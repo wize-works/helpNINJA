@@ -1,0 +1,61 @@
+# HelpNinja – AI agent working notes
+
+Context: Next.js 15 (App Router) app with an AI chat widget, RAG search on tenant-ingested docs, Stripe billing/limits, and pluggable escalations (Slack/Email). DB is Postgres via `pg` with pgvector and text search. Supabase is used for admin ops.
+
+Important: We want to confirm that functionality does not already exist in the codebase before suggesting new features or changes. If a feature is already implemented, please provide details on how it works or where it can be found in the code by updating the docs/fomplete-features.md file.  WE SHOULD NOT BE DUPLICATING FUNCTIONALITY.
+
+Run and build
+- Dev: `npm run dev` (Next dev on port 3001 via `--turbopack -p 3001`). Open http://localhost:3001
+- Lint: `npm run lint`. Build: `npm run build`. Start: `npm start` (port 3000)
+- Docker dev: `docker-compose up` maps 3001:3000; Prod image defined in `Dockerfile`
+
+Key env (set before running)
+- OpenAI: `OPENAI_API_KEY`, optional `OPENAI_CHAT_MODEL`, `OPENAI_EMBED_MODEL`
+- Database: `DATABASE_URL` (Postgres with pgvector + tsvector enabled; see `sql/001_extensions.sql` and schema files)
+- Stripe: `STRIPE_SECRET_KEY`, `STRIPE_WEBHOOK_SECRET`, `STRIPE_PRICE_STARTER|PRO|AGENCY`
+- Site: `SITE_URL`
+- Supabase: `NEXT_PUBLIC_SUPABASE_URL`, `SUPABASE_SERVICE_ROLE_KEY`
+- Integrations: `SLACK_WEBHOOK_URL` (fallback), `RESEND_API_KEY`, `SUPPORT_FALLBACK_TO_EMAIL`, `SUPPORT_FROM_EMAIL`
+
+Architecture & flows
+- Widget script (Edge) served by `src/app/api/widget/route.ts`. Embeds a floating chat bubble and posts to `/api/chat` with `{ tenantId, sessionId, message, voice }`
+- Chat answer flow: `api/chat` (Node runtime) → usage gate (`lib/usage.ts`) → RAG search (`lib/rag.ts` → lexical tsvector + vector merge) → OpenAI chat → persist message (`public.messages`) → auto-escalate under threshold via `api/escalate`
+- Ingestion flow: `api/ingest` crawls page/sitemap (`lib/crawler.ts`), chunks (`lib/chunk.ts`), embeds (`lib/embeddings.ts`), stores docs/chunks
+- Billing: checkout/portal in `src/app/api/billing/**`; webhook in `api/stripe/webhook` updates `public.tenants` plan/status and ensures `usage_counters`
+- Integrations: Provider interface in `lib/integrations/types.ts`; registry in `registry.ts`; dispatch in `dispatch.ts` (DB-backed integrations with env fallbacks). On failure, writes to `integration_outbox`
+
+Conventions & patterns
+- API routes: export `runtime` (`'nodejs'` for OpenAI/DB; `'edge'` for pure JS). Validate required fields and return `NextResponse.json`
+- DB: use `lib/db.ts` `query(text, params)` with parameterized SQL; avoid string interpolation for user input
+- Limits: Always check `canSendMessage` before OpenAI calls; call `incMessages` after. `PLAN_LIMITS` in `lib/limits.ts`
+- RAG: Prefer `searchHybrid(tenantId, q, k)` to combine vector + lexical; dedupe by URL and slice to `k`
+- Escalation: Use `dispatchEscalation(ev)` with `EscalationEvent`; low-confidence threshold is in `api/chat` (0.55) – keep answers concise per the system prompt there
+
+Adding features (follow these)
+- New API route: create `src/app/api/<name>/route.ts`; set `runtime`, parse JSON, validate, gate usage if applicable, interact via `query`, return JSON
+- New integration: add `lib/integrations/providers/<key>.ts` implementing `Provider.sendEscalation`, then register in `lib/integrations/registry.ts`
+- New ingestion source: extend `lib/crawler.ts` or branch in `api/ingest` to normalize `{ url, title, content }` and reuse chunk/embed/insert logic
+- Plan-gated features: derive from `public.tenants.plan` and constants in `lib/limits.ts` or prices in `lib/stripe.ts`
+
+Gotchas
+- Stripe webhook needs raw body: use `req.text()` then `stripe.webhooks.constructEvent`; keep route `runtime='nodejs'`
+- Ensure pgvector/tsvector extensions exist and table shapes match queries used in RAG (`public.documents`, `public.chunks`, `public.conversations`, `public.messages`, `usage_counters`, `integrations`, `integration_outbox`)
+- `auth.ts` is currently a stub; routes rely on `tenantId` passed in requests. Be cautious about exposing privileged ops
+
+Reference entry points
+- Widget: `src/app/api/widget/route.ts`
+- Chat & RAG: `src/app/api/chat/route.ts`, `src/lib/rag.ts`, `src/lib/embeddings.ts`
+- Ingestion: `src/app/api/ingest/route.ts`, `src/lib/crawler.ts`, `src/lib/chunk.ts`
+- Billing: `src/app/api/billing/**`, `src/app/api/stripe/webhook/route.ts`, `src/lib/stripe.ts`, `src/lib/usage.ts`
+- Integrations: `src/lib/integrations/**`
+
+When in doubt, mirror existing route/provider patterns and keep changes tenant-scoped and parameterized.
+
+Further reading
+- Overview & MVP scaffold: `../docs/help_ninja_mvp_scaffold_v_0.md`
+- Design & UI/UX: `../docs/development/design-doc.md`
+- Data model: `../docs/development/data-model.md`
+- API reference: `../docs/development/api-reference.md`
+- Security model: `../docs/development/security.md`
+- Roadmap: `../docs/development/roadmap.md`
+- Deployment guide: `../docs/development/deployment-guide.md`

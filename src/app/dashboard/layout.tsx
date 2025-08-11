@@ -1,0 +1,25 @@
+import Sidebar from "@/components/sidebar";
+import { TenantProvider } from "@/components/tenant-context";
+import { getTenantIdServer } from "@/lib/auth";
+
+export default async function DashboardLayout({ children }: { children: React.ReactNode }) {
+    const tenantId = await getTenantIdServer({ allowEnvFallback: true });
+    return (
+        <div className="min-h-[calc(100vh-4rem)]">{/* 4rem = titlebar height */}
+            <TenantProvider tenantId={tenantId}>
+                <div className="drawer lg:drawer-open">
+                    <input id="hn-drawer" type="checkbox" className="drawer-toggle" />
+                    <div className="drawer-content">
+                        <section className="p-4 sm:p-6 lg:p-8 bg-base-300 min-h-[calc(100vh-4rem)]">
+                            <div className="max-w-7xl mx-auto">{children}</div>
+                        </section>
+                    </div>
+                    <div className="drawer-side z-40">
+                        <label htmlFor="hn-drawer" aria-label="close sidebar" className="drawer-overlay"></label>
+                        <Sidebar />
+                    </div>
+                </div>
+            </TenantProvider>
+        </div>
+    );
+}

@@ -1,0 +1,46 @@
+:root[data-theme="ninja-dark"] {
+  /* Brand palette tuned for dark contrast */
+  --p:  #8b5cf6; /* primary (brighter for dark) */
+  --pc: #0b0b14; /* primary-content */
+
+  --s:  #22d3ee; /* secondary */
+  --sc: #04171b; /* secondary-content */
+
+  --a:  #fbbf24; /* accent */
+  --ac: #1f1603; /* accent-content */
+
+  --n:  #0b1220; /* neutral (cards/nav) */
+  --nc: #c7d2fe; /* neutral-content */
+
+  /* Base (surface) steps */
+  --b1: #0b0f1a; /* base-100 (page bg) */
+  --b2: #0f172a; /* base-200 */
+  --b3: #111827; /* base-300 */
+  --bc: #e5e7ff; /* base-content (text) */
+
+  /* State colors */
+  --in: #60a5fa; /* info */
+  --inc:#0b1b33;
+
+  --su: #22c55e; /* success */
+  --suc:#072013;
+
+  --wa: #f59e0b; /* warning */
+  --wac:#231a03;
+
+  --er: #ef4444; /* error */
+  --erc:#2a0909;
+
+  /* Radius, animation, borders */
+  --rounded-box:  1rem;
+  --rounded-btn:  .75rem;
+  --rounded-badge:.5rem;
+  --animation-btn: 0.2s;
+  --animation-input: 0.2s;
+  --btn-focus-scale: 0.98;
+  --border-btn: 1px;
+  --tab-border: 1px;
+  --tab-radius: .75rem;
+
+  color-scheme: dark;
+}

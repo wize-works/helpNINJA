@@ -1,0 +1,47 @@
+
+:root[data-theme="ninja-light"] {
+  /* Brand palette */
+  --primary:  #6366f1; /* primary */
+  --pc: #ffffff; /* primary-content */
+
+  --s:  #06b6d4; /* secondary */
+  --sc: #062a30; /* secondary-content */
+
+  --a:  #f59e0b; /* accent */
+  --ac: #231a03; /* accent-content */
+
+  --n:  #111827; /* neutral (cards/nav) */
+  --nc: #e5e7eb; /* neutral-content */
+
+  /* Base (surface) steps */
+  --b1: #ffffff; /* base-100 (page bg) */
+  --b2: #f9fafb; /* base-200 */
+  --b3: #eef2f7; /* base-300 */
+  --bc: #0b1220; /* base-content (text) */
+
+  /* State colors */
+  --in: #60a5fa; /* info */
+  --inc:#0b1b33; /* info-content */
+
+  --su: #22c55e; /* success */
+  --suc:#072013; /* success-content */
+
+  --wa: #f59e0b; /* warning */
+  --wac:#231a03; /* warning-content */
+
+  --er: #ef4444; /* error */
+  --erc:#2a0909; /* error-content */
+
+  /* Radius, animation, borders */
+  --rounded-box:  1rem;
+  --rounded-btn:  .75rem;
+  --rounded-badge:.5rem;
+  --animation-btn: 0.2s;
+  --animation-input: 0.2s;
+  --btn-focus-scale: 0.98;
+  --border-btn: 1px;
+  --tab-border: 1px;
+  --tab-radius: .75rem;
+
+  color-scheme: light;
+}
