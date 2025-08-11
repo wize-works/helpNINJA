@@ -2,7 +2,10 @@ import { NextRequest, NextResponse } from 'next/server'
 import { dispatchEscalation } from '@/lib/integrations/dispatch'
 import { resolveTenantIdFromRequest } from '@/lib/auth'
 
+export const runtime = 'nodejs'
+
 export async function POST(req: NextRequest) {
+    if (req.method !== 'POST') return NextResponse.json({ error: 'method not allowed' }, { status: 405 })
     const ev = await req.json()
     // ensure tenantId present
     if (!ev?.tenantId) {

@@ -1,6 +1,6 @@
 import { getTenantIdServer } from "@/lib/auth";
 import { query } from "@/lib/db";
-import ChatPreview from "@/components/chat-preview";
+import ChatWidgetPanel from "@/components/chat-widget-panel";
 
 export const runtime = 'nodejs'
 
@@ -59,11 +59,10 @@ export default async function SettingsPage() {
                         {t.public_key && (
                             <div className="mt-6">
                                 <div className="mb-2 flex items-center justify-between">
-                                    <h3 className="font-semibold">Chat widget preview</h3>
-                                    <div className="text-xs opacity-70">Voice: friendly</div>
+                                    <h3 className="font-semibold">Chat widget</h3>
+                                    <div className="text-xs opacity-70">Preview + embed</div>
                                 </div>
-                                {/* Live preview of the actual widget */}
-                                <ChatPreview tenantPublicKey={t.public_key} voice="friendly" height={520} />
+                                <ChatWidgetPanel tenantPublicKey={t.public_key} />
                             </div>
                         )}
                     </div>

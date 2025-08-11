@@ -12,12 +12,14 @@ export async function searchHybrid(tenantId: string, q: string, k = 8): Promise<
     );
 
     const qe = await embedQuery(q);
+    // Build pgvector literal: [v1,v2,...] to cast as ::vector
+    const vecLiteral = `[${qe.join(',')}]`;
     const { rows: vec } = await query<{ id: string, url: string, content: string }>(
         `select c.id, c.url, c.content
      from public.chunks c
      where c.tenant_id = $1
      order by c.embedding <=> $2::vector
-     limit $3`, [tenantId, qe, k]
+     limit $3`, [tenantId, vecLiteral, k]
     );
 
     const seen = new Set<string>();

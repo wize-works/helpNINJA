@@ -40,8 +40,10 @@ export async function GET(req: NextRequest) {
     async function send(){
       const i = document.getElementById('hn_input'); const text = i.value.trim(); if(!text) return;
       i.value=''; add('user', text);
-      const r = await fetch(${ORIGIN_JSON} + '/api/chat', {method:'POST', headers:{'content-type':'application/json'}, body: JSON.stringify({ tenantId: ${TENANT_JSON}, sessionId: sid, message: text, voice: ${VOICE_JSON} })});
-      const j = await r.json(); add('assistant', j.answer || '…');
+  const r = await fetch(${ORIGIN_JSON} + '/api/chat', {method:'POST', headers:{'content-type':'application/json'}, body: JSON.stringify({ tenantId: ${TENANT_JSON}, sessionId: sid, message: text, voice: ${VOICE_JSON} })});
+  let j = null; try { j = await r.json(); } catch(_) {}
+  if(!r.ok){ add('assistant', (j && (j.message||j.error)) || 'Sorry, something went wrong.'); return; }
+  add('assistant', (j && j.answer) || '…');
     }
 
     bubble.onclick = () => { panel.style.display = panel.style.display==='none'?'flex':'none'; };

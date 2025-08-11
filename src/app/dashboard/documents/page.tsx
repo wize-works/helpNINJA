@@ -1,5 +1,6 @@
 import { getTenantIdServer } from "@/lib/auth";
 import { query } from "@/lib/db";
+import IngestForm from "@/components/ingest-form";
 
 export const runtime = 'nodejs'
 
@@ -22,6 +23,7 @@ export default async function DocumentsPage() {
                 <h1 className="text-2xl font-bold">Documents</h1>
                 <IngestForm tenantId={tenantId} />
             </div>
+            <p className="text-sm opacity-70">Enter a full page URL to ingest that page, or a sitemap.xml to ingest multiple pages (up to plan limits).</p>
             <div className="card bg-base-100 border border-base-300">
                 <div className="card-body p-0">
                     <div className="overflow-x-auto">
@@ -55,26 +57,7 @@ export default async function DocumentsPage() {
     )
 }
 
-function IngestForm({ tenantId }: { tenantId: string }) {
-    async function action(formData: FormData) {
-        'use server'
-        const input = String(formData.get('input') || '')
-        if (!input) return
-        await fetch(`${process.env.SITE_URL || ''}/api/ingest`, {
-            method: 'POST',
-            headers: { 'content-type': 'application/json', 'x-tenant-id': tenantId },
-            body: JSON.stringify({ input, tenantId })
-        })
-    }
-    return (
-        <form action={action} className="join">
-            <input name="input" type="url" placeholder="https://site.com or sitemap.xml" className="input input-bordered join-item w-96" required />
-            <button className="btn btn-primary join-item" type="submit">
-                <i className="fa-duotone fa-download mr-2" aria-hidden />Ingest
-            </button>
-        </form>
-    )
-}
+// Server action variant removed in favor of client component with inline errors
 
 function DeleteButton({ id, tenantId }: { id: string; tenantId: string }) {
     async function action() {

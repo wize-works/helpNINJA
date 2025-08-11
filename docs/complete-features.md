@@ -56,6 +56,7 @@ Security and conventions
 - CORS on /api/chat for widget origins.
 - Use lib/db.ts query() with parameters; avoid string interpolation.
 - Keep Node runtime for routes that hit DB/OpenAI.
+  - Optional CORS allowlist for chat: set `ALLOWED_WIDGET_ORIGINS` to a comma-separated list (e.g., `https://example.com,https://app.example.com`). If unset, any origin is allowed.
 
 What’s partial or pending
 - Conversation detail transcript page (optional)

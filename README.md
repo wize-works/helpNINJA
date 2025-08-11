@@ -1,5 +1,18 @@
 This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
 
+## Embeddable widget
+
+Embed HelpNinja on any site:
+
+```html
+<script async src="https://your-site.com/api/widget?t=TENANT_PUBLIC_KEY&voice=friendly"></script>
+```
+
+Notes:
+- The `t` param is your tenant public key from Dashboard → Settings.
+- The widget posts to `/api/chat`; the API resolves the provided key to the internal tenant UUID (supports public_key, secret_key, or slug) before DB access.
+- If the key is unknown, the API returns `{ error: 'tenant_not_found' }` with 400, never a 500.
+
 ## Getting Started
 
 First, run the development server:
