@@ -26,15 +26,13 @@ export default function Titlebar() {
                             <HoverScale scale={1.01}>
                                 <Link href="/" className="flex items-center gap-3 py-1.5 px-2 rounded-xl hover:bg-base-200/40 transition-all duration-200 group">
                                     <div className="relative">
-                                        <div className="w-8 h-8 bg-gradient-to-br from-primary/20 to-secondary/20 rounded-lg flex items-center justify-center border border-primary/10">
-                                            <Image
-                                                src="/logo.svg"
-                                                alt="HelpNinja Logo"
-                                                width={20}
-                                                height={20}
-                                                className="w-5 h-5 group-hover:scale-110 transition-transform duration-200"
-                                            />
-                                        </div>
+                                        <Image
+                                            src="/logo.svg"
+                                            alt="HelpNinja Logo"
+                                            width={30}
+                                            height={30}
+                                            className="group-hover:scale-110 transition-transform duration-200"
+                                        />
                                     </div>
                                     <div className="hidden sm:block">
                                         <div className="text-base font-semibold tracking-tight text-base-content">
@@ -190,9 +188,9 @@ export default function Titlebar() {
                                                 </div>
                                             </Link>
                                         </li>
-                                        
+
                                         <div className="divider my-2"></div>
-                                        
+
                                         {/* Resources Section */}
                                         <li className="menu-title text-xs font-semibold text-base-content/50 px-3 py-2 uppercase tracking-wide">
                                             Resources
@@ -209,9 +207,9 @@ export default function Titlebar() {
                                                 <span>Get Support</span>
                                             </a>
                                         </li>
-                                        
+
                                         <div className="divider my-2"></div>
-                                        
+
                                         <li>
                                             <button className="flex items-center gap-3 py-2.5 px-3 rounded-xl text-error hover:bg-error/10 transition-colors w-full">
                                                 <i className="fa-duotone fa-solid fa-arrow-right-from-bracket text-base" aria-hidden />

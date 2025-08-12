@@ -69,8 +69,7 @@ function DocumentsTable({ docs, tenantId }: { docs: DocRow[]; tenantId: string }
                                 </thead>
                                 <tbody className="divide-y divide-base-200/60">
                                     {docs.map((d, index) => (
-                                        <HoverScale key={d.id} scale={1.005}>
-                                            <tr className="hover:bg-base-200/30 transition-colors duration-200">
+                                        <tr key={d.id} className="hover:bg-base-200/30 hover:scale-[1.002] transition-all duration-200 cursor-pointer">
                                                 <td className="p-4">
                                                     <div className="flex items-center gap-3">
                                                         <div className="w-8 h-8 bg-info/10 rounded-lg flex items-center justify-center flex-shrink-0">
@@ -109,7 +108,6 @@ function DocumentsTable({ docs, tenantId }: { docs: DocRow[]; tenantId: string }
                                                     <DeleteButton id={d.id} tenantId={tenantId} />
                                                 </td>
                                             </tr>
-                                        </HoverScale>
                                     ))}
                                 </tbody>
                             </table>

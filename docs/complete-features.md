@@ -35,6 +35,7 @@ Core features (present)
   - KPI cards (conversations, usage this month, low-confidence, active integrations), sources indexed, integrations list, usage panel.
   - Tenant resolved server-side; outbox retry button.
   - Files: src/app/dashboard/page.tsx, src/components/sidebar.tsx, src/lib/auth.ts
+  - Notes: "Messages (this month)" derives from `public.messages` for the current calendar month, counting `role='user'` messages (aligned with the Chat Volume chart). Low-confidence counts use assistant messages with confidence < 0.55 in the same period.
 - Admin pages
   - Documents: src/app/dashboard/documents/page.tsx and DELETE API src/app/api/documents/[id]/route.ts
   - Integrations: src/app/dashboard/integrations/page.tsx plus src/app/api/integrations/[id]/route.ts and /status/route.ts

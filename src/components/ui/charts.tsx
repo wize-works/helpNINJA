@@ -1,23 +1,22 @@
 "use client";
 
-import { 
-    LineChart, 
-    Line, 
-    AreaChart, 
-    Area, 
-    BarChart, 
-    Bar, 
-    XAxis, 
-    YAxis, 
-    CartesianGrid, 
-    Tooltip, 
+import {
+    LineChart,
+    Line,
+    AreaChart,
+    Area,
+    BarChart,
+    Bar,
+    XAxis,
+    YAxis,
+    CartesianGrid,
+    Tooltip,
     ResponsiveContainer,
     PieChart,
     Pie,
     Cell
 } from 'recharts';
 import { HoverScale } from './animated-page';
-import { useState } from 'react';
 
 // Time range options
 export const timeRanges = [
@@ -30,12 +29,12 @@ export const timeRanges = [
 export type TimeRange = typeof timeRanges[number]['key'];
 
 // Time Range Selector Component
-export function TimeRangeSelector({ 
-    selected, 
-    onSelect, 
-    className = "" 
-}: { 
-    selected: TimeRange; 
+export function TimeRangeSelector({
+    selected,
+    onSelect,
+    className = ""
+}: {
+    selected: TimeRange;
     onSelect: (range: TimeRange) => void;
     className?: string;
 }) {
@@ -45,11 +44,10 @@ export function TimeRangeSelector({
                 <HoverScale key={range.key} scale={1.02}>
                     <button
                         onClick={() => onSelect(range.key)}
-                        className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-all duration-200 ${
-                            selected === range.key
+                        className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-all duration-200 ${selected === range.key
                                 ? 'bg-primary text-primary-content shadow-sm'
                                 : 'bg-base-200/60 hover:bg-base-200 border border-base-300/40 text-base-content/80 hover:text-base-content'
-                        }`}
+                            }`}
                     >
                         {range.label}
                     </button>
@@ -78,8 +76,8 @@ function CustomTooltip({ active, payload, label }: TooltipProps) {
                 {payload.map((entry, index: number) => (
                     <div key={index} className="flex items-center justify-between gap-4 text-sm">
                         <div className="flex items-center gap-2">
-                            <div 
-                                className="w-3 h-3 rounded-full" 
+                            <div
+                                className="w-3 h-3 rounded-full"
                                 style={{ backgroundColor: entry.color }}
                             />
                             <span className="text-base-content/80">{entry.name}</span>
@@ -96,11 +94,11 @@ function CustomTooltip({ active, payload, label }: TooltipProps) {
 }
 
 // Enhanced Chat volume chart with better styling
-export function ChatVolumeChart({ 
-    data, 
-    loading = false 
-}: { 
-    data: Array<{ date: string; messages: number; conversations: number }>; 
+export function ChatVolumeChart({
+    data,
+    loading = false
+}: {
+    data: Array<{ date: string; messages: number; conversations: number }>;
     loading?: boolean;
 }) {
     if (loading) {
@@ -144,29 +142,29 @@ export function ChatVolumeChart({
             <AreaChart data={data} margin={{ top: 5, right: 5, left: 5, bottom: 5 }}>
                 <defs>
                     <linearGradient id="messagesGradient" x1="0" y1="0" x2="0" y2="1">
-                        <stop offset="5%" stopColor="hsl(var(--p))" stopOpacity={0.4}/>
-                        <stop offset="95%" stopColor="hsl(var(--p))" stopOpacity={0.05}/>
+                        <stop offset="5%" stopColor="hsl(var(--p))" stopOpacity={0.4} />
+                        <stop offset="95%" stopColor="hsl(var(--p))" stopOpacity={0.05} />
                     </linearGradient>
                     <linearGradient id="conversationsGradient" x1="0" y1="0" x2="0" y2="1">
-                        <stop offset="5%" stopColor="hsl(var(--s))" stopOpacity={0.4}/>
-                        <stop offset="95%" stopColor="hsl(var(--s))" stopOpacity={0.05}/>
+                        <stop offset="5%" stopColor="hsl(var(--s))" stopOpacity={0.4} />
+                        <stop offset="95%" stopColor="hsl(var(--s))" stopOpacity={0.05} />
                     </linearGradient>
                 </defs>
-                <CartesianGrid 
-                    strokeDasharray="3 3" 
-                    stroke="hsl(var(--b3))" 
+                <CartesianGrid
+                    strokeDasharray="3 3"
+                    stroke="hsl(var(--b3))"
                     opacity={0.6}
                 />
-                <XAxis 
-                    dataKey="date" 
-                    stroke="hsl(var(--bc))" 
+                <XAxis
+                    dataKey="date"
+                    stroke="hsl(var(--bc))"
                     fontSize={11}
                     tickLine={false}
                     axisLine={false}
                     tick={{ fill: 'hsl(var(--bc))', opacity: 0.7 }}
                 />
-                <YAxis 
-                    stroke="hsl(var(--bc))" 
+                <YAxis
+                    stroke="hsl(var(--bc))"
                     fontSize={11}
                     tickLine={false}
                     axisLine={false}
@@ -202,11 +200,11 @@ export function ChatVolumeChart({
 }
 
 // Enhanced Sources bar chart
-export function SourcesChart({ 
-    data, 
-    loading = false 
-}: { 
-    data: Array<{ name: string; documents: number; chunks: number }>; 
+export function SourcesChart({
+    data,
+    loading = false
+}: {
+    data: Array<{ name: string; documents: number; chunks: number }>;
     loading?: boolean;
 }) {
     if (loading) {
@@ -231,7 +229,7 @@ export function SourcesChart({
 
     // Filter out empty sources
     const validData = data.filter(d => d.documents > 0 || d.chunks > 0);
-    
+
     if (validData.length === 0) {
         return (
             <div className="w-full h-48 flex flex-col items-center justify-center text-center">
@@ -247,23 +245,23 @@ export function SourcesChart({
     return (
         <ResponsiveContainer width="100%" height="100%">
             <BarChart data={validData} layout="horizontal" margin={{ top: 5, right: 5, left: 5, bottom: 5 }}>
-                <CartesianGrid 
-                    strokeDasharray="3 3" 
-                    stroke="hsl(var(--b3))" 
+                <CartesianGrid
+                    strokeDasharray="3 3"
+                    stroke="hsl(var(--b3))"
                     opacity={0.6}
                 />
-                <XAxis 
-                    type="number" 
-                    stroke="hsl(var(--bc))" 
+                <XAxis
+                    type="number"
+                    stroke="hsl(var(--bc))"
                     fontSize={11}
                     tickLine={false}
                     axisLine={false}
                     tick={{ fill: 'hsl(var(--bc))', opacity: 0.7 }}
                 />
-                <YAxis 
-                    type="category" 
-                    dataKey="name" 
-                    stroke="hsl(var(--bc))" 
+                <YAxis
+                    type="category"
+                    dataKey="name"
+                    stroke="hsl(var(--bc))"
                     fontSize={11}
                     tickLine={false}
                     axisLine={false}
@@ -271,15 +269,15 @@ export function SourcesChart({
                     tick={{ fill: 'hsl(var(--bc))', opacity: 0.7 }}
                 />
                 <Tooltip content={<CustomTooltip />} />
-                <Bar 
-                    dataKey="documents" 
-                    fill="hsl(var(--p))" 
+                <Bar
+                    dataKey="documents"
+                    fill="hsl(var(--p))"
                     radius={[0, 6, 6, 0]}
                     name="Documents"
                 />
-                <Bar 
-                    dataKey="chunks" 
-                    fill="hsl(var(--s))" 
+                <Bar
+                    dataKey="chunks"
+                    fill="hsl(var(--s))"
                     radius={[0, 6, 6, 0]}
                     name="Chunks"
                 />
@@ -289,11 +287,11 @@ export function SourcesChart({
 }
 
 // Confidence distribution pie chart
-export function ConfidenceChart({ 
-    data, 
-    loading = false 
-}: { 
-    data: Array<{ name: string; value: number; color: string }>; 
+export function ConfidenceChart({
+    data,
+    loading = false
+}: {
+    data: Array<{ name: string; value: number; color: string }>;
     loading?: boolean;
 }) {
     if (loading) {
@@ -341,15 +339,15 @@ export function ConfidenceChart({
 }
 
 // Enhanced metric trend component
-export function MetricTrend({ 
-    value, 
-    previousValue, 
+export function MetricTrend({
+    value,
+    previousValue,
     label,
     showIcon = true,
     className = ""
-}: { 
-    value: number; 
-    previousValue: number; 
+}: {
+    value: number;
+    previousValue: number;
     label: string;
     showIcon?: boolean;
     className?: string;

@@ -30,7 +30,7 @@ const navigationSections = [
         id: "analytics",
         label: "Analytics",
         icon: "fa-chart-line",
-        href: "/analytics",
+        href: "/dashboard/analytics",
         collapsible: false
     },
     {
@@ -88,9 +88,9 @@ export default function Sidebar() {
                 const res = await fetch(`/api/usage`, { headers: { 'x-tenant-id': tenantId } });
                 if (!res.ok) throw new Error('bad');
                 const data = await res.json();
-                if (!cancelled) { 
-                    setUsage({ used: data.used, limit: data.limit, plan: data.plan }); 
-                    setOffline(false); 
+                if (!cancelled) {
+                    setUsage({ used: data.used, limit: data.limit, plan: data.plan });
+                    setOffline(false);
                 }
             } catch {
                 if (!cancelled) { setOffline(true); }
@@ -131,26 +131,23 @@ export default function Sidebar() {
                                         <i className={`fa-duotone fa-solid ${section.icon} text-base opacity-70 group-hover:opacity-100`} aria-hidden />
                                         <span>{section.label}</span>
                                     </div>
-                                    <i 
-                                        className={`fa-duotone fa-solid fa-chevron-down text-xs opacity-50 transition-transform duration-200 ${
-                                            collapsedSections[section.id] ? '-rotate-90' : ''
-                                        }`} 
-                                        aria-hidden 
+                                    <i
+                                        className={`fa-duotone fa-solid fa-chevron-down text-xs opacity-50 transition-transform duration-200 ${collapsedSections[section.id] ? '-rotate-90' : ''
+                                            }`}
+                                        aria-hidden
                                     />
                                 </button>
                             ) : (
                                 <HoverScale scale={1.01}>
                                     <Link
                                         href={section.href!}
-                                        className={`flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all duration-200 ${
-                                            isActive(section.href!) 
-                                                ? "bg-base-200 text-base-content shadow-sm border border-base-300/60" 
-                                                : "text-base-content/80 hover:text-base-content hover:bg-base-200/60"
-                                        }`}
+                                        className={`flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all duration-200 ${isActive(section.href!)
+                                            ? "bg-base-200 text-base-content shadow-sm border border-base-300/60"
+                                            : "text-base-content/80 hover:text-base-content hover:bg-base-200/60"
+                                            }`}
                                     >
-                                        <i className={`fa-duotone fa-solid ${section.icon} text-base ${
-                                            isActive(section.href!) ? "opacity-100" : "opacity-70"
-                                        }`} aria-hidden />
+                                        <i className={`fa-duotone fa-solid ${section.icon} text-base ${isActive(section.href!) ? "opacity-100" : "opacity-70"
+                                            }`} aria-hidden />
                                         <span>{section.label}</span>
                                     </Link>
                                 </HoverScale>
@@ -164,11 +161,10 @@ export default function Sidebar() {
                                             <HoverScale scale={1.01}>
                                                 <Link
                                                     href={item.href}
-                                                    className={`flex items-center justify-between px-3 py-2 rounded-lg text-sm transition-all duration-200 ${
-                                                        isActive(item.href)
-                                                            ? "bg-primary/10 text-primary font-medium shadow-sm"
-                                                            : "text-base-content/70 hover:text-base-content hover:bg-base-200/60"
-                                                    }`}
+                                                    className={`flex items-center justify-between px-3 py-2 rounded-lg text-sm transition-all duration-200 ${isActive(item.href)
+                                                        ? "bg-primary/10 text-primary font-medium shadow-sm"
+                                                        : "text-base-content/70 hover:text-base-content hover:bg-base-200/60"
+                                                        }`}
                                                 >
                                                     <span>{item.label}</span>
                                                     {item.badge && (
@@ -195,7 +191,7 @@ export default function Sidebar() {
                                 <span>Offline mode</span>
                             </div>
                         )}
-                        
+
                         <div className="bg-gradient-to-br from-base-200/40 to-base-300/40 rounded-xl p-4 border border-base-200/60">
                             <div className="flex items-center justify-between mb-3">
                                 <div className="flex items-center gap-2">
@@ -208,26 +204,26 @@ export default function Sidebar() {
                                     {usage?.plan || 'Starter'}
                                 </span>
                             </div>
-                            
+
                             <div className="space-y-2">
                                 <div className="flex items-center justify-between text-sm">
-                                    <span className="text-base-content/70">Messages</span>
+                                    <span className="text-base-content/70">User messages (UTC month)</span>
                                     <span className="font-medium">
-                                        {usage?.used || 45} / {usage?.limit || 100}
+                                        {usage ? usage.used : 45} / {usage ? usage.limit : 100}
                                     </span>
                                 </div>
                                 <div className="w-full bg-base-300/60 rounded-full h-2">
-                                    <div 
+                                    <div
                                         className="bg-gradient-to-r from-primary to-secondary h-2 rounded-full transition-all duration-500"
-                                        style={{ 
-                                            width: `${usage ? Math.min(100, (usage.used / usage.limit) * 100) : 45}%` 
+                                        style={{
+                                            width: `${usage ? Math.min(100, (usage.used / usage.limit) * 100) : 45}%`
                                         }}
                                     />
                                 </div>
                                 <div className="flex items-center justify-between text-xs text-base-content/60">
                                     <span>This month</span>
                                     <span>
-                                        {usage ? `${Math.round((usage.used / usage.limit) * 100)}%` : '45%'} used
+                                        {usage ? `${Math.round(Math.min(100, (usage.used / usage.limit) * 100))}%` : '45%'} used
                                     </span>
                                 </div>
                             </div>

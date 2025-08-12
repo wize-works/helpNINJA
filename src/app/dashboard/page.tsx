@@ -2,17 +2,20 @@ import OutboxRetryButton from "@/components/outbox-retry-button";
 import { query } from "@/lib/db";
 import { PLAN_LIMITS } from "@/lib/limits";
 import { getTenantIdServer } from "@/lib/auth";
-import { ChatVolumeChart, SourcesChart, MetricTrend, TimeRangeSelector, TimeRange } from "@/components/ui/charts";
+import { ChatVolumeChart, SourcesChart, MetricTrend, TimeRange } from "@/components/ui/charts";
 import { Suspense } from "react";
 import { ChartSkeleton, StatCardSkeleton } from "@/components/ui/skeleton";
-import { AnimatedPage, StaggerContainer, StaggerChild, HoverScale, FadeIn } from "@/components/ui/animated-page";
+import { AnimatedPage, StaggerContainer, StaggerChild, HoverScale } from "@/components/ui/animated-page";
+import { TenantProvider } from "@/components/tenant-context";
 
 export const runtime = "nodejs"; // ensure Node runtime for pg
+export const dynamic = "force-dynamic"; // always fetch fresh stats/charts
 
 type StatRow = {
     conversations: number;
     messages_this_month: number;
     low_conf: number;
+    assistant_messages_this_month: number;
     integrations_active: number;
     escalations_pending: number;
     documents: number;
@@ -30,8 +33,9 @@ async function getStats(tenantId: string) {
     const statsQ = await query<StatRow>(
         `select
             (select count(*) from public.conversations where tenant_id=$1)::int as conversations,
-            (select messages_count from public.usage_counters where tenant_id=$1)::int as messages_this_month,
-            (select count(*) from public.messages where tenant_id=$1 and role='assistant' and confidence < 0.55 and created_at >= date_trunc('month', now()))::int as low_conf,
+            (select count(*) from public.messages where tenant_id=$1 and role='user' and (created_at at time zone 'UTC') >= date_trunc('month', (now() at time zone 'UTC')) )::int as messages_this_month,
+            (select count(*) from public.messages where tenant_id=$1 and role='assistant' and confidence < 0.55 and (created_at at time zone 'UTC') >= date_trunc('month', (now() at time zone 'UTC')) )::int as low_conf,
+            (select count(*) from public.messages where tenant_id=$1 and role='assistant' and (created_at at time zone 'UTC') >= date_trunc('month', (now() at time zone 'UTC')) )::int as assistant_messages_this_month,
             (select count(*) from public.integrations where tenant_id=$1 and status='active')::int as integrations_active,
             (select count(*) from public.integration_outbox where tenant_id=$1 and status='pending')::int as escalations_pending,
             (select count(*) from public.documents where tenant_id=$1)::int as documents,
@@ -48,7 +52,7 @@ async function getStats(tenantId: string) {
         [tenantId]
     );
 
-    const defaultStats: StatRow = { conversations: 0, messages_this_month: 0, low_conf: 0, integrations_active: 0, escalations_pending: 0, documents: 0, chunks: 0 };
+    const defaultStats: StatRow = { conversations: 0, messages_this_month: 0, low_conf: 0, assistant_messages_this_month: 0, integrations_active: 0, escalations_pending: 0, documents: 0, chunks: 0 };
     const stats = statsQ.rows[0] || defaultStats;
     const plan = (planQ.rows[0]?.plan || "starter") as keyof typeof PLAN_LIMITS;
     const limit = PLAN_LIMITS[plan].messages;
@@ -57,6 +61,7 @@ async function getStats(tenantId: string) {
             conversations: Number(stats.conversations || 0),
             messages_this_month: Number(stats.messages_this_month || 0),
             low_conf: Number(stats.low_conf || 0),
+            assistant_messages_this_month: Number(stats.assistant_messages_this_month || 0),
             integrations_active: Number(stats.integrations_active || 0),
             escalations_pending: Number(stats.escalations_pending || 0),
             documents: Number(stats.documents || 0),
@@ -81,14 +86,14 @@ async function getChartData(tenantId: string, timeRange: TimeRange = '30d'): Pro
     // Get actual chat volume data from the database
     const chatVolumeQuery = await query<{ date: string; messages: number; conversations: number }>(
         `select 
-            date_trunc('day', created_at)::date as date,
+                date_trunc('day', (created_at at time zone 'UTC'))::date as date,
             count(case when role = 'user' then 1 end)::int as messages,
             count(distinct conversation_id)::int as conversations
          from public.messages 
          where tenant_id = $1 
-         and created_at >= current_date - interval '${days} days'
-         group by date_trunc('day', created_at)::date
-         order by date`,
+            and (created_at at time zone 'UTC') >= ((now() at time zone 'UTC')::date - interval '${days} days')
+            group by 1
+            order by 1`,
         [tenantId]
     );
 
@@ -97,13 +102,17 @@ async function getChartData(tenantId: string, timeRange: TimeRange = '30d'): Pro
         const date = new Date();
         date.setDate(date.getDate() - (days - 1 - i));
         const dateStr = date.toISOString().split('T')[0]; // YYYY-MM-DD format
-        
+
         // Find actual data for this date
-        const actualData = chatVolumeQuery.rows.find(row => row.date === dateStr);
-        
+        const actualData = chatVolumeQuery.rows.find(row => {
+            // Ensure both dates are in the same YYYY-MM-DD format
+            const rowDateStr = new Date(row.date).toISOString().split('T')[0];
+            return rowDateStr === dateStr;
+        });
+
         return {
-            date: date.toLocaleDateString('en-US', { 
-                month: 'short', 
+            date: date.toLocaleDateString('en-US', {
+                month: 'short',
                 day: 'numeric',
                 ...(days > 90 && { year: '2-digit' }) // Show year for longer periods
             }),
@@ -115,13 +124,13 @@ async function getChartData(tenantId: string, timeRange: TimeRange = '30d'): Pro
     // Get actual source data
     const sourcesQuery = await query<{ host: string; documents: number; chunks: number }>(
         `select 
-            regexp_replace(url, '^https?://([^/]+).*', '\\1') as host,
+            regexp_replace(d.url, '^https?://([^/]+).*', '\\1') as host,
             count(distinct d.id)::int as documents,
             count(c.id)::int as chunks
          from public.documents d
          left join public.chunks c on c.document_id = d.id
          where d.tenant_id = $1
-         group by host
+         group by regexp_replace(d.url, '^https?://([^/]+).*', '\\1')
          order by documents desc
          limit 5`,
         [tenantId]
@@ -197,7 +206,7 @@ export default async function Dashboard() {
                                         </div>
                                         <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3">
                                             <Suspense fallback={<div className="w-48 h-8 bg-base-200/60 rounded-lg animate-pulse"></div>}>
-                                                <InteractiveTimeRangeSelector tenantId={tenantId} />
+                                                <InteractiveTimeRangeSelector />
                                             </Suspense>
                                             <div className="flex items-center gap-2">
                                                 <HoverScale scale={1.02}>
@@ -231,11 +240,11 @@ export default async function Dashboard() {
                                             <i className="fa-duotone fa-solid fa-database text-sm text-secondary" aria-hidden />
                                         </div>
                                     </div>
-                                    
+
                                     <Suspense fallback={<div className="space-y-3"><div className="animate-pulse bg-base-300/60 h-4 rounded"></div><div className="animate-pulse bg-base-300/60 h-4 rounded w-3/4"></div></div>}>
                                         <SourcesOverview tenantId={tenantId} />
                                     </Suspense>
-                                    
+
                                     <div className="mt-6 h-48">
                                         <Suspense fallback={<ChartSkeleton height="h-48" />}>
                                             <SourcesChartContainer tenantId={tenantId} />
@@ -260,8 +269,8 @@ export default async function Dashboard() {
                                             <p className="text-sm text-base-content/60">Connected services</p>
                                         </div>
                                         <HoverScale scale={1.02}>
-                                            <a 
-                                                className="text-sm text-primary hover:text-primary/80 font-medium flex items-center gap-1 transition-colors" 
+                                            <a
+                                                className="text-sm text-primary hover:text-primary/80 font-medium flex items-center gap-1 transition-colors"
                                                 href="/dashboard/integrations"
                                             >
                                                 View all
@@ -294,7 +303,7 @@ export default async function Dashboard() {
 }
 
 // Interactive components that use client-side state
-function InteractiveTimeRangeSelector({ tenantId }: { tenantId: string }) {
+function InteractiveTimeRangeSelector() {
     // This would be a client component in a real implementation
     // For now, we'll return a static version
     return (
@@ -326,9 +335,9 @@ async function PlanBadge({ tenantId }: { tenantId: string }) {
             pro: { label: 'Pro', color: 'bg-primary/10 text-primary', icon: 'fa-star' },
             agency: { label: 'Agency', color: 'bg-gradient-to-r from-primary to-secondary text-white', icon: 'fa-crown' }
         };
-        
+
         const config = planConfig[plan as keyof typeof planConfig] || planConfig.starter;
-        
+
         return (
             <div className={`inline-flex items-center gap-2 px-3 py-1.5 rounded-lg text-sm font-medium ${config.color} border border-base-200/60`}>
                 <i className={`fa-duotone fa-solid ${config.icon} text-xs`} aria-hidden />
@@ -348,44 +357,51 @@ async function PlanBadge({ tenantId }: { tenantId: string }) {
 async function StatsCards({ tenantId }: { tenantId: string }) {
     try {
         const { stats, limit } = await getStats(tenantId);
-        const usedPct = limit ? Math.min(100, Math.round((stats.messages_this_month / limit) * 100)) : 0;
-        const lowConfRate = stats.messages_this_month ? Math.round((stats.low_conf / stats.messages_this_month) * 100) : 0;
+        const lowDenom = stats.assistant_messages_this_month || 0;
+        const lowConfRate = lowDenom ? Math.round((stats.low_conf / lowDenom) * 100) : 0;
 
         return (
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
                 <HoverScale scale={1.02}>
-                    <StatCard 
-                        icon="fa-comments" 
-                        iconColor="text-primary"
-                        iconBg="bg-primary/10"
-                        title="Conversations" 
-                        value={num(stats.conversations)} 
+                    <StatCard
+                        icon="fa-comments"
+                        iconColor="text-blue-600"
+                        iconBg="bg-blue-500/10"
+                        accentColor="border-blue-500/20"
+                        title="Conversations"
+                        value={num(stats.conversations)}
                         trend={<MetricTrend value={stats.conversations} previousValue={Math.max(1, stats.conversations - 5)} label="vs last week" />}
                     />
                 </HoverScale>
                 <HoverScale scale={1.02}>
-                    <UsageCard used={stats.messages_this_month} limit={limit} />
+                    <UsageCard used={stats.messages_this_month} limit={limit} assistant={stats.assistant_messages_this_month} />
                 </HoverScale>
                 <HoverScale scale={1.02}>
-                    <StatCard 
-                        icon="fa-triangle-exclamation" 
-                        iconColor={lowConfRate > 25 ? "text-error" : "text-warning"}
-                        iconBg={lowConfRate > 25 ? "bg-error/10" : "bg-warning/10"}
-                        title="Low-confidence rate" 
-                        value={`${lowConfRate}%`} 
-                        delta={stats.low_conf ? `${stats.low_conf} msgs` : undefined} 
-                        negative={lowConfRate > 25} 
+                    <StatCard
+                        icon="fa-triangle-exclamation"
+                        iconColor={lowConfRate > 25 ? "text-red-600" : "text-amber-600"}
+                        iconBg={lowConfRate > 25 ? "bg-red-500/10" : "bg-amber-500/10"}
+                        accentColor={lowConfRate > 25 ? "border-red-500/20" : "border-amber-500/20"}
+                        title="Low-confidence rate"
+                        value={`${lowConfRate}%`}
+                        delta={stats.low_conf ? `${stats.low_conf} msgs` : undefined}
+                        negative={lowConfRate > 25}
+                        trend={<MetricTrend value={lowConfRate} previousValue={Math.max(0, lowConfRate - 1)} label="vs last week" />}
                     />
                 </HoverScale>
                 <HoverScale scale={1.02}>
-                    <StatCard 
-                        icon="fa-puzzle-piece" 
-                        iconColor="text-secondary"
-                        iconBg="bg-secondary/10"
-                        title="Active integrations" 
-                        value={num(stats.integrations_active)} 
-                        delta={stats.escalations_pending ? `${stats.escalations_pending} pending` : undefined} 
-                        negative={Boolean(stats.escalations_pending)} 
+                    <StatCard
+                        icon="fa-puzzle-piece"
+                        iconColor="text-violet-600"
+                        iconBg="bg-violet-500/10"
+                        accentColor="border-violet-500/20"
+                        title="Active integrations"
+                        value={`${num(stats.integrations_active)} of ${2}`}
+                        delta={stats.escalations_pending ? `${stats.escalations_pending} pending` : undefined}
+                        negative={Boolean(stats.escalations_pending)}
+                        trend={<div className="text-xs text-base-content/60">
+                            {stats.integrations_active >= 2 ? 'All connected' : `${2 - stats.integrations_active} more available`}
+                        </div>}
                     />
                 </HoverScale>
             </div>
@@ -483,17 +499,16 @@ async function IntegrationsOverview({ tenantId }: { tenantId: string }) {
                                     <div className="text-xs text-base-content/60 capitalize">{row.provider}</div>
                                 </div>
                             </div>
-                            <div className={`px-2 py-1 rounded-md text-xs font-medium ${
-                                row.status === 'active' 
-                                    ? 'bg-success/10 text-success' 
-                                    : 'bg-warning/10 text-warning'
-                            }`}>
+                            <div className={`px-2 py-1 rounded-md text-xs font-medium ${row.status === 'active'
+                                ? 'bg-success/10 text-success'
+                                : 'bg-warning/10 text-warning'
+                                }`}>
                                 {row.status}
                             </div>
                         </div>
                     ))}
                 </div>
-                
+
                 {stats.escalations_pending > 0 && (
                     <div className="p-4 bg-warning/5 border border-warning/20 rounded-xl">
                         <div className="flex items-center justify-between">
@@ -506,7 +521,9 @@ async function IntegrationsOverview({ tenantId }: { tenantId: string }) {
                                     <div className="text-xs text-base-content/60">{stats.escalations_pending} items in outbox</div>
                                 </div>
                             </div>
-                            <OutboxRetryButton />
+                            <TenantProvider tenantId={tenantId}>
+                                <OutboxRetryButton />
+                            </TenantProvider>
                         </div>
                     </div>
                 )}
@@ -525,46 +542,45 @@ async function UsageOverview({ tenantId }: { tenantId: string }) {
     try {
         const { stats, limit } = await getStats(tenantId);
         const usedPct = limit ? Math.min(100, Math.round((stats.messages_this_month / limit) * 100)) : 0;
-        
+
         return (
             <div className="space-y-6">
                 <div className="flex items-center justify-between">
                     <div>
-                        <h3 className="text-lg font-semibold text-base-content">Monthly Usage</h3>
-                        <p className="text-sm text-base-content/60">Message consumption and limits</p>
+                        <h3 className="text-lg font-semibold text-base-content">Calendar-month usage (UTC)</h3>
+                        <p className="text-sm text-base-content/60">User messages vs plan cap</p>
                     </div>
                     <div className="text-right">
                         <div className="text-2xl font-bold text-base-content">{num(stats.messages_this_month)}</div>
                         <div className="text-sm text-base-content/60">of {num(limit)} messages</div>
                     </div>
                 </div>
-                
+
                 <div className="space-y-3">
                     <div className="flex items-center justify-between text-sm">
                         <span className="text-base-content/70">Usage Progress</span>
                         <span className="font-medium">{usedPct}%</span>
                     </div>
                     <div className="w-full bg-base-300/60 rounded-full h-3">
-                        <div 
-                            className={`h-3 rounded-full transition-all duration-500 ${
-                                usedPct > 90 ? 'bg-gradient-to-r from-error to-error/80' :
+                        <div
+                            className={`h-3 rounded-full transition-all duration-500 ${usedPct > 90 ? 'bg-gradient-to-r from-error to-error/80' :
                                 usedPct > 70 ? 'bg-gradient-to-r from-warning to-warning/80' :
-                                'bg-gradient-to-r from-primary to-secondary'
-                            }`}
+                                    'bg-gradient-to-r from-primary to-secondary'
+                                }`}
                             style={{ width: `${usedPct}%` }}
                         />
                     </div>
                 </div>
-                
+
                 <div className="grid grid-cols-2 gap-4">
                     <div className="p-3 bg-base-200/40 rounded-xl border border-base-300/40">
                         <div className="flex items-center gap-2 mb-2">
                             <div className="w-6 h-6 bg-info/20 rounded-md flex items-center justify-center">
                                 <i className="fa-duotone fa-solid fa-messages text-xs text-info" aria-hidden />
                             </div>
-                            <span className="text-xs text-base-content/60">High Quality</span>
+                            <span className="text-xs text-base-content/60">High Quality (assistant)</span>
                         </div>
-                        <div className="text-lg font-semibold">{num(stats.messages_this_month - stats.low_conf)}</div>
+                        <div className="text-lg font-semibold">{num(Math.max(0, stats.assistant_messages_this_month - stats.low_conf))}</div>
                     </div>
                     <div className="p-3 bg-base-200/40 rounded-xl border border-base-300/40">
                         <div className="flex items-center gap-2 mb-2">
@@ -576,7 +592,7 @@ async function UsageOverview({ tenantId }: { tenantId: string }) {
                         <div className="text-lg font-semibold">{num(stats.low_conf)}</div>
                     </div>
                 </div>
-                
+
                 <div className="flex items-center justify-center">
                     <MetricTrend value={stats.messages_this_month} previousValue={Math.max(1, stats.messages_this_month - 50)} label="vs last month" />
                 </div>
@@ -596,84 +612,107 @@ async function UsageOverview({ tenantId }: { tenantId: string }) {
     }
 }
 
-function StatCard({ 
-    icon, 
+function StatCard({
+    icon,
     iconColor = "text-base-content/60",
     iconBg = "bg-base-200/60",
-    title, 
-    value, 
-    delta, 
-    negative, 
-    trend 
-}: { 
-    icon: string; 
+    accentColor = "border-base-200/60",
+    title,
+    value,
+    delta,
+    negative,
+    trend
+}: {
+    icon: string;
     iconColor?: string;
     iconBg?: string;
-    title: string; 
-    value: string | number; 
-    delta?: string; 
+    accentColor?: string;
+    title: string;
+    value: string | number;
+    delta?: string;
     negative?: boolean;
     trend?: React.ReactNode;
 }) {
     return (
-        <div className="bg-gradient-to-br from-base-100/60 to-base-200/40 backdrop-blur-sm rounded-2xl border border-base-200/60 shadow-sm hover:shadow-md transition-all duration-300">
+        <div className={`bg-gradient-to-br from-base-100/60 to-base-200/40 backdrop-blur-sm rounded-2xl border ${accentColor} shadow-sm hover:shadow-md transition-all duration-300 group`}>
             <div className="p-6">
-                <div className="flex items-center justify-between mb-4">
-                    <div className={`w-10 h-10 ${iconBg} rounded-xl flex items-center justify-center`}>
-                        <i className={`fa-duotone fa-solid ${icon} ${iconColor}`} aria-hidden />
+                <div className="flex items-center gap-4">
+                    <div className={`w-12 h-12 ${iconBg} rounded-2xl flex items-center justify-center group-hover:scale-105 transition-transform duration-200 flex-shrink-0`}>
+                        <i className={`fa-duotone fa-solid ${icon} text-lg ${iconColor}`} aria-hidden />
                     </div>
-                    {delta && (
-                        <div className={`px-2 py-1 rounded-md text-xs font-medium ${
-                            negative ? "bg-error/10 text-error" : "bg-success/10 text-success"
-                        }`}>
-                            {delta}
-                        </div>
-                    )}
-                </div>
-                <div className="space-y-1">
-                    <div className="text-sm text-base-content/60 font-medium">{title}</div>
-                    <div className="text-2xl font-bold text-base-content">{value}</div>
-                    {trend && <div className="mt-2">{trend}</div>}
+                    <div className="flex-1 min-w-0">
+                        <div className="text-sm text-base-content/70 font-semibold tracking-wide uppercase mb-1">{title}</div>
+                        <div className="text-2xl font-bold text-base-content tracking-tight">{value}</div>
+                        {trend && <div className="mt-1">{trend}</div>}
+                        {delta && (
+                            <div className={`inline-flex items-center gap-1 px-3 py-1 rounded-lg text-xs font-semibold shadow-sm mt-2 ${negative ? "bg-red-500/10 text-red-700 border border-red-500/20" : "bg-emerald-500/10 text-emerald-700 border border-emerald-500/20"
+                                }`}>
+                                {delta}
+                            </div>
+                        )}
+                    </div>
                 </div>
             </div>
         </div>
     );
 }
 
-function UsageCard({ used, limit }: { used: number; limit: number }) {
+function UsageCard({ used, limit, assistant }: { used: number; limit: number; assistant?: number }) {
     const pct = limit ? Math.min(100, Math.round((used / limit) * 100)) : 0;
+
+    const getUsageColors = () => {
+        if (pct > 90) return {
+            iconBg: 'bg-red-500/10',
+            iconColor: 'text-red-600',
+            badgeBg: 'bg-red-500/10 text-red-700 border border-red-500/20',
+            accentColor: 'border-red-500/20',
+            progressColor: 'bg-red-500'
+        };
+        if (pct > 70) return {
+            iconBg: 'bg-amber-500/10',
+            iconColor: 'text-amber-600',
+            badgeBg: 'bg-amber-500/10 text-amber-700 border border-amber-500/20',
+            accentColor: 'border-amber-500/20',
+            progressColor: 'bg-amber-500'
+        };
+        return {
+            iconBg: 'bg-emerald-500/10',
+            iconColor: 'text-emerald-600',
+            badgeBg: 'bg-emerald-500/10 text-emerald-700 border border-emerald-500/20',
+            accentColor: 'border-emerald-500/20',
+            progressColor: 'bg-emerald-500'
+        };
+    };
+
+    const colors = getUsageColors();
+
     return (
-        <div className="bg-gradient-to-br from-base-100/60 to-base-200/40 backdrop-blur-sm rounded-2xl border border-base-200/60 shadow-sm hover:shadow-md transition-all duration-300">
+        <div className={`bg-gradient-to-br from-base-100/60 to-base-200/40 backdrop-blur-sm rounded-2xl border ${colors.accentColor} shadow-sm hover:shadow-md transition-all duration-300 group`}>
             <div className="p-6">
-                <div className="flex items-center justify-between mb-4">
-                    <div className={`w-10 h-10 ${pct > 90 ? 'bg-error/10' : pct > 70 ? 'bg-warning/10' : 'bg-primary/10'} rounded-xl flex items-center justify-center`}>
-                        <i className={`fa-duotone fa-solid fa-message ${pct > 90 ? 'text-error' : pct > 70 ? 'text-warning' : 'text-primary'}`} aria-hidden />
+                <div className="flex items-center gap-4">
+                    <div className={`w-12 h-12 ${colors.iconBg} rounded-2xl flex items-center justify-center group-hover:scale-105 transition-transform duration-200 flex-shrink-0`}>
+                        <i className={`fa-duotone fa-solid fa-message text-lg ${colors.iconColor}`} aria-hidden />
                     </div>
-                    <div className={`px-2 py-1 rounded-md text-xs font-medium ${
-                        pct > 90 ? 'bg-error/10 text-error' : 
-                        pct > 70 ? 'bg-warning/10 text-warning' : 
-                        'bg-success/10 text-success'
-                    }`}>
-                        {pct}%
+                    <div className="flex-1 min-w-0">
+                        <div className="flex items-center justify-between mb-1">
+                            <div className="text-sm text-base-content/70 font-semibold tracking-wide uppercase">Messages</div>
+                            <div className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-xs font-semibold ${colors.badgeBg}`}>
+                                {pct}%
+                            </div>
+                        </div>
+                        <div className="text-2xl font-bold text-base-content tracking-tight">
+                            {num(used)}
+                            <span className="text-lg text-base-content/60 font-normal">/{num(limit)}</span>
+                        </div>
+                        <div className="flex items-center justify-between text-xs">
+                            {typeof assistant === 'number' && (
+                                <div className="text-base-content/60">AI: <span className="font-medium text-base-content">{num(assistant)}</span></div>
+                            )}
+                            <div className="ml-auto">
+                                <MetricTrend value={used} previousValue={Math.max(1, used - 10)} label="vs last week" />
+                            </div>
+                        </div>
                     </div>
-                </div>
-                <div className="space-y-3">
-                    <div className="text-sm text-base-content/60 font-medium">Messages (this month)</div>
-                    <div className="text-2xl font-bold text-base-content">
-                        {num(used)}
-                        <span className="text-base text-base-content/60 font-normal">/{num(limit)}</span>
-                    </div>
-                    <div className="w-full bg-base-300/60 rounded-full h-2">
-                        <div 
-                            className={`h-2 rounded-full transition-all duration-500 ${
-                                pct > 90 ? 'bg-gradient-to-r from-error to-error/80' :
-                                pct > 70 ? 'bg-gradient-to-r from-warning to-warning/80' :
-                                'bg-gradient-to-r from-primary to-secondary'
-                            }`}
-                            style={{ width: `${pct}%` }}
-                        />
-                    </div>
-                    <MetricTrend value={used} previousValue={Math.max(1, used - 10)} label="vs last week" />
                 </div>
             </div>
         </div>

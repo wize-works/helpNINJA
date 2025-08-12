@@ -1,0 +1,590 @@
+import { Suspense } from "react";
+import { getTenantIdServer } from "@/lib/auth";
+import { query } from "@/lib/db";
+import { Breadcrumb } from "@/components/ui/breadcrumb";
+import { StatCardSkeleton, ChartSkeleton } from "@/components/ui/skeleton";
+import { AnimatedPage, StaggerContainer, StaggerChild, HoverScale } from "@/components/ui/animated-page";
+import { ConversationTrendsChart, ConfidenceAnalysisChart, ResponseTimeChart } from "./analytics-charts";
+
+export const runtime = 'nodejs'
+
+type AnalyticsData = {
+    totalMessages: number;
+    totalConversations: number;
+    avgConfidence: number;
+    escalationRate: number;
+    avgResponseTime: number;
+    activeIntegrations: number;
+    messagesGrowth: number;
+    conversationsGrowth: number;
+    confidenceGrowth: number;
+    escalationGrowth: number;
+    responseTimeGrowth: number;
+    integrationsGrowth: number;
+    conversationsByDay: ConversationTrendsData[];
+    confidenceDistribution: ConfidenceDistributionData[];
+    responseTimeByHour: ResponseTimeData[];
+    topSources: TopSourcesData[];
+};
+
+type ConversationTrendsData = {
+    date: string;
+    conversations: number;
+    messages: number;
+    escalations: number;
+};
+
+type ConfidenceDistributionData = {
+    range: string;
+    count: number;
+    percentage: number;
+};
+
+type ResponseTimeData = {
+    hour: number;
+    avgResponse: number;
+    volume: number;
+};
+
+type TopSourcesData = {
+    source: string;
+    queries: number;
+    accuracy: number;
+};
+
+async function getAnalyticsData(tenantId: string): Promise<AnalyticsData> {
+    // Current period stats
+    const currentStatsQuery = await query<{
+        total_messages: number;
+        total_conversations: number;
+        avg_confidence: number;
+        escalation_rate: number;
+        active_integrations: number;
+    }>(`
+        SELECT 
+            COUNT(CASE WHEN role = 'user' THEN 1 END)::int as total_messages,
+            COUNT(DISTINCT conversation_id)::int as total_conversations,
+            AVG(CASE WHEN confidence IS NOT NULL THEN confidence ELSE 0 END) as avg_confidence,
+            (COUNT(CASE WHEN confidence < 0.55 THEN 1 END)::float / NULLIF(COUNT(CASE WHEN role = 'assistant' THEN 1 END), 0)) * 100 as escalation_rate,
+            (SELECT COUNT(*)::int FROM public.integrations WHERE tenant_id = $1 AND status = 'active') as active_integrations
+        FROM public.messages 
+        WHERE tenant_id = $1 
+        AND created_at >= NOW() - INTERVAL '30 days'
+    `, [tenantId]);
+
+    // Previous period stats for growth calculation
+    const previousStatsQuery = await query<{
+        prev_messages: number;
+        prev_conversations: number;
+        prev_confidence: number;
+        prev_escalation_rate: number;
+    }>(`
+        SELECT 
+            COUNT(CASE WHEN role = 'user' THEN 1 END)::int as prev_messages,
+            COUNT(DISTINCT conversation_id)::int as prev_conversations,
+            AVG(CASE WHEN confidence IS NOT NULL THEN confidence ELSE 0 END) as prev_confidence,
+            (COUNT(CASE WHEN confidence < 0.55 THEN 1 END)::float / NULLIF(COUNT(CASE WHEN role = 'assistant' THEN 1 END), 0)) * 100 as prev_escalation_rate
+        FROM public.messages 
+        WHERE tenant_id = $1 
+        AND created_at >= NOW() - INTERVAL '60 days'
+        AND created_at < NOW() - INTERVAL '30 days'
+    `, [tenantId]);
+
+    // Conversation trends over time
+    const conversationTrendsQuery = await query<{
+        date: string;
+        conversations: number;
+        messages: number;
+        escalations: number;
+    }>(`
+        SELECT 
+            date_trunc('day', created_at)::date::text as date,
+            COUNT(DISTINCT conversation_id)::int as conversations,
+            COUNT(CASE WHEN role = 'user' THEN 1 END)::int as messages,
+            COUNT(CASE WHEN confidence < 0.55 THEN 1 END)::int as escalations
+        FROM public.messages 
+        WHERE tenant_id = $1 
+        AND created_at >= NOW() - INTERVAL '30 days'
+        GROUP BY date_trunc('day', created_at)::date
+        ORDER BY date
+    `, [tenantId]);
+
+    // Confidence score distribution
+    const confidenceQuery = await query<{
+        range: string;
+        count: number;
+    }>(`
+        SELECT 
+            CASE 
+                WHEN confidence >= 0.8 THEN 'High (80-100%)'
+                WHEN confidence >= 0.6 THEN 'Medium (60-80%)'
+                WHEN confidence >= 0.4 THEN 'Low (40-60%)'
+                ELSE 'Very Low (0-40%)'
+            END as range,
+            COUNT(*)::int as count
+        FROM public.messages 
+        WHERE tenant_id = $1 
+        AND confidence IS NOT NULL
+        AND created_at >= NOW() - INTERVAL '30 days'
+        GROUP BY 
+            CASE 
+                WHEN confidence >= 0.8 THEN 'High (80-100%)'
+                WHEN confidence >= 0.6 THEN 'Medium (60-80%)'
+                WHEN confidence >= 0.4 THEN 'Low (40-60%)'
+                ELSE 'Very Low (0-40%)'
+            END
+        ORDER BY 
+            MIN(CASE 
+                WHEN confidence >= 0.8 THEN 4
+                WHEN confidence >= 0.6 THEN 3
+                WHEN confidence >= 0.4 THEN 2
+                ELSE 1
+            END) DESC
+    `, [tenantId]);
+
+    // Response time by hour (simplified - using mock data for now)
+    const responseTimeQuery = await query<{
+        hour: number;
+        volume: number;
+    }>(`
+        SELECT 
+            EXTRACT(hour FROM created_at)::int as hour,
+            COUNT(*)::int as volume
+        FROM public.messages 
+        WHERE tenant_id = $1 
+        AND created_at >= NOW() - INTERVAL '7 days'
+        GROUP BY EXTRACT(hour FROM created_at)
+        ORDER BY hour
+    `, [tenantId]);
+
+    // Top performing sources
+    const sourcesQuery = await query<{
+        source: string;
+        queries: number;
+        avg_confidence: number;
+    }>(`
+        SELECT 
+            d.title as source,
+            COUNT(m.id)::int as queries,
+            AVG(m.confidence) as avg_confidence
+        FROM public.messages m
+        JOIN public.documents d ON d.tenant_id = m.tenant_id
+        WHERE m.tenant_id = $1 
+        AND m.confidence IS NOT NULL
+        AND m.created_at >= NOW() - INTERVAL '30 days'
+        GROUP BY d.id, d.title
+        ORDER BY queries DESC
+        LIMIT 10
+    `, [tenantId]);
+
+    // Calculate trends (comparing current vs previous period)
+    const calculateGrowth = (current: number, previous: number) => {
+        if (previous === 0) return current > 0 ? 100 : 0;
+        return ((current - previous) / previous) * 100;
+    };
+
+    const currData = currentStatsQuery.rows[0] || {
+        total_messages: 0,
+        total_conversations: 0,
+        avg_confidence: 0,
+        escalation_rate: 0,
+        active_integrations: 0
+    };
+
+    const prevData = previousStatsQuery.rows[0] || {
+        prev_messages: 0,
+        prev_conversations: 0,
+        prev_confidence: 0,
+        prev_escalation_rate: 0
+    };
+
+    // Process conversation trends data to fill gaps
+    const last30Days = Array.from({ length: 30 }, (_, i) => {
+        const date = new Date();
+        date.setDate(date.getDate() - (29 - i));
+        return date.toISOString().split('T')[0];
+    });
+
+    const conversationsByDay = last30Days.map(date => {
+        const data = conversationTrendsQuery.rows.find(row => row.date === date);
+        return {
+            date,
+            conversations: data?.conversations || 0,
+            messages: data?.messages || 0,
+            escalations: data?.escalations || 0
+        };
+    });
+
+    // Process confidence distribution
+    const totalConfidenceRecords = confidenceQuery.rows.reduce((sum, row) => sum + row.count, 0);
+    const confidenceDistribution = confidenceQuery.rows.map(row => ({
+        range: row.range,
+        count: row.count,
+        percentage: totalConfidenceRecords > 0 ? Math.round((row.count / totalConfidenceRecords) * 100) : 0
+    }));
+
+    // Process response time data with mock response times
+    const responseTimeByHour = Array.from({ length: 24 }, (_, hour) => {
+        const data = responseTimeQuery.rows.find(row => row.hour === hour);
+        const volume = data?.volume || 0;
+        // Mock response time based on realistic patterns (higher during business hours)
+        const baseResponseTime = hour >= 9 && hour <= 17 ? 2.5 : 1.8;
+        const variation = Math.random() * 0.8 - 0.4; // ±0.4s variation
+        const avgResponse = volume > 0 ? Math.max(1.0, baseResponseTime + variation) : 0;
+
+        return {
+            hour,
+            avgResponse: Math.round(avgResponse * 10) / 10, // Round to 1 decimal
+            volume
+        };
+    });
+
+    // Process top sources data
+    const topSources = sourcesQuery.rows.map(row => ({
+        source: row.source || 'Unknown Source',
+        queries: row.queries,
+        accuracy: Math.round((row.avg_confidence || 0) * 100)
+    }));
+
+    return {
+        totalMessages: currData.total_messages,
+        totalConversations: currData.total_conversations,
+        avgConfidence: Math.round((currData.avg_confidence || 0) * 100),
+        escalationRate: Math.round(currData.escalation_rate || 0),
+        avgResponseTime: 2.3, // Mock average response time
+        activeIntegrations: currData.active_integrations,
+        messagesGrowth: calculateGrowth(currData.total_messages, prevData.prev_messages),
+        conversationsGrowth: calculateGrowth(currData.total_conversations, prevData.prev_conversations),
+        confidenceGrowth: calculateGrowth(
+            (currData.avg_confidence || 0) * 100,
+            (prevData.prev_confidence || 0) * 100
+        ),
+        escalationGrowth: calculateGrowth(
+            currData.escalation_rate || 0,
+            prevData.prev_escalation_rate || 0
+        ),
+        responseTimeGrowth: -5.2, // Mock improvement
+        integrationsGrowth: 0, // Assuming stable integration count
+        conversationsByDay,
+        confidenceDistribution,
+        responseTimeByHour,
+        topSources
+    };
+}
+
+export default async function AnalyticsPage() {
+    const tenantId = await getTenantIdServer({ allowEnvFallback: true });
+
+    const breadcrumbItems = [
+        { label: "Dashboard", href: "/dashboard", icon: "fa-gauge-high" },
+        { label: "Analytics", icon: "fa-chart-line" }
+    ];
+
+    return (
+        <AnimatedPage>
+            <div className="space-y-8">
+                {/* Breadcrumb */}
+                <StaggerContainer>
+                    <StaggerChild>
+                        <Breadcrumb items={breadcrumbItems} />
+                    </StaggerChild>
+                </StaggerContainer>
+
+                {/* Header */}
+                <StaggerContainer>
+                    <StaggerChild>
+                        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+                            <div>
+                                <h1 className="text-3xl font-bold text-base-content tracking-tight">Analytics</h1>
+                                <p className="text-base-content/60 mt-2">Comprehensive insights into your AI support performance</p>
+                            </div>
+                            <div className="flex items-center gap-3">
+                                <HoverScale scale={1.02}>
+                                    <button className="flex items-center gap-2 px-4 py-2 bg-base-200/60 hover:bg-base-200 border border-base-300/40 rounded-lg text-sm transition-all duration-200">
+                                        <i className="fa-duotone fa-solid fa-download text-xs" aria-hidden />
+                                        Export Report
+                                    </button>
+                                </HoverScale>
+                                <HoverScale scale={1.02}>
+                                    <button className="flex items-center gap-2 px-4 py-2 bg-primary text-primary-content rounded-lg text-sm font-medium shadow-sm transition-all duration-200">
+                                        <i className="fa-duotone fa-solid fa-calendar text-xs" aria-hidden />
+                                        Last 30 Days
+                                    </button>
+                                </HoverScale>
+                            </div>
+                        </div>
+                    </StaggerChild>
+                </StaggerContainer>
+
+                {/* Content */}
+                <Suspense fallback={<AnalyticsSkeleton />}>
+                    <AnalyticsContent tenantId={tenantId} />
+                </Suspense>
+            </div>
+        </AnimatedPage>
+    );
+}
+
+async function AnalyticsContent({ tenantId }: { tenantId: string }) {
+    const data = await getAnalyticsData(tenantId);
+
+    return (
+        <div className="space-y-8">
+            {/* Overview Metrics */}
+            <div>
+                <AnalyticsOverview data={data} />
+            </div>
+
+            {/* Charts Grid */}
+            <div className="grid grid-cols-1 xl:grid-cols-2 gap-8">
+                <StaggerChild>
+                    <ConversationTrendsCard data={data.conversationsByDay} />
+                </StaggerChild>
+                <StaggerChild>
+                    <ConfidenceAnalysisCard data={data.confidenceDistribution} />
+                </StaggerChild>
+            </div>
+
+            <div className="grid grid-cols-1 xl:grid-cols-3 gap-8">
+                <div className="xl:col-span-2">
+                    <StaggerChild>
+                        <ResponseTimeCard data={data.responseTimeByHour} />
+                    </StaggerChild>
+                </div>
+                <div>
+                    <StaggerChild>
+                        <TopSourcesCard data={data.topSources} />
+                    </StaggerChild>
+                </div>
+            </div>
+        </div>
+    );
+}
+
+function AnalyticsSkeleton() {
+    return (
+        <div className="space-y-8">
+            {/* Overview metrics skeleton */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-6">
+                {Array.from({ length: 6 }, (_, i) => <StatCardSkeleton key={i} />)}
+            </div>
+
+            {/* Charts skeleton */}
+            <div className="grid grid-cols-1 xl:grid-cols-2 gap-8">
+                <ChartSkeleton />
+                <ChartSkeleton />
+            </div>
+
+            <div className="grid grid-cols-1 xl:grid-cols-3 gap-8">
+                <div className="xl:col-span-2">
+                    <ChartSkeleton />
+                </div>
+                <ChartSkeleton />
+            </div>
+        </div>
+    );
+}
+
+function AnalyticsOverview({ data }: { data: AnalyticsData }) {
+    const metrics = [
+        {
+            label: "Total Messages",
+            value: data.totalMessages.toLocaleString(),
+            trend: data.messagesGrowth,
+            icon: "fa-messages",
+            color: "blue"
+        },
+        {
+            label: "Conversations",
+            value: data.totalConversations.toLocaleString(),
+            trend: data.conversationsGrowth,
+            icon: "fa-comments",
+            color: "green"
+        },
+        {
+            label: "Avg Confidence",
+            value: `${data.avgConfidence}%`,
+            trend: data.confidenceGrowth,
+            icon: "fa-gauge-high",
+            color: "purple"
+        },
+        {
+            label: "Escalation Rate",
+            value: `${data.escalationRate}%`,
+            trend: data.escalationGrowth,
+            icon: "fa-triangle-exclamation",
+            color: "orange"
+        },
+        {
+            label: "Response Time",
+            value: `${data.avgResponseTime}s`,
+            trend: data.responseTimeGrowth,
+            icon: "fa-clock",
+            color: "teal"
+        },
+        {
+            label: "Active Integrations",
+            value: data.activeIntegrations.toString(),
+            trend: data.integrationsGrowth,
+            icon: "fa-puzzle-piece",
+            color: "pink"
+        }
+    ];
+
+    const getColorClasses = (color: string) => {
+        const colors = {
+            blue: "bg-blue-500/10 text-blue-600 border-blue-500/20",
+            green: "bg-emerald-500/10 text-emerald-600 border-emerald-500/20",
+            purple: "bg-purple-500/10 text-purple-600 border-purple-500/20",
+            orange: "bg-orange-500/10 text-orange-600 border-orange-500/20",
+            teal: "bg-teal-500/10 text-teal-600 border-teal-500/20",
+            pink: "bg-pink-500/10 text-pink-600 border-pink-500/20"
+        };
+        return colors[color as keyof typeof colors] || colors.blue;
+    };
+
+    return (
+        <StaggerContainer>
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+                {metrics.map((metric) => (
+                    <StaggerChild key={metric.label}>
+                        <HoverScale scale={1.02}>
+                            <div className={`bg-gradient-to-br from-base-100/60 to-base-200/40 backdrop-blur-sm rounded-2xl border ${getColorClasses(metric.color).split(' ')[2]} shadow-sm hover:shadow-md transition-all duration-300 p-6 group`}>
+                                <div className="flex items-center gap-4">
+                                    <div className={`w-12 h-12 ${getColorClasses(metric.color).split(' ')[0]} rounded-2xl flex items-center justify-center group-hover:scale-105 transition-transform duration-200 flex-shrink-0`}>
+                                        <i className={`fa-duotone fa-solid ${metric.icon} text-lg ${getColorClasses(metric.color).split(' ')[1]}`} aria-hidden />
+                                    </div>
+                                    <div className="flex-1 min-w-0">
+                                        <div className="text-sm text-base-content/70 font-semibold tracking-wide uppercase mb-1">{metric.label}</div>
+                                        <div className="text-2xl font-bold text-base-content tracking-tight">{metric.value}</div>
+                                        <div className={`flex items-center gap-1 text-xs mt-1 ${
+                                            metric.trend > 0 ? 'text-emerald-600' :
+                                            metric.trend < 0 ? 'text-red-600' : 'text-base-content/60'
+                                        }`}>
+                                            {metric.trend > 0 && <i className="fa-duotone fa-solid fa-arrow-trend-up" aria-hidden />}
+                                            {metric.trend < 0 && <i className="fa-duotone fa-solid fa-arrow-trend-down" aria-hidden />}
+                                            {metric.trend === 0 && <i className="fa-duotone fa-solid fa-minus" aria-hidden />}
+                                            <span className="font-semibold">{Math.abs(metric.trend).toFixed(1)}%</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </HoverScale>
+                    </StaggerChild>
+                ))}
+            </div>
+        </StaggerContainer>
+    );
+}
+
+function ConversationTrendsCard({ data }: { data: ConversationTrendsData[] }) {
+    return (
+        <div className="bg-gradient-to-br from-base-100/60 to-base-200/40 backdrop-blur-sm rounded-2xl border border-base-200/60 shadow-sm hover:shadow-md transition-all duration-300">
+            <div className="p-6">
+                <div className="flex items-center justify-between mb-6">
+                    <div>
+                        <h3 className="text-lg font-semibold text-base-content">Conversation Trends</h3>
+                        <p className="text-sm text-base-content/60">Daily conversations, messages, and escalations</p>
+                    </div>
+                    <div className="w-10 h-10 bg-blue-500/10 rounded-xl flex items-center justify-center">
+                        <i className="fa-duotone fa-solid fa-chart-line text-lg text-blue-600" aria-hidden />
+                    </div>
+                </div>
+                <ConversationTrendsChart data={data} />
+            </div>
+        </div>
+    );
+}
+
+function ConfidenceAnalysisCard({ data }: { data: ConfidenceDistributionData[] }) {
+    return (
+        <div className="bg-gradient-to-br from-base-100/60 to-base-200/40 backdrop-blur-sm rounded-2xl border border-base-200/60 shadow-sm hover:shadow-md transition-all duration-300">
+            <div className="p-6">
+                <div className="flex items-center justify-between mb-6">
+                    <div>
+                        <h3 className="text-lg font-semibold text-base-content">Confidence Analysis</h3>
+                        <p className="text-sm text-base-content/60">Distribution of AI response confidence scores</p>
+                    </div>
+                    <div className="w-10 h-10 bg-purple-500/10 rounded-xl flex items-center justify-center">
+                        <i className="fa-duotone fa-solid fa-chart-pie text-lg text-purple-600" aria-hidden />
+                    </div>
+                </div>
+                <ConfidenceAnalysisChart data={data} />
+            </div>
+        </div>
+    );
+}
+
+function ResponseTimeCard({ data }: { data: ResponseTimeData[] }) {
+    return (
+        <div className="bg-gradient-to-br from-base-100/60 to-base-200/40 backdrop-blur-sm rounded-2xl border border-base-200/60 shadow-sm hover:shadow-md transition-all duration-300">
+            <div className="p-6">
+                <div className="flex items-center justify-between mb-6">
+                    <div>
+                        <h3 className="text-lg font-semibold text-base-content">Response Time Analysis</h3>
+                        <p className="text-sm text-base-content/60">Average response times throughout the day</p>
+                    </div>
+                    <div className="w-10 h-10 bg-teal-500/10 rounded-xl flex items-center justify-center">
+                        <i className="fa-duotone fa-solid fa-clock text-lg text-teal-600" aria-hidden />
+                    </div>
+                </div>
+                <ResponseTimeChart data={data} />
+            </div>
+        </div>
+    );
+}
+
+function TopSourcesCard({ data }: { data: TopSourcesData[] }) {
+    return (
+        <div className="bg-gradient-to-br from-base-100/60 to-base-200/40 backdrop-blur-sm rounded-2xl border border-base-200/60 shadow-sm hover:shadow-md transition-all duration-300">
+            <div className="p-6">
+                <div className="flex items-center justify-between mb-6">
+                    <div>
+                        <h3 className="text-lg font-semibold text-base-content">Top Knowledge Sources</h3>
+                        <p className="text-sm text-base-content/60">Most queried content sources</p>
+                    </div>
+                    <div className="w-10 h-10 bg-orange-500/10 rounded-xl flex items-center justify-center">
+                        <i className="fa-duotone fa-solid fa-ranking-star text-lg text-orange-600" aria-hidden />
+                    </div>
+                </div>
+                
+                {data.length === 0 ? (
+                    <div className="text-center py-8">
+                        <div className="w-12 h-12 bg-base-200/60 rounded-xl flex items-center justify-center mx-auto mb-4">
+                            <i className="fa-duotone fa-solid fa-database text-lg text-base-content/40" aria-hidden />
+                        </div>
+                        <p className="text-sm text-base-content/60">No source data available</p>
+                        <p className="text-xs text-base-content/40 mt-1">Ingest some documents to see analytics</p>
+                    </div>
+                ) : (
+                    <div className="space-y-4">
+                        {data.slice(0, 5).map((source, index) => (
+                            <div key={source.source} className="flex items-center justify-between p-3 bg-base-200/30 rounded-xl hover:bg-base-200/50 transition-colors">
+                                <div className="flex items-center gap-3 min-w-0 flex-1">
+                                    <div className="w-8 h-8 bg-primary/10 rounded-lg flex items-center justify-center flex-shrink-0">
+                                        <span className="text-sm font-bold text-primary">#{index + 1}</span>
+                                    </div>
+                                    <div className="min-w-0 flex-1">
+                                        <div className="font-medium text-sm text-base-content truncate" title={source.source}>
+                                            {source.source}
+                                        </div>
+                                        <div className="text-xs text-base-content/60">
+                                            {source.queries} queries
+                                        </div>
+                                    </div>
+                                </div>
+                                <div className={`px-2 py-1 rounded-lg text-xs font-semibold ${
+                                    source.accuracy >= 80 ? 'bg-emerald-500/10 text-emerald-700 border border-emerald-500/20' :
+                                    source.accuracy >= 60 ? 'bg-amber-500/10 text-amber-700 border border-amber-500/20' :
+                                    'bg-red-500/10 text-red-700 border border-red-500/20'
+                                }`}>
+                                    {source.accuracy}%
+                                </div>
+                            </div>
+                        ))}
+                    </div>
+                )}
+            </div>
+        </div>
+    );
+}
