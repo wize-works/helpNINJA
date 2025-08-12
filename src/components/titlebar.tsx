@@ -1,76 +1,228 @@
 import Link from "next/link";
 import ThemeToggle from "./theme-toggle";
 import Image from "next/image";
+import { HoverScale, SlideIn } from "./ui/animated-page";
 
 export default function Titlebar() {
     return (
-        <header className="navbar h-16 sticky top-0 z-50 bg-base-100/80 supports-[backdrop-filter]:bg-base-100/60 backdrop-blur border-b border-base-200">
-            <div className="w-full max-w-7xl mx-auto px-3 sm:px-4 lg:px-6 flex items-center gap-3">
-                {/* Left: brand + mobile sidebar toggle */}
-                <div className="navbar-start gap-2">
-                    {/* Mobile sidebar toggle (works with a DaisyUI drawer if present) */}
-                    <label htmlFor="hn-drawer" className="btn btn-ghost btn-square lg:hidden" aria-label="Open menu">
-                        <i className="fa-duotone fa-solid fa-bars text-lg" aria-hidden />
-                    </label>
-                    <Link href="/" className="btn btn-ghost normal-case text-xl">
-                        <span className="inline-flex items-center">
-                            <Image src="/logo-black.svg" alt="HelpNinja Logo" width={32} height={32} className="mr-2" />
-                            <span className="">
-                                help
-                            </span>
-                            <span className="text-primary font-bold">NINJA</span>
-                        </span>
-                    </Link>
-                </div>
+        <header className="sticky top-0 z-50 bg-base-100/60 backdrop-blur-sm border-b border-base-200/60">
+            <div className="w-full px-4 sm:px-6">
+                <div className="flex items-center justify-between h-16">
+                    {/* Left: Brand + Mobile Menu */}
+                    <div className="flex items-center gap-3">
+                        {/* Mobile sidebar toggle */}
+                        <HoverScale className="lg:hidden" scale={1.05}>
+                            <label
+                                htmlFor="hn-drawer"
+                                className="w-9 h-9 rounded-lg bg-base-200/60 hover:bg-base-200 border border-base-300/40 flex items-center justify-center transition-all duration-200"
+                                aria-label="Open navigation menu"
+                            >
+                                <i className="fa-duotone fa-solid fa-bars text-sm text-base-content/80" aria-hidden />
+                            </label>
+                        </HoverScale>
 
-                {/* Center: main nav (desktop) */}
-                <div className="navbar-center hidden md:flex">
-                    <nav className="menu menu-horizontal px-1">
-                        <li>
-                            <Link href="/dashboard" className="font-medium">
-                                <i className="fa-duotone fa-solid fa-gauge-high mr-2" aria-hidden />
-                                Dashboard
-                            </Link>
-                        </li>
-                        <li>
-                            <Link href="/docs" className="font-medium">
-                                <i className="fa-duotone fa-solid fa-book mr-2" aria-hidden />
-                                Docs
-                            </Link>
-                        </li>
-                        <li>
-                            <Link href="/account" className="font-medium">
-                                <i className="fa-duotone fa-solid fa-user mr-2" aria-hidden />
-                                Account
-                            </Link>
-                        </li>
-                    </nav>
-                </div>
-
-                {/* Right: utilities */}
-                <div className="navbar-end ml-auto flex items-center gap-2">
-                    <div className="hidden md:block">
-                        <label className="input input-bordered input-sm flex items-center gap-2">
-                            <i className="fa-duotone fa-solid fa-magnifying-glass" aria-hidden />
-                            <input type="text" className="grow" placeholder="Search…" />
-                        </label>
+                        {/* Brand */}
+                        <SlideIn direction="right" delay={0.1}>
+                            <HoverScale scale={1.01}>
+                                <Link href="/" className="flex items-center gap-3 py-1.5 px-2 rounded-xl hover:bg-base-200/40 transition-all duration-200 group">
+                                    <div className="relative">
+                                        <div className="w-8 h-8 bg-gradient-to-br from-primary/20 to-secondary/20 rounded-lg flex items-center justify-center border border-primary/10">
+                                            <Image
+                                                src="/logo.svg"
+                                                alt="HelpNinja Logo"
+                                                width={20}
+                                                height={20}
+                                                className="w-5 h-5 group-hover:scale-110 transition-transform duration-200"
+                                            />
+                                        </div>
+                                    </div>
+                                    <div className="hidden sm:block">
+                                        <div className="text-base font-semibold tracking-tight text-base-content">
+                                            help<span className="text-primary font-bold">NINJA</span>
+                                        </div>
+                                        <div className="text-xs text-base-content/50 -mt-0.5">
+                                            AI Support Platform
+                                        </div>
+                                    </div>
+                                </Link>
+                            </HoverScale>
+                        </SlideIn>
                     </div>
-                    <button className="btn btn-ghost btn-circle hidden sm:inline-flex" aria-label="Notifications">
-                        <i className="fa-duotone fa-solid fa-bell" aria-hidden />
-                    </button>
-                    <div className="dropdown dropdown-end">
-                        <div tabIndex={0} role="button" className="btn btn-ghost btn-circle avatar placeholder">
-                            <div className="bg-neutral text-neutral-content w-8 rounded-full">
-                                <span className="text-xs">HN</span>
+
+                    {/* Center: Global Search */}
+                    <div className="flex-1 max-w-xl mx-8 hidden md:block">
+                        <SlideIn delay={0.2}>
+                            <HoverScale scale={1.01}>
+                                <div className="relative group">
+                                    <div className="absolute inset-y-0 left-3 flex items-center pointer-events-none">
+                                        <i className="fa-duotone fa-solid fa-magnifying-glass text-sm text-base-content/40 group-hover:text-base-content/60 transition-colors" aria-hidden />
+                                    </div>
+                                    <input
+                                        type="search"
+                                        placeholder="Search conversations, documents..."
+                                        className="w-full h-10 pl-10 pr-16 bg-base-200/40 border border-base-300/40 rounded-xl text-sm placeholder:text-base-content/40 focus:bg-base-100/80 focus:border-primary/40 focus:outline-none focus:ring-2 focus:ring-primary/20 transition-all duration-200"
+                                        aria-label="Global search"
+                                    />
+                                    <div className="absolute inset-y-0 right-3 flex items-center pointer-events-none">
+                                        <div className="flex items-center gap-1">
+                                            <kbd className="kbd kbd-xs bg-base-300/60 text-base-content/50 border border-base-300/60">⌘</kbd>
+                                            <kbd className="kbd kbd-xs bg-base-300/60 text-base-content/50 border border-base-300/60">K</kbd>
+                                        </div>
+                                    </div>
+                                </div>
+                            </HoverScale>
+                        </SlideIn>
+                    </div>
+
+                    {/* Right: Actions */}
+                    <div className="flex items-center gap-2">
+                        <SlideIn direction="left" delay={0.3}>
+                            <div className="flex items-center gap-1">
+                                {/* Quick Create */}
+                                <HoverScale scale={1.05}>
+                                    <button
+                                        className="w-9 h-9 rounded-lg bg-primary/10 hover:bg-primary/20 border border-primary/20 flex items-center justify-center transition-all duration-200 group"
+                                        aria-label="Quick create"
+                                        title="Quick create"
+                                    >
+                                        <i className="fa-duotone fa-solid fa-plus text-sm text-primary group-hover:text-primary/80" aria-hidden />
+                                    </button>
+                                </HoverScale>
+
+                                {/* Notifications */}
+                                <HoverScale scale={1.05}>
+                                    <button
+                                        className="relative w-9 h-9 rounded-lg bg-base-200/60 hover:bg-base-200 border border-base-300/40 flex items-center justify-center transition-all duration-200 group"
+                                        aria-label="Notifications"
+                                        title="Notifications"
+                                    >
+                                        <i className="fa-duotone fa-solid fa-bell text-sm text-base-content/70 group-hover:text-base-content" aria-hidden />
+                                        {/* Notification indicator */}
+                                        <div className="absolute -top-1 -right-1 w-2.5 h-2.5 bg-error rounded-full border border-base-100"></div>
+                                    </button>
+                                </HoverScale>
+
+                                {/* Help */}
+                                <HoverScale scale={1.05}>
+                                    <button
+                                        className="hidden sm:flex w-9 h-9 rounded-lg bg-base-200/60 hover:bg-base-200 border border-base-300/40 items-center justify-center transition-all duration-200 group"
+                                        aria-label="Help & Support"
+                                        title="Help & Support"
+                                    >
+                                        <i className="fa-duotone fa-solid fa-circle-question text-sm text-base-content/70 group-hover:text-base-content" aria-hidden />
+                                    </button>
+                                </HoverScale>
+
+                                {/* Theme Toggle */}
+                                <div className="ml-1">
+                                    <ThemeToggle />
+                                </div>
+
+                                {/* User Menu */}
+                                <div className="dropdown dropdown-end ml-2">
+                                    <HoverScale scale={1.02}>
+                                        <div
+                                            tabIndex={0}
+                                            role="button"
+                                            className="flex items-center gap-2.5 pl-2 pr-3 py-1.5 rounded-xl bg-base-200/40 hover:bg-base-200/60 border border-base-300/40 transition-all duration-200 group"
+                                            aria-label="User menu"
+                                        >
+                                            <div className="avatar placeholder">
+                                                <div className="bg-gradient-to-br from-primary to-secondary text-primary-content w-7 h-7 rounded-lg flex items-center justify-center shadow-sm">
+                                                    <span className="text-xs font-semibold">HN</span>
+                                                </div>
+                                            </div>
+                                            <div className="hidden sm:block text-left">
+                                                <div className="text-sm font-medium text-base-content">Demo User</div>
+                                                <div className="text-xs text-base-content/50 -mt-0.5">Pro Plan</div>
+                                            </div>
+                                            <i className="fa-duotone fa-solid fa-chevron-down text-xs text-base-content/50 group-hover:text-base-content/70 transition-colors" aria-hidden />
+                                        </div>
+                                    </HoverScale>
+                                    <ul
+                                        tabIndex={0}
+                                        className="dropdown-content menu bg-base-100/95 backdrop-blur-sm rounded-2xl shadow-xl border border-base-200/60 w-72 p-3 mt-2"
+                                    >
+                                        {/* User Info Header */}
+                                        <li className="mb-2">
+                                            <div className="flex items-center gap-3 p-3 bg-gradient-to-r from-primary/5 to-secondary/5 rounded-xl border border-primary/10">
+                                                <div className="avatar placeholder">
+                                                    <div className="bg-gradient-to-br from-primary to-secondary text-primary-content w-10 h-10 rounded-xl flex items-center justify-center">
+                                                        <span className="text-sm font-semibold">HN</span>
+                                                    </div>
+                                                </div>
+                                                <div className="flex-1">
+                                                    <div className="font-semibold text-base-content">Demo User</div>
+                                                    <div className="text-sm text-base-content/60">demo@helpninja.ai</div>
+                                                    <div className="text-xs text-primary font-medium">Pro Plan • Active</div>
+                                                </div>
+                                            </div>
+                                        </li>
+
+                                        {/* Account Section */}
+                                        <li className="menu-title text-xs font-semibold text-base-content/50 px-3 py-2 uppercase tracking-wide">
+                                            Account
+                                        </li>
+                                        <li>
+                                            <Link href="/account" className="flex items-center gap-3 py-2.5 px-3 rounded-xl hover:bg-base-200/60 transition-colors">
+                                                <i className="fa-duotone fa-solid fa-user text-base text-base-content/60" aria-hidden />
+                                                <div>
+                                                    <div className="font-medium">Profile Settings</div>
+                                                    <div className="text-xs text-base-content/50">Manage your account</div>
+                                                </div>
+                                            </Link>
+                                        </li>
+                                        <li>
+                                            <Link href="/dashboard/billing" className="flex items-center gap-3 py-2.5 px-3 rounded-xl hover:bg-base-200/60 transition-colors">
+                                                <i className="fa-duotone fa-solid fa-credit-card text-base text-base-content/60" aria-hidden />
+                                                <div>
+                                                    <div className="font-medium">Billing & Plans</div>
+                                                    <div className="text-xs text-base-content/50">Upgrade or manage subscription</div>
+                                                </div>
+                                            </Link>
+                                        </li>
+                                        <li>
+                                            <Link href="/dashboard/settings" className="flex items-center gap-3 py-2.5 px-3 rounded-xl hover:bg-base-200/60 transition-colors">
+                                                <i className="fa-duotone fa-solid fa-sliders text-base text-base-content/60" aria-hidden />
+                                                <div>
+                                                    <div className="font-medium">Preferences</div>
+                                                    <div className="text-xs text-base-content/50">Customize your experience</div>
+                                                </div>
+                                            </Link>
+                                        </li>
+                                        
+                                        <div className="divider my-2"></div>
+                                        
+                                        {/* Resources Section */}
+                                        <li className="menu-title text-xs font-semibold text-base-content/50 px-3 py-2 uppercase tracking-wide">
+                                            Resources
+                                        </li>
+                                        <li>
+                                            <a href="/docs" className="flex items-center gap-3 py-2.5 px-3 rounded-xl hover:bg-base-200/60 transition-colors">
+                                                <i className="fa-duotone fa-solid fa-book-open text-base text-base-content/60" aria-hidden />
+                                                <span>Documentation</span>
+                                            </a>
+                                        </li>
+                                        <li>
+                                            <a href="/support" className="flex items-center gap-3 py-2.5 px-3 rounded-xl hover:bg-base-200/60 transition-colors">
+                                                <i className="fa-duotone fa-solid fa-headset text-base text-base-content/60" aria-hidden />
+                                                <span>Get Support</span>
+                                            </a>
+                                        </li>
+                                        
+                                        <div className="divider my-2"></div>
+                                        
+                                        <li>
+                                            <button className="flex items-center gap-3 py-2.5 px-3 rounded-xl text-error hover:bg-error/10 transition-colors w-full">
+                                                <i className="fa-duotone fa-solid fa-arrow-right-from-bracket text-base" aria-hidden />
+                                                <span>Sign Out</span>
+                                            </button>
+                                        </li>
+                                    </ul>
+                                </div>
                             </div>
-                        </div>
-                        <ul tabIndex={0} className="menu menu-sm dropdown-content mt-3 z-[1] p-2 shadow bg-base-100 rounded-box w-52">
-                            <li><Link href="/account">Profile</Link></li>
-                            <li><Link href="/settings">Settings</Link></li>
-                            <li><a>Sign out</a></li>
-                        </ul>
+                        </SlideIn>
                     </div>
-                    <ThemeToggle />
                 </div>
             </div>
         </header>

@@ -1,6 +1,7 @@
 import { getTenantIdServer } from "@/lib/auth";
 import { query } from "@/lib/db";
 import ChatWidgetPanel from "@/components/chat-widget-panel";
+import { Breadcrumb } from "@/components/ui/breadcrumb";
 
 export const runtime = 'nodejs'
 
@@ -21,8 +22,16 @@ async function getTenant(tenantId: string) {
 export default async function SettingsPage() {
     const tenantId = await getTenantIdServer({ allowEnvFallback: true })
     const t = await getTenant(tenantId)
+    
+    const breadcrumbItems = [
+        { label: "Dashboard", href: "/dashboard", icon: "fa-gauge-high" },
+        { label: "Settings", icon: "fa-sliders" }
+    ];
+    
     return (
         <div className="space-y-6">
+            <Breadcrumb items={breadcrumbItems} />
+            
             <h1 className="text-2xl font-bold">Settings</h1>
 
             <div className="card bg-base-100 border border-base-300">

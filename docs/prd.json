@@ -1,0 +1,78 @@
+{
+    "product": "HelpNinja AI Agent",
+    "version": "1.0",
+    "lastUpdated": "2024-06-09",
+    "overview": "HelpNinja is an embeddable AI chat widget for SaaS and support sites, providing instant answers via RAG search on tenant-ingested docs, with Stripe billing, usage limits, and pluggable escalation (Slack/Email).",
+    "goals": [
+        "Reduce support workload by automating answers to common questions.",
+        "Enable tenants to ingest and search their own documentation.",
+        "Provide seamless escalation to human support via integrations.",
+        "Support flexible billing and usage limits per tenant."
+    ],
+    "features": [
+        {
+            "name": "AI Chat Widget",
+            "description": "Embeddable chat widget served via Edge API, supporting text and voice input, session tracking, and tenant scoping."
+        },
+        {
+            "name": "RAG Search",
+            "description": "Hybrid retrieval (vector + lexical) over tenant-ingested docs for accurate, context-aware answers."
+        },
+        {
+            "name": "Document Ingestion",
+            "description": "Crawls, chunks, and embeds tenant docs/pages; supports re-ingestion and normalization."
+        },
+        {
+            "name": "Billing & Usage Limits",
+            "description": "Stripe integration for plan management, usage metering, and gating premium features."
+        },
+        {
+            "name": "Escalation Integrations",
+            "description": "Pluggable escalation to Slack, Email, or other channels when AI confidence is low or on request."
+        },
+        {
+            "name": "Admin Operations",
+            "description": "Supabase-powered admin tools for tenant and usage management."
+        }
+    ],
+    "userStories": [
+        {
+            "role": "End User",
+            "story": "As a site visitor, I can ask questions in the chat widget and get instant, relevant answers."
+        },
+        {
+            "role": "Tenant Admin",
+            "story": "As a tenant admin, I can ingest my docs and view usage/billing details."
+        },
+        {
+            "role": "Support Agent",
+            "story": "As a support agent, I receive escalations when the AI can't answer confidently."
+        }
+    ],
+    "architecture": {
+        "frontend": "Next.js 15 App Router, widget script served via Edge API.",
+        "backend": "Node.js API routes for chat, ingestion, billing, and escalation.",
+        "database": "Postgres with pgvector and tsvector for hybrid search.",
+        "integrations": [
+            "OpenAI for chat and embeddings",
+            "Stripe for billing",
+            "Slack/Email for escalation",
+            "Supabase for admin ops"
+        ]
+    },
+    "metrics": [
+        "AI answer rate",
+        "Escalation rate",
+        "Tenant usage (messages, docs ingested)",
+        "Billing conversion"
+    ],
+    "security": [
+        "Tenant isolation via scoped API calls",
+        "No privileged admin ops exposed to widget",
+        "All user input validated and parameterized"
+    ],
+    "outOfScope": [
+        "End-user authentication (handled by tenant site)",
+        "Custom AI model training per tenant (uses shared OpenAI models)"
+    ]
+}

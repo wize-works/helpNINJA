@@ -1,6 +1,7 @@
 'use client';
 import { useState } from 'react';
 import { useTenant } from '@/components/tenant-context';
+import { Breadcrumb } from '@/components/ui/breadcrumb';
 
 const PLANS = [
     { key: 'starter', name: 'Starter', price: '$29/mo', features: ['1 site', '1k messages', 'Email handoff'] },
@@ -11,6 +12,11 @@ const PLANS = [
 export default function BillingPage() {
     const [loading, setLoading] = useState<string | null>(null);
     const { tenantId } = useTenant();
+
+    const breadcrumbItems = [
+        { label: "Dashboard", href: "/dashboard", icon: "fa-gauge-high" },
+        { label: "Billing", icon: "fa-credit-card" }
+    ];
 
     async function checkout(plan: string) {
         setLoading(plan);
@@ -28,6 +34,7 @@ export default function BillingPage() {
 
     return (
         <div className="p-6 space-y-6">
+            <Breadcrumb items={breadcrumbItems} />
             <h1 className="text-2xl font-bold">Billing</h1>
             <div className="grid md:grid-cols-3 gap-4">
                 {PLANS.map(p => (

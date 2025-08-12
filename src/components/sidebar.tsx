@@ -3,16 +3,61 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
 import { useTenant } from "./tenant-context";
+import { HoverScale, SlideIn } from "./ui/animated-page";
 
-const primaryNav = [
-    { href: "/dashboard", icon: "fa-gauge-high", label: "Overview" },
-    { href: "/dashboard/billing", icon: "fa-credit-card", label: "Billing" },
-];
-const secondaryNav = [
-    { href: "/dashboard/documents", icon: "fa-file-lines", label: "Documents" },
-    { href: "/dashboard/conversations", icon: "fa-messages", label: "Conversations" },
-    { href: "/dashboard/integrations", icon: "fa-puzzle-piece", label: "Integrations" },
-    { href: "/dashboard/settings", icon: "fa-sliders", label: "Settings" },
+// Main navigation sections with collapsible functionality
+const navigationSections = [
+    {
+        id: "dashboard",
+        label: "Dashboard",
+        icon: "fa-gauge-high",
+        href: "/dashboard",
+        collapsible: false
+    },
+    {
+        id: "content",
+        label: "Content",
+        icon: "fa-folder-open",
+        collapsible: true,
+        defaultOpen: true,
+        items: [
+            { href: "/dashboard/documents", label: "Documents", badge: null },
+            { href: "/dashboard/conversations", label: "Conversations", badge: null },
+            { href: "/dashboard/integrations", label: "Integrations", badge: 2 },
+        ]
+    },
+    {
+        id: "analytics",
+        label: "Analytics",
+        icon: "fa-chart-line",
+        href: "/analytics",
+        collapsible: false
+    },
+    {
+        id: "customers",
+        label: "Customers",
+        icon: "fa-users",
+        collapsible: true,
+        defaultOpen: false,
+        items: [
+            { href: "/customers/list", label: "All Customers", badge: null },
+            { href: "/customers/segments", label: "Segments", badge: null },
+        ]
+    },
+    {
+        id: "settings",
+        label: "Settings",
+        icon: "fa-sliders",
+        href: "/dashboard/settings",
+        collapsible: false
+    },
+    {
+        id: "billing",
+        label: "Billing",
+        icon: "fa-credit-card",
+        href: "/dashboard/billing",
+        collapsible: false
+    }
 ];
 
 type Usage = { used: number; limit: number; plan: string } | null;
@@ -22,6 +67,18 @@ export default function Sidebar() {
     const { tenantId } = useTenant();
     const [usage, setUsage] = useState<Usage>(null);
     const [offline, setOffline] = useState(false);
+    const [collapsedSections, setCollapsedSections] = useState<Record<string, boolean>>({});
+
+    useEffect(() => {
+        // Initialize collapsed state based on default settings
+        const initialCollapsed: Record<string, boolean> = {};
+        navigationSections.forEach(section => {
+            if (section.collapsible) {
+                initialCollapsed[section.id] = !section.defaultOpen;
+            }
+        });
+        setCollapsedSections(initialCollapsed);
+    }, []);
 
     useEffect(() => {
         let cancelled = false;
@@ -31,7 +88,10 @@ export default function Sidebar() {
                 const res = await fetch(`/api/usage`, { headers: { 'x-tenant-id': tenantId } });
                 if (!res.ok) throw new Error('bad');
                 const data = await res.json();
-                if (!cancelled) { setUsage({ used: data.used, limit: data.limit, plan: data.plan }); setOffline(false); }
+                if (!cancelled) { 
+                    setUsage({ used: data.used, limit: data.limit, plan: data.plan }); 
+                    setOffline(false); 
+                }
             } catch {
                 if (!cancelled) { setOffline(true); }
             }
@@ -39,59 +99,150 @@ export default function Sidebar() {
         load();
         return () => { cancelled = true; };
     }, [tenantId]);
+
+    const toggleSection = (sectionId: string) => {
+        setCollapsedSections(prev => ({
+            ...prev,
+            [sectionId]: !prev[sectionId]
+        }));
+    };
+
+    const isActive = (href: string) => {
+        if (href === "/dashboard") {
+            return pathname === "/dashboard";
+        }
+        return pathname.startsWith(href);
+    };
+
     return (
-        <aside className="h-[calc(100vh-4rem)] sticky top-16 w-64 bg-base-200/60 border-r border-base-300 backdrop-blur">
-            <div className="h-full flex flex-col px-3 py-4">
-                <nav className="flex flex-col gap-1">
-                    <p className="px-3 py-2 text-xs uppercase tracking-wide text-base-content/60">Overview</p>
-                    {primaryNav.map((item) => (
-                        <Link
-                            key={item.href}
-                            href={item.href}
-                            className={`btn btn-ghost justify-start font-medium gap-3 ${pathname === item.href ? "bg-base-100 text-primary border border-base-300" : ""
-                                }`}
-                        >
-                            <i className={`fa-duotone fa-solid ${item.icon} text-base`} aria-hidden />
-                            <span>{item.label}</span>
-                        </Link>
+        <aside className="h-[calc(100vh-4rem)] sticky top-16 w-64 bg-base-100/60 backdrop-blur-sm border-r border-base-200/60">
+            <div className="h-full flex flex-col">
+                {/* Main Navigation */}
+                <nav className="flex-1 px-3 py-6 space-y-1">
+                    {navigationSections.map((section, index) => (
+                        <SlideIn key={section.id} delay={index * 0.05} className="space-y-1">
+                            {/* Section Header / Main Item */}
+                            {section.collapsible ? (
+                                <button
+                                    onClick={() => toggleSection(section.id)}
+                                    className="w-full flex items-center justify-between px-3 py-2.5 rounded-lg text-sm font-medium text-base-content/80 hover:text-base-content hover:bg-base-200/60 transition-all duration-200 group"
+                                >
+                                    <div className="flex items-center gap-3">
+                                        <i className={`fa-duotone fa-solid ${section.icon} text-base opacity-70 group-hover:opacity-100`} aria-hidden />
+                                        <span>{section.label}</span>
+                                    </div>
+                                    <i 
+                                        className={`fa-duotone fa-solid fa-chevron-down text-xs opacity-50 transition-transform duration-200 ${
+                                            collapsedSections[section.id] ? '-rotate-90' : ''
+                                        }`} 
+                                        aria-hidden 
+                                    />
+                                </button>
+                            ) : (
+                                <HoverScale scale={1.01}>
+                                    <Link
+                                        href={section.href!}
+                                        className={`flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all duration-200 ${
+                                            isActive(section.href!) 
+                                                ? "bg-base-200 text-base-content shadow-sm border border-base-300/60" 
+                                                : "text-base-content/80 hover:text-base-content hover:bg-base-200/60"
+                                        }`}
+                                    >
+                                        <i className={`fa-duotone fa-solid ${section.icon} text-base ${
+                                            isActive(section.href!) ? "opacity-100" : "opacity-70"
+                                        }`} aria-hidden />
+                                        <span>{section.label}</span>
+                                    </Link>
+                                </HoverScale>
+                            )}
+
+                            {/* Collapsible Items */}
+                            {section.collapsible && section.items && !collapsedSections[section.id] && (
+                                <div className="ml-6 space-y-1">
+                                    {section.items.map((item, itemIndex) => (
+                                        <SlideIn key={item.href} delay={(index * 0.05) + (itemIndex * 0.02)}>
+                                            <HoverScale scale={1.01}>
+                                                <Link
+                                                    href={item.href}
+                                                    className={`flex items-center justify-between px-3 py-2 rounded-lg text-sm transition-all duration-200 ${
+                                                        isActive(item.href)
+                                                            ? "bg-primary/10 text-primary font-medium shadow-sm"
+                                                            : "text-base-content/70 hover:text-base-content hover:bg-base-200/60"
+                                                    }`}
+                                                >
+                                                    <span>{item.label}</span>
+                                                    {item.badge && (
+                                                        <span className="inline-flex items-center justify-center w-5 h-5 text-xs font-medium bg-accent text-accent-content rounded-full">
+                                                            {item.badge}
+                                                        </span>
+                                                    )}
+                                                </Link>
+                                            </HoverScale>
+                                        </SlideIn>
+                                    ))}
+                                </div>
+                            )}
+                        </SlideIn>
                     ))}
                 </nav>
-                <div className="my-3 border-t border-base-300" />
-                <nav className="flex flex-col gap-1">
-                    <p className="px-3 py-2 text-xs uppercase tracking-wide text-base-content/60">Manage</p>
-                    {secondaryNav.map((item) => (
-                        <Link
-                            key={item.href}
-                            href={item.href}
-                            className={`btn btn-ghost justify-start font-medium gap-3 ${pathname === item.href ? "bg-base-100 text-primary border border-base-300" : ""
-                                }`}
-                        >
-                            <i className={`fa-duotone fa-solid ${item.icon} text-base`} aria-hidden />
-                            <span>{item.label}</span>
-                        </Link>
-                    ))}
-                </nav>
-                <div className="flex-1" />
-                <div className="px-2">
-                    {offline && (
-                        <div className="alert alert-warning mb-2 text-sm">
-                            <i className="fa-duotone fa-triangle-exclamation" aria-hidden />
-                            <span>DB offline; showing static usage.</span>
+
+                {/* Usage Statistics Card */}
+                <div className="p-3 border-t border-base-200/60">
+                    <SlideIn delay={0.3}>
+                        {offline && (
+                            <div className="mb-3 p-2 bg-warning/10 text-warning rounded-lg text-xs flex items-center gap-2">
+                                <i className="fa-duotone fa-solid fa-triangle-exclamation" aria-hidden />
+                                <span>Offline mode</span>
+                            </div>
+                        )}
+                        
+                        <div className="bg-gradient-to-br from-base-200/40 to-base-300/40 rounded-xl p-4 border border-base-200/60">
+                            <div className="flex items-center justify-between mb-3">
+                                <div className="flex items-center gap-2">
+                                    <div className="w-6 h-6 bg-primary/20 rounded-lg flex items-center justify-center">
+                                        <i className="fa-duotone fa-solid fa-chart-bar text-xs text-primary" aria-hidden />
+                                    </div>
+                                    <span className="text-sm font-medium">Usage</span>
+                                </div>
+                                <span className="text-xs text-base-content/60 bg-base-100/60 px-2 py-1 rounded-md">
+                                    {usage?.plan || 'Starter'}
+                                </span>
+                            </div>
+                            
+                            <div className="space-y-2">
+                                <div className="flex items-center justify-between text-sm">
+                                    <span className="text-base-content/70">Messages</span>
+                                    <span className="font-medium">
+                                        {usage?.used || 45} / {usage?.limit || 100}
+                                    </span>
+                                </div>
+                                <div className="w-full bg-base-300/60 rounded-full h-2">
+                                    <div 
+                                        className="bg-gradient-to-r from-primary to-secondary h-2 rounded-full transition-all duration-500"
+                                        style={{ 
+                                            width: `${usage ? Math.min(100, (usage.used / usage.limit) * 100) : 45}%` 
+                                        }}
+                                    />
+                                </div>
+                                <div className="flex items-center justify-between text-xs text-base-content/60">
+                                    <span>This month</span>
+                                    <span>
+                                        {usage ? `${Math.round((usage.used / usage.limit) * 100)}%` : '45%'} used
+                                    </span>
+                                </div>
+                            </div>
+
+                            <HoverScale scale={1.02}>
+                                <Link
+                                    href="/dashboard/billing"
+                                    className="mt-3 w-full btn btn-primary btn-sm bg-gradient-to-r from-primary to-secondary border-none text-primary-content shadow-lg hover:shadow-xl transition-all duration-200"
+                                >
+                                    <i className="fa-duotone fa-solid fa-arrow-up-right-from-square mr-2" aria-hidden />
+                                    Upgrade Plan
+                                </Link>
+                            </HoverScale>
                         </div>
-                    )}
-                    <div className="card bg-base-100 border border-base-300">
-                        <div className="card-body p-3">
-                            <p className="text-sm">Usage this month {usage?.plan ? `(${usage.plan})` : ''}</p>
-                            <progress className="progress progress-primary w-full" value={usage ? Math.min(usage.used, usage.limit) : 45} max={usage ? usage.limit : 100}></progress>
-                            <p className="text-xs text-base-content/70 mt-1">
-                                {usage ? `${usage.used} / ${usage.limit} messages` : '45 / 100 messages'}
-                            </p>
-                            <button className="btn btn-primary btn-sm mt-2">
-                                <i className="fa-duotone fa-solid fa-arrow-up-right-from-square mr-2" aria-hidden />
-                                Upgrade
-                            </button>
-                        </div>
-                    </div>
+                    </SlideIn>
                 </div>
             </div>
         </aside>
