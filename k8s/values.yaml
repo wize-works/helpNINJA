@@ -28,7 +28,7 @@
 replicaCount: 2  # Default production replica count
 
 image:
-  repository: ghcr.io/wizeworks/helpninja
+  repository: ""  # Set via GitHub Actions workflow (--set image.repository)
   tag: "latest"
   pullPolicy: IfNotPresent
 
