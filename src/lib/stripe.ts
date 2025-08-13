@@ -1,5 +1,25 @@
 import Stripe from 'stripe';
-export const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!);
+
+// Lazy initialization to avoid issues during build time
+let _stripe: Stripe | null = null;
+
+export function getStripe(): Stripe {
+    if (!_stripe) {
+        const apiKey = process.env.STRIPE_SECRET_KEY;
+        if (!apiKey) {
+            throw new Error('STRIPE_SECRET_KEY environment variable is required');
+        }
+        _stripe = new Stripe(apiKey);
+    }
+    return _stripe;
+}
+
+// For backward compatibility
+export const stripe = new Proxy({} as Stripe, {
+    get(target, prop) {
+        return getStripe()[prop as keyof Stripe];
+    }
+});
 
 export const PRICE_BY_PLAN = {
     starter: process.env.STRIPE_PRICE_STARTER!,
