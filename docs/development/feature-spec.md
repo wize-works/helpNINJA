@@ -1,4 +1,4 @@
-# HelpNinja Feature Specification
+# helpNINJA Feature Specification
 
 ## Chat Widget
 - Floating button → expandable panel

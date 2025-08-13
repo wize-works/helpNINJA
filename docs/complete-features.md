@@ -1,4 +1,4 @@
-# HelpNinja – Complete Features Inventory
+# helpNINJA – Complete Features Inventory
 
 Scope
 - Stack: Next.js 15 (App Router), Node runtime for DB/What's partial or pending

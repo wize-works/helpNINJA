@@ -1,4 +1,4 @@
-# HelpNinja Requirements Document
+# helpNINJA Requirements Document
 
 ## Functional Requirements
 1. **Tenant Onboarding**: Users can sign up, create an account, and configure a chat widget.

@@ -7,10 +7,10 @@ type LogoProps = {
 };
 
 /**
- * HelpNinja Logo (SVG) that inherits color via currentColor.
+ * helpNINJA Logo (SVG) that inherits color via currentColor.
  * Pass Tailwind/DaisyUI text-* classes to control color per theme.
  */
-export default function Logo({ className, size = 30, title = "HelpNinja Logo" }: LogoProps) {
+export default function Logo({ className, size = 30, title = "helpNINJA Logo" }: LogoProps) {
     return (
         <svg
             xmlns="http://www.w3.org/2000/svg"

@@ -16,7 +16,7 @@ const slackProvider: Provider = {
     async sendEscalation(ev: EscalationEvent, i: IntegrationRecord) {
         const webhook = (i.credentials?.webhook_url as string) || process.env.SLACK_WEBHOOK_URL
         if (!webhook) return { ok: false, error: 'no slack webhook configured' }
-        const payload = { text: 'HelpNinja escalation', blocks: [{ type: 'section', text: { type: 'mrkdwn', text: text(ev) } }] }
+        const payload = { text: 'helpNINJA escalation', blocks: [{ type: 'section', text: { type: 'mrkdwn', text: text(ev) } }] }
         try {
             const res = await fetch(webhook, { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify(payload) })
             if (!res.ok) return { ok: false, error: `HTTP ${res.status}` }

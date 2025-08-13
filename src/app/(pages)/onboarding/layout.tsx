@@ -22,7 +22,7 @@ export default async function OnboardingLayout({ children }: { children: React.R
                                     <i className="fa-duotone fa-solid fa-comments text-primary-content text-sm" aria-hidden />
                                 </div>
                                 <div>
-                                    <h1 className="text-xl font-bold text-base-content">HelpNinja</h1>
+                                    <h1 className="text-xl font-bold text-base-content">helpNINJA</h1>
                                     <p className="text-xs text-base-content/60">Setup Wizard</p>
                                 </div>
                             </div>
@@ -43,7 +43,7 @@ export default async function OnboardingLayout({ children }: { children: React.R
                 {/* Footer */}
                 <footer className="mt-auto py-6 text-center">
                     <div className="text-sm text-base-content/40">
-                        © 2024 HelpNinja. All rights reserved.
+                        © 2024 helpNINJA. All rights reserved.
                     </div>
                 </footer>
             </TenantProvider>

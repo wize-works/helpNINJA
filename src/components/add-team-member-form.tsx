@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import { getAssignableRoles, getRoleInfo, type Role } from '@/lib/permissions';
 import { HoverScale } from './ui/animated-page';
+import { toastUtils } from '@/lib/toast';
 
 interface AddTeamMemberFormProps {
     tenantId: string;
@@ -22,7 +23,8 @@ export default function AddTeamMemberForm({
         firstName: '',
         lastName: '',
         role: 'viewer' as Role,
-        method: 'direct' // 'direct' or 'invitation'
+        method: 'direct', // 'direct' or 'invitation'
+        message: '' // Optional message for invitations
     });
     const [loading, setLoading] = useState(false);
     const [errors, setErrors] = useState<Record<string, string>>({});
@@ -76,6 +78,18 @@ export default function AddTeamMemberForm({
             });
 
             if (response.ok) {
+                const data = await response.json();
+
+                if (formData.method === 'invitation') {
+                    if (data.email_sent) {
+                        toastUtils.success(`Invitation sent to ${formData.email}! They will receive an email to join your team.`);
+                    } else {
+                        toastUtils.info(`Invitation created but email delivery failed. The user can still be added manually.`);
+                    }
+                } else {
+                    toastUtils.success(`${formData.email} has been added to your team!`);
+                }
+
                 onSuccess();
             } else {
                 const error = await response.json();
@@ -135,7 +149,7 @@ export default function AddTeamMemberForm({
                     {/* Method Selection */}
                     <fieldset className="space-y-4">
                         <legend className="text-base font-semibold text-base-content mb-3">Invitation Method</legend>
-                        
+
                         <div className="grid grid-cols-2 gap-3">
                             <button
                                 type="button"
@@ -158,7 +172,7 @@ export default function AddTeamMemberForm({
                                 <span className="text-xs opacity-80">Email invitation</span>
                             </button>
                         </div>
-                        
+
                         <div className="text-xs text-base-content/60 bg-base-200/30 px-3 py-2 rounded-lg">
                             {formData.method === 'direct'
                                 ? 'User will be added immediately with access to your team'
@@ -170,7 +184,7 @@ export default function AddTeamMemberForm({
                     {/* Member Information */}
                     <fieldset className="space-y-4">
                         <legend className="text-base font-semibold text-base-content mb-3">Member Information</legend>
-                        
+
                         {/* Email */}
                         <label className="block">
                             <span className="text-sm font-medium text-base-content mb-2 block">
@@ -234,7 +248,7 @@ export default function AddTeamMemberForm({
                     {/* Role Selection */}
                     <fieldset className="space-y-4">
                         <legend className="text-base font-semibold text-base-content mb-3">Role & Permissions</legend>
-                        
+
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                             {assignableRoles.map((role) => {
                                 const roleInfo = getRoleInfo(role);
@@ -273,15 +287,39 @@ export default function AddTeamMemberForm({
                         </div>
                     </fieldset>
 
+                    {/* Message for Invitations */}
+                    {formData.method === 'invitation' && (
+                        <fieldset className="space-y-4">
+                            <legend className="text-base font-semibold text-base-content mb-3">Personal Message (Optional)</legend>
+
+                            <label className="block">
+                                <span className="text-sm font-medium text-base-content mb-2 block">
+                                    Message
+                                </span>
+                                <textarea
+                                    className="textarea textarea-bordered w-full focus:textarea-primary transition-all duration-200 focus:scale-[1.02]"
+                                    placeholder="Hi! I'd like to invite you to join our team on helpNINJA..."
+                                    rows={3}
+                                    value={formData.message}
+                                    onChange={(e) => setFormData(prev => ({ ...prev, message: e.target.value }))}
+                                    disabled={loading}
+                                />
+                                <div className="text-xs text-base-content/60 mt-1">
+                                    This message will be included in the invitation email
+                                </div>
+                            </label>
+                        </fieldset>
+                    )}
+
                     {/* Actions */}
                     <div className="flex items-center justify-between pt-4 border-t border-base-200/60">
                         <div className="text-sm text-base-content/60">
-                            {formData.method === 'direct' 
-                                ? 'Add a new team member with immediate access' 
+                            {formData.method === 'direct'
+                                ? 'Add a new team member with immediate access'
                                 : 'Send an invitation for the user to join your team'
                             }
                         </div>
-                        
+
                         <div className="flex items-center gap-3">
                             <button
                                 type="button"
@@ -291,7 +329,7 @@ export default function AddTeamMemberForm({
                             >
                                 Cancel
                             </button>
-                            
+
                             <HoverScale scale={1.02}>
                                 <button
                                     type="submit"

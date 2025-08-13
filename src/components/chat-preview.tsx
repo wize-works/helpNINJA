@@ -28,7 +28,7 @@ export default function ChatPreview({
     name="viewport"
     content="width=device-width, initial-scale=1, viewport-fit=cover"
   />
-  <title>HelpNinja — Preview</title>
+  <title>helpNINJA — Preview</title>
   <style>
     html, body { height: 100%; }
     body {
@@ -110,7 +110,7 @@ export default function ChatPreview({
             <iframe
                 key={nonce} // hard reload when nonce changes
                 ref={iframeRef}
-                title="HelpNinja Preview"
+                title="helpNINJA Preview"
                 style={{ width: "100%", height, border: "1px solid #e5e7eb", borderRadius: 12, background: "#fff" }}
                 sandbox="allow-scripts allow-same-origin allow-forms"
                 srcDoc={srcDoc}

@@ -8,7 +8,7 @@ data:
   SITE_URL: "https://helpninja.app"
   NEXT_PUBLIC_SUPABASE_URL: "{{ .Values.supabase.url }}"
   SUPPORT_FALLBACK_TO_EMAIL: "true"
-  SUPPORT_FROM_EMAIL: "support@helpninja.app"
+  SUPPORT_FROM_EMAIL: "support@updates.helpninja.app"
 ---
 apiVersion: v1
 kind: ConfigMap
@@ -20,4 +20,4 @@ data:
   SITE_URL: "https://staging.helpninja.app"
   NEXT_PUBLIC_SUPABASE_URL: "{{ .Values.supabase.stagingUrl }}"
   SUPPORT_FALLBACK_TO_EMAIL: "true"
-  SUPPORT_FROM_EMAIL: "support@helpninja.app"
+  SUPPORT_FROM_EMAIL: "support@updates.helpninja.app"

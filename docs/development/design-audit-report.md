@@ -1,4 +1,4 @@
-# HelpNinja Design System Audit Report
+# helpNINJA Design System Audit Report
 
 **Date**: December 28, 2024  
 **Status**: In Progress  
@@ -266,4 +266,4 @@ export default async function YourPage() {
 - [ ] Design system documentation complete
 - [ ] Developer onboarding materials updated
 
-This audit provides a clear roadmap for completing the design system implementation across the entire HelpNinja application.
+This audit provides a clear roadmap for completing the design system implementation across the entire helpNINJA application.

@@ -1,4 +1,4 @@
-# HelpNinja Design System - Quick Reference
+# helpNINJA Design System - Quick Reference
 
 ## 🎨 **Card Styling (Copy & Paste)**
 

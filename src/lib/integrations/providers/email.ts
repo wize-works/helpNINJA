@@ -4,7 +4,7 @@ import { Provider, EscalationEvent, IntegrationRecord } from '../types'
 const resend = new Resend(process.env.RESEND_API_KEY!)
 
 function subject(ev: EscalationEvent) {
-    return `HelpNinja Escalation — ${ev.reason} — ${ev.sessionId.slice(0, 6)}`
+    return `helpNINJA Escalation — ${ev.reason} — ${ev.sessionId.slice(0, 6)}`
 }
 function body(ev: EscalationEvent) {
     const refs = (ev.refs || []).map(u => `- ${u}`).join('')
@@ -28,7 +28,7 @@ const emailProvider: Provider = {
     key: 'email',
     async sendEscalation(ev: EscalationEvent, i: IntegrationRecord) {
         const to = (i.config?.to as string) || process.env.SUPPORT_FALLBACK_TO_EMAIL
-        const from = (i.config?.from as string) || process.env.SUPPORT_FROM_EMAIL || 'no-reply@helpninja.app'
+        const from = (i.config?.from as string) || process.env.SUPPORT_FROM_EMAIL || 'no-reply@updates.helpninja.app'
         if (!to) return { ok: false, error: 'no email recipient configured' }
         try {
             const r = await resend.emails.send({ to, from, subject: subject(ev), text: body(ev) })

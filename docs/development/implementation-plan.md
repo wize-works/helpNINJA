@@ -1,4 +1,4 @@
-# HelpNinja Implementation Plan
+# helpNINJA Implementation Plan
 **Multi-Site Features & Complete User Experience**
 
 ## Overview

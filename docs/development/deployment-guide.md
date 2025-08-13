@@ -1,4 +1,4 @@
-# HelpNinja Deployment Guide
+# helpNINJA Deployment Guide
 
 Stack
 - Next.js App Router (Node runtime for DB/OpenAI, Edge for widget)

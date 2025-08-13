@@ -2,7 +2,7 @@ This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-
 
 ## Embeddable widget
 
-Embed HelpNinja on any site:
+Embed helpNINJA on any site:
 
 ```html
 <script async src="https://your-site.com/api/widget?t=TENANT_PUBLIC_KEY&voice=friendly"></script>

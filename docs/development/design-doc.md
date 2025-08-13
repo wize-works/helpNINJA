@@ -1,7 +1,7 @@
-# HelpNinja Design Document
+# helpNINJA Design Document
 
 ## Overview
-HelpNinja is a modern AI-powered customer support widget and dashboard platform, designed to deliver a premium, sophisticated support experience. Built with **Next.js (App Router)**, **TailwindCSS** + **DaisyUI**, **FontAwesome** icons, and **Framer Motion** animations.
+helpNINJA is a modern AI-powered customer support widget and dashboard platform, designed to deliver a premium, sophisticated support experience. Built with **Next.js (App Router)**, **TailwindCSS** + **DaisyUI**, **FontAwesome** icons, and **Framer Motion** animations.
 
 The UI follows a sophisticated design system with glassmorphism effects, consistent spacing, and thoughtful micro-interactions that create a premium user experience.
 

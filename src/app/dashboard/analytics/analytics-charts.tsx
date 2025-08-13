@@ -66,26 +66,26 @@ export function ConversationTrendsChart({ data }: { data: ConversationTrendsData
                 <AreaChart data={formattedData} margin={{ top: 10, right: 30, left: 0, bottom: 0 }}>
                     <defs>
                         <linearGradient id="conversationsGradientAnalytics" x1="0" y1="0" x2="0" y2="1">
-                            <stop offset="5%" stopColor={colors.primary} stopOpacity={0.3}/>
-                            <stop offset="95%" stopColor={colors.primary} stopOpacity={0}/>
+                            <stop offset="5%" stopColor={colors.primary} stopOpacity={0.3} />
+                            <stop offset="95%" stopColor={colors.primary} stopOpacity={0} />
                         </linearGradient>
                         <linearGradient id="messagesGradientAnalytics" x1="0" y1="0" x2="0" y2="1">
-                            <stop offset="5%" stopColor={colors.success} stopOpacity={0.3}/>
-                            <stop offset="95%" stopColor={colors.success} stopOpacity={0}/>
+                            <stop offset="5%" stopColor={colors.success} stopOpacity={0.3} />
+                            <stop offset="95%" stopColor={colors.success} stopOpacity={0} />
                         </linearGradient>
                         <linearGradient id="escalationsGradientAnalytics" x1="0" y1="0" x2="0" y2="1">
-                            <stop offset="5%" stopColor={colors.warning} stopOpacity={0.3}/>
-                            <stop offset="95%" stopColor={colors.warning} stopOpacity={0}/>
+                            <stop offset="5%" stopColor={colors.warning} stopOpacity={0.3} />
+                            <stop offset="95%" stopColor={colors.warning} stopOpacity={0} />
                         </linearGradient>
                     </defs>
                     <CartesianGrid strokeDasharray="3 3" stroke={colors.neutral} opacity={0.2} />
-                    <XAxis 
-                        dataKey="date" 
+                    <XAxis
+                        dataKey="date"
                         axisLine={false}
                         tickLine={false}
                         tick={{ fontSize: 12, fill: colors.neutral, opacity: 0.7 }}
                     />
-                    <YAxis 
+                    <YAxis
                         axisLine={false}
                         tickLine={false}
                         tick={{ fontSize: 12, fill: colors.neutral, opacity: 0.7 }}
@@ -165,24 +165,69 @@ export function ResponseTimeChart({ data }: { data: ResponseTimeData[] }) {
             <ResponsiveContainer width="100%" height="100%">
                 <BarChart data={formattedData} margin={{ top: 10, right: 30, left: 0, bottom: 0 }}>
                     <CartesianGrid strokeDasharray="3 3" stroke={colors.neutral} opacity={0.2} />
-                    <XAxis 
-                        dataKey="hour" 
+                    <XAxis
+                        dataKey="hour"
                         axisLine={false}
                         tickLine={false}
                         tick={{ fontSize: 12, fill: colors.neutral, opacity: 0.7 }}
                         interval={3}
                     />
-                    <YAxis 
+                    <YAxis
                         axisLine={false}
                         tickLine={false}
                         tick={{ fontSize: 12, fill: colors.neutral, opacity: 0.7 }}
                     />
                     <Tooltip content={<CustomTooltip />} />
-                    <Bar 
-                        dataKey="avgResponse" 
+                    <Bar
+                        dataKey="avgResponse"
                         name="Avg Response Time"
                         fill={colors.info}
                         radius={[4, 4, 0, 0]}
+                    />
+                </BarChart>
+            </ResponsiveContainer>
+        </div>
+    );
+}
+
+type TopSourcesData = {
+    source: string;
+    queries: number;
+    accuracy: number;
+};
+
+export function TopSourcesChart({ data }: { data: TopSourcesData[] }) {
+    const colors = getChartColors();
+
+    return (
+        <div className="h-80">
+            <ResponsiveContainer width="100%" height="100%">
+                <BarChart
+                    data={data}
+                    layout="horizontal"
+                    margin={{ top: 20, right: 30, left: 20, bottom: 5 }}
+                >
+                    <CartesianGrid strokeDasharray="3 3" stroke="#E2E8F0" />
+                    <XAxis
+                        type="number"
+                        stroke="#64748B"
+                        fontSize={12}
+                    />
+                    <YAxis
+                        type="category"
+                        dataKey="source"
+                        stroke="#64748B"
+                        fontSize={12}
+                        width={100}
+                    />
+                    <Tooltip
+                        content={<CustomTooltip />}
+                        cursor={{ fill: "#F1F5F9", opacity: 0.1 }}
+                    />
+                    <Bar
+                        dataKey="queries"
+                        fill={colors.primary}
+                        radius={[0, 4, 4, 0]}
                     />
                 </BarChart>
             </ResponsiveContainer>

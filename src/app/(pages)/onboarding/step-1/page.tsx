@@ -139,7 +139,7 @@ export default function OnboardingStep1() {
                                         <i className="fa-duotone fa-solid fa-building text-primary text-3xl" aria-hidden />
                                     </div>
                                     <h1 className="text-3xl font-bold text-base-content mb-2">
-                                        Welcome to HelpNinja!
+                                        Welcome to helpNINJA!
                                     </h1>
                                     <p className="text-base-content/60 text-lg">
                                         Let&apos;s set up your AI-powered customer support in just a few steps.

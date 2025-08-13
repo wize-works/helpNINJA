@@ -1,4 +1,4 @@
-# HelpNinja Testing Plan
+# helpNINJA Testing Plan
 
 ## Unit Tests
 - Chat message handling (RAG prompt build, OpenAI client wrapper)

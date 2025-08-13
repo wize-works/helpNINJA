@@ -1,4 +1,4 @@
-# HelpNinja — MVP Scaffold v0.1
+# helpNINJA — MVP Scaffold v0.1
 
 A 2‑minute, AI‑powered website support agent. Crawl → index → answer → escalate.
 
@@ -505,7 +505,7 @@ import { query } from '@/lib/db';
 const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
 export const runtime = 'nodejs';
 
-const SYSTEM = (voice = 'friendly') => `You are HelpNinja, a concise, helpful site assistant.
+const SYSTEM = (voice = 'friendly') => `You are helpNINJA, a concise, helpful site assistant.
 Use only the provided Context to answer. If unsure, say you don’t know and offer to connect support.
 Voice: ${voice}. Keep answers under 120 words. Include 1 link to the relevant page if useful.`;
 
@@ -562,7 +562,7 @@ export async function GET(req: NextRequest) {
     panel.style.cssText = 'position:fixed;bottom:90px;right:20px;width:340px;max-height:70vh;background:#fff;border:1px solid #ddd;border-radius:12px;box-shadow:0 10px 40px rgba(0,0,0,.15);display:none;flex-direction:column;overflow:hidden;';
 
     panel.innerHTML = `
-      <div style="padding:10px 12px;border-bottom:1px solid #eee;font-weight:600">HelpNinja</div>
+      <div style="padding:10px 12px;border-bottom:1px solid #eee;font-weight:600">helpNINJA</div>
       <div id="hn_msgs" style="padding:12px;gap:8px;display:flex;flex-direction:column;overflow:auto"></div>
       <div style="display:flex;border-top:1px solid #eee">
         <input id="hn_input" placeholder="Ask a question..." style="flex:1;padding:10px;border:0;outline:none" />
@@ -610,7 +610,7 @@ Embed code a customer pastes:
 export default function Dashboard() {
   return (
     <div className="p-6 space-y-6">
-      <h1 className="text-2xl font-bold">HelpNinja Dashboard</h1>
+      <h1 className="text-2xl font-bold">helpNINJA Dashboard</h1>
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         <Card title="Deflection rate" value="—" />
         <Card title="Conversations" value="—" />
@@ -1239,7 +1239,7 @@ import { Provider, EscalationEvent, IntegrationRecord } from '../types'
 const resend = new Resend(process.env.RESEND_API_KEY!)
 
 function subject(ev: EscalationEvent){
-  return `HelpNinja Escalation — ${ev.reason} — ${ev.sessionId.slice(0,6)}`
+  return `helpNINJA Escalation — ${ev.reason} — ${ev.sessionId.slice(0,6)}`
 }
 function body(ev: EscalationEvent){
   const refs = (ev.refs || []).map(u => `- ${u}`).join('
@@ -1265,7 +1265,7 @@ const emailProvider: Provider = {
   key: 'email',
   async sendEscalation(ev: EscalationEvent, i: IntegrationRecord){
     const to = (i.config?.to as string) || process.env.SUPPORT_FALLBACK_TO_EMAIL
-    const from = (i.config?.from as string) || process.env.SUPPORT_FROM_EMAIL || 'no-reply@helpninja.app'
+    const from = (i.config?.from as string) || process.env.SUPPORT_FROM_EMAIL || 'no-reply@updates.helpninja.app'
     if (!to) return { ok:false, error:'no email recipient configured' }
     try {
       const r = await resend.emails.send({ to, from, subject: subject(ev), text: body(ev) })

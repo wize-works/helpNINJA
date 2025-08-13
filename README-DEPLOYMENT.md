@@ -1,6 +1,6 @@
-# 🚀 HelpNinja Azure Kubernetes Deployment
+# 🚀 helpNINJA Azure Kubernetes Deployment
 
-Complete Azure Kubernetes deployment setup for HelpNinja with GitHub Actions CI/CD.
+Complete Azure Kubernetes deployment setup for helpNINJA with GitHub Actions CI/CD.
 
 ## 🎯 **What's Included**
 

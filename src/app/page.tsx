@@ -17,7 +17,7 @@ export default function Home() {
                                     </div>
 
                                     <h1 className="text-3xl lg:text-4xl font-bold tracking-tight mb-4 text-center">
-                                        Get started with HelpNinja
+                                        Get started with helpNINJA
                                     </h1>
 
                                     <p className="text-base text-base-content/60 text-center mb-8">

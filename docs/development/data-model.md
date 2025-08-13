@@ -1,4 +1,4 @@
-# HelpNinja Data Model
+# helpNINJA Data Model
 
 Core tables (public schema)
 - tenants

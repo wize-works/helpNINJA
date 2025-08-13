@@ -1,4 +1,4 @@
--- Complete HelpNinja Migration Script
+-- Complete helpNINJA Migration Script
 -- This script applies all schema changes needed for Phases 1-6
 -- Run this against your PostgreSQL database to enable all features
 

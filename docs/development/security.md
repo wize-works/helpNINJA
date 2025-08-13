@@ -1,4 +1,4 @@
-# HelpNinja Security
+# helpNINJA Security
 
 ## Auth
 - Supabase Auth, JWT-based sessions

@@ -7,7 +7,7 @@ import { embedQuery } from '@/lib/embeddings';
 
 export const runtime = 'nodejs';
 
-type Context = { params: { id: string } };
+type Context = { params: Promise<{ id: string }> };
 
 export async function POST(req: NextRequest, ctx: Context) {
     try {

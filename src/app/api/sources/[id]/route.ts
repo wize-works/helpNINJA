@@ -4,12 +4,12 @@ import { resolveTenantIdFromRequest, resolveTenantIdAndBodyFromRequest } from '@
 
 export const runtime = 'nodejs';
 
-type Context = { params: { id: string } };
+type Context = { params: Promise<{ id: string }> };
 
 export async function GET(req: NextRequest, ctx: Context) {
     try {
         const tenantId = await resolveTenantIdFromRequest(req, true);
-        const { id } = ctx.params;
+        const { id } = await ctx.params;
 
         if (!id) {
             return NextResponse.json({ error: 'Source ID required' }, { status: 400 });
@@ -44,7 +44,7 @@ export async function GET(req: NextRequest, ctx: Context) {
 export async function PUT(req: NextRequest, ctx: Context) {
     try {
         const { tenantId, body } = await resolveTenantIdAndBodyFromRequest(req, true);
-        const { id } = ctx.params;
+        const { id } = await ctx.params;
 
         if (!id) {
             return NextResponse.json({ error: 'Source ID required' }, { status: 400 });
@@ -123,7 +123,7 @@ export async function PUT(req: NextRequest, ctx: Context) {
 export async function DELETE(req: NextRequest, ctx: Context) {
     try {
         const tenantId = await resolveTenantIdFromRequest(req, true);
-        const { id } = ctx.params;
+        const { id } = await ctx.params;
 
         if (!id) {
             return NextResponse.json({ error: 'Source ID required' }, { status: 400 });

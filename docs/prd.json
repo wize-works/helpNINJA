@@ -1,8 +1,8 @@
 {
-    "product": "HelpNinja AI Agent",
+    "product": "helpNINJA AI Agent",
     "version": "1.0",
     "lastUpdated": "2024-06-09",
-    "overview": "HelpNinja is an embeddable AI chat widget for SaaS and support sites, providing instant answers via RAG search on tenant-ingested docs, with Stripe billing, usage limits, and pluggable escalation (Slack/Email).",
+    "overview": "helpNINJA is an embeddable AI chat widget for SaaS and support sites, providing instant answers via RAG search on tenant-ingested docs, with Stripe billing, usage limits, and pluggable escalation (Slack/Email).",
     "goals": [
         "Reduce support workload by automating answers to common questions.",
         "Enable tenants to ingest and search their own documentation.",

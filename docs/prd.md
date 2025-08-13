@@ -1,6 +1,6 @@
-HelpNinja Product Requirements Document (PRD)
+helpNINJA Product Requirements Document (PRD)
 1. Purpose
-HelpNinja is an AI-powered customer support platform that combines an embeddable chat widget with a centralized analytics dashboard. It enables businesses to deliver instant, AI-driven answers while providing escalation paths to human support channels when needed. The system integrates with popular communication tools, supports usage-based billing, and provides detailed performance analytics.
+helpNINJA is an AI-powered customer support platform that combines an embeddable chat widget with a centralized analytics dashboard. It enables businesses to deliver instant, AI-driven answers while providing escalation paths to human support channels when needed. The system integrates with popular communication tools, supports usage-based billing, and provides detailed performance analytics.
 
 2. Goals
 Deliver a seamless, responsive, and branded chat experience for customers.

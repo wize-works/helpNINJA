@@ -5,30 +5,30 @@ import { evaluateRuleConditions } from '@/lib/rule-engine';
 
 export const runtime = 'nodejs';
 
-type Context = { params: { id: string } };
+type Context = { params: Promise<{ id: string }> };
 
 export async function POST(req: NextRequest, ctx: Context) {
     try {
         const tenantId = await resolveTenantIdFromRequest(req, true);
-        const { id } = ctx.params;
+        const { id } = await ctx.params;
         const body = await req.json();
-        
+
         if (!id) {
             return NextResponse.json({ error: 'Rule ID required' }, { status: 400 });
         }
-        
+
         // Get the rule
         const { rows: ruleRows } = await query(
             'SELECT predicate FROM public.escalation_rules WHERE id = $1 AND tenant_id = $2',
             [id, tenantId]
         );
-        
+
         if (ruleRows.length === 0) {
             return NextResponse.json({ error: 'Rule not found' }, { status: 404 });
         }
-        
+
         const rule = ruleRows[0];
-        
+
         // Extract test context from request body
         const testContext = {
             message: body.message || 'Test message',
@@ -41,10 +41,10 @@ export async function POST(req: NextRequest, ctx: Context) {
             isOffHours: body.isOffHours || false,
             conversationLength: body.conversationLength || 1
         };
-        
+
         // Evaluate the rule conditions
         const result = evaluateRuleConditions(rule.predicate, testContext);
-        
+
         return NextResponse.json({
             matched: result.matched,
             details: result.details,

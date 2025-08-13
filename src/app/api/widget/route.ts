@@ -111,7 +111,7 @@ export async function GET(req: NextRequest) {
     panel.style.cssText = 'position:fixed;bottom:90px;right:20px;width:340px;max-height:70vh;background:#fff;border:1px solid #ddd;border-radius:12px;box-shadow:0 10px 40px rgba(0,0,0,.15);display:none;flex-direction:column;overflow:hidden;';
 
     panel.innerHTML = \`
-      <div style="padding:10px 12px;border-bottom:1px solid #eee;font-weight:600">HelpNinja</div>
+      <div style="padding:10px 12px;border-bottom:1px solid #eee;font-weight:600">helpNINJA</div>
       <div id="hn_msgs" style="padding:12px;gap:8px;display:flex;flex-direction:column;overflow:auto"></div>
       <div style="display:flex;border-top:1px solid #eee">
         <input id="hn_input" placeholder="Ask a question..." style="flex:1;padding:10px;border:0;outline:none" />

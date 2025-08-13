@@ -1,4 +1,4 @@
-# HelpNinja Roadmap
+# helpNINJA Roadmap
 
 ## Phase 1 (MVP)
 - Slack + Email integration

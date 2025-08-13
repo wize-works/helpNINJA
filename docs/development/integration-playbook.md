@@ -1,4 +1,4 @@
-# HelpNinja Integration Playbook
+# helpNINJA Integration Playbook
 
 Provider interface
 - File: `src/lib/integrations/types.ts`

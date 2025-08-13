@@ -1,4 +1,4 @@
-# HelpNinja Application Sitemap
+# helpNINJA Application Sitemap
 
 ## 🏠 **Public Pages**
 

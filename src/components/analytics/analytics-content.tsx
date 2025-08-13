@@ -10,12 +10,12 @@ import { StatCardSkeleton, ChartSkeleton } from "@/components/ui/skeleton";
 
 // Import the existing chart components
 import {
-    AnalyticsOverview,
-    ConversationTrendsCard,
-    ConfidenceAnalysisCard,
-    ResponseTimeCard,
-    TopSourcesCard
+    ConversationTrendsChart,
+    ConfidenceAnalysisChart,
+    ResponseTimeChart,
+    TopSourcesChart
 } from "../../app/dashboard/analytics/analytics-charts";
+import { AnalyticsOverview } from "./analytics-overview";
 
 type AnalyticsData = {
     totalMessages: number;
@@ -30,10 +30,10 @@ type AnalyticsData = {
     escalationGrowth: number;
     responseTimeGrowth: number;
     integrationsGrowth: number;
-    conversationsByDay: Array<{ date: string; conversations: number; messages: number; }>;
+    conversationsByDay: Array<{ date: string; conversations: number; messages: number; escalations: number; }>;
     confidenceDistribution: Array<{ range: string; count: number; percentage: number; }>;
-    responseTimeByHour: Array<{ hour: number; avgTime: number; count: number; }>;
-    topSources: Array<{ source: string; count: number; percentage: number; }>;
+    responseTimeByHour: Array<{ hour: number; avgResponse: number; volume: number; }>;
+    topSources: Array<{ source: string; queries: number; accuracy: number; }>;
 };
 
 export function AnalyticsContent() {
@@ -122,22 +122,22 @@ export function AnalyticsContent() {
             {/* Charts Grid */}
             <div className="grid grid-cols-1 xl:grid-cols-2 gap-8">
                 <StaggerChild>
-                    <ConversationTrendsCard data={data.conversationsByDay} />
+                    <ConversationTrendsChart data={data.conversationsByDay} />
                 </StaggerChild>
                 <StaggerChild>
-                    <ConfidenceAnalysisCard data={data.confidenceDistribution} />
+                    <ConfidenceAnalysisChart data={data.confidenceDistribution} />
                 </StaggerChild>
             </div>
 
             <div className="grid grid-cols-1 xl:grid-cols-3 gap-8">
                 <div className="xl:col-span-2">
                     <StaggerChild>
-                        <ResponseTimeCard data={data.responseTimeByHour} />
+                        <ResponseTimeChart data={data.responseTimeByHour} />
                     </StaggerChild>
                 </div>
                 <div>
                     <StaggerChild>
-                        <TopSourcesCard data={data.topSources} />
+                        <TopSourcesChart data={data.topSources} />
                     </StaggerChild>
                 </div>
             </div>

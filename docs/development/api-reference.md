@@ -1,4 +1,4 @@
-# HelpNinja API Reference
+# helpNINJA API Reference
 
 Conventions
 - All routes live under Next.js App Router. Export `runtime`:

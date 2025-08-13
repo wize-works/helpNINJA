@@ -54,29 +54,29 @@ export default function OnboardingStep3() {
     useEffect(() => {
         let cancelled = false;
         const controller = new AbortController();
-        
+
         async function load() {
             try {
                 if (!tenantId) {
                     return;
                 }
-                
+
                 const [sitesRes, infoRes] = await Promise.all([
-                    fetch('/api/sites', { 
-                        headers: { 'x-tenant-id': tenantId }, 
-                        signal: controller.signal 
+                    fetch('/api/sites', {
+                        headers: { 'x-tenant-id': tenantId },
+                        signal: controller.signal
                     }),
-                    fetch('/api/tenant/info', { 
-                        headers: { 'x-tenant-id': tenantId }, 
-                        signal: controller.signal 
+                    fetch('/api/tenant/info', {
+                        headers: { 'x-tenant-id': tenantId },
+                        signal: controller.signal
                     })
                 ]);
-                
+
                 if (sitesRes.ok) {
                     const data = await sitesRes.json();
                     if (!cancelled) setSites(data);
                 }
-                
+
                 if (infoRes.ok) {
                     const data = await infoRes.json();
                     if (!cancelled) setTenantInfo(data);
@@ -90,19 +90,19 @@ export default function OnboardingStep3() {
                 if (!cancelled) setLoading(false);
             }
         }
-        
+
         setLoading(true);
         load();
-        
-        return () => { 
-            cancelled = true; 
-            controller.abort(); 
+
+        return () => {
+            cancelled = true;
+            controller.abort();
         };
     }, [tenantId]);
 
     function generateEmbedCode() {
         if (!tenantInfo?.public_key) return '';
-        
+
         const origin = typeof window !== "undefined" ? window.location.origin : "https://your-domain.com";
         const voice = encodeURIComponent(selectedVoice);
         return `<script src="${origin}/api/widget?t=${tenantInfo.public_key}&voice=${voice}" async></script>`;
@@ -121,7 +121,7 @@ export default function OnboardingStep3() {
     }
 
     async function handleFinish() {
-        toast.success("🎉 Setup complete! Welcome to HelpNinja!");
+        toast.success("🎉 Setup complete! Welcome to helpNINJA!");
         router.push("/dashboard");
     }
 

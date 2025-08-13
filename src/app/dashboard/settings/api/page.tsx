@@ -275,7 +275,7 @@ export default function ApiKeysPage() {
                             <div>
                                 <div className="font-semibold mb-1">Managed API Keys vs Widget Keys</div>
                                 <div className="text-sm opacity-90">
-                                    These are <strong>managed API keys</strong> for programmatic access to HelpNinja APIs with granular permissions and usage tracking.
+                                    These are <strong>managed API keys</strong> for programmatic access to helpNINJA APIs with granular permissions and usage tracking.
                                     For basic chat widget integration, use the simpler{' '}
                                     <a href="/dashboard/settings" className="link link-primary">Widget Keys</a> found in your main settings.
                                 </div>
@@ -369,7 +369,7 @@ export default function ApiKeysPage() {
                                         </div>
                                         <h3 className="font-semibold text-lg mb-2">No API Keys Found</h3>
                                         <p className="text-base-content/60 mb-4">
-                                            Create your first API key to access the HelpNinja API programmatically
+                                            Create your first API key to access the helpNINJA API programmatically
                                         </p>
                                         <button
                                             className="btn btn-primary"
@@ -618,7 +618,7 @@ export default function ApiKeysPage() {
                                     </div>
                                     <div>
                                         <h2 className="text-lg font-semibold text-base-content">Integration Guide</h2>
-                                        <p className="text-base-content/60 text-sm">Complete guide for HelpNinja API integration</p>
+                                        <p className="text-base-content/60 text-sm">Complete guide for helpNINJA API integration</p>
                                     </div>
                                 </div>
 

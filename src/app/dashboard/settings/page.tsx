@@ -127,7 +127,7 @@ export default async function SettingsPage() {
                                         <div>
                                             <div className="font-semibold mb-1">Widget Integration Keys</div>
                                             <div className="text-sm opacity-90">
-                                                These keys are specifically for embedding the HelpNinja chat widget on your website.
+                                                These keys are specifically for embedding the helpNINJA chat widget on your website.
                                                 Use the public key in your widget script - it&apos;s safe for client-side use. The secret key is for server-side authentication.
                                                 <div className="mt-2">
                                                     <span className="font-medium">Need programmatic API access?</span> Visit the{' '}

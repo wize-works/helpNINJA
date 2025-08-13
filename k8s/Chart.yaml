@@ -1,6 +1,6 @@
 apiVersion: v2
 name: helpninja
-description: A Helm chart for HelpNinja AI Chat Widget Application
+description: A Helm chart for helpNINJA AI Chat Widget Application
 type: application
 version: 0.1.0
 appVersion: "1.0.0"

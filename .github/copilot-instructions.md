@@ -1,4 +1,4 @@
-# HelpNinja – AI agent working notes
+# helpNINJA – AI agent working notes
 
 Context: Next.js 15 (App Router) app with an AI chat widget, RAG search on tenant-ingested docs, Stripe billing/limits, and pluggable escalations (Slack/Email). DB is Postgres via `pg` with pgvector and text search. Supabase is used for admin ops.
 

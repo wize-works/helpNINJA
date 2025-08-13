@@ -168,7 +168,7 @@ async function ensureConversation(client, tenantId, sessionId) {
 }
 
 async function addSampleMessages(client, tenantId, conversationId) {
-    await client.query(`insert into public.messages (conversation_id, tenant_id, role, content, confidence) values ($1,$2,'user',$3, null)`, [conversationId, tenantId, 'How do I install HelpNinja?'])
+    await client.query(`insert into public.messages (conversation_id, tenant_id, role, content, confidence) values ($1,$2,'user',$3, null)`, [conversationId, tenantId, 'How do I install helpNINJA?'])
     await client.query(`insert into public.messages (conversation_id, tenant_id, role, content, confidence) values ($1,$2,'assistant',$3, 0.8)`, [conversationId, tenantId, 'Visit /docs to get started.'])
     await client.query(`update public.usage_counters set messages_count = messages_count + 1 where tenant_id=$1`, [tenantId])
 }
@@ -194,7 +194,7 @@ async function main() {
             }
         }
 
-        await upsertDocumentWithChunks(client, tenantId, homeUrl, 'HelpNinja Docs', `Welcome to HelpNinja.\n\n- Install via NPM.\n- Configure env vars.\n- Ingest your docs.\n- Embed the widget.\n\nNeed help? Contact support.`, embedder)
+        await upsertDocumentWithChunks(client, tenantId, homeUrl, 'helpNINJA Docs', `Welcome to helpNINJA.\n\n- Install via NPM.\n- Configure env vars.\n- Ingest your docs.\n- Embed the widget.\n\nNeed help? Contact support.`, embedder)
 
         const sessionId = rid().slice(0, 8)
         const conversationId = await ensureConversation(client, tenantId, sessionId)
@@ -206,7 +206,7 @@ async function main() {
                 `insert into public.integrations (tenant_id, provider, name, status, credentials, config)
                  values ($1,'email','Support email','active', '{}'::jsonb, jsonb_build_object('to', $2::text, 'from', $3::text))
                  on conflict do nothing`,
-                [tenantId, process.env.SUPPORT_FALLBACK_TO_EMAIL, process.env.SUPPORT_FROM_EMAIL || 'no-reply@helpninja.app']
+                [tenantId, process.env.SUPPORT_FALLBACK_TO_EMAIL, process.env.SUPPORT_FROM_EMAIL || 'no-reply@updates.helpninja.app']
             )
         }
 

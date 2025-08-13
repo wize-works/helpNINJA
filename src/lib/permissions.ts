@@ -4,7 +4,7 @@
 
 export type Role = 'owner' | 'admin' | 'analyst' | 'support' | 'viewer';
 
-export type Permission = 
+export type Permission =
     | 'tenant.manage'
     | 'users.manage'
     | 'sites.manage'
@@ -144,7 +144,7 @@ export function getRoleInfo(role: Role) {
             icon: 'fa-eye'
         }
     };
-    
+
     return roleInfo[role];
 }
 
@@ -168,10 +168,10 @@ export function getAssignableRoles(userRole: Role): Role[] {
 export function canManageUser(managerRole: Role, targetRole: Role): boolean {
     // Owner can manage everyone except other owners
     if (managerRole === 'owner' && targetRole !== 'owner') return true;
-    
+
     // Admin can manage analyst, support, viewer
     if (managerRole === 'admin' && ['analyst', 'support', 'viewer'].includes(targetRole)) return true;
-    
+
     return false;
 }
 
@@ -232,25 +232,25 @@ export function getFeaturePermissions() {
  */
 export function canAccessRoute(role: Role, route: string): boolean {
     const permissions = getFeaturePermissions();
-    
+
     // Map routes to required permissions
     const routePermissions: Record<string, Permission[]> = {
-        '/dashboard': permissions.dashboard,
-        '/dashboard/sites': permissions.sites.view,
-        '/dashboard/documents': permissions.documents.view,
-        '/dashboard/sources': permissions.sources.view,
-        '/dashboard/answers': permissions.answers.view,
-        '/dashboard/conversations': permissions.conversations.view,
-        '/dashboard/rules': permissions.rules.view,
-        '/dashboard/integrations': permissions.integrations.view,
-        '/dashboard/analytics': permissions.analytics.view,
-        '/dashboard/team': permissions.team.view,
-        '/dashboard/billing': permissions.billing.view,
-        '/dashboard/settings': permissions.settings.view
+        '/dashboard': permissions.dashboard as Permission[],
+        '/dashboard/sites': permissions.sites.view as Permission[],
+        '/dashboard/documents': permissions.documents.view as Permission[],
+        '/dashboard/sources': permissions.sources.view as Permission[],
+        '/dashboard/answers': permissions.answers.view as Permission[],
+        '/dashboard/conversations': permissions.conversations.view as Permission[],
+        '/dashboard/rules': permissions.rules.view as Permission[],
+        '/dashboard/integrations': permissions.integrations.view as Permission[],
+        '/dashboard/analytics': permissions.analytics.view as Permission[],
+        '/dashboard/team': permissions.team.view as Permission[],
+        '/dashboard/billing': permissions.billing.view as Permission[],
+        '/dashboard/settings': permissions.settings.view as Permission[]
     };
-    
+
     const requiredPermissions = routePermissions[route];
     if (!requiredPermissions) return true; // No specific permissions required
-    
+
     return requiredPermissions.some(permission => hasPermission(role, permission));
 }

@@ -11,40 +11,40 @@ export async function POST(req: NextRequest) {
     try {
         const body = await req.json();
         const tenantId = body.tenantId || req.headers.get('x-tenant-id') || process.env.DEMO_TENANT_ID || process.env.NEXT_PUBLIC_DEMO_TENANT_ID;
-        
+
         if (!tenantId) {
             return NextResponse.json({ error: 'Tenant ID required' }, { status: 400 });
         }
-        const { 
-            query: userQuery, 
-            siteId, 
-            includeAI = true, 
+        const {
+            query: userQuery,
+            siteId,
+            includeAI = true,
             maxResults = 8,
             voice = 'friendly'
         } = body;
-        
+
         if (!userQuery?.trim()) {
             return NextResponse.json({ error: 'Query is required' }, { status: 400 });
         }
-        
+
         if (!process.env.OPENAI_API_KEY && includeAI) {
-            return NextResponse.json({ 
-                error: 'OpenAI API key not configured - AI responses disabled' 
+            return NextResponse.json({
+                error: 'OpenAI API key not configured - AI responses disabled'
             }, { status: 500 });
         }
-        
+
         const startTime = Date.now();
-        
+
         // Search for curated answers and RAG results
         const { curatedAnswers, ragResults } = await searchWithCuratedAnswers(
-            tenantId, 
-            userQuery.trim(), 
-            maxResults, 
+            tenantId,
+            userQuery.trim(),
+            maxResults,
             siteId || undefined
         );
-        
+
         const searchTime = Date.now() - startTime;
-        
+
         // Prepare response data
         const responseData: {
             query: string;
@@ -124,15 +124,15 @@ export async function POST(req: NextRequest) {
                 ai_enabled: includeAI
             }
         };
-        
+
         // Generate AI response if requested
         if (includeAI && (curatedAnswers.length > 0 || ragResults.length > 0)) {
             try {
                 const aiStartTime = Date.now();
-                
+
                 let aiResponse: string;
                 let confidence: number;
-                
+
                 if (curatedAnswers.length > 0) {
                     // Use curated answer directly
                     aiResponse = curatedAnswers[0].answer;
@@ -142,11 +142,11 @@ export async function POST(req: NextRequest) {
                     const contextText = ragResults
                         .map((c, i) => `[[${i + 1}]] ${c.url || 'Source'}\n${c.content}`)
                         .join('\n\n');
-                    
-                    const systemPrompt = `You are HelpNinja, a helpful AI assistant. Use only the provided Context to answer the user's question. 
+
+                    const systemPrompt = `You are helpNINJA, a helpful AI assistant. Use only the provided Context to answer the user's question. 
 If the context doesn't contain relevant information, say you don't know and offer to connect them with support.
 Voice: ${voice}. Keep answers concise and helpful.`;
-                    
+
                     const chat = await openai.chat.completions.create({
                         model: process.env.OPENAI_CHAT_MODEL || 'gpt-4o-mini',
                         messages: [
@@ -156,14 +156,14 @@ Voice: ${voice}. Keep answers concise and helpful.`;
                         temperature: 0.7,
                         max_tokens: 500
                     });
-                    
-                    aiResponse = chat.choices[0]?.message?.content?.trim() || 
+
+                    aiResponse = chat.choices[0]?.message?.content?.trim() ||
                         "I don't have enough information to answer that question. Would you like me to connect you with support?";
                     confidence = chat.choices[0]?.finish_reason === 'stop' ? 0.7 : 0.4;
                 }
-                
+
                 const aiTime = Date.now() - aiStartTime;
-                
+
                 responseData.ai_response = {
                     answer: aiResponse,
                     confidence,
@@ -172,7 +172,7 @@ Voice: ${voice}. Keep answers concise and helpful.`;
                     model: process.env.OPENAI_CHAT_MODEL || 'gpt-4o-mini',
                     tokens_used: aiResponse.length / 4 // Rough estimate
                 };
-                
+
                 responseData.total_time_ms = searchTime + aiTime;
             } catch (aiError) {
                 console.error('AI generation error:', aiError);
@@ -192,7 +192,7 @@ Voice: ${voice}. Keep answers concise and helpful.`;
                 };
             }
         }
-        
+
         // Add search metadata
         responseData.metadata = {
             tenant_id: tenantId,
@@ -203,11 +203,11 @@ Voice: ${voice}. Keep answers concise and helpful.`;
             document_count: ragResults.length,
             ai_enabled: includeAI
         };
-        
+
         return NextResponse.json(responseData);
     } catch (error) {
         console.error('Playground test error:', error);
-        return NextResponse.json({ 
+        return NextResponse.json({
             error: 'Failed to process test query',
             details: error instanceof Error ? error.message : 'Unknown error'
         }, { status: 500 });

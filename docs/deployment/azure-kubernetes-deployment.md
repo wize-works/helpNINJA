@@ -1,6 +1,6 @@
 # Azure Kubernetes Deployment Guide
 
-This guide covers deploying HelpNinja to Azure Kubernetes Service (AKS) using GitHub Actions.
+This guide covers deploying helpNINJA to Azure Kubernetes Service (AKS) using GitHub Actions.
 
 ## 🏗️ **Prerequisites**
 

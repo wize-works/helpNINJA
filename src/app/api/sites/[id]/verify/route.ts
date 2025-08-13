@@ -150,7 +150,7 @@ async function verifyByMetaTag(domain: string, token: string): Promise<boolean> 
     try {
         const response = await fetch(`https://${domain}`, {
             method: 'GET',
-            headers: { 'User-Agent': 'HelpNinja-Verifier/1.0' },
+            headers: { 'User-Agent': 'helpNINJA-Verifier/1.0' },
             signal: AbortSignal.timeout(10000) // 10 second timeout
         })
 

@@ -152,7 +152,7 @@ async function sendWebhook(endpoint: WebhookEndpoint, event: WebhookEvent): Prom
 
         const headers: Record<string, string> = {
             'Content-Type': 'application/json',
-            'User-Agent': 'HelpNinja-Webhooks/1.0',
+            'User-Agent': 'helpNINJA-Webhooks/1.0',
             'X-Webhook-Event': event.type,
             'X-Webhook-Delivery': deliveryId,
             'X-Webhook-Timestamp': Math.floor(Date.now() / 1000).toString()

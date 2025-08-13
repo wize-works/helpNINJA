@@ -9,7 +9,7 @@ import { AnimatedPage, StaggerContainer, StaggerChild, HoverScale } from "@/comp
 import { useTenant } from "@/components/tenant-context";
 
 type Answer = {
-    id: string;
+    id?: string;
     question: string;
     answer: string;
     keywords: string[];
@@ -19,8 +19,8 @@ type Answer = {
     site_id?: string;
     site_name?: string;
     site_domain?: string;
-    created_at: string;
-    updated_at: string;
+    created_at?: string;
+    updated_at?: string;
 };
 
 export default function AnswersPage() {
@@ -302,7 +302,7 @@ export default function AnswersPage() {
                                                                 )}
                                                                 <div className="flex items-center gap-1">
                                                                     <i className="fa-duotone fa-solid fa-calendar" aria-hidden />
-                                                                    <span>{new Date(answer.updated_at).toLocaleDateString()}</span>
+                                                                    <span>{answer.updated_at ? new Date(answer.updated_at).toLocaleDateString() : 'N/A'}</span>
                                                                 </div>
                                                             </div>
 

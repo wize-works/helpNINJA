@@ -17,7 +17,7 @@ const integrationTypes = [
         configSchema: {
             webhook_url: { type: 'url', label: 'Webhook URL', required: true, placeholder: 'https://hooks.slack.com/...' },
             channel: { type: 'text', label: 'Channel', required: false, placeholder: '#support' },
-            username: { type: 'text', label: 'Bot Username', required: false, placeholder: 'HelpNinja' }
+            username: { type: 'text', label: 'Bot Username', required: false, placeholder: 'helpNINJA' }
         }
     },
     {
@@ -55,7 +55,7 @@ const integrationTypes = [
         features: ['Rich embeds', 'Custom webhooks', 'Bot integration', 'Role mentions'],
         configSchema: {
             webhook_url: { type: 'url', label: 'Discord Webhook URL', required: true, placeholder: 'https://discord.com/api/webhooks/...' },
-            username: { type: 'text', label: 'Bot Username', required: false, placeholder: 'HelpNinja' }
+            username: { type: 'text', label: 'Bot Username', required: false, placeholder: 'helpNINJA' }
         },
         comingSoon: true
     },
@@ -141,7 +141,7 @@ export default function IntegrationsMarketplacePage() {
                                 Integrations Marketplace
                             </h1>
                             <p className="text-base-content/70 mt-2">
-                                Discover and install integrations to extend your HelpNinja capabilities
+                                Discover and install integrations to extend your helpNINJA capabilities
                             </p>
                         </div>
                     </div>
