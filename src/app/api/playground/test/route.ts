@@ -5,7 +5,7 @@ import OpenAI from 'openai';
 
 export const runtime = 'nodejs';
 
-const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
+
 
 export async function POST(req: NextRequest) {
     try {
@@ -147,6 +147,8 @@ export async function POST(req: NextRequest) {
 If the context doesn't contain relevant information, say you don't know and offer to connect them with support.
 Voice: ${voice}. Keep answers concise and helpful.`;
 
+                    // Initialize OpenAI only when needed at runtime
+                    const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
                     const chat = await openai.chat.completions.create({
                         model: process.env.OPENAI_CHAT_MODEL || 'gpt-4o-mini',
                         messages: [

@@ -6,7 +6,6 @@ import { canSendMessage, incMessages } from '@/lib/usage';
 import { resolveTenantIdFromRequest } from '@/lib/auth';
 import { webhookEvents } from '@/lib/webhooks';
 
-const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
 export const runtime = 'nodejs';
 
 function parseAllowedOrigins(): string[] | null {
@@ -129,6 +128,8 @@ export async function POST(req: NextRequest) {
             const contextText = ragResults.map((c, i) => `[[${i + 1}]] ${c.url}\n${c.content}`).join('\n\n');
             refs = ragResults.map(c => c.url);
 
+            // Initialize OpenAI only when needed at runtime
+            const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
             const chat = await openai.chat.completions.create({
                 model: process.env.OPENAI_CHAT_MODEL || 'gpt-4o-mini',
                 messages: [

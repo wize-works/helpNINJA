@@ -5,7 +5,6 @@ import { searchWithCuratedAnswers } from '@/lib/rag';
 import { canSendMessage, incMessages } from '@/lib/usage';
 import OpenAI from 'openai';
 
-const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
 export const runtime = 'nodejs';
 
 const SYSTEM = (voice = 'friendly') => `You are helpNINJA, a concise, helpful site assistant.
@@ -79,6 +78,8 @@ async function handleSendMessage(req: AuthenticatedRequest) {
             const contextText = ragResults.map((c, i) => `[[${i + 1}]] ${c.url}\n${c.content}`).join('\n\n');
             refs = ragResults.map(c => c.url);
 
+            // Initialize OpenAI only when needed at runtime
+            const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
             const chat = await openai.chat.completions.create({
                 model: process.env.OPENAI_CHAT_MODEL || 'gpt-4o-mini',
                 messages: [

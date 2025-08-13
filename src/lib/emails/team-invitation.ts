@@ -1,7 +1,5 @@
 import { Resend } from 'resend';
 
-const resend = new Resend(process.env.RESEND_API_KEY!);
-
 export interface TeamInvitationEmailData {
     email: string;
     token: string;
@@ -127,6 +125,8 @@ export async function sendTeamInvitationEmail(data: TeamInvitationEmailData): Pr
 </html>`;
 
     try {
+        // Initialize Resend only when needed at runtime
+        const resend = new Resend(process.env.RESEND_API_KEY!);
         const result = await resend.emails.send({
             from: supportEmail,
             to: email,
