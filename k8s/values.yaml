@@ -38,8 +38,8 @@ staging:
 # Supabase configuration
 # TODO: Replace with your actual Supabase project URLs
 supabase:
-  url: "https://YOUR_PRODUCTION_PROJECT_ID.supabase.co"
-  stagingUrl: "https://YOUR_STAGING_PROJECT_ID.supabase.co"
+  url: "https://adrokmnrceksbpwjusjj.supabase.co"
+  stagingUrl: "https://adrokmnrceksbpwjusjj.supabase.co"
 
 # Secrets - these will be populated from GitHub Secrets
 # Note: These values are set via --set flags in the GitHub Actions workflow
