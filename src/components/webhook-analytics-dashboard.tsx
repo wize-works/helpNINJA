@@ -88,7 +88,7 @@ export function WebhookAnalyticsDashboard() {
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z" />
                 </svg>
                 <span>{error}</span>
-                <button className="btn btn-sm" onClick={loadAnalytics}>Retry</button>
+                <button className="btn btn-sm rounded-lg" onClick={loadAnalytics}>Retry</button>
             </div>
         );
     }
@@ -110,12 +110,17 @@ export function WebhookAnalyticsDashboard() {
         <div className="space-y-6">
             {/* Header with timeframe selector */}
             <div className="flex justify-between items-center">
-                <h2 className="text-2xl font-bold">Webhook Analytics</h2>
+                <div className="flex items-center justify-between mb-6">
+                    <div>
+                        <h2 className="text-xl font-semibold text-base-content">Webhook Performance</h2>
+                        <p className="text-sm text-base-content/60 mt-1">Real-time delivery metrics and performance insights</p>
+                    </div>
+                </div>
                 <div className="flex gap-2">
                     {['1d', '7d', '30d', '90d'].map((period) => (
                         <button
                             key={period}
-                            className={`btn btn-sm ${timeframe === period ? 'btn-primary' : 'btn-outline'}`}
+                            className={`btn btn-sm rounded-xl ${timeframe === period ? 'btn-primary' : 'btn-outline'}`}
                             onClick={() => setTimeframe(period)}
                         >
                             {period === '1d' ? '24h' : period === '7d' ? '7 days' : period === '30d' ? '30 days' : '90 days'}

@@ -127,55 +127,59 @@ export default function ActionSelector({
             {destinations.length > 0 && (
                 <div className="space-y-3">
                     {destinations.map((destination, index) => (
-                        <div key={index} className="bg-base-200/40 border border-base-300 rounded-xl p-4">
+                        <div key={index} className="bg-gradient-to-br from-base-100/60 to-base-200/40 backdrop-blur-sm rounded-xl border border-base-200/60 shadow-sm p-4">
                             <div className="flex items-start justify-between gap-4">
                                 <div className="flex items-center gap-3 flex-1">
-                                    <div className="w-10 h-10 bg-base-100 rounded-lg flex items-center justify-center border border-base-300">
+                                    <div className="w-10 h-10 bg-primary/10 rounded-lg flex items-center justify-center border border-primary/20">
                                         <i className={`fa-duotone fa-solid ${getDestinationIcon(destination.type)} text-primary`} aria-hidden />
                                     </div>
 
                                     <div className="flex-1 min-w-0">
-                                        <div className="font-medium text-sm">
+                                        <div className="font-medium text-sm text-base-content">
                                             {destination.type === 'integration' && destination.integrationId && (
                                                 <>
                                                     {integrations.find(i => i.id === destination.integrationId)?.name || 'Unknown Integration'}
-                                                    <span className="ml-2 text-xs opacity-60">
+                                                    <span className="ml-2 text-xs text-base-content/60">
                                                         ({integrations.find(i => i.id === destination.integrationId)?.provider})
                                                     </span>
                                                 </>
                                             )}
                                             {destination.type === 'email' && destination.email}
                                             {destination.type === 'webhook' && (
-                                                <span className="text-xs font-mono">{destination.webhookUrl}</span>
+                                                <span className="text-xs font-mono text-base-content/70">{destination.webhookUrl}</span>
                                             )}
                                         </div>
-                                        <div className="text-xs text-base-content/60 capitalize">
+                                        <div className="text-xs text-base-content/60 capitalize mt-1">
                                             {destination.type} destination
                                         </div>
                                     </div>
                                 </div>
 
                                 <div className="flex items-center gap-2">
-                                    <button
-                                        type="button"
-                                        className="btn btn-sm btn-ghost"
-                                        onClick={() => {
-                                            // TODO: Show edit modal
-                                        }}
-                                        disabled={disabled}
-                                        title="Edit destination"
-                                    >
-                                        <i className="fa-duotone fa-solid fa-edit" aria-hidden />
-                                    </button>
-                                    <button
-                                        type="button"
-                                        className="btn btn-sm btn-ghost text-error"
-                                        onClick={() => removeDestination(index)}
-                                        disabled={disabled}
-                                        title="Remove destination"
-                                    >
-                                        <i className="fa-duotone fa-solid fa-trash" aria-hidden />
-                                    </button>
+                                    <HoverScale scale={1.05}>
+                                        <button
+                                            type="button"
+                                            className="btn btn-sm btn-ghost rounded-lg"
+                                            onClick={() => {
+                                                // TODO: Show edit modal
+                                            }}
+                                            disabled={disabled}
+                                            title="Edit destination"
+                                        >
+                                            <i className="fa-duotone fa-solid fa-edit" aria-hidden />
+                                        </button>
+                                    </HoverScale>
+                                    <HoverScale scale={1.05}>
+                                        <button
+                                            type="button"
+                                            className="btn btn-sm btn-ghost text-error rounded-lg"
+                                            onClick={() => removeDestination(index)}
+                                            disabled={disabled}
+                                            title="Remove destination"
+                                        >
+                                            <i className="fa-duotone fa-solid fa-trash" aria-hidden />
+                                        </button>
+                                    </HoverScale>
                                 </div>
                             </div>
                         </div>
@@ -197,7 +201,7 @@ export default function ActionSelector({
                     <HoverScale scale={1.02}>
                         <button
                             type="button"
-                            className="btn btn-outline"
+                            className="btn btn-outline btn-primary"
                             onClick={() => setShowAddForm(true)}
                             disabled={disabled}
                         >
@@ -207,45 +211,61 @@ export default function ActionSelector({
                     </HoverScale>
                 </div>
             ) : (
-                <div className="card bg-base-200/40 border border-base-300">
-                    <div className="card-body">
-                        <h4 className="card-title text-lg">Add Destination</h4>
+                <div className="bg-gradient-to-br from-base-100/60 to-base-200/40 backdrop-blur-sm rounded-2xl border border-base-200/60 shadow-sm">
+                    <div className="p-6">
+                        <div className="flex items-center gap-3 mb-6">
+                            <div className="w-12 h-12 bg-primary/10 rounded-2xl flex items-center justify-center">
+                                <i className="fa-duotone fa-solid fa-paper-plane text-lg text-primary" aria-hidden />
+                            </div>
+                            <div>
+                                <h4 className="text-xl font-semibold text-base-content">Add Destination</h4>
+                                <p className="text-base-content/60 text-sm">Configure where escalation notifications will be sent</p>
+                            </div>
+                        </div>
 
-                        <div className="space-y-4">
+                        <div className="space-y-6">
                             {/* Destination Type */}
-                            <div className="form-control">
-                                <label className="label">
-                                    <span className="label-text">Destination Type</span>
-                                </label>
-                                <div className="grid grid-cols-3 gap-2">
+                            <fieldset className="space-y-4">
+                                <legend className="text-base font-semibold text-base-content mb-4">Destination Type</legend>
+                                <div className="grid grid-cols-3 gap-3">
                                     {[
-                                        { type: 'integration', label: 'Integration', icon: 'fa-puzzle-piece' },
-                                        { type: 'email', label: 'Email', icon: 'fa-envelope' },
-                                        { type: 'webhook', label: 'Webhook', icon: 'fa-webhook' }
+                                        { type: 'integration', label: 'Integration', icon: 'fa-puzzle-piece', desc: 'Send to connected services' },
+                                        { type: 'email', label: 'Email', icon: 'fa-envelope', desc: 'Direct email notification' },
+                                        { type: 'webhook', label: 'Webhook', icon: 'fa-webhook', desc: 'Custom API endpoint' }
                                     ].map((option) => (
                                         <button
                                             key={option.type}
                                             type="button"
-                                            className={`btn btn-sm ${newDestination.type === option.type ? 'btn-primary' : 'btn-outline'}`}
+                                            className={`p-4 rounded-xl border-2 transition-all duration-200 ${newDestination.type === option.type
+                                                ? 'border-primary bg-primary/10 text-primary'
+                                                : 'border-base-300 bg-base-100/60 hover:border-base-400 hover:bg-base-200/40'
+                                                }`}
                                             onClick={() => setNewDestination({ ...newDestination, type: option.type as any })}
                                             disabled={disabled}
                                         >
-                                            <i className={`fa-duotone fa-solid ${option.icon} mr-2`} aria-hidden />
-                                            {option.label}
+                                            <div className="flex flex-col items-center gap-2">
+                                                <i className={`fa-duotone fa-solid ${option.icon} text-xl`} aria-hidden />
+                                                <span className="font-medium text-sm">{option.label}</span>
+                                                <span className="text-xs text-base-content/60 text-center">{option.desc}</span>
+                                            </div>
                                         </button>
                                     ))}
                                 </div>
-                            </div>
+                            </fieldset>
 
                             {/* Integration Selection */}
                             {newDestination.type === 'integration' && (
-                                <div className="form-control">
-                                    <label className="label">
-                                        <span className="label-text">Select Integration</span>
-                                    </label>
+                                <label className="block">
+                                    <span className="text-sm font-medium text-base-content mb-2 block">
+                                        Select Integration
+                                        <span className="text-error ml-1">*</span>
+                                    </span>
                                     {integrations.length === 0 ? (
-                                        <div className="text-center py-4 text-base-content/60">
-                                            <p className="mb-2">No active integrations found</p>
+                                        <div className="text-center py-6 bg-base-200/40 rounded-xl border border-base-300">
+                                            <div className="w-12 h-12 bg-base-300/60 rounded-xl flex items-center justify-center mx-auto mb-3">
+                                                <i className="fa-duotone fa-solid fa-puzzle-piece text-xl text-base-content/40" aria-hidden />
+                                            </div>
+                                            <p className="text-base-content/60 mb-3">No active integrations found</p>
                                             <a href="/dashboard/integrations" className="btn btn-sm btn-outline">
                                                 <i className="fa-duotone fa-solid fa-plus mr-2" aria-hidden />
                                                 Set Up Integrations
@@ -253,7 +273,7 @@ export default function ActionSelector({
                                         </div>
                                     ) : (
                                         <select
-                                            className="select select-bordered"
+                                            className="select select-bordered w-full focus:select-primary transition-all duration-200"
                                             value={newDestination.integrationId || ''}
                                             onChange={(e) => setNewDestination({
                                                 ...newDestination,
@@ -269,18 +289,22 @@ export default function ActionSelector({
                                             ))}
                                         </select>
                                     )}
-                                </div>
+                                    <div className="text-xs text-base-content/60 mt-1">
+                                        Choose which integration will receive the escalation notification
+                                    </div>
+                                </label>
                             )}
 
                             {/* Email Input */}
                             {newDestination.type === 'email' && (
-                                <div className="form-control">
-                                    <label className="label">
-                                        <span className="label-text">Email Address</span>
-                                    </label>
+                                <label className="block">
+                                    <span className="text-sm font-medium text-base-content mb-2 block">
+                                        Email Address
+                                        <span className="text-error ml-1">*</span>
+                                    </span>
                                     <input
                                         type="email"
-                                        className="input input-bordered"
+                                        className="input input-bordered w-full focus:input-primary transition-all duration-200 focus:scale-[1.02]"
                                         placeholder="support@company.com"
                                         value={newDestination.email || ''}
                                         onChange={(e) => setNewDestination({
@@ -289,18 +313,22 @@ export default function ActionSelector({
                                         })}
                                         disabled={disabled}
                                     />
-                                </div>
+                                    <div className="text-xs text-base-content/60 mt-1">
+                                        Enter the email address that will receive escalation notifications
+                                    </div>
+                                </label>
                             )}
 
                             {/* Webhook Input */}
                             {newDestination.type === 'webhook' && (
-                                <div className="form-control">
-                                    <label className="label">
-                                        <span className="label-text">Webhook URL</span>
-                                    </label>
+                                <label className="block">
+                                    <span className="text-sm font-medium text-base-content mb-2 block">
+                                        Webhook URL
+                                        <span className="text-error ml-1">*</span>
+                                    </span>
                                     <input
                                         type="url"
-                                        className="input input-bordered"
+                                        className="input input-bordered w-full focus:input-primary transition-all duration-200 focus:scale-[1.02]"
                                         placeholder="https://api.example.com/webhook"
                                         value={newDestination.webhookUrl || ''}
                                         onChange={(e) => setNewDestination({
@@ -309,49 +337,61 @@ export default function ActionSelector({
                                         })}
                                         disabled={disabled}
                                     />
-                                </div>
+                                    <div className="text-xs text-base-content/60 mt-1">
+                                        Enter the webhook endpoint that will receive escalation data
+                                    </div>
+                                </label>
                             )}
 
                             {/* Message Template */}
-                            <div className="form-control">
-                                <label className="label">
-                                    <span className="label-text">Message Template</span>
+                            <fieldset className="space-y-4">
+                                <legend className="text-base font-semibold text-base-content mb-4">Message Template</legend>
+                                <label className="block">
+                                    <span className="text-sm font-medium text-base-content mb-2 block">Template Content</span>
+                                    <textarea
+                                        className="textarea textarea-bordered w-full h-24 focus:textarea-primary transition-all duration-200 focus:scale-[1.02]"
+                                        placeholder="Customize the message that will be sent..."
+                                        value={newDestination.template || ''}
+                                        onChange={(e) => setNewDestination({
+                                            ...newDestination,
+                                            template: e.target.value
+                                        })}
+                                        disabled={disabled}
+                                    />
+                                    <div className="text-xs text-base-content/60 mt-1">
+                                        Use variables: &#123;&#123; message &#125;&#125;, &#123;&#123; confidence &#125;&#125;, &#123;&#123; timestamp &#125;&#125;, &#123;&#123; userEmail &#125;&#125;
+                                    </div>
                                 </label>
-                                <textarea
-                                    className="textarea textarea-bordered h-24"
-                                    placeholder="Customize the message that will be sent..."
-                                    value={newDestination.template || ''}
-                                    onChange={(e) => setNewDestination({
-                                        ...newDestination,
-                                        template: e.target.value
-                                    })}
-                                    disabled={disabled}
-                                />
-                                <label className="label">
-                                    <span className="label-text-alt">
-                                        Use variables: {{ message }}, {{ confidence }}, {{ timestamp }}, {{ userEmail }}
-                                    </span>
-                                </label>
-                            </div>
+                            </fieldset>
 
                             {/* Actions */}
-                            <div className="flex gap-3">
-                                <button
-                                    type="button"
-                                    className="btn btn-primary"
-                                    onClick={addDestination}
-                                    disabled={disabled}
-                                >
-                                    Add Destination
-                                </button>
-                                <button
-                                    type="button"
-                                    className="btn btn-ghost"
-                                    onClick={() => setShowAddForm(false)}
-                                    disabled={disabled}
-                                >
-                                    Cancel
-                                </button>
+                            <div className="flex items-center justify-between pt-4 border-t border-base-200/60">
+                                <div className="text-sm text-base-content/60">
+                                    Configure where and how escalation notifications will be sent
+                                </div>
+
+                                <div className="flex items-center gap-3">
+                                    <button
+                                        type="button"
+                                        className="btn btn-ghost"
+                                        onClick={() => setShowAddForm(false)}
+                                        disabled={disabled}
+                                    >
+                                        Cancel
+                                    </button>
+
+                                    <HoverScale scale={1.02}>
+                                        <button
+                                            type="button"
+                                            className="btn btn-primary"
+                                            onClick={addDestination}
+                                            disabled={disabled}
+                                        >
+                                            <i className="fa-duotone fa-solid fa-plus mr-2" aria-hidden />
+                                            Add Destination
+                                        </button>
+                                    </HoverScale>
+                                </div>
                             </div>
                         </div>
                     </div>

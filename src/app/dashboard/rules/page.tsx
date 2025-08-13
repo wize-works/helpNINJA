@@ -48,6 +48,17 @@ export default function RulesPage() {
     const [showEditor, setShowEditor] = useState(false);
     const [editingRule, setEditingRule] = useState<EscalationRule | undefined>();
     const [testingRule, setTestingRule] = useState<string | null>(null);
+    const [showTestInterface, setShowTestInterface] = useState(false);
+    const [testData, setTestData] = useState({
+        message: 'How do I reset my password?',
+        confidence: 0.3,
+        userEmail: 'user@example.com',
+        offHours: false
+    });
+    const [testResult, setTestResult] = useState<{
+        matched: boolean;
+        details: TestDetail[];
+    } | null>(null);
     const [filters, setFilters] = useState({
         siteId: '',
         enabled: 'true',
@@ -211,17 +222,13 @@ export default function RulesPage() {
                     'Content-Type': 'application/json',
                     'x-tenant-id': tenantId
                 },
-                body: JSON.stringify({
-                    message: 'How do I reset my password?',
-                    confidence: 0.3,
-                    userEmail: 'user@example.com'
-                })
+                body: JSON.stringify(testData)
             });
 
             if (response.ok) {
                 const result = await response.json();
-                const resultMessage = `Test result: ${result.matched ? 'MATCHED ✅' : 'NOT MATCHED ❌'}\n\nDetails:\n${result.details.map((d: TestDetail) => `- ${d.reason} (${d.result ? 'Pass' : 'Fail'})`).join('\n')}`;
-                toastUtils.info(resultMessage);
+                setTestResult(result);
+                setShowTestInterface(true);
             } else {
                 const error = await response.json();
                 toastUtils.apiError(error, 'Failed to test rule');
@@ -232,6 +239,16 @@ export default function RulesPage() {
         } finally {
             setTestingRule(null);
         }
+    };
+
+    const openTestInterface = () => {
+        setShowTestInterface(true);
+        setTestResult(null);
+    };
+
+    const closeTestInterface = () => {
+        setShowTestInterface(false);
+        setTestResult(null);
     };
 
     const resetForm = () => {
@@ -287,16 +304,6 @@ export default function RulesPage() {
                                 </p>
                             </div>
                             <div className="flex items-center gap-3">
-                                <div className="stats shadow">
-                                    <div className="stat">
-                                        <div className="stat-figure text-primary">
-                                            <i className="fa-duotone fa-solid fa-route text-2xl" aria-hidden />
-                                        </div>
-                                        <div className="stat-title">Total Rules</div>
-                                        <div className="stat-value text-primary text-lg">{rules.length}</div>
-                                        <div className="stat-desc">Active: {rules.filter(r => r.enabled).length}</div>
-                                    </div>
-                                </div>
                                 <HoverScale scale={1.02}>
                                     <button
                                         className="btn btn-primary"
@@ -319,14 +326,24 @@ export default function RulesPage() {
                 {showEditor && (
                     <StaggerContainer>
                         <StaggerChild>
-                            <div className="card bg-base-100 rounded-2xl shadow-sm">
+                            <div className="bg-gradient-to-br from-base-100/60 to-base-200/40 backdrop-blur-sm rounded-2xl border border-base-200/60 shadow-sm">
                                 <div className="p-6">
                                     <div className="flex items-center justify-between mb-6">
-                                        <h3 className="text-lg font-semibold text-base-content">
-                                            {editingRule ? 'Edit Rule' : 'Create New Rule'}
-                                        </h3>
+                                        <div className="flex items-center gap-3">
+                                            <div className="w-12 h-12 bg-primary/10 rounded-2xl flex items-center justify-center">
+                                                <i className={`fa-duotone fa-solid ${editingRule ? 'fa-edit' : 'fa-plus'} text-lg text-primary`} aria-hidden />
+                                            </div>
+                                            <div>
+                                                <h3 className="text-xl font-semibold text-base-content">
+                                                    {editingRule ? 'Edit Rule' : 'Create New Rule'}
+                                                </h3>
+                                                <p className="text-base-content/60 text-sm">
+                                                    {editingRule ? 'Update your escalation rule configuration' : 'Create a new rule to automate conversation handling'}
+                                                </p>
+                                            </div>
+                                        </div>
                                         <button
-                                            className="btn btn-ghost btn-sm rounded-lg"
+                                            className="btn btn-ghost btn-sm btn-square rounded-lg"
                                             onClick={() => {
                                                 setShowEditor(false);
                                                 setEditingRule(undefined);
@@ -337,124 +354,164 @@ export default function RulesPage() {
                                     </div>
 
                                     {/* Basic Information */}
-                                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
-                                        <div className="space-y-4">
-                                            <div className="form-control">
-                                                <label className="label">
-                                                    <span className="label-text font-semibold">Rule Name</span>
-                                                </label>
-                                                <input
-                                                    type="text"
-                                                    className="input input-bordered"
-                                                    placeholder="e.g., Low Confidence Escalation"
-                                                    value={formData.name}
-                                                    onChange={(e) => setFormData(prev => ({ ...prev, name: e.target.value }))}
-                                                />
-                                            </div>
-
-                                            <div className="form-control">
-                                                <label className="label">
-                                                    <span className="label-text font-semibold">Description</span>
-                                                </label>
-                                                <textarea
-                                                    className="textarea textarea-bordered h-20"
-                                                    placeholder="Optional description of what this rule does..."
-                                                    value={formData.description}
-                                                    onChange={(e) => setFormData(prev => ({ ...prev, description: e.target.value }))}
-                                                />
-                                            </div>
-                                        </div>
-
-                                        <div className="space-y-4">
-                                            <div className="form-control">
-                                                <label className="label">
-                                                    <span className="label-text font-semibold">Priority</span>
-                                                </label>
-                                                <input
-                                                    type="range"
-                                                    min="0"
-                                                    max="100"
-                                                    className="range range-primary"
-                                                    value={formData.priority}
-                                                    onChange={(e) => setFormData(prev => ({ ...prev, priority: parseInt(e.target.value) }))}
-                                                />
-                                                <div className="text-center text-sm text-base-content/60 mt-1">
-                                                    {formData.priority} (Higher = evaluated first)
-                                                </div>
-                                            </div>
-
-                                            <div className="form-control">
-                                                <label className="label">
-                                                    <span className="label-text font-semibold">Rule Type</span>
-                                                </label>
-                                                <select
-                                                    className="select select-bordered"
-                                                    value={formData.ruleType}
-                                                    onChange={(e) => setFormData(prev => ({ ...prev, ruleType: e.target.value as 'escalation' | 'routing' | 'notification' }))}
-                                                >
-                                                    <option value="escalation">Escalation</option>
-                                                    <option value="routing">Routing</option>
-                                                    <option value="notification">Notification</option>
-                                                </select>
-                                            </div>
-
-                                            <div className="form-control">
-                                                <label className="label">
-                                                    <span className="label-text font-semibold">Associated Site</span>
-                                                </label>
-                                                <SiteSelector
-                                                    tenantId={tenantId}
-                                                    value={formData.siteId}
-                                                    onChange={(siteId) => setFormData(prev => ({ ...prev, siteId: siteId || '' }))}
-                                                    allowNone={true}
-                                                    noneLabel="All sites"
-                                                    placeholder="Select a site"
-                                                />
-                                            </div>
-
-                                            <div className="form-control">
-                                                <label className="cursor-pointer label">
-                                                    <span className="label-text font-semibold">Enabled</span>
+                                    <fieldset className="space-y-6 mb-6">
+                                        <legend className="text-base font-semibold text-base-content mb-4">Rule Information</legend>
+                                        
+                                        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                                            <div className="space-y-4">
+                                                <label className="block">
+                                                    <span className="text-sm font-medium text-base-content mb-2 block">
+                                                        Rule Name
+                                                        <span className="text-error ml-1">*</span>
+                                                    </span>
                                                     <input
-                                                        type="checkbox"
-                                                        className="checkbox checkbox-primary"
-                                                        checked={formData.enabled}
-                                                        onChange={(e) => setFormData(prev => ({ ...prev, enabled: e.target.checked }))}
+                                                        type="text"
+                                                        className="input input-bordered w-full focus:input-primary transition-all duration-200 focus:scale-[1.02]"
+                                                        placeholder="e.g., Low Confidence Escalation"
+                                                        value={formData.name}
+                                                        onChange={(e) => setFormData(prev => ({ ...prev, name: e.target.value }))}
                                                     />
+                                                    <div className="text-xs text-base-content/60 mt-1">
+                                                        Give your rule a descriptive name for easy identification
+                                                    </div>
+                                                </label>
+
+                                                <label className="block">
+                                                    <span className="text-sm font-medium text-base-content mb-2 block">Description</span>
+                                                    <textarea
+                                                        className="textarea textarea-bordered w-full h-20 focus:textarea-primary transition-all duration-200 focus:scale-[1.02]"
+                                                        placeholder="Optional description of what this rule does..."
+                                                        value={formData.description}
+                                                        onChange={(e) => setFormData(prev => ({ ...prev, description: e.target.value }))}
+                                                    />
+                                                    <div className="text-xs text-base-content/60 mt-1">
+                                                        Explain the purpose and behavior of this rule
+                                                    </div>
+                                                </label>
+                                            </div>
+
+                                            <div className="space-y-4">
+                                                <label className="block">
+                                                    <span className="text-sm font-medium text-base-content mb-2 block">Priority</span>
+                                                    <input
+                                                        type="range"
+                                                        min="0"
+                                                        max="100"
+                                                        className="range range-primary w-full"
+                                                        value={formData.priority}
+                                                        onChange={(e) => setFormData(prev => ({ ...prev, priority: parseInt(e.target.value) }))}
+                                                    />
+                                                    <div className="w-full flex justify-between text-xs px-2 mt-1">
+                                                        <span>Low (0)</span>
+                                                        <span className="font-semibold text-primary">{formData.priority}</span>
+                                                        <span>High (100)</span>
+                                                    </div>
+                                                    <div className="text-xs text-base-content/60 mt-1">
+                                                        Higher priority rules are evaluated first
+                                                    </div>
+                                                </label>
+
+                                                <label className="block">
+                                                    <span className="text-sm font-medium text-base-content mb-2 block">Rule Type</span>
+                                                    <select
+                                                        className="select select-bordered w-full focus:select-primary transition-all duration-200"
+                                                        value={formData.ruleType}
+                                                        onChange={(e) => setFormData(prev => ({ ...prev, ruleType: e.target.value as 'escalation' | 'routing' | 'notification' }))}
+                                                    >
+                                                        <option value="escalation">🚨 Escalation - Route to human support</option>
+                                                        <option value="routing">🔄 Routing - Send to specific integrations</option>
+                                                        <option value="notification">🔔 Notification - Alert team members</option>
+                                                    </select>
+                                                    <div className="text-xs text-base-content/60 mt-1">
+                                                        Determines what action the rule will perform
+                                                    </div>
+                                                </label>
+
+                                                <label className="block">
+                                                    <span className="text-sm font-medium text-base-content mb-2 block">Associated Site</span>
+                                                    <SiteSelector
+                                                        tenantId={tenantId}
+                                                        value={formData.siteId}
+                                                        onChange={(siteId) => setFormData(prev => ({ ...prev, siteId: siteId || '' }))}
+                                                        allowNone={true}
+                                                        noneLabel="All sites"
+                                                        placeholder="Select a site"
+                                                    />
+                                                    <div className="text-xs text-base-content/60 mt-1">
+                                                        Optional: Apply rule only to specific sites
+                                                    </div>
+                                                </label>
+
+                                                <label className="block">
+                                                    <span className="text-sm font-medium text-base-content mb-2 block">Status</span>
+                                                    <div className="flex items-center gap-3 mt-2">
+                                                        <label className="cursor-pointer flex items-center gap-2">
+                                                            <input
+                                                                type="checkbox"
+                                                                className="checkbox checkbox-primary"
+                                                                checked={formData.enabled}
+                                                                onChange={(e) => setFormData(prev => ({ ...prev, enabled: e.target.checked }))}
+                                                            />
+                                                            <span className="text-sm">Enabled</span>
+                                                        </label>
+                                                    </div>
+                                                    <div className="text-xs text-base-content/60 mt-1">
+                                                        Disabled rules won&apos;t execute even when conditions are met
+                                                    </div>
                                                 </label>
                                             </div>
                                         </div>
-                                    </div>
+                                    </fieldset>
 
                                     {/* Rule Builder */}
-                                    <RuleBuilder
-                                        tenantId={tenantId}
-                                        predicate={formData.predicate}
-                                        destinations={formData.destinations}
-                                        onPredicateChange={(predicate) => setFormData(prev => ({ ...prev, predicate }))}
-                                        onDestinationsChange={(destinations) => setFormData(prev => ({ ...prev, destinations }))}
-                                    />
+                                    <fieldset className="space-y-4 mb-6">
+                                        <legend className="text-base font-semibold text-base-content mb-4">Rule Logic & Actions</legend>
+                                        <RuleBuilder
+                                            tenantId={tenantId}
+                                            predicate={formData.predicate}
+                                            destinations={formData.destinations}
+                                            onPredicateChange={(predicate) => setFormData(prev => ({ ...prev, predicate }))}
+                                            onDestinationsChange={(destinations) => setFormData(prev => ({ ...prev, destinations }))}
+                                        />
+                                    </fieldset>
 
                                     {/* Save Actions */}
-                                    <div className="flex gap-3 mt-6 pt-6 border-t border-base-300">
-                                        <HoverScale scale={1.02}>
+                                    <div className="flex items-center justify-between pt-4 border-t border-base-200/60">
+                                        <div className="text-sm text-base-content/60">
+                                            {editingRule ? 'Update your escalation rule configuration' : 'Create a new rule to automate conversation handling'}
+                                        </div>
+                                        
+                                        <div className="flex items-center gap-3">
                                             <button
-                                                className="btn btn-primary"
-                                                onClick={handleSave}
-                                                disabled={!formData.name.trim() || formData.predicate.conditions.length === 0 || formData.destinations.length === 0}
+                                                className="btn btn-ghost"
+                                                onClick={() => {
+                                                    setShowEditor(false);
+                                                    setEditingRule(undefined);
+                                                }}
                                             >
-                                                {editingRule ? 'Update Rule' : 'Create Rule'}
+                                                Cancel
                                             </button>
-                                        </HoverScale>
-                                        <button
-                                            className="btn btn-ghost"
-                                            onClick={() => {
-                                                setShowEditor(false);
-                                                setEditingRule(undefined);
-                                            }}
-                                        >
-                                            Cancel
-                                        </button>
+                                            
+                                            <HoverScale scale={1.02}>
+                                                <button
+                                                    className={`btn btn-primary ${!formData.name.trim() || formData.predicate.conditions.length === 0 || formData.destinations.length === 0 ? 'btn-disabled' : ''}`}
+                                                    onClick={handleSave}
+                                                    disabled={!formData.name.trim() || formData.predicate.conditions.length === 0 || formData.destinations.length === 0}
+                                                >
+                                                    {editingRule ? (
+                                                        <>
+                                                            <i className="fa-duotone fa-solid fa-save mr-2" aria-hidden />
+                                                            Update Rule
+                                                        </>
+                                                    ) : (
+                                                        <>
+                                                            <i className="fa-duotone fa-solid fa-plus mr-2" aria-hidden />
+                                                            Create Rule
+                                                        </>
+                                                    )}
+                                                </button>
+                                            </HoverScale>
+                                        </div>
                                     </div>
                                 </div>
                             </div>
@@ -466,13 +523,21 @@ export default function RulesPage() {
                 {!showEditor && (
                     <StaggerContainer>
                         <StaggerChild>
-                            <div className="card bg-base-100 border border-base-300">
-                                <div className="card-body">
+                            <div className="bg-gradient-to-br from-base-100/60 to-base-200/40 backdrop-blur-sm rounded-2xl border border-base-200/60 shadow-sm">
+                                <div className="p-6">
+                                    <div className="flex items-center gap-3 mb-4">
+                                        <div className="w-10 h-10 bg-secondary/10 rounded-xl flex items-center justify-center">
+                                            <i className="fa-duotone fa-solid fa-filter text-secondary" aria-hidden />
+                                        </div>
+                                        <div>
+                                            <h3 className="text-lg font-semibold text-base-content">Filter Rules</h3>
+                                            <p className="text-base-content/60 text-sm">Narrow down your rules by specific criteria</p>
+                                        </div>
+                                    </div>
+                                    
                                     <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                                        <div className="form-control">
-                                            <label className="label">
-                                                <span className="label-text">Filter by site</span>
-                                            </label>
+                                        <label className="block">
+                                            <span className="text-sm font-medium text-base-content mb-2 block">Filter by site</span>
                                             <SiteSelector
                                                 tenantId={tenantId}
                                                 value={filters.siteId}
@@ -481,38 +546,34 @@ export default function RulesPage() {
                                                 noneLabel="All sites"
                                                 placeholder="Select a site"
                                             />
-                                        </div>
+                                        </label>
 
-                                        <div className="form-control">
-                                            <label className="label">
-                                                <span className="label-text">Status</span>
-                                            </label>
+                                        <label className="block">
+                                            <span className="text-sm font-medium text-base-content mb-2 block">Status</span>
                                             <select
-                                                className="select select-bordered"
+                                                className="select select-bordered w-full focus:select-primary transition-all duration-200"
                                                 value={filters.enabled}
                                                 onChange={(e) => setFilters(prev => ({ ...prev, enabled: e.target.value }))}
                                             >
                                                 <option value="">All rules</option>
-                                                <option value="true">Enabled only</option>
-                                                <option value="false">Disabled only</option>
+                                                <option value="true">🟢 Enabled only</option>
+                                                <option value="false">🔴 Disabled only</option>
                                             </select>
-                                        </div>
+                                        </label>
 
-                                        <div className="form-control">
-                                            <label className="label">
-                                                <span className="label-text">Type</span>
-                                            </label>
+                                        <label className="block">
+                                            <span className="text-sm font-medium text-base-content mb-2 block">Type</span>
                                             <select
-                                                className="select select-bordered"
+                                                className="select select-bordered w-full focus:select-primary transition-all duration-200"
                                                 value={filters.type}
                                                 onChange={(e) => setFilters(prev => ({ ...prev, type: e.target.value }))}
                                             >
                                                 <option value="">All types</option>
-                                                <option value="escalation">Escalation</option>
-                                                <option value="routing">Routing</option>
-                                                <option value="notification">Notification</option>
+                                                <option value="escalation">🚨 Escalation</option>
+                                                <option value="routing">🔄 Routing</option>
+                                                <option value="notification">🔔 Notification</option>
                                             </select>
-                                        </div>
+                                        </label>
                                     </div>
                                 </div>
                             </div>
@@ -524,8 +585,8 @@ export default function RulesPage() {
                 {!showEditor && (
                     <StaggerContainer>
                         <StaggerChild>
-                            <div className="card bg-base-100 border border-base-300">
-                                <div className="card-body p-0">
+                            <div className="bg-gradient-to-br from-base-100/60 to-base-200/40 backdrop-blur-sm rounded-2xl border border-base-200/60 shadow-sm">
+                                <div className="p-0">
                                     {loading ? (
                                         <div className="p-8 space-y-4">
                                             {Array.from({ length: 3 }, (_, i) => (
@@ -614,9 +675,8 @@ export default function RulesPage() {
                                                         <div className="flex items-center gap-2">
                                                             <HoverScale scale={1.05}>
                                                                 <button
-                                                                    className={`btn btn-sm btn-outline rounded-lg ${testingRule === rule.id ? 'loading' : ''}`}
-                                                                    onClick={() => testRule(rule.id)}
-                                                                    disabled={testingRule === rule.id}
+                                                                    className="btn btn-sm btn-outline rounded-lg"
+                                                                    onClick={() => openTestInterface()}
                                                                     title="Test rule"
                                                                 >
                                                                     <i className="fa-duotone fa-solid fa-flask" aria-hidden />
@@ -664,16 +724,205 @@ export default function RulesPage() {
                     </StaggerContainer>
                 )}
 
+                {/* Test Rule Interface */}
+                {showTestInterface && (
+                    <StaggerContainer>
+                        <StaggerChild>
+                            <div className="bg-gradient-to-br from-base-100/60 to-base-200/40 backdrop-blur-sm rounded-2xl border border-base-200/60 shadow-sm">
+                                <div className="p-6">
+                                    <div className="flex items-center justify-between mb-6">
+                                        <div className="flex items-center gap-3">
+                                            <div className="w-12 h-12 bg-secondary/10 rounded-2xl flex items-center justify-center">
+                                                <i className="fa-duotone fa-solid fa-flask text-lg text-secondary" aria-hidden />
+                                            </div>
+                                            <div>
+                                                <h3 className="text-xl font-semibold text-base-content">Test Rule</h3>
+                                                <p className="text-base-content/60 text-sm">Test your rule with sample conversation data</p>
+                                            </div>
+                                        </div>
+                                        <button
+                                            className="btn btn-ghost btn-sm btn-square rounded-lg"
+                                            onClick={closeTestInterface}
+                                        >
+                                            <i className="fa-duotone fa-solid fa-times" aria-hidden />
+                                        </button>
+                                    </div>
+
+                                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                                        {/* Test Input Form */}
+                                        <fieldset className="space-y-6">
+                                            <legend className="text-base font-semibold text-base-content mb-4">Test Data</legend>
+                                            
+                                            <label className="block">
+                                                <span className="text-sm font-medium text-base-content mb-2 block">
+                                                    Test Message
+                                                    <span className="text-error ml-1">*</span>
+                                                </span>
+                                                <textarea
+                                                    className="textarea textarea-bordered w-full h-20 focus:textarea-primary transition-all duration-200 focus:scale-[1.02]"
+                                                    placeholder="Enter a sample user message to test..."
+                                                    value={testData.message}
+                                                    onChange={(e) => setTestData(prev => ({ ...prev, message: e.target.value }))}
+                                                />
+                                                <div className="text-xs text-base-content/60 mt-1">
+                                                    The message content that will be evaluated against your rule conditions
+                                                </div>
+                                            </label>
+
+                                            <label className="block">
+                                                <span className="text-sm font-medium text-base-content mb-2 block">
+                                                    Confidence Score
+                                                </span>
+                                                <input
+                                                    type="range"
+                                                    min="0"
+                                                    max="1"
+                                                    step="0.1"
+                                                    className="range range-secondary w-full"
+                                                    value={testData.confidence}
+                                                    onChange={(e) => setTestData(prev => ({ ...prev, confidence: parseFloat(e.target.value) }))}
+                                                />
+                                                <div className="w-full flex justify-between text-xs px-2 mt-1">
+                                                    <span>Low (0.0)</span>
+                                                    <span className="font-semibold text-secondary">{testData.confidence}</span>
+                                                    <span>High (1.0)</span>
+                                                </div>
+                                                <div className="text-xs text-base-content/60 mt-1">
+                                                    AI confidence level for the response (0.0 = low, 1.0 = high)
+                                                </div>
+                                            </label>
+
+                                            <label className="block">
+                                                <span className="text-sm font-medium text-base-content mb-2 block">User Email</span>
+                                                <input
+                                                    type="email"
+                                                    className="input input-bordered w-full focus:input-primary transition-all duration-200 focus:scale-[1.02]"
+                                                    placeholder="user@example.com"
+                                                    value={testData.userEmail}
+                                                    onChange={(e) => setTestData(prev => ({ ...prev, userEmail: e.target.value }))}
+                                                />
+                                                <div className="text-xs text-base-content/60 mt-1">
+                                                    User email for domain-based condition testing
+                                                </div>
+                                            </label>
+
+                                            <label className="block">
+                                                <span className="text-sm font-medium text-base-content mb-2 block">Off Hours</span>
+                                                <div className="flex items-center gap-3 mt-2">
+                                                    <label className="cursor-pointer flex items-center gap-2">
+                                                        <input
+                                                            type="checkbox"
+                                                            className="checkbox checkbox-secondary"
+                                                            checked={testData.offHours || false}
+                                                            onChange={(e) => setTestData(prev => ({ ...prev, offHours: e.target.checked }))}
+                                                        />
+                                                        <span className="text-sm">Currently outside business hours</span>
+                                                    </label>
+                                                </div>
+                                                <div className="text-xs text-base-content/60 mt-1">
+                                                    Check if testing during non-business hours for time-based conditions
+                                                </div>
+                                            </label>
+
+                                            <div className="pt-4">
+                                                <HoverScale scale={1.02}>
+                                                    <button
+                                                        className={`btn btn-secondary w-full ${testingRule ? 'loading' : ''}`}
+                                                        onClick={() => testRule(rules[0]?.id || '')}
+                                                        disabled={!!testingRule || !testData.message.trim()}
+                                                    >
+                                                        {testingRule ? (
+                                                            <>
+                                                                <i className="fa-duotone fa-solid fa-spinner fa-spin mr-2" aria-hidden />
+                                                                Testing Rule...
+                                                            </>
+                                                        ) : (
+                                                            <>
+                                                                <i className="fa-duotone fa-solid fa-play mr-2" aria-hidden />
+                                                                Run Test
+                                                            </>
+                                                        )}
+                                                    </button>
+                                                </HoverScale>
+                                            </div>
+                                        </fieldset>
+
+                                        {/* Test Results */}
+                                        <div className="space-y-4">
+                                            <h4 className="text-base font-semibold text-base-content">Test Results</h4>
+                                            
+                                            {!testResult ? (
+                                                <div className="text-center py-12 bg-base-200/40 rounded-xl border border-base-300">
+                                                    <div className="w-16 h-16 bg-base-300/60 rounded-xl flex items-center justify-center mx-auto mb-3">
+                                                        <i className="fa-duotone fa-solid fa-flask text-xl text-base-content/40" aria-hidden />
+                                                    </div>
+                                                    <p className="text-base-content/60 text-sm">Run a test to see results</p>
+                                                </div>
+                                            ) : (
+                                                <div className="space-y-4">
+                                                    {/* Overall Result */}
+                                                    <div className={`p-4 rounded-xl border-2 ${
+                                                        testResult.matched 
+                                                            ? 'border-success bg-success/10 text-success' 
+                                                            : 'border-error bg-error/10 text-error'
+                                                    }`}>
+                                                        <div className="flex items-center gap-2">
+                                                            <i className={`fa-duotone fa-solid ${
+                                                                testResult.matched ? 'fa-check-circle' : 'fa-times-circle'
+                                                            } text-lg`} aria-hidden />
+                                                            <span className="font-semibold">
+                                                                {testResult.matched ? 'Rule MATCHED ✅' : 'Rule NOT MATCHED ❌'}
+                                                            </span>
+                                                        </div>
+                                                    </div>
+
+                                                    {/* Condition Details */}
+                                                    <div className="space-y-3">
+                                                        <h5 className="text-sm font-medium text-base-content">Condition Results</h5>
+                                                        {testResult.details.map((detail: TestDetail, index: number) => (
+                                                            <div key={index} className={`p-3 rounded-lg border ${
+                                                                detail.result === true
+                                                                    ? 'border-success/30 bg-success/5' 
+                                                                    : 'border-error/30 bg-error/5'
+                                                            }`}>
+                                                                <div className="flex items-center justify-between">
+                                                                    <span className="text-sm text-base-content">
+                                                                        {detail.reason}
+                                                                    </span>
+                                                                    <div className={`badge badge-sm ${
+                                                                        detail.result === true ? 'badge-success' : 'badge-error'
+                                                                    }`}>
+                                                                        {detail.result === true ? 'Pass' : 'Fail'}
+                                                                    </div>
+                                                                </div>
+                                                            </div>
+                                                        ))}
+                                                    </div>
+                                                </div>
+                                            )}
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </StaggerChild>
+                    </StaggerContainer>
+                )}
+
                 {/* Help Section */}
                 {!showEditor && (
                     <StaggerContainer>
                         <StaggerChild>
-                            <div className="card bg-base-100 border border-base-300">
-                                <div className="card-body">
-                                    <h2 className="card-title">
-                                        <i className="fa-duotone fa-solid fa-lightbulb mr-2 text-primary" aria-hidden />
-                                        How Escalation Rules Work
-                                    </h2>
+                            <div className="bg-gradient-to-br from-base-100/60 to-base-200/40 backdrop-blur-sm rounded-2xl border border-base-200/60 shadow-sm">
+                                <div className="p-6">
+                                    <div className="flex items-center gap-3 mb-6">
+                                        <div className="w-12 h-12 bg-primary/10 rounded-2xl flex items-center justify-center">
+                                            <i className="fa-duotone fa-solid fa-lightbulb text-lg text-primary" aria-hidden />
+                                        </div>
+                                        <div>
+                                            <h2 className="text-xl font-semibold text-base-content">How Escalation Rules Work</h2>
+                                            <p className="text-base-content/60 text-sm">Understand the key concepts behind our rule engine</p>
+                                        </div>
+                                    </div>
                                     <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mt-4">
                                         <div>
                                             <div className="flex items-center gap-2 mb-2">

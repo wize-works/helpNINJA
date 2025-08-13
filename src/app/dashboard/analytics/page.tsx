@@ -5,6 +5,8 @@ import { Breadcrumb } from "@/components/ui/breadcrumb";
 import { StatCardSkeleton, ChartSkeleton } from "@/components/ui/skeleton";
 import { AnimatedPage, StaggerContainer, StaggerChild, HoverScale } from "@/components/ui/animated-page";
 import { ConversationTrendsChart, ConfidenceAnalysisChart, ResponseTimeChart } from "./analytics-charts";
+import { IntegrationHealthDashboard } from "@/components/analytics/integration-health-dashboard";
+import { ExportControls } from "@/components/analytics/export-controls";
 
 export const runtime = 'nodejs'
 
@@ -335,6 +337,16 @@ async function AnalyticsContent({ tenantId }: { tenantId: string }) {
                 <AnalyticsOverview data={data} />
             </div>
 
+            {/* Export Controls */}
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                <div className="lg:col-span-2">
+                    <StaggerChild>
+                        <IntegrationHealthDashboard />
+                    </StaggerChild>
+                </div>
+                <ExportControls />
+            </div>
+
             {/* Charts Grid */}
             <div className="grid grid-cols-1 xl:grid-cols-2 gap-8">
                 <StaggerChild>
@@ -457,10 +469,9 @@ function AnalyticsOverview({ data }: { data: AnalyticsData }) {
                                     <div className="flex-1 min-w-0">
                                         <div className="text-sm text-base-content/70 font-semibold tracking-wide uppercase mb-1">{metric.label}</div>
                                         <div className="text-2xl font-bold text-base-content tracking-tight">{metric.value}</div>
-                                        <div className={`flex items-center gap-1 text-xs mt-1 ${
-                                            metric.trend > 0 ? 'text-emerald-600' :
+                                        <div className={`flex items-center gap-1 text-xs mt-1 ${metric.trend > 0 ? 'text-emerald-600' :
                                             metric.trend < 0 ? 'text-red-600' : 'text-base-content/60'
-                                        }`}>
+                                            }`}>
                                             {metric.trend > 0 && <i className="fa-duotone fa-solid fa-arrow-trend-up" aria-hidden />}
                                             {metric.trend < 0 && <i className="fa-duotone fa-solid fa-arrow-trend-down" aria-hidden />}
                                             {metric.trend === 0 && <i className="fa-duotone fa-solid fa-minus" aria-hidden />}
@@ -547,7 +558,7 @@ function TopSourcesCard({ data }: { data: TopSourcesData[] }) {
                         <i className="fa-duotone fa-solid fa-ranking-star text-lg text-orange-600" aria-hidden />
                     </div>
                 </div>
-                
+
                 {data.length === 0 ? (
                     <div className="text-center py-8">
                         <div className="w-12 h-12 bg-base-200/60 rounded-xl flex items-center justify-center mx-auto mb-4">
@@ -573,11 +584,10 @@ function TopSourcesCard({ data }: { data: TopSourcesData[] }) {
                                         </div>
                                     </div>
                                 </div>
-                                <div className={`px-2 py-1 rounded-lg text-xs font-semibold ${
-                                    source.accuracy >= 80 ? 'bg-emerald-500/10 text-emerald-700 border border-emerald-500/20' :
+                                <div className={`px-2 py-1 rounded-lg text-xs font-semibold ${source.accuracy >= 80 ? 'bg-emerald-500/10 text-emerald-700 border border-emerald-500/20' :
                                     source.accuracy >= 60 ? 'bg-amber-500/10 text-amber-700 border border-amber-500/20' :
-                                    'bg-red-500/10 text-red-700 border border-red-500/20'
-                                }`}>
+                                        'bg-red-500/10 text-red-700 border border-red-500/20'
+                                    }`}>
                                     {source.accuracy}%
                                 </div>
                             </div>

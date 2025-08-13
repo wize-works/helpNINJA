@@ -11,7 +11,7 @@ const integrationTypes = [
         id: 'slack',
         name: 'Slack',
         description: 'Send real-time notifications to your Slack channels when conversations need human attention',
-        icon: 'fa-slack',
+        icon: 'fa-brands fa-slack',
         color: 'info',
         features: ['Real-time notifications', 'Custom channels', 'Rich message formatting', 'Thread support'],
         configSchema: {
@@ -24,7 +24,7 @@ const integrationTypes = [
         id: 'email',
         name: 'Email',
         description: 'Get email notifications when your AI escalates conversations to human agents',
-        icon: 'fa-envelope',
+        icon: 'fa-solid fa-duotone fa-envelope',
         color: 'success',
         features: ['Instant delivery', 'Multiple recipients', 'Rich HTML content', 'Attachment support'],
         configSchema: {
@@ -37,7 +37,7 @@ const integrationTypes = [
         id: 'teams',
         name: 'Microsoft Teams',
         description: 'Connect your team conversations with Microsoft Teams channels',
-        icon: 'fa-microsoft',
+        icon: 'fa-brands fa-microsoft',
         color: 'primary',
         features: ['Channel notifications', 'Adaptive cards', 'Rich formatting', 'Thread replies'],
         configSchema: {
@@ -50,7 +50,7 @@ const integrationTypes = [
         id: 'discord',
         name: 'Discord',
         description: 'Send notifications to Discord channels for community-driven support',
-        icon: 'fa-discord',
+        icon: 'fa-brands fa-discord',
         color: 'secondary',
         features: ['Rich embeds', 'Custom webhooks', 'Bot integration', 'Role mentions'],
         configSchema: {
@@ -63,7 +63,7 @@ const integrationTypes = [
         id: 'zendesk',
         name: 'Zendesk',
         description: 'Create tickets automatically when AI escalates conversations',
-        icon: 'fa-life-ring',
+        icon: 'fa-solid fa-duotone fa-life-ring',
         color: 'warning',
         features: ['Auto-ticket creation', 'Priority mapping', 'Custom fields', 'Agent assignment'],
         configSchema: {
@@ -77,7 +77,7 @@ const integrationTypes = [
         id: 'webhooks',
         name: 'Custom Webhooks',
         description: 'Send data to any external service using custom webhook endpoints',
-        icon: 'fa-code',
+        icon: 'fa-solid fa-duotone fa-code',
         color: 'accent',
         features: ['Custom endpoints', 'JSON payloads', 'Signature verification', 'Retry logic'],
         configSchema: {
@@ -149,20 +149,20 @@ export default function IntegrationsMarketplacePage() {
 
                 {/* Categories */}
                 <SlideIn delay={0.1}>
-                    <div className="flex gap-2 flex-wrap">
-                        <button className="btn btn-primary btn-sm">
+                    <div className="flex gap-3 flex-wrap">
+                        <button className="btn btn-primary rounded-xl">
                             <i className="fa-duotone fa-solid fa-sparkles mr-2" />
                             All Integrations
                         </button>
-                        <button className="btn btn-ghost btn-sm">
+                        <button className="btn btn-ghost rounded-xl">
                             <i className="fa-duotone fa-solid fa-bell mr-2" />
                             Notifications
                         </button>
-                        <button className="btn btn-ghost btn-sm">
+                        <button className="btn btn-ghost rounded-xl">
                             <i className="fa-duotone fa-solid fa-ticket mr-2" />
                             Ticketing
                         </button>
-                        <button className="btn btn-ghost btn-sm">
+                        <button className="btn btn-ghost rounded-xl">
                             <i className="fa-duotone fa-solid fa-code mr-2" />
                             Developer
                         </button>
@@ -175,16 +175,16 @@ export default function IntegrationsMarketplacePage() {
                         {integrationTypes.map((integration) => (
                             <StaggerChild key={integration.id}>
                                 <HoverScale scale={1.02}>
-                                    <div className="card bg-base-100 shadow-lg border border-base-200 hover:shadow-xl transition-all duration-300">
-                                        <div className="card-body">
+                                    <div className="bg-gradient-to-br from-base-100/60 to-base-200/40 backdrop-blur-sm rounded-2xl border border-base-200/60 shadow-sm hover:shadow-lg transition-all duration-300">
+                                        <div className="p-6">
                                             {/* Header */}
-                                            <div className="flex items-start justify-between mb-4">
-                                                <div className="flex items-center gap-3">
-                                                    <div className={`w-12 h-12 rounded-xl bg-${integration.color}/10 flex items-center justify-center`}>
-                                                        <i className={`fa-brands ${integration.icon} text-xl text-${integration.color}`} />
+                                            <div className="flex items-start justify-between mb-6">
+                                                <div className="flex items-center gap-4">
+                                                    <div className={`w-16 h-16 rounded-2xl bg-${integration.color}/10 flex items-center justify-center group-hover:scale-105 transition-transform duration-200 flex-shrink-0`}>
+                                                        <i className={`${integration.icon} text-2xl text-${integration.color}`} />
                                                     </div>
                                                     <div>
-                                                        <h3 className="font-semibold text-lg">{integration.name}</h3>
+                                                        <h3 className="text-xl font-semibold text-base-content mb-1">{integration.name}</h3>
                                                         {integration.comingSoon && (
                                                             <span className="badge badge-outline badge-sm">Coming Soon</span>
                                                         )}
@@ -193,37 +193,38 @@ export default function IntegrationsMarketplacePage() {
                                             </div>
 
                                             {/* Description */}
-                                            <p className="text-base-content/70 text-sm mb-4 leading-relaxed">
+                                            <p className="text-base-content/70 text-sm mb-6 leading-relaxed">
                                                 {integration.description}
                                             </p>
 
                                             {/* Features */}
                                             <div className="mb-6">
-                                                <h4 className="font-medium text-sm mb-2 text-base-content/80">Features:</h4>
-                                                <div className="flex flex-wrap gap-1">
-                                                    {integration.features.slice(0, 2).map((feature, idx) => (
-                                                        <span key={idx} className="badge badge-outline badge-xs">
+                                                <h4 className="font-semibold text-sm mb-3 text-base-content/80 tracking-wide uppercase">Features</h4>
+                                                <div className="space-y-2">
+                                                    {integration.features.slice(0, 3).map((feature, idx) => (
+                                                        <div key={idx} className="flex items-center gap-2 text-sm text-base-content/70">
+                                                            <i className="fa-duotone fa-solid fa-check text-success text-xs" />
                                                             {feature}
-                                                        </span>
+                                                        </div>
                                                     ))}
-                                                    {integration.features.length > 2 && (
-                                                        <span className="badge badge-ghost badge-xs">
-                                                            +{integration.features.length - 2} more
-                                                        </span>
+                                                    {integration.features.length > 3 && (
+                                                        <div className="text-xs text-base-content/50 pt-1">
+                                                            +{integration.features.length - 3} more features
+                                                        </div>
                                                     )}
                                                 </div>
                                             </div>
 
                                             {/* Action Button */}
-                                            <div className="card-actions justify-end">
+                                            <div className="flex justify-end">
                                                 {integration.comingSoon ? (
-                                                    <button className="btn btn-outline btn-sm" disabled>
+                                                    <button className="btn btn-outline rounded-xl" disabled>
                                                         <i className="fa-duotone fa-solid fa-clock mr-2" />
                                                         Coming Soon
                                                     </button>
                                                 ) : (
                                                     <button
-                                                        className={`btn btn-${integration.color} btn-sm`}
+                                                        className={`btn btn-${integration.color} rounded-xl`}
                                                         onClick={() => setShowSetupModal(integration.id)}
                                                     >
                                                         <i className="fa-duotone fa-solid fa-plus mr-2" />
@@ -275,25 +276,34 @@ function IntegrationSetupModal({
         <div className="modal modal-open">
             <div className="modal-box max-w-2xl">
                 <form onSubmit={handleSubmit}>
-                    <h3 className="font-bold text-lg mb-4 flex items-center gap-3">
-                        <div className={`w-8 h-8 rounded-lg bg-${integration.color}/10 flex items-center justify-center`}>
-                            <i className={`fa-brands ${integration.icon} text-${integration.color}`} />
+                    {/* Header */}
+                    <div className="flex items-center gap-4 mb-6">
+                        <div className={`w-12 h-12 rounded-xl bg-${integration.color}/10 flex items-center justify-center`}>
+                            <i className={`fa-brands ${integration.icon} text-lg text-${integration.color}`} />
                         </div>
-                        Setup {integration.name} Integration
-                    </h3>
+                        <div>
+                            <h3 className="text-xl font-semibold text-base-content">
+                                Setup {integration.name} Integration
+                            </h3>
+                            <p className="text-sm text-base-content/60">
+                                Configure your {integration.name} integration settings
+                            </p>
+                        </div>
+                    </div>
 
-                    <div className="space-y-4">
+                    {/* Form Fields */}
+                    <div className="space-y-4 mb-6">
                         {Object.entries(integration.configSchema).map(([key, field]) => (
                             <div key={key} className="form-control">
                                 <label className="label">
-                                    <span className="label-text">
+                                    <span className="label-text font-medium">
                                         {field.label}
                                         {field.required && <span className="text-error ml-1">*</span>}
                                     </span>
                                 </label>
                                 {field.type === 'select' ? (
                                     <select
-                                        className="select select-bordered"
+                                        className="select select-bordered w-full"
                                         value={formData[key] || ''}
                                         onChange={(e) => setFormData({ ...formData, [key]: e.target.value })}
                                         required={field.required}
@@ -306,7 +316,7 @@ function IntegrationSetupModal({
                                 ) : (
                                     <input
                                         type={field.type === 'password' ? 'password' : field.type === 'email' ? 'email' : 'text'}
-                                        className="input input-bordered"
+                                        className="input input-bordered w-full"
                                         placeholder={field.placeholder}
                                         value={formData[key] || ''}
                                         onChange={(e) => setFormData({ ...formData, [key]: e.target.value })}
@@ -317,6 +327,7 @@ function IntegrationSetupModal({
                         ))}
                     </div>
 
+                    {/* Actions */}
                     <div className="modal-action">
                         <button type="button" className="btn btn-ghost" onClick={onClose} disabled={loading}>
                             Cancel

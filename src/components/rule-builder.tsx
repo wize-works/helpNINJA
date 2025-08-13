@@ -89,19 +89,24 @@ export default function RuleBuilder({
     return (
         <div className="space-y-6">
             {/* Conditions Section */}
-            <div className="card bg-base-100 border border-base-300">
-                <div className="card-body">
+            <div className="bg-gradient-to-br from-base-100/60 to-base-200/40 backdrop-blur-sm rounded-2xl border border-base-200/60 shadow-sm">
+                <div className="p-6">
                     <div className="flex items-center justify-between mb-4">
-                        <h3 className="card-title">
-                            <i className="fa-duotone fa-solid fa-filter mr-2 text-primary" aria-hidden />
-                            Conditions
-                        </h3>
+                        <div className="flex items-center gap-3">
+                            <div className="w-10 h-10 bg-primary/10 rounded-xl flex items-center justify-center">
+                                <i className="fa-duotone fa-solid fa-filter text-primary" aria-hidden />
+                            </div>
+                            <div>
+                                <h3 className="text-lg font-semibold text-base-content">Conditions</h3>
+                                <p className="text-base-content/60 text-sm">Define when this rule should trigger</p>
+                            </div>
+                        </div>
                         <div className="flex items-center gap-3">
                             <div className="text-sm text-base-content/70">
                                 Trigger when{' '}
                                 <button
                                     type="button"
-                                    className={`btn btn-xs ${currentPredicate.operator === 'and' ? 'btn-primary' : 'btn-outline'}`}
+                                    className={`btn btn-xs rounded-lg ${currentPredicate.operator === 'and' ? 'btn-primary' : 'btn-outline'}`}
                                     onClick={toggleOperator}
                                     disabled={disabled}
                                 >
@@ -112,7 +117,7 @@ export default function RuleBuilder({
                             <HoverScale scale={1.02}>
                                 <button
                                     type="button"
-                                    className="btn btn-sm btn-outline"
+                                    className="btn btn-sm btn-outline rounded-lg"
                                     onClick={addCondition}
                                     disabled={disabled}
                                 >
@@ -159,15 +164,17 @@ export default function RuleBuilder({
             </div>
 
             {/* Actions Section */}
-            <div className="card bg-base-100 border border-base-300">
-                <div className="card-body">
-                    <h3 className="card-title">
-                        <i className="fa-duotone fa-solid fa-paper-plane mr-2 text-secondary" aria-hidden />
-                        Actions
-                    </h3>
-                    <p className="text-sm text-base-content/60 mb-4">
-                        Define what happens when the conditions are met
-                    </p>
+            <div className="bg-gradient-to-br from-base-100/60 to-base-200/40 backdrop-blur-sm rounded-2xl border border-base-200/60 shadow-sm">
+                <div className="p-6">
+                    <div className="flex items-center gap-3 mb-4">
+                        <div className="w-10 h-10 bg-secondary/10 rounded-xl flex items-center justify-center">
+                            <i className="fa-duotone fa-solid fa-paper-plane text-secondary" aria-hidden />
+                        </div>
+                        <div>
+                            <h3 className="text-lg font-semibold text-base-content">Actions</h3>
+                            <p className="text-base-content/60 text-sm">Define what happens when the conditions are met</p>
+                        </div>
+                    </div>
                     
                     <ActionSelector
                         tenantId={tenantId}
@@ -179,16 +186,21 @@ export default function RuleBuilder({
             </div>
 
             {/* Test Section */}
-            <div className="card bg-base-100 border border-base-300">
-                <div className="card-body">
-                    <div className="flex items-center justify-between mb-4">
-                        <h3 className="card-title">
-                            <i className="fa-duotone fa-solid fa-flask mr-2 text-accent" aria-hidden />
-                            Test Rule
-                        </h3>
+            <div className="bg-gradient-to-br from-base-100/60 to-base-200/40 backdrop-blur-sm rounded-2xl border border-base-200/60 shadow-sm">
+                <div className="p-6">
+                    <div className="flex items-center justify-between mb-6">
+                        <div className="flex items-center gap-3">
+                            <div className="w-10 h-10 bg-accent/10 rounded-xl flex items-center justify-center">
+                                <i className="fa-duotone fa-solid fa-flask text-accent" aria-hidden />
+                            </div>
+                            <div>
+                                <h3 className="text-lg font-semibold text-base-content">Test Rule</h3>
+                                <p className="text-base-content/60 text-sm">Test your rule logic with sample data</p>
+                            </div>
+                        </div>
                         <button
                             type="button"
-                            className={`btn btn-sm ${testMode ? 'btn-accent' : 'btn-outline'}`}
+                            className={`btn btn-sm rounded-lg ${testMode ? 'btn-accent' : 'btn-outline'}`}
                             onClick={() => setTestMode(!testMode)}
                             disabled={disabled}
                         >
@@ -197,102 +209,134 @@ export default function RuleBuilder({
                     </div>
 
                     {testMode && (
-                        <div className="space-y-4">
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                <div className="form-control">
-                                    <label className="label">
-                                        <span className="label-text">Test Message</span>
-                                    </label>
+                        <fieldset className="space-y-6">
+                            <legend className="text-base font-semibold text-base-content mb-4">Test Data</legend>
+                            
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                <label className="block">
+                                    <span className="text-sm font-medium text-base-content mb-2 block">
+                                        Test Message
+                                        <span className="text-error ml-1">*</span>
+                                    </span>
                                     <textarea
-                                        className="textarea textarea-bordered h-20"
+                                        className="textarea textarea-bordered w-full h-20 focus:textarea-primary transition-all duration-200 focus:scale-[1.02]"
                                         placeholder="Enter a test message..."
                                         value={testContext.message}
                                         onChange={(e) => setTestContext(prev => ({ ...prev, message: e.target.value }))}
                                         disabled={disabled}
                                     />
-                                </div>
+                                    <div className="text-xs text-base-content/60 mt-1">
+                                        The message content that will be evaluated against your rule conditions
+                                    </div>
+                                </label>
 
                                 <div className="space-y-3">
-                                    <div className="form-control">
-                                        <label className="label">
-                                            <span className="label-text">Confidence Score</span>
-                                        </label>
+                                    <label className="block">
+                                        <span className="text-sm font-medium text-base-content mb-2 block">
+                                            Confidence Score
+                                        </span>
                                         <input
                                             type="range"
                                             min="0"
                                             max="1"
                                             step="0.1"
-                                            className="range range-primary"
+                                            className="range range-accent w-full"
                                             value={testContext.confidence}
                                             onChange={(e) => setTestContext(prev => ({ ...prev, confidence: parseFloat(e.target.value) }))}
                                             disabled={disabled}
                                         />
-                                        <div className="text-center text-sm text-base-content/60 mt-1">
-                                            {testContext.confidence}
+                                        <div className="w-full flex justify-between text-xs px-2 mt-1">
+                                            <span>Low (0.0)</span>
+                                            <span className="font-semibold text-accent">{testContext.confidence}</span>
+                                            <span>High (1.0)</span>
                                         </div>
-                                    </div>
+                                        <div className="text-xs text-base-content/60 mt-1">
+                                            AI confidence level for the response (0.0 = low, 1.0 = high)
+                                        </div>
+                                    </label>
 
-                                    <div className="form-control">
-                                        <label className="label">
-                                            <span className="label-text">User Email</span>
-                                        </label>
+                                    <label className="block">
+                                        <span className="text-sm font-medium text-base-content mb-2 block">User Email</span>
                                         <input
                                             type="email"
-                                            className="input input-bordered input-sm"
+                                            className="input input-bordered w-full focus:input-primary transition-all duration-200 focus:scale-[1.02]"
+                                            placeholder="user@example.com"
                                             value={testContext.userEmail}
                                             onChange={(e) => setTestContext(prev => ({ ...prev, userEmail: e.target.value }))}
                                             disabled={disabled}
                                         />
-                                    </div>
+                                        <div className="text-xs text-base-content/60 mt-1">
+                                            User email for domain-based condition testing
+                                        </div>
+                                    </label>
 
-                                    <div className="form-control">
-                                        <label className="cursor-pointer label">
-                                            <span className="label-text">Off Hours</span>
-                                            <input
-                                                type="checkbox"
-                                                className="checkbox checkbox-primary"
-                                                checked={testContext.isOffHours}
-                                                onChange={(e) => setTestContext(prev => ({ ...prev, isOffHours: e.target.checked }))}
-                                                disabled={disabled}
-                                            />
-                                        </label>
-                                    </div>
+                                    <label className="block">
+                                        <span className="text-sm font-medium text-base-content mb-2 block">Off Hours</span>
+                                        <div className="flex items-center gap-3 mt-2">
+                                            <label className="cursor-pointer flex items-center gap-2">
+                                                <input
+                                                    type="checkbox"
+                                                    className="checkbox checkbox-accent"
+                                                    checked={testContext.isOffHours}
+                                                    onChange={(e) => setTestContext(prev => ({ ...prev, isOffHours: e.target.checked }))}
+                                                    disabled={disabled}
+                                                />
+                                                <span className="text-sm">Currently outside business hours</span>
+                                            </label>
+                                        </div>
+                                        <div className="text-xs text-base-content/60 mt-1">
+                                            Check if testing during non-business hours for time-based conditions
+                                        </div>
+                                    </label>
                                 </div>
                             </div>
 
-                            <div className="flex justify-center">
+                            <div className="pt-4">
                                 <button
                                     type="button"
-                                    className="btn btn-accent"
+                                    className="btn btn-accent rounded-lg w-full"
                                     disabled={disabled || currentPredicate.conditions.length === 0}
                                 >
                                     <i className="fa-duotone fa-solid fa-play mr-2" aria-hidden />
                                     Run Test
                                 </button>
                             </div>
-                        </div>
+                        </fieldset>
                     )}
                 </div>
             </div>
 
             {/* Rule Summary */}
-            <div className="card bg-base-200/40 border border-base-300">
-                <div className="card-body">
-                    <h3 className="card-title text-sm">
-                        <i className="fa-duotone fa-solid fa-summary mr-2 text-info" aria-hidden />
-                        Rule Summary
-                    </h3>
+            <div className="bg-gradient-to-br from-base-100/60 to-base-200/40 backdrop-blur-sm rounded-2xl border border-base-200/60 shadow-sm">
+                <div className="p-6">
+                    <div className="flex items-center gap-3 mb-4">
+                        <div className="w-10 h-10 bg-info/10 rounded-xl flex items-center justify-center">
+                            <i className="fa-duotone fa-solid fa-summary text-info" aria-hidden />
+                        </div>
+                        <div>
+                            <h3 className="text-lg font-semibold text-base-content">Rule Summary</h3>
+                            <p className="text-base-content/60 text-sm">Overview of your rule configuration</p>
+                        </div>
+                    </div>
+                    
                     <div className="text-sm text-base-content/70">
                         {currentPredicate.conditions.length === 0 ? (
-                            <span className="italic">No conditions defined</span>
+                            <div className="text-center py-6 bg-base-200/40 rounded-xl border border-base-300">
+                                <div className="w-12 h-12 bg-base-300/60 rounded-xl flex items-center justify-center mx-auto mb-3">
+                                    <i className="fa-duotone fa-solid fa-filter text-xl text-base-content/40" aria-hidden />
+                                </div>
+                                <p className="text-base-content/60 text-sm">No conditions defined</p>
+                            </div>
                         ) : (
-                            <>
-                                Trigger when <strong>{currentPredicate.operator.toUpperCase()}</strong> of these{' '}
-                                <strong>{currentPredicate.conditions.length}</strong> condition{currentPredicate.conditions.length > 1 ? 's' : ''} {currentPredicate.conditions.length > 1 ? 'are' : 'is'} met
-                                {destinations.length > 0 && (
-                                    <>, then send to <strong>{destinations.length}</strong> destination{destinations.length > 1 ? 's' : ''}</>
-                                )}
-                            </>
+                            <div className="p-4 bg-base-200/40 rounded-xl border border-base-300">
+                                <p className="text-base-content/70">
+                                    Trigger when <strong>{currentPredicate.operator.toUpperCase()}</strong> of these{' '}
+                                    <strong>{currentPredicate.conditions.length}</strong> condition{currentPredicate.conditions.length > 1 ? 's' : ''} {currentPredicate.conditions.length > 1 ? 'are' : 'is'} met
+                                    {destinations.length > 0 && (
+                                        <>, then send to <strong>{destinations.length}</strong> destination{destinations.length > 1 ? 's' : ''}</>
+                                    )}
+                                </p>
+                            </div>
                         )}
                     </div>
                 </div>
