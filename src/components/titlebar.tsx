@@ -1,6 +1,6 @@
 import Link from "next/link";
 import ThemeToggle from "./theme-toggle";
-import Image from "next/image";
+import Logo from "./logo";
 import { HoverScale, SlideIn } from "./ui/animated-page";
 
 export default function Titlebar() {
@@ -26,12 +26,9 @@ export default function Titlebar() {
                             <HoverScale scale={1.01}>
                                 <Link href="/" className="flex items-center gap-3 py-1.5 px-2 rounded-xl hover:bg-base-200/40 transition-all duration-200 group">
                                     <div className="relative">
-                                        <Image
-                                            src="/logo.svg"
-                                            alt="HelpNinja Logo"
-                                            width={30}
-                                            height={30}
-                                            className="group-hover:scale-110 transition-transform duration-200"
+                                        <Logo
+                                            size={30}
+                                            className="text-base-content group-hover:text-primary transition-colors duration-200 group-hover:scale-110"
                                         />
                                     </div>
                                     <div className="hidden sm:block">

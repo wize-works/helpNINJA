@@ -26,20 +26,20 @@ function ConversationsTable({ conversations }: { conversations: Row[] }) {
     if (conversations.length === 0) {
         return (
             <FadeIn>
-                <div className="bg-gradient-to-br from-base-100/60 to-base-200/40 backdrop-blur-sm rounded-2xl border border-base-200/60 shadow-sm">
+                <div className="card bg-base-100 rounded-2xl shadow-sm">
                     <div className="p-12 text-center">
                         <div className="w-20 h-20 bg-secondary/10 rounded-2xl flex items-center justify-center mx-auto mb-6">
                             <i className="fa-duotone fa-solid fa-messages text-3xl text-secondary" aria-hidden />
                         </div>
                         <h3 className="text-xl font-semibold text-base-content mb-3">No conversations yet</h3>
                         <p className="text-base-content/60 mb-6 max-w-md mx-auto">
-                            Customer conversations will appear here when users interact with your AI support chat widget. 
+                            Customer conversations will appear here when users interact with your AI support chat widget.
                             Get started by setting up your chat widget.
                         </p>
                         <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
                             <HoverScale scale={1.02}>
                                 <a href="/dashboard/settings" className="flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-primary to-secondary text-primary-content rounded-xl font-medium text-sm shadow-lg hover:shadow-xl transition-all duration-200">
-                                    <i className="fa-duotone fa-solid fa-widget" aria-hidden />
+                                    <i className="fa-duotone fa-solid fa-comment" aria-hidden />
                                     Set up chat widget
                                 </a>
                             </HoverScale>
@@ -58,7 +58,7 @@ function ConversationsTable({ conversations }: { conversations: Row[] }) {
         <StaggerContainer>
             {/* Desktop Table */}
             <StaggerChild>
-                <div className="hidden lg:block bg-gradient-to-br from-base-100/60 to-base-200/40 backdrop-blur-sm rounded-2xl border border-base-200/60 shadow-sm hover:shadow-md transition-all duration-300">
+                <div className="hidden lg:block card bg-base-100 rounded-2xl shadow-sm hover:shadow-md transition-all duration-300">
                     <div className="p-6">
                         <div className="flex items-center justify-between mb-6">
                             <div>
@@ -109,8 +109,8 @@ function ConversationsTable({ conversations }: { conversations: Row[] }) {
                                             </td>
                                             <td className="p-4">
                                                 <div className="text-sm text-base-content">
-                                                    {new Date(r.created_at).toLocaleDateString('en-US', { 
-                                                        month: 'short', 
+                                                    {new Date(r.created_at).toLocaleDateString('en-US', {
+                                                        month: 'short',
                                                         day: 'numeric',
                                                         year: 'numeric'
                                                     })}
@@ -142,7 +142,7 @@ function ConversationsTable({ conversations }: { conversations: Row[] }) {
                 <div className="lg:hidden space-y-4">
                     {conversations.map((r, index) => (
                         <HoverScale key={r.id} scale={1.02}>
-                            <div className="bg-gradient-to-br from-base-100/60 to-base-200/40 backdrop-blur-sm rounded-2xl border border-base-200/60 shadow-sm hover:shadow-md transition-all duration-300 cursor-pointer">
+                            <div className="card bg-base-100 rounded-2xl shadow-sm hover:shadow-md transition-all duration-300 cursor-pointer">
                                 <div className="p-6">
                                     <div className="flex items-start justify-between mb-4">
                                         <div className="flex items-center gap-3 flex-1 min-w-0">
@@ -154,8 +154,8 @@ function ConversationsTable({ conversations }: { conversations: Row[] }) {
                                                     Session #{index + 1}
                                                 </h3>
                                                 <div className="text-sm text-base-content/60">
-                                                    Started {new Date(r.created_at).toLocaleDateString('en-US', { 
-                                                        month: 'short', 
+                                                    Started {new Date(r.created_at).toLocaleDateString('en-US', {
+                                                        month: 'short',
                                                         day: 'numeric'
                                                     })} at {new Date(r.created_at).toLocaleTimeString('en-US', {
                                                         hour: '2-digit',
@@ -169,7 +169,7 @@ function ConversationsTable({ conversations }: { conversations: Row[] }) {
                                             Completed
                                         </div>
                                     </div>
-                                    
+
                                     <div className="space-y-3">
                                         <div className="bg-base-200/40 rounded-xl p-3 border border-base-300/40">
                                             <div className="flex items-center gap-2 mb-2">
@@ -180,7 +180,7 @@ function ConversationsTable({ conversations }: { conversations: Row[] }) {
                                                 {r.session_id}
                                             </div>
                                         </div>
-                                        
+
                                         <div className="flex items-center justify-between">
                                             <div className="flex items-center gap-2 px-3 py-2 bg-info/10 text-info rounded-lg">
                                                 <i className="fa-duotone fa-solid fa-messages text-xs" aria-hidden />
@@ -207,12 +207,12 @@ function ConversationsTable({ conversations }: { conversations: Row[] }) {
 
 export default async function ConversationsPage() {
     const tenantId = await getTenantIdServer({ allowEnvFallback: true })
-    
+
     const breadcrumbItems = [
         { label: "Dashboard", href: "/dashboard", icon: "fa-gauge-high" },
         { label: "Conversations", icon: "fa-messages" }
     ];
-    
+
     return (
         <AnimatedPage>
             <div className="space-y-8">
@@ -222,7 +222,7 @@ export default async function ConversationsPage() {
                         <Breadcrumb items={breadcrumbItems} />
                     </StaggerChild>
                 </StaggerContainer>
-                
+
                 {/* Header */}
                 <StaggerContainer>
                     <StaggerChild>
@@ -250,7 +250,7 @@ export default async function ConversationsPage() {
                         </div>
                     </StaggerChild>
                 </StaggerContainer>
-                
+
                 {/* Content */}
                 <Suspense fallback={
                     <div className="space-y-4">

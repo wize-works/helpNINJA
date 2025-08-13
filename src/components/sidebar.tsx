@@ -5,8 +5,35 @@ import { useEffect, useState } from "react";
 import { useTenant } from "./tenant-context";
 import { HoverScale, SlideIn } from "./ui/animated-page";
 
+// Types for navigation structure
+type NavItem = {
+    href: string;
+    label: string;
+    badge?: number | null;
+    disabled?: boolean;
+};
+
+type NavSectionBase = {
+    id: string;
+    label: string;
+    icon: string;
+};
+
+type NavSectionLink = NavSectionBase & {
+    collapsible: false;
+    href: string;
+};
+
+type NavSectionCollapsible = NavSectionBase & {
+    collapsible: true;
+    defaultOpen?: boolean;
+    items: NavItem[];
+};
+
+type NavSection = NavSectionLink | NavSectionCollapsible;
+
 // Main navigation sections with collapsible functionality
-const navigationSections = [
+const navigationSections: NavSection[] = [
     {
         id: "dashboard",
         label: "Dashboard",
@@ -15,15 +42,40 @@ const navigationSections = [
         collapsible: false
     },
     {
-        id: "content",
-        label: "Content",
-        icon: "fa-folder-open",
+        id: "sites",
+        label: "Sites",
+        icon: "fa-globe",
         collapsible: true,
         defaultOpen: true,
         items: [
+            { href: "/dashboard/sites", label: "Manage Sites", badge: null },
+            { href: "/dashboard/sources", label: "Sources", badge: null },
             { href: "/dashboard/documents", label: "Documents", badge: null },
-            { href: "/dashboard/conversations", label: "Conversations", badge: null },
-            { href: "/dashboard/integrations", label: "Integrations", badge: 2 },
+            { href: "/dashboard/answers", label: "Answers", badge: null },
+        ]
+    },
+    {
+        id: "conversations",
+        label: "Conversations",
+        icon: "fa-comments",
+        collapsible: true,
+        defaultOpen: false,
+        items: [
+            { href: "/dashboard/conversations", label: "All Conversations", badge: null },
+            { href: "/dashboard/rules", label: "Escalation Rules", badge: null },
+            { href: "/dashboard/outbox", label: "Delivery Status", badge: null },
+        ]
+    },
+    {
+        id: "integrations",
+        label: "Integrations",
+        icon: "fa-plug",
+        collapsible: true,
+        defaultOpen: false,
+        items: [
+            { href: "/dashboard/integrations", label: "Dashboard", badge: 2 },
+            { href: "/dashboard/integrations/marketplace", label: "Marketplace", badge: null },
+            { href: "/dashboard/settings/api", label: "API Keys", badge: null },
         ]
     },
     {
@@ -34,22 +86,26 @@ const navigationSections = [
         collapsible: false
     },
     {
-        id: "customers",
-        label: "Customers",
-        icon: "fa-users",
+        id: "tools",
+        label: "Tools",
+        icon: "fa-wrench",
         collapsible: true,
         defaultOpen: false,
         items: [
-            { href: "/customers/list", label: "All Customers", badge: null },
-            { href: "/customers/segments", label: "Segments", badge: null },
+            { href: "/dashboard/playground", label: "Playground", badge: null },
+            { href: "/dashboard/team", label: "Team", badge: null },
+            { href: "/onboarding", label: "Setup Guide", badge: null },
         ]
     },
     {
         id: "settings",
         label: "Settings",
         icon: "fa-sliders",
-        href: "/dashboard/settings",
-        collapsible: false
+        collapsible: true,
+        defaultOpen: false,
+        items: [
+            { href: "/dashboard/settings", label: "General", badge: null },
+        ]
     },
     {
         id: "billing",
@@ -140,13 +196,13 @@ export default function Sidebar() {
                             ) : (
                                 <HoverScale scale={1.01}>
                                     <Link
-                                        href={section.href!}
-                                        className={`flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all duration-200 ${isActive(section.href!)
+                                        href={section.href}
+                                        className={`flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all duration-200 ${isActive(section.href)
                                             ? "bg-base-200 text-base-content shadow-sm border border-base-300/60"
                                             : "text-base-content/80 hover:text-base-content hover:bg-base-200/60"
                                             }`}
                                     >
-                                        <i className={`fa-duotone fa-solid ${section.icon} text-base ${isActive(section.href!) ? "opacity-100" : "opacity-70"
+                                        <i className={`fa-duotone fa-solid ${section.icon} text-base ${isActive(section.href) ? "opacity-100" : "opacity-70"
                                             }`} aria-hidden />
                                         <span>{section.label}</span>
                                     </Link>
@@ -158,21 +214,30 @@ export default function Sidebar() {
                                 <div className="ml-6 space-y-1">
                                     {section.items.map((item, itemIndex) => (
                                         <SlideIn key={item.href} delay={(index * 0.05) + (itemIndex * 0.02)}>
-                                            <HoverScale scale={1.01}>
-                                                <Link
-                                                    href={item.href}
-                                                    className={`flex items-center justify-between px-3 py-2 rounded-lg text-sm transition-all duration-200 ${isActive(item.href)
-                                                        ? "bg-primary/10 text-primary font-medium shadow-sm"
-                                                        : "text-base-content/70 hover:text-base-content hover:bg-base-200/60"
-                                                        }`}
-                                                >
-                                                    <span>{item.label}</span>
-                                                    {item.badge && (
-                                                        <span className="inline-flex items-center justify-center w-5 h-5 text-xs font-medium bg-accent text-accent-content rounded-full">
-                                                            {item.badge}
+                                            <HoverScale scale={item.disabled ? 1 : 1.01}>
+                                                {item.disabled ? (
+                                                    <div className="flex items-center justify-between px-3 py-2 rounded-lg text-sm text-base-content/40 cursor-not-allowed">
+                                                        <span>{item.label}</span>
+                                                        <span className="text-xs bg-base-300/50 text-base-content/50 px-2 py-0.5 rounded">
+                                                            Coming Soon
                                                         </span>
-                                                    )}
-                                                </Link>
+                                                    </div>
+                                                ) : (
+                                                    <Link
+                                                        href={item.href}
+                                                        className={`flex items-center justify-between px-3 py-2 rounded-lg text-sm transition-all duration-200 ${isActive(item.href)
+                                                            ? "bg-primary/10 text-primary font-medium shadow-sm"
+                                                            : "text-base-content/70 hover:text-base-content hover:bg-base-200/60"
+                                                            }`}
+                                                    >
+                                                        <span>{item.label}</span>
+                                                        {item.badge && (
+                                                            <span className="inline-flex items-center justify-center w-5 h-5 text-xs font-medium bg-accent text-accent-content rounded-full">
+                                                                {item.badge}
+                                                            </span>
+                                                        )}
+                                                    </Link>
+                                                )}
                                             </HoverScale>
                                         </SlideIn>
                                     ))}
@@ -207,7 +272,7 @@ export default function Sidebar() {
 
                             <div className="space-y-2">
                                 <div className="flex items-center justify-between text-sm">
-                                    <span className="text-base-content/70">User messages (UTC month)</span>
+                                    <span className="text-base-content/70">User messages<br /><span className="text-xs">(UTC month)</span></span>
                                     <span className="font-medium">
                                         {usage ? usage.used : 45} / {usage ? usage.limit : 100}
                                     </span>

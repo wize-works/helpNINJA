@@ -179,6 +179,15 @@ export default async function Dashboard() {
                     </StaggerChild>
                 </StaggerContainer>
 
+                {/* Quick Start Banner for New Users */}
+                <StaggerContainer>
+                    <StaggerChild>
+                        <Suspense fallback={null}>
+                            <QuickStartBanner tenantId={tenantId} />
+                        </Suspense>
+                    </StaggerChild>
+                </StaggerContainer>
+
                 {/* KPIs Grid */}
                 <StaggerContainer>
                     <StaggerChild>
@@ -197,7 +206,7 @@ export default async function Dashboard() {
                     <div className="grid grid-cols-1 xl:grid-cols-3 gap-6">
                         {/* Chat Volume Chart - Takes 2/3 width */}
                         <StaggerChild className="xl:col-span-2">
-                            <div className="bg-gradient-to-br from-base-100/60 to-base-200/40 backdrop-blur-sm rounded-2xl border border-base-200/60 shadow-sm hover:shadow-md transition-all duration-300">
+                            <div className="card bg-base-100 rounded-2xl shadow-sm hover:shadow-md transition-all duration-300">
                                 <div className="p-6">
                                     <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
                                         <div>
@@ -229,7 +238,7 @@ export default async function Dashboard() {
 
                         {/* Sources Overview */}
                         <StaggerChild>
-                            <div className="bg-gradient-to-br from-base-100/60 to-base-200/40 backdrop-blur-sm rounded-2xl border border-base-200/60 shadow-sm hover:shadow-md transition-all duration-300">
+                            <div className="card bg-base-100 rounded-2xl shadow-sm hover:shadow-md transition-all duration-300">
                                 <div className="p-6">
                                     <div className="flex items-center justify-between mb-4">
                                         <div>
@@ -261,7 +270,7 @@ export default async function Dashboard() {
                     <div className="grid grid-cols-1 lg:grid-cols-5 gap-6">
                         {/* Integrations */}
                         <StaggerChild className="lg:col-span-2">
-                            <div className="bg-gradient-to-br from-base-100/60 to-base-200/40 backdrop-blur-sm rounded-2xl border border-base-200/60 shadow-sm hover:shadow-md transition-all duration-300">
+                            <div className="card bg-base-100 rounded-2xl shadow-sm hover:shadow-md transition-all duration-300">
                                 <div className="p-6">
                                     <div className="flex items-center justify-between mb-4">
                                         <div>
@@ -287,7 +296,7 @@ export default async function Dashboard() {
 
                         {/* Usage Overview */}
                         <StaggerChild className="lg:col-span-3">
-                            <div className="bg-gradient-to-br from-base-100/60 to-base-200/40 backdrop-blur-sm rounded-2xl border border-base-200/60 shadow-sm hover:shadow-md transition-all duration-300">
+                            <div className="card bg-base-100 rounded-2xl shadow-sm hover:shadow-md transition-all duration-300">
                                 <div className="p-6">
                                     <Suspense fallback={<div className="space-y-3"><div className="animate-pulse bg-base-300/60 h-6 rounded w-1/2"></div><div className="animate-pulse bg-base-300/60 h-4 rounded"></div></div>}>
                                         <UsageOverview tenantId={tenantId} />
@@ -634,7 +643,7 @@ function StatCard({
     trend?: React.ReactNode;
 }) {
     return (
-        <div className={`bg-gradient-to-br from-base-100/60 to-base-200/40 backdrop-blur-sm rounded-2xl border ${accentColor} shadow-sm hover:shadow-md transition-all duration-300 group`}>
+        <div className={`card bg-base-100 rounded-2xl border ${accentColor} shadow-sm hover:shadow-md transition-all duration-300 group`}>
             <div className="p-6">
                 <div className="flex items-center gap-4">
                     <div className={`w-12 h-12 ${iconBg} rounded-2xl flex items-center justify-center group-hover:scale-105 transition-transform duration-200 flex-shrink-0`}>
@@ -687,7 +696,7 @@ function UsageCard({ used, limit, assistant }: { used: number; limit: number; as
     const colors = getUsageColors();
 
     return (
-        <div className={`bg-gradient-to-br from-base-100/60 to-base-200/40 backdrop-blur-sm rounded-2xl border ${colors.accentColor} shadow-sm hover:shadow-md transition-all duration-300 group`}>
+        <div className={`card bg-base-100 rounded-2xl border ${colors.accentColor} shadow-sm hover:shadow-md transition-all duration-300 group`}>
             <div className="p-6">
                 <div className="flex items-center gap-4">
                     <div className={`w-12 h-12 ${colors.iconBg} rounded-2xl flex items-center justify-center group-hover:scale-105 transition-transform duration-200 flex-shrink-0`}>
@@ -726,5 +735,121 @@ function providerIcon(key: string) {
         case 'slack': return 'fa-slack';
         case 'email': return 'fa-envelope';
         default: return 'fa-puzzle-piece';
+    }
+}
+
+async function QuickStartBanner({ tenantId }: { tenantId: string }) {
+    try {
+        // Check if user has sites and documents
+        const sitesQuery = await query('SELECT COUNT(*) as count FROM public.tenant_sites WHERE tenant_id = $1', [tenantId]);
+        const docsQuery = await query('SELECT COUNT(*) as count FROM public.documents WHERE tenant_id = $1', [tenantId]);
+
+        const sitesCount = Number(sitesQuery.rows[0]?.count || 0);
+        const docsCount = Number(docsQuery.rows[0]?.count || 0);
+
+        // Don't show banner if user already has sites and documents
+        if (sitesCount > 0 && docsCount > 0) {
+            return null;
+        }
+
+        const needsSites = sitesCount === 0;
+        const needsDocs = docsCount === 0;
+
+        return (
+            <div data-banner="quickstart" className="bg-gradient-to-r from-primary/10 via-secondary/10 to-primary/10 border border-primary/20 rounded-2xl p-6">
+                <div className="flex items-start justify-between gap-6">
+                    <div className="flex-1">
+                        <div className="flex items-center gap-3 mb-3">
+                            <div className="w-10 h-10 bg-primary/20 rounded-xl flex items-center justify-center">
+                                <i className="fa-duotone fa-solid fa-rocket text-primary text-lg" aria-hidden />
+                            </div>
+                            <div>
+                                <h3 className="text-lg font-semibold text-base-content">
+                                    {needsSites && needsDocs ? "Let's get you started!" : "Almost ready!"}
+                                </h3>
+                                <p className="text-sm text-base-content/70">
+                                    {needsSites && needsDocs
+                                        ? "Set up your AI support in just a few steps"
+                                        : needsSites
+                                            ? "Add your website to start using the chat widget"
+                                            : "Add some content to improve your AI responses"
+                                    }
+                                </p>
+                            </div>
+                        </div>
+
+                        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
+                            <div className={`flex items-center gap-3 p-3 rounded-xl ${sitesCount > 0 ? 'bg-success/10 border border-success/20' : 'bg-base-100/60 border border-base-300'}`}>
+                                <div className={`w-6 h-6 rounded-lg flex items-center justify-center ${sitesCount > 0 ? 'bg-success/20' : 'bg-base-200'}`}>
+                                    <i className={`fa-duotone fa-solid ${sitesCount > 0 ? 'fa-check text-success' : 'fa-globe text-base-content/60'} text-sm`} aria-hidden />
+                                </div>
+                                <div>
+                                    <div className="text-sm font-medium">Add Website</div>
+                                    <div className="text-xs text-base-content/60">
+                                        {sitesCount > 0 ? `${sitesCount} site${sitesCount > 1 ? 's' : ''} registered` : 'Register your domain'}
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div className={`flex items-center gap-3 p-3 rounded-xl ${docsCount > 0 ? 'bg-success/10 border border-success/20' : 'bg-base-100/60 border border-base-300'}`}>
+                                <div className={`w-6 h-6 rounded-lg flex items-center justify-center ${docsCount > 0 ? 'bg-success/20' : 'bg-base-200'}`}>
+                                    <i className={`fa-duotone fa-solid ${docsCount > 0 ? 'fa-check text-success' : 'fa-file-lines text-base-content/60'} text-sm`} aria-hidden />
+                                </div>
+                                <div>
+                                    <div className="text-sm font-medium">Add Content</div>
+                                    <div className="text-xs text-base-content/60">
+                                        {docsCount > 0 ? `${docsCount} document${docsCount > 1 ? 's' : ''} indexed` : 'Upload your knowledge base'}
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div className="flex items-center gap-3 p-3 rounded-xl bg-base-100/60 border border-base-300">
+                                <div className="w-6 h-6 bg-base-200 rounded-lg flex items-center justify-center">
+                                    <i className="fa-duotone fa-solid fa-code text-base-content/60 text-sm" aria-hidden />
+                                </div>
+                                <div>
+                                    <div className="text-sm font-medium">Install Widget</div>
+                                    <div className="text-xs text-base-content/60">Copy & paste the code</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div className="flex-shrink-0 flex gap-3">
+                        {needsSites ? (
+                            <HoverScale scale={1.02}>
+                                <a href="/onboarding" className="btn btn-primary">
+                                    <i className="fa-duotone fa-solid fa-play mr-2" aria-hidden />
+                                    Start Setup
+                                </a>
+                            </HoverScale>
+                        ) : needsDocs ? (
+                            <HoverScale scale={1.02}>
+                                <a href="/dashboard/documents" className="btn btn-primary">
+                                    <i className="fa-duotone fa-solid fa-plus mr-2" aria-hidden />
+                                    Add Content
+                                </a>
+                            </HoverScale>
+                        ) : (
+                            <HoverScale scale={1.02}>
+                                <a href="/dashboard/settings" className="btn btn-primary">
+                                    <i className="fa-duotone fa-solid fa-code mr-2" aria-hidden />
+                                    Get Widget Code
+                                </a>
+                            </HoverScale>
+                        )}
+
+                        <button className="btn btn-ghost btn-sm rounded-lg" onClick={() => {
+                            const banner = document.querySelector('[data-banner="quickstart"]');
+                            if (banner) banner.remove();
+                        }}>
+                            <i className="fa-duotone fa-solid fa-times" aria-hidden />
+                        </button>
+                    </div>
+                </div>
+            </div>
+        );
+    } catch {
+        return null;
     }
 }

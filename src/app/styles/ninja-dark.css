@@ -1,4 +1,8 @@
-:root[data-theme="ninja-dark"] {
+@plugin "daisyui/theme" {
+    name: "dark";
+    default: false;
+    color-scheme: dark;
+    prefersdark: false;
   /* Brand palette tuned for dark contrast */
   --p:  #8b5cf6; /* primary (brighter for dark) */
   --pc: #0b0b14; /* primary-content */
@@ -42,5 +46,4 @@
   --tab-border: 1px;
   --tab-radius: .75rem;
 
-  color-scheme: dark;
 }

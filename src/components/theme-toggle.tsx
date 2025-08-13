@@ -30,9 +30,13 @@ function applyTheme(mode: Mode, explicitTheme?: ThemeName) {
     // allow an explicit non-light/dark theme if passed (e.g., corporate)
     const final = explicitTheme ?? theme;
 
-    document.documentElement.setAttribute("data-theme", final);
+
     // toggle dark class for Tailwind dark: utilities to play nice with DaisyUI
-    document.documentElement.classList.toggle("dark", final === DARK_THEME);
+    if (mode === "dark" || (mode === "system" && systemPrefersDark())) {
+        document.querySelector("html")?.setAttribute("data-theme", DARK_THEME);
+    } else {
+        document.querySelector("html")?.setAttribute("data-theme", LIGHT_THEME);
+    }
     localStorage.setItem(STORAGE_THEME, final);
 }
 
@@ -45,7 +49,7 @@ const themeOptions = [
     },
     {
         mode: "dark" as Mode,
-        label: "Dark", 
+        label: "Dark",
         icon: "fa-moon",
         description: "Dark appearance"
     },
@@ -119,11 +123,11 @@ export default function ThemeToggle() {
             {isOpen && (
                 <>
                     {/* Backdrop */}
-                    <div 
+                    <div
                         className="fixed inset-0 z-40"
                         onClick={() => setIsOpen(false)}
                     />
-                    
+
                     {/* Dropdown Content */}
                     <div className="absolute right-0 top-full mt-2 z-50 w-64 bg-base-100/95 backdrop-blur-sm rounded-2xl shadow-xl border border-base-200/60 p-3 animate-in slide-in-from-top-2 fade-in-0 duration-200">
                         <div className="space-y-1">
@@ -132,24 +136,22 @@ export default function ThemeToggle() {
                                 <h3 className="text-sm font-semibold text-base-content">Appearance</h3>
                                 <p className="text-xs text-base-content/60">Choose your interface theme</p>
                             </div>
-                            
+
                             {/* Theme Options */}
                             <div className="space-y-1 py-2">
                                 {themeOptions.map((option) => (
                                     <HoverScale key={option.mode} scale={1.01}>
                                         <button
                                             onClick={() => setModeAndApply(option.mode)}
-                                            className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl transition-all duration-200 text-left ${
-                                                mode === option.mode
-                                                    ? "bg-primary/10 text-primary border border-primary/20 shadow-sm"
-                                                    : "hover:bg-base-200/60 text-base-content/80 hover:text-base-content"
-                                            }`}
+                                            className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl transition-all duration-200 text-left ${mode === option.mode
+                                                ? "bg-primary/10 text-primary border border-primary/20 shadow-sm"
+                                                : "hover:bg-base-200/60 text-base-content/80 hover:text-base-content"
+                                                }`}
                                         >
-                                            <div className={`w-8 h-8 rounded-lg flex items-center justify-center transition-colors ${
-                                                mode === option.mode
-                                                    ? "bg-primary/20 text-primary"
-                                                    : "bg-base-200/60 text-base-content/60"
-                                            }`}>
+                                            <div className={`w-8 h-8 rounded-lg flex items-center justify-center transition-colors ${mode === option.mode
+                                                ? "bg-primary/20 text-primary"
+                                                : "bg-base-200/60 text-base-content/60"
+                                                }`}>
                                                 <i className={`fa-duotone fa-solid ${option.icon} text-sm`} aria-hidden />
                                             </div>
                                             <div className="flex-1">
@@ -167,7 +169,7 @@ export default function ThemeToggle() {
                             {/* Footer Info */}
                             <div className="px-3 py-2 border-t border-base-200/60">
                                 <p className="text-xs text-base-content/50">
-                                    {mode === "system" 
+                                    {mode === "system"
                                         ? `Following ${systemPrefersDark() ? 'dark' : 'light'} system preference`
                                         : `Using ${mode} theme`
                                     }

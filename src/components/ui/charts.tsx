@@ -17,6 +17,7 @@ import {
     Cell
 } from 'recharts';
 import { HoverScale } from './animated-page';
+import { getChartColors } from '@/lib/colors';
 
 // Time range options
 export const timeRanges = [
@@ -94,11 +95,11 @@ function CustomTooltip({ active, payload, label }: TooltipProps) {
 }
 
 // Enhanced Chat volume chart with better styling
-export function ChatVolumeChart({
-    data,
-    loading = false
-}: {
-    data: Array<{ date: string; messages: number; conversations: number }>;
+export function ChatVolumeChart({ 
+    data, 
+    loading = false 
+}: { 
+    data: Array<{ date: string; messages: number; conversations: number }>; 
     loading?: boolean;
 }) {
     if (loading) {
@@ -137,62 +138,65 @@ export function ChatVolumeChart({
         );
     }
 
+    // Get theme-consistent colors
+    const colors = getChartColors();
+
     return (
         <ResponsiveContainer width="100%" height="100%">
             <AreaChart data={data} margin={{ top: 5, right: 5, left: 5, bottom: 5 }}>
                 <defs>
                     <linearGradient id="messagesGradient" x1="0" y1="0" x2="0" y2="1">
-                        <stop offset="5%" stopColor="hsl(var(--p))" stopOpacity={0.4} />
-                        <stop offset="95%" stopColor="hsl(var(--p))" stopOpacity={0.05} />
+                        <stop offset="5%" stopColor={colors.primary} stopOpacity={0.4} />
+                        <stop offset="95%" stopColor={colors.primary} stopOpacity={0.05} />
                     </linearGradient>
                     <linearGradient id="conversationsGradient" x1="0" y1="0" x2="0" y2="1">
-                        <stop offset="5%" stopColor="hsl(var(--s))" stopOpacity={0.4} />
-                        <stop offset="95%" stopColor="hsl(var(--s))" stopOpacity={0.05} />
+                        <stop offset="5%" stopColor={colors.secondary} stopOpacity={0.4} />
+                        <stop offset="95%" stopColor={colors.secondary} stopOpacity={0.05} />
                     </linearGradient>
                 </defs>
                 <CartesianGrid
                     strokeDasharray="3 3"
-                    stroke="hsl(var(--b3))"
-                    opacity={0.6}
+                    stroke={colors.neutral}
+                    opacity={0.3}
                 />
                 <XAxis
                     dataKey="date"
-                    stroke="hsl(var(--bc))"
+                    stroke={colors.neutral}
                     fontSize={11}
                     tickLine={false}
                     axisLine={false}
-                    tick={{ fill: 'hsl(var(--bc))', opacity: 0.7 }}
+                    tick={{ fill: colors.neutral, opacity: 0.7 }}
                 />
                 <YAxis
-                    stroke="hsl(var(--bc))"
+                    stroke={colors.neutral}
                     fontSize={11}
                     tickLine={false}
                     axisLine={false}
-                    tick={{ fill: 'hsl(var(--bc))', opacity: 0.7 }}
+                    tick={{ fill: colors.neutral, opacity: 0.7 }}
                     width={30}
                 />
                 <Tooltip content={<CustomTooltip />} />
                 <Area
                     type="monotone"
                     dataKey="messages"
-                    stroke="hsl(var(--p))"
+                    stroke={colors.primary}
                     fillOpacity={1}
                     fill="url(#messagesGradient)"
                     strokeWidth={2.5}
                     name="Messages"
-                    dot={{ fill: 'hsl(var(--p))', strokeWidth: 2, r: 4 }}
-                    activeDot={{ r: 6, stroke: 'hsl(var(--p))', strokeWidth: 2, fill: 'hsl(var(--p))' }}
+                    dot={{ fill: colors.primary, strokeWidth: 2, r: 4 }}
+                    activeDot={{ r: 6, stroke: colors.primary, strokeWidth: 2, fill: colors.primary }}
                 />
                 <Area
                     type="monotone"
                     dataKey="conversations"
-                    stroke="hsl(var(--s))"
+                    stroke={colors.secondary}
                     fillOpacity={1}
                     fill="url(#conversationsGradient)"
                     strokeWidth={2.5}
                     name="Conversations"
-                    dot={{ fill: 'hsl(var(--s))', strokeWidth: 2, r: 4 }}
-                    activeDot={{ r: 6, stroke: 'hsl(var(--s))', strokeWidth: 2, fill: 'hsl(var(--s))' }}
+                    dot={{ fill: colors.secondary, strokeWidth: 2, r: 4 }}
+                    activeDot={{ r: 6, stroke: colors.secondary, strokeWidth: 2, fill: colors.secondary }}
                 />
             </AreaChart>
         </ResponsiveContainer>
@@ -242,21 +246,24 @@ export function SourcesChart({
         );
     }
 
+    // Get theme-consistent colors
+    const colors = getChartColors();
+
     return (
         <ResponsiveContainer width="100%" height="100%">
             <BarChart data={validData} layout="horizontal" margin={{ top: 5, right: 5, left: 5, bottom: 5 }}>
                 <CartesianGrid
                     strokeDasharray="3 3"
-                    stroke="hsl(var(--b3))"
-                    opacity={0.6}
+                    stroke={colors.neutral}
+                    opacity={0.3}
                 />
                 <XAxis
                     type="number"
-                    stroke="hsl(var(--bc))"
+                    stroke={colors.neutral}
                     fontSize={11}
                     tickLine={false}
                     axisLine={false}
-                    tick={{ fill: 'hsl(var(--bc))', opacity: 0.7 }}
+                    tick={{ fill: colors.neutral, opacity: 0.7 }}
                 />
                 <YAxis
                     type="category"

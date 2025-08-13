@@ -449,7 +449,7 @@ function AnalyticsOverview({ data }: { data: AnalyticsData }) {
                 {metrics.map((metric) => (
                     <StaggerChild key={metric.label}>
                         <HoverScale scale={1.02}>
-                            <div className={`bg-gradient-to-br from-base-100/60 to-base-200/40 backdrop-blur-sm rounded-2xl border ${getColorClasses(metric.color).split(' ')[2]} shadow-sm hover:shadow-md transition-all duration-300 p-6 group`}>
+                            <div className={`card bg-base-100 rounded-2xl border ${getColorClasses(metric.color).split(' ')[2]} shadow-sm hover:shadow-md transition-all duration-300 p-6 group`}>
                                 <div className="flex items-center gap-4">
                                     <div className={`w-12 h-12 ${getColorClasses(metric.color).split(' ')[0]} rounded-2xl flex items-center justify-center group-hover:scale-105 transition-transform duration-200 flex-shrink-0`}>
                                         <i className={`fa-duotone fa-solid ${metric.icon} text-lg ${getColorClasses(metric.color).split(' ')[1]}`} aria-hidden />
@@ -479,7 +479,7 @@ function AnalyticsOverview({ data }: { data: AnalyticsData }) {
 
 function ConversationTrendsCard({ data }: { data: ConversationTrendsData[] }) {
     return (
-        <div className="bg-gradient-to-br from-base-100/60 to-base-200/40 backdrop-blur-sm rounded-2xl border border-base-200/60 shadow-sm hover:shadow-md transition-all duration-300">
+        <div className="card bg-base-100 rounded-2xl shadow-sm hover:shadow-md transition-all duration-300">
             <div className="p-6">
                 <div className="flex items-center justify-between mb-6">
                     <div>
@@ -498,7 +498,7 @@ function ConversationTrendsCard({ data }: { data: ConversationTrendsData[] }) {
 
 function ConfidenceAnalysisCard({ data }: { data: ConfidenceDistributionData[] }) {
     return (
-        <div className="bg-gradient-to-br from-base-100/60 to-base-200/40 backdrop-blur-sm rounded-2xl border border-base-200/60 shadow-sm hover:shadow-md transition-all duration-300">
+        <div className="card bg-base-100 rounded-2xl shadow-sm hover:shadow-md transition-all duration-300">
             <div className="p-6">
                 <div className="flex items-center justify-between mb-6">
                     <div>
@@ -517,7 +517,7 @@ function ConfidenceAnalysisCard({ data }: { data: ConfidenceDistributionData[] }
 
 function ResponseTimeCard({ data }: { data: ResponseTimeData[] }) {
     return (
-        <div className="bg-gradient-to-br from-base-100/60 to-base-200/40 backdrop-blur-sm rounded-2xl border border-base-200/60 shadow-sm hover:shadow-md transition-all duration-300">
+        <div className="card bg-base-100 rounded-2xl shadow-sm hover:shadow-md transition-all duration-300">
             <div className="p-6">
                 <div className="flex items-center justify-between mb-6">
                     <div>
@@ -536,7 +536,7 @@ function ResponseTimeCard({ data }: { data: ResponseTimeData[] }) {
 
 function TopSourcesCard({ data }: { data: TopSourcesData[] }) {
     return (
-        <div className="bg-gradient-to-br from-base-100/60 to-base-200/40 backdrop-blur-sm rounded-2xl border border-base-200/60 shadow-sm hover:shadow-md transition-all duration-300">
+        <div className="card bg-base-100 rounded-2xl shadow-sm hover:shadow-md transition-all duration-300">
             <div className="p-6">
                 <div className="flex items-center justify-between mb-6">
                     <div>

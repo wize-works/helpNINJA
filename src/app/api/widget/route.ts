@@ -1,18 +1,107 @@
 import { NextRequest } from 'next/server';
+import { query } from '@/lib/db';
 
-export const runtime = 'edge';
+export const runtime = 'nodejs';
 
 export async function GET(req: NextRequest) {
     const { searchParams } = new URL(req.url);
-    const tenant = searchParams.get('t');
+    const tenantPublicKey = searchParams.get('t');
     const voice = searchParams.get('voice') || 'friendly';
-    const origin = new URL(req.url).origin;
+    const originUrl = new URL(req.url);
+    const origin = originUrl.origin;
+
+    // Validate tenant public key
+    if (!tenantPublicKey) {
+        return new Response('Missing tenant parameter', { status: 400 });
+    }
+
+    // Get referer to validate domain
+    const referer = req.headers.get('referer');
+    let refererDomain = '';
+    let skipDomainValidation = false;
+
+    if (referer) {
+        try {
+            const refUrl = new URL(referer);
+            refererDomain = refUrl.hostname;
+            // If the widget script is being loaded from the same origin as the API
+            // (e.g., inside the dashboard preview iframe), skip domain checks.
+            if (refUrl.origin === origin) {
+                skipDomainValidation = true;
+            }
+        } catch {
+            // Invalid referer URL, continue without domain validation
+        }
+    }
+
+    // Validate domain if referer is provided
+    if (refererDomain && !skipDomainValidation) {
+        try {
+            const { rows: siteRows } = await query(
+                `SELECT ts.domain, ts.verified, t.id as tenant_id
+                 FROM public.tenant_sites ts
+                 JOIN public.tenants t ON t.id = ts.tenant_id
+                 WHERE t.public_key = $1 AND ts.domain = $2 AND ts.verified = true AND ts.status = 'active'`,
+                [tenantPublicKey, refererDomain]
+            );
+
+            if (siteRows.length === 0) {
+                // Check if domain exists but is not verified
+                const { rows: unverifiedRows } = await query(
+                    `SELECT ts.domain
+                     FROM public.tenant_sites ts
+                     JOIN public.tenants t ON t.id = ts.tenant_id
+                     WHERE t.public_key = $1 AND ts.domain = $2`,
+                    [tenantPublicKey, refererDomain]
+                );
+
+                if (unverifiedRows.length > 0) {
+                    return new Response('Domain not verified', { status: 403 });
+                } else {
+                    return new Response('Domain not registered', { status: 403 });
+                }
+            }
+        } catch (error) {
+            console.error('Domain validation error:', error);
+            // Continue without domain validation if DB error occurs
+        }
+    }
+
+    // Get tenant ID for the widget
+    let tenantId = '';
+    try {
+        const { rows: tenantRows } = await query(
+            'SELECT id FROM public.tenants WHERE public_key = $1',
+            [tenantPublicKey]
+        );
+
+        if (tenantRows.length === 0) {
+            return new Response('Invalid tenant', { status: 404 });
+        }
+
+        tenantId = tenantRows[0].id;
+    } catch (error) {
+        console.error('Tenant lookup error:', error);
+        return new Response('Server error', { status: 500 });
+    }
     // sanitize variables for embedding into inline JS
-    const TENANT_JSON = JSON.stringify(tenant || '');
+    const TENANT_JSON = JSON.stringify(tenantId);
     const VOICE_JSON = JSON.stringify(voice);
     const ORIGIN_JSON = JSON.stringify(origin);
     const js = `(() => {
-    const sid = localStorage.getItem('hn_sid') || (localStorage.setItem('hn_sid', crypto.randomUUID()), localStorage.getItem('hn_sid'));
+        const sid = (() => {
+            try {
+                const existing = localStorage.getItem('hn_sid');
+                if (existing) return existing;
+                const uuid = (typeof crypto !== 'undefined' && crypto.randomUUID)
+                    ? crypto.randomUUID()
+                    : 'sid_' + Math.random().toString(36).slice(2) + Date.now().toString(36);
+                localStorage.setItem('hn_sid', uuid);
+                return uuid;
+            } catch (_) {
+                return 'sid_' + Math.random().toString(36).slice(2);
+            }
+        })();
     const bubble = document.createElement('div');
     bubble.style.cssText = 'position:fixed;bottom:20px;right:20px;width:56px;height:56px;border-radius:28px;box-shadow:0 10px 30px rgba(0,0,0,.2);background:#111;color:#fff;display:flex;align-items:center;justify-content:center;cursor:pointer;z-index:999999;';
     bubble.innerText = '🗨️';

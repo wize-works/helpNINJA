@@ -47,23 +47,58 @@ export async function getTenantIdServer(opts: TenantResolveOptions = {}): Promis
 }
 
 /**
- * Resolve tenantId from a NextRequest (API routes). Checks JSON body, query, headers, cookies.
+ * Resolve tenantId from a NextRequest (API routes). Checks query, headers, cookies, and optionally body.
  */
 export async function resolveTenantIdFromRequest(req: NextRequest, allowEnvFallback = false): Promise<string> {
-    // Try body (POST/PUT) without consuming for webhook routes that need raw body elsewhere
-    let bodyTid: string | null = null
-    try {
-        if (req.method !== 'GET' && req.headers.get('content-type')?.includes('application/json')) {
-            const j = await req.json()
-            bodyTid = j?.tenantId || j?.tenant || null
-        }
-    } catch { }
     const url = new URL(req.url)
     const fromSp = url.searchParams.get('tenantId') || url.searchParams.get('tenant')
     const fromH = pickFromHeaders(req.headers as unknown as HeadersLike)
     const fromCookie = req.cookies.get('hn_tenant')?.value || req.cookies.get('tenantId')?.value || null
     const fromEnv = allowEnvFallback ? (process.env.DEMO_TENANT_ID || process.env.NEXT_PUBLIC_DEMO_TENANT_ID || '') : ''
-    const val = bodyTid || fromSp || fromH || fromCookie || fromEnv
+
+    // Try headers, query params, cookies first (non-destructive)
+    let val = fromSp || fromH || fromCookie || fromEnv
+
+    // Only try reading body if we haven't found tenantId elsewhere and it's not a GET request
+    if (!val && req.method !== 'GET' && req.headers.get('content-type')?.includes('application/json')) {
+        try {
+            const j = await req.json()
+            val = j?.tenantId || j?.tenant || null
+        } catch { }
+    }
+
     if (!val) throw new Error('tenantId not resolved')
     return val
+}
+
+/**
+ * Resolve tenantId and parse body from a NextRequest in one go to avoid double-reading issues.
+ * Returns both the tenantId and the parsed body.
+ */
+export async function resolveTenantIdAndBodyFromRequest(req: NextRequest, allowEnvFallback = false): Promise<{ tenantId: string; body: Record<string, unknown> | null }> {
+    const url = new URL(req.url)
+    const fromSp = url.searchParams.get('tenantId') || url.searchParams.get('tenant')
+    const fromH = pickFromHeaders(req.headers as unknown as HeadersLike)
+    const fromCookie = req.cookies.get('hn_tenant')?.value || req.cookies.get('tenantId')?.value || null
+    const fromEnv = allowEnvFallback ? (process.env.DEMO_TENANT_ID || process.env.NEXT_PUBLIC_DEMO_TENANT_ID || '') : ''
+
+    // Try headers, query params, cookies first (non-destructive)
+    let tenantId: string | null = fromSp || fromH || fromCookie || fromEnv
+    let body: Record<string, unknown> | null = null
+
+    // If we haven't found tenantId and this is a JSON request, read the body
+    if (req.method !== 'GET' && req.headers.get('content-type')?.includes('application/json')) {
+        try {
+            body = await req.json() as Record<string, unknown>
+            // If we didn't find tenantId elsewhere, try the body
+            if (!tenantId) {
+                tenantId = (body?.tenantId as string) || (body?.tenant as string) || null
+            }
+        } catch (error) {
+            console.error('Error parsing request body:', error)
+        }
+    }
+
+    if (!tenantId) throw new Error('tenantId not resolved')
+    return { tenantId, body }
 }

@@ -5,6 +5,7 @@ import { embedBatch } from '@/lib/embeddings';
 import { query } from '@/lib/db';
 import { canAddSite } from '@/lib/usage';
 import { resolveTenantIdFromRequest } from '@/lib/auth';
+import { webhookEvents } from '@/lib/webhooks';
 
 export const runtime = 'nodejs';
 
@@ -12,7 +13,28 @@ export async function POST(req: NextRequest) {
     const body = await req.json();
     const tenantId = body?.tenantId || await resolveTenantIdFromRequest(req, true);
     const input = body?.input;
-    if (!tenantId || !input) return NextResponse.json({ error: 'tenantId and input required' }, { status: 400 });
+    const siteId = body?.siteId;
+
+    if (!tenantId || !input) {
+        return NextResponse.json({ error: 'tenantId and input required' }, { status: 400 });
+    }
+
+    // Validate siteId if provided
+    if (siteId) {
+        try {
+            const siteCheck = await query(
+                'SELECT id FROM public.tenant_sites WHERE id = $1 AND tenant_id = $2',
+                [siteId, tenantId]
+            );
+
+            if (siteCheck.rowCount === 0) {
+                return NextResponse.json({ error: 'Invalid siteId for this tenant' }, { status: 400 });
+            }
+        } catch (error) {
+            console.error('Site validation error:', error);
+            return NextResponse.json({ error: 'Failed to validate site' }, { status: 500 });
+        }
+    }
 
     try {
         const u = new URL(input);
@@ -30,22 +52,47 @@ export async function POST(req: NextRequest) {
     for (const d of docs) {
         const normUrl = (() => { try { const u = new URL(d.url); u.hash = ''; return u.toString(); } catch { return d.url; } })();
         if (seen.has(normUrl)) continue; seen.add(normUrl);
-        // Skip if already ingested for this tenant
-        const existing = await query<{ id: string }>(`select id from public.documents where tenant_id=$1 and url=$2 limit 1`, [tenantId, normUrl]);
+        // Skip if already ingested for this tenant (and site if specified)
+        let existing;
+        if (siteId) {
+            existing = await query<{ id: string }>(
+                `SELECT id FROM public.documents WHERE tenant_id=$1 AND url=$2 AND site_id=$3 LIMIT 1`,
+                [tenantId, normUrl, siteId]
+            );
+        } else {
+            existing = await query<{ id: string }>(
+                `SELECT id FROM public.documents WHERE tenant_id=$1 AND url=$2 AND site_id IS NULL LIMIT 1`,
+                [tenantId, normUrl]
+            );
+        }
+
         if (existing.rows[0]?.id) continue;
+
+        // Insert document with site_id
         const ins = await query<{ id: string }>(
-            `insert into public.documents (tenant_id, url, title, content)
-       values ($1,$2,$3,$4) returning id`, [tenantId, normUrl, d.title, d.content]
+            `INSERT INTO public.documents (tenant_id, url, title, content, site_id)
+             VALUES ($1, $2, $3, $4, $5) RETURNING id`,
+            [tenantId, normUrl, d.title, d.content, siteId || null]
         );
+
         const docId = ins.rows[0].id;
         const chunks = chunkText(d.content);
         const embs = await embedBatch(chunks);
+
         for (let i = 0; i < chunks.length; i++) {
             const v = `[${embs[i].join(',')}]`;
             await query(
-                `insert into public.chunks (tenant_id, document_id, url, content, token_count, embedding)
-         values ($1,$2,$3,$4,$5,$6::vector)`, [tenantId, docId, normUrl, chunks[i], Math.ceil(chunks[i].length / 4), v]
+                `INSERT INTO public.chunks (tenant_id, document_id, url, content, token_count, embedding, site_id)
+                 VALUES ($1, $2, $3, $4, $5, $6::vector, $7)`,
+                [tenantId, docId, normUrl, chunks[i], Math.ceil(chunks[i].length / 4), v, siteId || null]
             );
+        }
+
+        // Trigger document ingested webhook
+        try {
+            await webhookEvents.documentIngested(tenantId, docId, normUrl, chunks.length);
+        } catch (error) {
+            console.error('Failed to trigger document.ingested webhook:', error);
         }
     }
     return NextResponse.json({ ok: true, docs: docs.length });

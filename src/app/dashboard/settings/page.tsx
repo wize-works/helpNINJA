@@ -2,6 +2,7 @@ import { getTenantIdServer } from "@/lib/auth";
 import { query } from "@/lib/db";
 import ChatWidgetPanel from "@/components/chat-widget-panel";
 import { Breadcrumb } from "@/components/ui/breadcrumb";
+import { AnimatedPage, StaggerContainer, StaggerChild } from "@/components/ui/animated-page";
 
 export const runtime = 'nodejs'
 
@@ -22,62 +23,171 @@ async function getTenant(tenantId: string) {
 export default async function SettingsPage() {
     const tenantId = await getTenantIdServer({ allowEnvFallback: true })
     const t = await getTenant(tenantId)
-    
+
     const breadcrumbItems = [
         { label: "Dashboard", href: "/dashboard", icon: "fa-gauge-high" },
         { label: "Settings", icon: "fa-sliders" }
     ];
-    
+
     return (
-        <div className="space-y-6">
-            <Breadcrumb items={breadcrumbItems} />
-            
-            <h1 className="text-2xl font-bold">Settings</h1>
+        <AnimatedPage>
+            <div className="space-y-8">
+                {/* Breadcrumb */}
+                <StaggerContainer>
+                    <StaggerChild>
+                        <Breadcrumb items={breadcrumbItems} />
+                    </StaggerChild>
+                </StaggerContainer>
 
-            <div className="card bg-base-100 border border-base-300">
-                <div className="card-body">
-                    <h2 className="card-title">Tenant</h2>
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
-                        <div>
-                            <div className="opacity-60">ID</div>
-                            <div className="font-mono break-all">{t.id}</div>
-                        </div>
-                        <div>
-                            <div className="opacity-60">Name</div>
-                            <div>{t.name}</div>
-                        </div>
-                        <div>
-                            <div className="opacity-60">Plan</div>
-                            <div>{t.plan} <span className="badge badge-outline ml-2">{t.plan_status}</span></div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            {(t.public_key || t.secret_key) && (
-                <div className="card bg-base-100 border border-base-300">
-                    <div className="card-body">
-                        <div className="flex items-center justify-between">
-                            <h2 className="card-title">API keys</h2>
-                            <RotateKeysButton tenantId={tenantId} />
-                        </div>
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
-                            {t.public_key && (<div><div className="opacity-60">Public key</div><div className="font-mono break-all">{t.public_key}</div></div>)}
-                            {t.secret_key && (<div><div className="opacity-60">Secret key</div><div className="font-mono break-all">{t.secret_key}</div></div>)}
-                        </div>
-                        {t.public_key && (
-                            <div className="mt-6">
-                                <div className="mb-2 flex items-center justify-between">
-                                    <h3 className="font-semibold">Chat widget</h3>
-                                    <div className="text-xs opacity-70">Preview + embed</div>
-                                </div>
-                                <ChatWidgetPanel tenantPublicKey={t.public_key} />
+                {/* Header */}
+                <StaggerContainer>
+                    <StaggerChild>
+                        <div className="flex flex-col lg:flex-row lg:items-start lg:justify-between gap-4">
+                            <div className="flex-1">
+                                <h1 className="text-3xl font-bold text-base-content">Account Settings</h1>
+                                <p className="text-base-content/60 mt-2">
+                                    Manage your account information, API keys, and chat widget configuration
+                                </p>
                             </div>
-                        )}
-                    </div>
-                </div>
-            )}
-        </div>
+                            <div className="flex items-center gap-3">
+                                <div className="stats shadow">
+                                    <div className="stat">
+                                        <div className="stat-figure text-primary">
+                                            <i className="fa-duotone fa-solid fa-shield-check text-2xl" aria-hidden />
+                                        </div>
+                                        <div className="stat-title">Account Status</div>
+                                        <div className="stat-value text-primary text-lg">{t.plan_status}</div>
+                                        <div className="stat-desc">{t.plan} plan</div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </StaggerChild>
+                </StaggerContainer>
+
+                {/* Account Information */}
+                <StaggerContainer>
+                    <StaggerChild>
+                        <div className="card bg-base-100 rounded-2xl shadow-sm">
+                            <div className="p-6">
+                                <div className="flex items-center gap-3 mb-6">
+                                    <div className="w-12 h-12 bg-primary/10 rounded-2xl flex items-center justify-center">
+                                        <i className="fa-duotone fa-solid fa-user text-lg text-primary" aria-hidden />
+                                    </div>
+                                    <div>
+                                        <h2 className="text-lg font-semibold text-base-content">Account Information</h2>
+                                        <p className="text-base-content/60 text-sm">Your tenant details and subscription information</p>
+                                    </div>
+                                </div>
+
+                                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                                    <div className="p-4 bg-base-200/20 rounded-xl">
+                                        <div className="text-sm text-base-content/60 mb-1">Tenant ID</div>
+                                        <div className="font-mono text-sm text-base-content break-all">{t.id}</div>
+                                    </div>
+                                    <div className="p-4 bg-base-200/20 rounded-xl">
+                                        <div className="text-sm text-base-content/60 mb-1">Organization Name</div>
+                                        <div className="text-base-content font-medium">{t.name}</div>
+                                    </div>
+                                    <div className="p-4 bg-base-200/20 rounded-xl">
+                                        <div className="text-sm text-base-content/60 mb-1">Current Plan</div>
+                                        <div className="flex items-center gap-2">
+                                            <span className="text-base-content font-medium">{t.plan}</span>
+                                            <span className="badge badge-primary badge-sm">{t.plan_status}</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </StaggerChild>
+                </StaggerContainer>
+
+                {/* API Keys Section */}
+                {(t.public_key || t.secret_key) && (
+                    <StaggerContainer>
+                        <StaggerChild>
+                            <div className="card bg-base-100 rounded-2xl shadow-sm">
+                                <div className="p-6">
+                                    <div className="flex items-center justify-between mb-6">
+                                        <div className="flex items-center gap-3">
+                                            <div className="w-12 h-12 bg-warning/10 rounded-2xl flex items-center justify-center">
+                                                <i className="fa-duotone fa-solid fa-key text-lg text-warning" aria-hidden />
+                                            </div>
+                                            <div>
+                                                <h2 className="text-lg font-semibold text-base-content">Widget Keys</h2>
+                                                <p className="text-base-content/60 text-sm">Essential keys for chat widget integration on your website</p>
+                                            </div>
+                                        </div>
+                                        <RotateKeysButton tenantId={tenantId} />
+                                    </div>
+
+                                    {/* Widget Keys Help */}
+                                    <div className="alert alert-info mb-6">
+                                        <i className="fa-duotone fa-solid fa-info-circle text-xl" aria-hidden />
+                                        <div>
+                                            <div className="font-semibold mb-1">Widget Integration Keys</div>
+                                            <div className="text-sm opacity-90">
+                                                These keys are specifically for embedding the HelpNinja chat widget on your website.
+                                                Use the public key in your widget script - it&apos;s safe for client-side use. The secret key is for server-side authentication.
+                                                <div className="mt-2">
+                                                    <span className="font-medium">Need programmatic API access?</span> Visit the{' '}
+                                                    <a href="/dashboard/settings/api" className="link link-primary">API Keys page</a> to create managed keys with specific permissions.
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+                                        {t.public_key && (
+                                            <div className="p-4 bg-base-200/20 rounded-xl">
+                                                <div className="text-sm text-base-content/60 mb-2">Public Key (Widget)</div>
+                                                <div className="font-mono text-sm text-base-content break-all bg-base-300/30 p-3 rounded-lg">
+                                                    {t.public_key}
+                                                </div>
+                                                <div className="text-xs text-base-content/50 mt-2">
+                                                    <i className="fa-duotone fa-solid fa-shield-check mr-1" aria-hidden />
+                                                    Safe to use in client-side code and widget scripts
+                                                </div>
+                                            </div>
+                                        )}
+                                        {t.secret_key && (
+                                            <div className="p-4 bg-base-200/20 rounded-xl">
+                                                <div className="text-sm text-base-content/60 mb-2">Secret Key (Server)</div>
+                                                <div className="font-mono text-sm text-base-content break-all bg-base-300/30 p-3 rounded-lg">
+                                                    {t.secret_key}
+                                                </div>
+                                                <div className="text-xs text-warning mt-2">
+                                                    <i className="fa-duotone fa-solid fa-exclamation-triangle mr-1" aria-hidden />
+                                                    Keep this secure - server-side only, never expose in client code
+                                                </div>
+                                            </div>
+                                        )}
+                                    </div>
+
+                                    {/* Widget Configuration */}
+                                    {t.public_key && (
+                                        <div>
+                                            <div className="flex items-center justify-between mb-4">
+                                                <div className="flex items-center gap-3">
+                                                    <div className="w-8 h-8 bg-info/10 rounded-xl flex items-center justify-center">
+                                                        <i className="fa-duotone fa-solid fa-comment text-info" aria-hidden />
+                                                    </div>
+                                                    <div>
+                                                        <h3 className="font-semibold text-base-content">Chat Widget</h3>
+                                                        <p className="text-base-content/60 text-sm">Preview and embed code for your website</p>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <ChatWidgetPanel tenantPublicKey={t.public_key} />
+                                        </div>
+                                    )}
+                                </div>
+                            </div>
+                        </StaggerChild>
+                    </StaggerContainer>
+                )}
+            </div>
+        </AnimatedPage>
     )
 }
 
@@ -86,5 +196,12 @@ function RotateKeysButton({ tenantId }: { tenantId: string }) {
         'use server'
         await fetch(`${process.env.SITE_URL || ''}/api/tenants/${tenantId}/rotate-keys`, { method: 'POST', headers: { 'x-tenant-id': tenantId } })
     }
-    return (<form action={action}><button className="btn btn-sm"><i className="fa-duotone fa-arrows-rotate mr-2" />Rotate keys</button></form>)
+    return (
+        <form action={action}>
+            <button className="btn btn-outline btn-sm">
+                <i className="fa-duotone fa-solid fa-arrows-rotate mr-2" aria-hidden />
+                Rotate Keys
+            </button>
+        </form>
+    )
 }

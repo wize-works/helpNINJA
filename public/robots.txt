@@ -1,0 +1,18 @@
+User-agent: *
+Allow: /
+Allow: /pricing
+Allow: /features
+Allow: /about
+Allow: /contact
+Allow: /auth/signin
+Allow: /auth/signup
+
+# Disallow dashboard and private areas
+Disallow: /dashboard/
+Disallow: /onboarding/
+Disallow: /api/
+Disallow: /auth/reset-password
+Disallow: /auth/verify-email
+
+# Sitemap location
+Sitemap: https://helpninja.com/sitemap.xml

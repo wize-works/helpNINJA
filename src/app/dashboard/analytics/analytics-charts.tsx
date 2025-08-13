@@ -1,6 +1,7 @@
 "use client";
 
 import { AreaChart, Area, BarChart, Bar, PieChart, Pie, Cell, XAxis, YAxis, CartesianGrid, ResponsiveContainer, Tooltip } from 'recharts';
+import { getChartColors } from '@/lib/colors';
 
 type ConversationTrendsData = {
     date: string;
@@ -56,60 +57,63 @@ export function ConversationTrendsChart({ data }: { data: ConversationTrendsData
         date: new Date(item.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })
     }));
 
+    // Get theme-consistent colors
+    const colors = getChartColors();
+
     return (
         <div className="h-64">
             <ResponsiveContainer width="100%" height="100%">
                 <AreaChart data={formattedData} margin={{ top: 10, right: 30, left: 0, bottom: 0 }}>
                     <defs>
-                        <linearGradient id="conversationsGradient" x1="0" y1="0" x2="0" y2="1">
-                            <stop offset="5%" stopColor="#3b82f6" stopOpacity={0.3}/>
-                            <stop offset="95%" stopColor="#3b82f6" stopOpacity={0}/>
+                        <linearGradient id="conversationsGradientAnalytics" x1="0" y1="0" x2="0" y2="1">
+                            <stop offset="5%" stopColor={colors.primary} stopOpacity={0.3}/>
+                            <stop offset="95%" stopColor={colors.primary} stopOpacity={0}/>
                         </linearGradient>
-                        <linearGradient id="messagesGradient" x1="0" y1="0" x2="0" y2="1">
-                            <stop offset="5%" stopColor="#10b981" stopOpacity={0.3}/>
-                            <stop offset="95%" stopColor="#10b981" stopOpacity={0}/>
+                        <linearGradient id="messagesGradientAnalytics" x1="0" y1="0" x2="0" y2="1">
+                            <stop offset="5%" stopColor={colors.success} stopOpacity={0.3}/>
+                            <stop offset="95%" stopColor={colors.success} stopOpacity={0}/>
                         </linearGradient>
-                        <linearGradient id="escalationsGradient" x1="0" y1="0" x2="0" y2="1">
-                            <stop offset="5%" stopColor="#f59e0b" stopOpacity={0.3}/>
-                            <stop offset="95%" stopColor="#f59e0b" stopOpacity={0}/>
+                        <linearGradient id="escalationsGradientAnalytics" x1="0" y1="0" x2="0" y2="1">
+                            <stop offset="5%" stopColor={colors.warning} stopOpacity={0.3}/>
+                            <stop offset="95%" stopColor={colors.warning} stopOpacity={0}/>
                         </linearGradient>
                     </defs>
-                    <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--bc) / 0.1)" />
+                    <CartesianGrid strokeDasharray="3 3" stroke={colors.neutral} opacity={0.2} />
                     <XAxis 
                         dataKey="date" 
                         axisLine={false}
                         tickLine={false}
-                        tick={{ fontSize: 12, fill: 'hsl(var(--bc) / 0.6)' }}
+                        tick={{ fontSize: 12, fill: colors.neutral, opacity: 0.7 }}
                     />
                     <YAxis 
                         axisLine={false}
                         tickLine={false}
-                        tick={{ fontSize: 12, fill: 'hsl(var(--bc) / 0.6)' }}
+                        tick={{ fontSize: 12, fill: colors.neutral, opacity: 0.7 }}
                     />
                     <Tooltip content={<CustomTooltip />} />
                     <Area
                         type="monotone"
                         dataKey="conversations"
                         name="Conversations"
-                        stroke="#3b82f6"
+                        stroke={colors.primary}
                         strokeWidth={2}
-                        fill="url(#conversationsGradient)"
+                        fill="url(#conversationsGradientAnalytics)"
                     />
                     <Area
                         type="monotone"
                         dataKey="messages"
                         name="Messages"
-                        stroke="#10b981"
+                        stroke={colors.success}
                         strokeWidth={2}
-                        fill="url(#messagesGradient)"
+                        fill="url(#messagesGradientAnalytics)"
                     />
                     <Area
                         type="monotone"
                         dataKey="escalations"
                         name="Escalations"
-                        stroke="#f59e0b"
+                        stroke={colors.warning}
                         strokeWidth={2}
-                        fill="url(#escalationsGradient)"
+                        fill="url(#escalationsGradientAnalytics)"
                     />
                 </AreaChart>
             </ResponsiveContainer>
@@ -118,7 +122,9 @@ export function ConversationTrendsChart({ data }: { data: ConversationTrendsData
 }
 
 export function ConfidenceAnalysisChart({ data }: { data: ConfidenceDistributionData[] }) {
-    const COLORS = ['#10b981', '#3b82f6', '#f59e0b', '#ef4444'];
+    // Get theme-consistent colors
+    const colors = getChartColors();
+    const COLORS = [colors.success, colors.primary, colors.warning, colors.error];
 
     return (
         <div className="h-64">
@@ -129,7 +135,7 @@ export function ConfidenceAnalysisChart({ data }: { data: ConfidenceDistribution
                         cx="50%"
                         cy="50%"
                         outerRadius={80}
-                        fill="#8884d8"
+                        fill={colors.primary}
                         dataKey="percentage"
                         label={({ range, percentage }) => `${range}: ${percentage}%`}
                         labelLine={false}
@@ -151,28 +157,31 @@ export function ResponseTimeChart({ data }: { data: ResponseTimeData[] }) {
         hour: `${item.hour}:00`
     }));
 
+    // Get theme-consistent colors
+    const colors = getChartColors();
+
     return (
         <div className="h-64">
             <ResponsiveContainer width="100%" height="100%">
                 <BarChart data={formattedData} margin={{ top: 10, right: 30, left: 0, bottom: 0 }}>
-                    <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--bc) / 0.1)" />
+                    <CartesianGrid strokeDasharray="3 3" stroke={colors.neutral} opacity={0.2} />
                     <XAxis 
                         dataKey="hour" 
                         axisLine={false}
                         tickLine={false}
-                        tick={{ fontSize: 12, fill: 'hsl(var(--bc) / 0.6)' }}
+                        tick={{ fontSize: 12, fill: colors.neutral, opacity: 0.7 }}
                         interval={3}
                     />
                     <YAxis 
                         axisLine={false}
                         tickLine={false}
-                        tick={{ fontSize: 12, fill: 'hsl(var(--bc) / 0.6)' }}
+                        tick={{ fontSize: 12, fill: colors.neutral, opacity: 0.7 }}
                     />
                     <Tooltip content={<CustomTooltip />} />
                     <Bar 
                         dataKey="avgResponse" 
                         name="Avg Response Time"
-                        fill="#06b6d4"
+                        fill={colors.info}
                         radius={[4, 4, 0, 0]}
                     />
                 </BarChart>

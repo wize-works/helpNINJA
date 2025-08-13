@@ -41,9 +41,45 @@ Core features (present)
   - Integrations: src/app/dashboard/integrations/page.tsx plus src/app/api/integrations/[id]/route.ts and /status/route.ts
   - Conversations: src/app/dashboard/conversations/page.tsx
   - Settings + Keys: src/app/dashboard/settings/page.tsx and scaffolded src/app/api/tenants/[id]/rotate-keys/route.ts
+  - API Keys Management: src/app/dashboard/settings/api/page.tsx for advanced API key and webhook management
+- Webhook Event System (NEW - Production-ready implementation)
+  - Event Dispatching: Automatic webhook delivery for conversation.started, message.sent, escalation.triggered, document.ingested events
+  - Delivery Tracking: Complete audit trail with retry logic, status tracking, and response monitoring  
+  - Security: HMAC signature verification, API key authentication, tenant isolation
+  - Management: Full CRUD operations via dashboard UI and API endpoints
+  - API routes: src/app/api/webhooks/route.ts (list/create), src/app/api/webhooks/[id]/route.ts (get/update/delete), src/app/api/webhooks/[id]/test/route.ts (test delivery)
+  - Core system: src/lib/webhooks.ts (dispatch), src/lib/webhook-retry.ts (retry logic), src/app/api/webhooks/debug/route.ts (debugging)
+  - Database: webhook_endpoints, webhook_deliveries tables with comprehensive tracking
+  - Features: Real-time delivery status, test webhooks, retry with exponential backoff, admin debugging tools
+- Dual API key system (NEW - Comprehensive guidance added)
+  - Widget Keys: Basic tenant keys (public_key, secret_key) from tenants table for chat widget integration
+    - Located: src/app/dashboard/settings/page.tsx 
+    - Purpose: Simple widget embedding and basic authentication
+    - Public key: Safe for client-side use in widget scripts
+    - Secret key: Server-side authentication for tenant operations
+    - Features: Key rotation, widget preview, embed code generation
+  - Managed API Keys: Advanced programmatic access keys from api_keys table
+    - Located: src/app/dashboard/settings/api/page.tsx
+    - Purpose: Granular permissions, usage tracking, rate limiting
+    - Key types: Public (read), Secret (write), Webhook (endpoint auth)
+    - Features: Permission scoping, usage analytics, expiration dates, rate limits
+    - Integration: Full API documentation, curl examples, best practices guide
 - Chat preview
   - Component renders the real widget in an iframe for admins.
   - Files: src/components/chat-preview.tsx
+- Site management (NEW - Phase 1 completed)
+  - Multi-site registration and domain verification system for tenants
+  - API routes: src/app/api/sites/route.ts, src/app/api/sites/[id]/route.ts, src/app/api/sites/[id]/verify/route.ts
+  - Components: src/components/site-manager.tsx, src/components/site-selector.tsx, src/components/domain-verification.tsx
+  - Database: tenant_sites table with verification tokens and status tracking
+  - Domain validation: Widget validates allowed origins per tenant (updated src/app/api/widget/route.ts)
+  - Site-specific content: Documents and chunks associated with specific tenant sites (updated src/app/api/ingest/route.ts)
+- Onboarding experience (NEW - Phase 2 completed)
+  - Complete 3-step onboarding flow: account setup → site registration → widget installation
+  - Pages: src/app/(pages)/onboarding/step-1/page.tsx, step-2/page.tsx, step-3/page.tsx
+  - Components: src/components/onboarding-progress.tsx, src/components/onboarding-navigation.tsx
+  - Features: Progress tracking, site registration with verification, live widget preview, installation guide
+  - Layout: Custom onboarding layout with branded header and streamlined UX
 - DB access
   - pg Pool with Supabase-friendly SSL (cloud: no-verify; local: no SSL); parameterized queries.
   - Files: src/lib/db.ts
@@ -58,6 +94,15 @@ Security and conventions
 - Use lib/db.ts query() with parameters; avoid string interpolation.
 - Keep Node runtime for routes that hit DB/OpenAI.
   - Optional CORS allowlist for chat: set `ALLOWED_WIDGET_ORIGINS` to a comma-separated list (e.g., `https://example.com,https://app.example.com`). If unset, any origin is allowed.
+
+UX guidance patterns (NEW - Comprehensive in-app help)
+- Contextual guidance: Alert components on key pages explaining feature purposes and relationships
+- Progressive disclosure: Clear distinction between basic (widget keys) and advanced (managed API keys) features
+- Cross-linking: Smart navigation between related features (widget keys ↔ API keys)
+- Visual hierarchy: DaisyUI alert components with icons, typography, and color coding
+- Documentation integration: Comprehensive API guides, curl examples, and best practices directly in UI
+- Status indicators: Clear badges for key types, expiration states, and active/inactive states
+- Empty states: Helpful guidance when no data exists, explaining next steps and feature benefits
 
 What’s partial or pending
 - Conversation detail transcript page (optional)
@@ -82,5 +127,7 @@ Key files index
 - Billing: src/app/api/billing/**, src/app/api/stripe/webhook/route.ts, src/lib/stripe.ts
 - Integrations: src/lib/integrations/**
 - Dashboard: src/app/dashboard/**, src/components/sidebar.tsx
+- Settings & API Keys: src/app/dashboard/settings/page.tsx, src/app/dashboard/settings/api/page.tsx
+- UX Components: src/components/ui/stat-card.tsx, src/lib/toast.ts
 - DB: src/lib/db.ts
 - Seed: scripts/seed.mjs

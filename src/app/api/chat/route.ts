@@ -1,9 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server';
 import OpenAI from 'openai';
-import { searchHybrid } from '@/lib/rag';
+import { searchHybrid, searchWithCuratedAnswers, CuratedAnswer } from '@/lib/rag';
 import { query } from '@/lib/db';
 import { canSendMessage, incMessages } from '@/lib/usage';
 import { resolveTenantIdFromRequest } from '@/lib/auth';
+import { webhookEvents } from '@/lib/webhooks';
 
 const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
 export const runtime = 'nodejs';
@@ -44,8 +45,19 @@ export async function OPTIONS(req: NextRequest) {
 async function ensureConversation(tenantId: string, sessionId: string) {
     const existing = await query<{ id: string }>('select id from public.conversations where tenant_id=$1 and session_id=$2 limit 1', [tenantId, sessionId]);
     if (existing.rows[0]?.id) return existing.rows[0].id;
+
+    // Create new conversation
     const ins = await query<{ id: string }>('insert into public.conversations (tenant_id, session_id) values ($1,$2) returning id', [tenantId, sessionId]);
-    return ins.rows[0].id;
+    const conversationId = ins.rows[0].id;
+
+    // Trigger conversation started webhook
+    try {
+        await webhookEvents.conversationStarted(tenantId, conversationId, sessionId);
+    } catch (error) {
+        console.error('Failed to trigger conversation.started webhook:', error);
+    }
+
+    return conversationId;
 }
 
 // Accept public identifiers from the widget and resolve to internal tenant UUID
@@ -90,39 +102,112 @@ export async function POST(req: NextRequest) {
 
         const conversationId = await ensureConversation(tenantId, sessionId);
 
-        const contexts = await searchHybrid(tenantId, message, 6);
-        const contextText = contexts.map((c, i) => `[[${i + 1}]] ${c.url}\n${c.content}`).join('\n\n');
+        // Get site_id if available from widget referer or session context
+        // For now, we'll pass undefined but this could be enhanced to detect the site
+        const siteId = undefined; // TODO: Extract from widget context or session
 
-        const chat = await openai.chat.completions.create({
-            model: process.env.OPENAI_CHAT_MODEL || 'gpt-4o-mini',
-            messages: [
-                { role: 'system', content: SYSTEM(voice) },
-                { role: 'user', content: `Question: ${message}\n\nContext:\n${contextText}` }
-            ]
-        });
+        // Search for curated answers first, then RAG results
+        const { curatedAnswers, ragResults } = await searchWithCuratedAnswers(tenantId, message, 6, siteId);
 
-        const text = chat.choices[0]?.message?.content?.trim() || "I’m not sure. Want me to connect you with support?";
-        const confidence = chat.choices[0]?.finish_reason === 'stop' ? 0.7 : 0.4;
+        let text: string;
+        let confidence: number;
+        let refs: string[] = [];
 
-        await query(`insert into public.messages (conversation_id, tenant_id, role, content, confidence)
-               values ($1, $2, 'assistant', $3, $4)`,
+        if (curatedAnswers.length > 0) {
+            // Use the highest-priority curated answer
+            const bestAnswer = curatedAnswers[0];
+            text = bestAnswer.answer;
+            confidence = 0.95; // High confidence for curated answers
+            refs = []; // Curated answers don't have URL refs
+
+            // Log that we used a curated answer
+            await query(`insert into public.messages (conversation_id, tenant_id, role, content, confidence)
+                         values ($1, $2, 'user', $3, 1.0)`,
+                [conversationId, tenantId, message]);
+        } else {
+            // Fall back to RAG + OpenAI
+            const contextText = ragResults.map((c, i) => `[[${i + 1}]] ${c.url}\n${c.content}`).join('\n\n');
+            refs = ragResults.map(c => c.url);
+
+            const chat = await openai.chat.completions.create({
+                model: process.env.OPENAI_CHAT_MODEL || 'gpt-4o-mini',
+                messages: [
+                    { role: 'system', content: SYSTEM(voice) },
+                    { role: 'user', content: `Question: ${message}\n\nContext:\n${contextText}` }
+                ]
+            });
+
+            text = chat.choices[0]?.message?.content?.trim() || "I'm not sure. Want me to connect you with support?";
+            confidence = chat.choices[0]?.finish_reason === 'stop' ? 0.7 : 0.4;
+
+            // Log user message
+            const userMessage = await query<{ id: string }>(`insert into public.messages (conversation_id, tenant_id, role, content, confidence)
+                         values ($1, $2, 'user', $3, 1.0) returning id`,
+                [conversationId, tenantId, message]);
+
+            // Trigger message sent webhook for user message
+            try {
+                console.log(`🔔 Chat API: Triggering message.sent webhook for user message ${userMessage.rows[0].id}`);
+                await webhookEvents.messageSent(tenantId, conversationId, userMessage.rows[0].id, 'user');
+                console.log(`✅ Chat API: message.sent webhook triggered successfully`);
+            } catch (error) {
+                console.error('💥 Chat API: Failed to trigger message.sent webhook for user:', error);
+            }
+        }
+
+        const assistantMessage = await query<{ id: string }>(`insert into public.messages (conversation_id, tenant_id, role, content, confidence)
+               values ($1, $2, 'assistant', $3, $4) returning id`,
             [conversationId, tenantId, text, confidence]);
+
+        // Trigger message sent webhook for assistant response
+        try {
+            console.log(`🔔 Chat API: Triggering message.sent webhook for assistant message ${assistantMessage.rows[0].id}`);
+            await webhookEvents.messageSent(tenantId, conversationId, assistantMessage.rows[0].id, 'assistant', confidence);
+            console.log(`✅ Chat API: assistant message.sent webhook triggered successfully`);
+        } catch (error) {
+            console.error('💥 Chat API: Failed to trigger message.sent webhook for assistant:', error);
+        }
 
         // Auto-escalate on low confidence or explicit handoff
         const threshold = 0.55;
         if ((confidence ?? 0) < threshold || /connect you with support/i.test(text)) {
             try {
+                // Trigger escalation webhook
+                await webhookEvents.escalationTriggered(
+                    tenantId,
+                    conversationId,
+                    (confidence ?? 0) < threshold ? 'low_confidence' : 'handoff',
+                    confidence
+                );
+
                 const base = process.env.SITE_URL || '';
                 const url = base ? base.replace(/\/$/, '') + '/api/escalate' : 'http://localhost:3001/api/escalate';
                 await fetch(url, {
                     method: 'POST', headers: { 'content-type': 'application/json' },
-                    body: JSON.stringify({ tenantId, sessionId, conversationId, userMessage: message, assistantAnswer: text, confidence, refs: contexts.map(c => c.url), reason: (confidence ?? 0) < threshold ? 'low_confidence' : 'handoff' })
+                    body: JSON.stringify({
+                        tenantId,
+                        sessionId,
+                        conversationId,
+                        userMessage: message,
+                        assistantAnswer: text,
+                        confidence,
+                        refs,
+                        reason: (confidence ?? 0) < threshold ? 'low_confidence' : 'handoff',
+                        usedCuratedAnswer: curatedAnswers.length > 0
+                    })
                 })
-            } catch { }
+            } catch (error) {
+                console.error('Failed to trigger escalation webhook or call escalate API:', error);
+            }
         }
 
         await incMessages(tenantId);
-        return NextResponse.json({ answer: text, refs: contexts.map(c => c.url), confidence }, { headers: headersOut });
+        return NextResponse.json({
+            answer: text,
+            refs,
+            confidence,
+            source: curatedAnswers.length > 0 ? 'curated' : 'ai'
+        }, { headers: headersOut });
     } catch (e) {
         // Don’t leak internal errors; keep message generic in production
         const dev = process.env.NODE_ENV !== 'production';

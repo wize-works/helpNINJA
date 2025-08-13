@@ -1,15 +1,17 @@
+@layer base;
+
 @import "tailwindcss";
 @plugin "daisyui";
-
 @import "./styles/ninja-light.css";
 @import "./styles/ninja-dark.css";
 
-html, body { height: 100%; }
 
+html, body { height: 100%; }
+/* 
 :root[data-theme="ninja-light"] *, 
 :root[data-theme="ninja-dark"] * {
   --tw-ring-offset-color: var(--b1);
-}
+} */
 
 /* Utility classes for better text handling */
 .line-clamp-1 {
