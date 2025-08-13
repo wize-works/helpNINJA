@@ -240,7 +240,7 @@ export default function ActionSelector({
                                                 ? 'border-primary bg-primary/10 text-primary'
                                                 : 'border-base-300 bg-base-100/60 hover:border-base-400 hover:bg-base-200/40'
                                                 }`}
-                                            onClick={() => setNewDestination({ ...newDestination, type: option.type as any })}
+                                            onClick={() => setNewDestination({ ...newDestination, type: option.type as 'integration' | 'email' | 'webhook' })}
                                             disabled={disabled}
                                         >
                                             <div className="flex flex-col items-center gap-2">

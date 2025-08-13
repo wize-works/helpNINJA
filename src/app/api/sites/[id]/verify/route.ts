@@ -171,11 +171,13 @@ async function verifyByDNS(domain: string, token: string): Promise<boolean> {
     // Note: This is a simplified implementation
     // In production, you'd use a proper DNS resolver library
     const response = await fetch(`https://dns.google/resolve?name=helpninja-verification.${domain}&type=TXT`)
-    const data = await response.json()
+    const data = await response.json() as { 
+      Answer?: Array<{ type: number; data: string }> 
+    }
     
     if (!data.Answer) return false
     
-    return data.Answer.some((record: any) => 
+    return data.Answer.some((record) => 
       record.type === 16 && record.data.includes(token)
     )
   } catch {

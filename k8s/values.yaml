@@ -1,0 +1,78 @@
+# Default values for HelpNinja application
+replicaCount: 2
+
+image:
+  repository: ghcr.io/wizeworks/helpninja
+  tag: "latest"
+  pullPolicy: IfNotPresent
+
+staging:
+  replicaCount: 1
+
+# Supabase configuration
+supabase:
+  url: "https://your-production-project.supabase.co"
+  stagingUrl: "https://your-staging-project.supabase.co"
+
+# Secrets - these will be populated from GitHub Secrets
+secrets:
+  openaiApiKey: ""
+  openaiChatModel: "gpt-4o-mini"
+  openaiEmbedModel: "text-embedding-3-small"
+  databaseUrl: ""
+  stripeSecretKey: ""
+  stripeWebhookSecret: ""
+  stripePriceStarter: ""
+  stripePricePro: ""
+  stripePriceAgency: ""
+  supabaseServiceRoleKey: ""
+  slackWebhookUrl: ""
+  resendApiKey: ""
+  # Staging database URL (can be different from production)
+  stagingDatabaseUrl: ""
+
+# Resource limits
+resources:
+  requests:
+    memory: "128Mi"
+    cpu: "100m"
+  limits:
+    memory: "512Mi"
+    cpu: "500m"
+
+# Ingress configuration
+ingress:
+  enabled: true
+  className: "nginx"
+  annotations:
+    cert-manager.io/cluster-issuer: "letsencrypt-prod"
+    nginx.ingress.kubernetes.io/ssl-redirect: "true"
+    nginx.ingress.kubernetes.io/force-ssl-redirect: "true"
+  hosts:
+    - host: helpninja.app
+      paths:
+        - path: /
+          pathType: Prefix
+  staging:
+    - host: staging.helpninja.app
+      paths:
+        - path: /
+          pathType: Prefix
+  tls:
+    - secretName: helpninja-tls
+      hosts:
+        - helpninja.app
+    - secretName: helpninja-staging-tls
+      hosts:
+        - staging.helpninja.app
+
+# Autoscaling configuration
+autoscaling:
+  enabled: true
+  minReplicas: 2
+  maxReplicas: 10
+  targetCPUUtilizationPercentage: 70
+  targetMemoryUtilizationPercentage: 80
+  staging:
+    minReplicas: 1
+    maxReplicas: 3

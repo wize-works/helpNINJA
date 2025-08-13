@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import OpenAI from 'openai';
-import { searchHybrid, searchWithCuratedAnswers, CuratedAnswer } from '@/lib/rag';
+import { searchWithCuratedAnswers } from '@/lib/rag';
 import { query } from '@/lib/db';
 import { canSendMessage, incMessages } from '@/lib/usage';
 import { resolveTenantIdFromRequest } from '@/lib/auth';

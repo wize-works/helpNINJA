@@ -45,7 +45,7 @@ export default function ConditionEditor({
         
         // Reset to default values for the new type
         let defaultValue: unknown = '';
-        let defaultOperator = typeConfig.operators[0];
+        const defaultOperator = typeConfig.operators[0];
 
         if (typeConfig.valueType === 'number') {
             defaultValue = newType === 'confidence' ? 0.5 : 1;
@@ -55,8 +55,8 @@ export default function ConditionEditor({
 
         onChange({
             ...condition,
-            type: newType as any,
-            operator: defaultOperator as any,
+            type: newType as RuleCondition['type'],
+            operator: defaultOperator as RuleCondition['operator'],
             value: defaultValue
         });
     };
@@ -64,7 +64,7 @@ export default function ConditionEditor({
     const handleOperatorChange = (newOperator: string) => {
         onChange({
             ...condition,
-            operator: newOperator as any
+            operator: newOperator as RuleCondition['operator']
         });
     };
 

@@ -1,7 +1,6 @@
 "use client";
 
 import { useState, useEffect } from 'react';
-import { useTenant } from './tenant-context';
 import SiteSelector from './site-selector';
 import IntentMapper from './intent-mapper';
 import { HoverScale } from './ui/animated-page';
@@ -148,7 +147,7 @@ export default function AnswerEditor({
         }
     };
 
-    const updateFormData = (field: keyof Answer, value: any) => {
+    const updateFormData = (field: keyof Answer, value: string | string[] | number) => {
         setFormData(prev => ({ ...prev, [field]: value }));
         // Clear error when user starts typing
         if (errors[field]) {
@@ -284,7 +283,7 @@ export default function AnswerEditor({
                                     <select
                                         className="select select-bordered w-full focus:select-primary transition-all duration-200"
                                         value={formData.status}
-                                        onChange={(e) => updateFormData('status', e.target.value as any)}
+                                        onChange={(e) => updateFormData('status', e.target.value as 'active' | 'draft' | 'disabled')}
                                         disabled={loading}
                                     >
                                         <option value="active">🟢 Active - Answer is live</option>

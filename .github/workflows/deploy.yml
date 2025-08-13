@@ -1,0 +1,147 @@
+name: Deploy to Azure Kubernetes
+
+on:
+  push:
+    branches: [ main ]
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: 'Environment to deploy to'
+        required: true
+        default: 'production'
+        type: choice
+        options:
+        - production
+        - staging
+
+env:
+  REGISTRY: ghcr.io
+  IMAGE_NAME: wizeworks/helpninja
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+      id-token: write
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Set up Docker Buildx
+      uses: docker/setup-buildx-action@v3
+
+    - name: Log in to Container Registry
+      uses: docker/login-action@v3
+      with:
+        registry: ${{ env.REGISTRY }}
+        username: ${{ github.actor }}
+        password: ${{ secrets.GITHUB_TOKEN }}
+
+    - name: Extract metadata
+      id: meta
+      uses: docker/metadata-action@v5
+      with:
+        images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
+        tags: |
+          type=ref,event=branch
+          type=ref,event=pr
+          type=sha,prefix={{branch}}-
+          type=raw,value=latest,enable={{is_default_branch}}
+
+    - name: Build and push Docker image
+      uses: docker/build-push-action@v5
+      with:
+        context: .
+        platforms: linux/amd64,linux/arm64
+        push: true
+        tags: ${{ steps.meta.outputs.tags }}
+        labels: ${{ steps.meta.outputs.labels }}
+        cache-from: type=gha
+        cache-to: type=gha,mode=max
+
+    - name: Set up kubectl
+      uses: azure/setup-kubectl@v3
+      with:
+        version: 'latest'
+
+    - name: Azure Login
+      uses: azure/login@v1
+      with:
+        creds: ${{ secrets.AZURE_CREDENTIALS }}
+
+    - name: Get AKS credentials
+      run: |
+        az aks get-credentials --resource-group ${{ secrets.AKS_RESOURCE_GROUP }} --name ${{ secrets.AKS_CLUSTER_NAME }} --overwrite-existing
+
+    - name: Deploy to Production
+      if: github.ref == 'refs/heads/main' && (github.event.inputs.environment == 'production' || github.event.inputs.environment == null)
+      run: |
+        # Update values with production secrets
+        helm upgrade --install helpninja ./k8s \
+          --namespace helpninja \
+          --create-namespace \
+          --set image.tag=${{ steps.meta.outputs.version }} \
+          --set secrets.openaiApiKey="${{ secrets.OPENAI_API_KEY }}" \
+          --set secrets.openaiChatModel="${{ secrets.OPENAI_CHAT_MODEL }}" \
+          --set secrets.openaiEmbedModel="${{ secrets.OPENAI_EMBED_MODEL }}" \
+          --set secrets.databaseUrl="${{ secrets.DATABASE_URL }}" \
+          --set secrets.stripeSecretKey="${{ secrets.STRIPE_SECRET_KEY }}" \
+          --set secrets.stripeWebhookSecret="${{ secrets.STRIPE_WEBHOOK_SECRET }}" \
+          --set secrets.stripePriceStarter="${{ secrets.STRIPE_PRICE_STARTER }}" \
+          --set secrets.stripePricePro="${{ secrets.STRIPE_PRICE_PRO }}" \
+          --set secrets.stripePriceAgency="${{ secrets.STRIPE_PRICE_AGENCY }}" \
+          --set secrets.supabaseServiceRoleKey="${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}" \
+          --set secrets.slackWebhookUrl="${{ secrets.SLACK_WEBHOOK_URL }}" \
+          --set secrets.resendApiKey="${{ secrets.RESEND_API_KEY }}" \
+          --set supabase.url="${{ secrets.SUPABASE_URL }}" \
+          --wait --timeout=10m
+
+    - name: Deploy to Staging
+      if: github.ref == 'refs/heads/main' && github.event.inputs.environment == 'staging'
+      run: |
+        # Update values with staging secrets
+        helm upgrade --install helpninja-staging ./k8s \
+          --namespace helpninja-staging \
+          --create-namespace \
+          --set image.tag=${{ steps.meta.outputs.version }} \
+          --set secrets.openaiApiKey="${{ secrets.OPENAI_API_KEY }}" \
+          --set secrets.openaiChatModel="${{ secrets.OPENAI_CHAT_MODEL }}" \
+          --set secrets.openaiEmbedModel="${{ secrets.OPENAI_EMBED_MODEL }}" \
+          --set secrets.stagingDatabaseUrl="${{ secrets.STAGING_DATABASE_URL }}" \
+          --set secrets.stripeSecretKey="${{ secrets.STRIPE_SECRET_KEY }}" \
+          --set secrets.stripeWebhookSecret="${{ secrets.STRIPE_WEBHOOK_SECRET }}" \
+          --set secrets.stripePriceStarter="${{ secrets.STRIPE_PRICE_STARTER }}" \
+          --set secrets.stripePricePro="${{ secrets.STRIPE_PRICE_PRO }}" \
+          --set secrets.stripePriceAgency="${{ secrets.STRIPE_PRICE_AGENCY }}" \
+          --set secrets.supabaseServiceRoleKey="${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}" \
+          --set secrets.slackWebhookUrl="${{ secrets.SLACK_WEBHOOK_URL }}" \
+          --set secrets.resendApiKey="${{ secrets.RESEND_API_KEY }}" \
+          --set supabase.stagingUrl="${{ secrets.STAGING_SUPABASE_URL }}" \
+          --wait --timeout=10m
+
+    - name: Verify deployment
+      run: |
+        if [ "${{ github.event.inputs.environment }}" = "staging" ]; then
+          kubectl get pods -n helpninja-staging
+          kubectl get svc -n helpninja-staging
+          kubectl get ingress -n helpninja-staging
+        else
+          kubectl get pods -n helpninja
+          kubectl get svc -n helpninja
+          kubectl get ingress -n helpninja
+        fi
+
+    - name: Health check
+      run: |
+        if [ "${{ github.event.inputs.environment }}" = "staging" ]; then
+          # Wait for staging deployment to be ready
+          kubectl wait --for=condition=available --timeout=300s deployment/helpninja-staging -n helpninja-staging
+          echo "Staging deployment is ready!"
+        else
+          # Wait for production deployment to be ready
+          kubectl wait --for=condition=available --timeout=300s deployment/helpninja -n helpninja
+          echo "Production deployment is ready!"
+        fi

@@ -109,7 +109,7 @@ function DocumentsTable({ docs, tenantId }: { docs: DocRow[]; tenantId: string }
                                     </tr>
                                 </thead>
                                 <tbody className="divide-y divide-base-200/60">
-                                    {docs.map((d, index) => (
+                                    {docs.map((d) => (
                                         <tr key={d.id} className="hover:bg-base-200/30 transition-colors group">
                                             <td className="p-4">
                                                 <div className="flex items-center gap-3">

@@ -1,8 +1,6 @@
 "use client";
 
 import {
-    LineChart,
-    Line,
     AreaChart,
     Area,
     BarChart,

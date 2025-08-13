@@ -13,12 +13,12 @@ type OutboxItem = {
     session_id?: string;
     status: 'pending' | 'sent' | 'failed';
     attempts: number;
-    payload: any;
+    payload: Record<string, unknown>;
     last_error?: string;
     created_at: string;
     sent_at?: string;
     next_attempt_at?: string;
-    message_context: any;
+    message_context: Record<string, unknown>;
 };
 
 type OutboxStats = Record<string, Record<string, number>>;

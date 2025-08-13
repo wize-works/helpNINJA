@@ -1,0 +1,33 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: helpninja-service
+  namespace: helpninja
+  labels:
+    app: helpninja
+spec:
+  type: ClusterIP
+  ports:
+  - port: 80
+    targetPort: 3000
+    protocol: TCP
+    name: http
+  selector:
+    app: helpninja
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: helpninja-staging-service
+  namespace: helpninja-staging
+  labels:
+    app: helpninja-staging
+spec:
+  type: ClusterIP
+  ports:
+  - port: 80
+    targetPort: 3000
+    protocol: TCP
+    name: http
+  selector:
+    app: helpninja-staging

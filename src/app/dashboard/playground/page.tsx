@@ -7,7 +7,6 @@ import SearchResultsViewer from "@/components/search-results-viewer";
 import ConfidenceDisplay from "@/components/confidence-display";
 import { Breadcrumb } from "@/components/ui/breadcrumb";
 import { AnimatedPage, StaggerContainer, StaggerChild, HoverScale } from "@/components/ui/animated-page";
-import { SimpleStatCard } from '@/components/ui/stat-card';
 
 type TestResult = {
     query: string;
@@ -78,7 +77,6 @@ export default function PlaygroundPage() {
     const { tenantId } = useTenant();
     const [results, setResults] = useState<TestResult | null>(null);
     const [analytics, setAnalytics] = useState<Analytics | null>(null);
-    const [loadingAnalytics, setLoadingAnalytics] = useState(true);
 
     const breadcrumbItems = [
         { label: "Dashboard", href: "/dashboard", icon: "fa-gauge-high" },
@@ -104,8 +102,6 @@ export default function PlaygroundPage() {
             }
         } catch (error) {
             console.error('Error loading analytics:', error);
-        } finally {
-            setLoadingAnalytics(false);
         }
     };
 

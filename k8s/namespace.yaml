@@ -1,0 +1,15 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: helpninja
+  labels:
+    name: helpninja
+    app: helpninja
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: helpninja-staging
+  labels:
+    name: helpninja-staging
+    app: helpninja

@@ -1,7 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { query } from '@/lib/db';
 import { resolveTenantIdFromRequest } from '@/lib/auth';
-import crypto from 'crypto';
 
 export const runtime = 'nodejs';
 

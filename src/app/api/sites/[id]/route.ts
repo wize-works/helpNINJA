@@ -87,14 +87,14 @@ export async function PUT(req: NextRequest, ctx: Context) {
         [tenantId, domain, id]
       )
 
-      if (domainConflict.rowCount > 0) {
+      if ((domainConflict.rowCount ?? 0) > 0) {
         return NextResponse.json({ error: 'Domain already registered for this tenant' }, { status: 409 })
       }
     }
 
     // Build dynamic update query
     const updates: string[] = []
-    const values: any[] = []
+    const values: (string | boolean)[] = []
     let paramIndex = 1
 
     if (domain !== undefined) {

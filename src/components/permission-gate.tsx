@@ -47,7 +47,7 @@ export default function PermissionGate({
                     </div>
                     <h3 className="font-semibold text-lg mb-2">Access Restricted</h3>
                     <p className="text-base-content/60 mb-4">
-                        You don't have permission to access this feature.
+                        You don&apos;t have permission to access this feature.
                     </p>
                     <p className="text-sm text-base-content/50">
                         Contact your team administrator to request access.
