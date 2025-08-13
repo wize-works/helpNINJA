@@ -64,19 +64,22 @@ jobs:
         cache-from: type=gha
         cache-to: type=gha,mode=max
 
-    - name: Set up kubectl
-      uses: azure/setup-kubectl@v3
+    - name: Install kubelogin
+      uses: azure/use-kubelogin@v1
+      with:
+        kubelogin-version: v0.0.25
+
+    - name: Set AKS Context with admin access
+      uses: azure/aks-set-context@v4
+      with:
+        cluster-name: ${{ secrets.AKS_CLUSTER_NAME }}
+        resource-group: ${{ secrets.AKS_RESOURCE_GROUP }}
+        admin: true
+
+    - name: Install Helm
+      uses: azure/setup-helm@v3
       with:
         version: 'latest'
-
-    - name: Azure Login
-      uses: azure/login@v2
-      with:
-        creds: ${{ secrets.AZURE_CREDENTIALS }}
-
-    - name: Get AKS credentials
-      run: |
-        az aks get-credentials --resource-group ${{ secrets.AKS_RESOURCE_GROUP }} --name ${{ secrets.AKS_CLUSTER_NAME }} --overwrite-existing
 
     - name: Deploy to Production
       if: github.ref == 'refs/heads/main' && (github.event.inputs.environment == 'production' || github.event.inputs.environment == null)
