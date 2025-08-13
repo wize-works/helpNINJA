@@ -7,7 +7,7 @@ export const runtime = 'nodejs';
 export async function GET(req: NextRequest) {
     try {
         const tenantId = await resolveTenantIdFromRequest(req, true);
-        
+
         const { rows } = await query(`
             SELECT 
                 ak.id,
@@ -29,7 +29,7 @@ export async function GET(req: NextRequest) {
             WHERE ak.tenant_id = $1
             ORDER BY ak.created_at DESC
         `, [tenantId]);
-        
+
         const apiKeys = rows.map(row => ({
             id: row.id,
             name: row.name,
@@ -42,12 +42,12 @@ export async function GET(req: NextRequest) {
             expires_at: row.expires_at,
             created_at: row.created_at,
             updated_at: row.updated_at,
-            created_by_name: row.created_by_first_name && row.created_by_last_name 
+            created_by_name: row.created_by_first_name && row.created_by_last_name
                 ? `${row.created_by_first_name} ${row.created_by_last_name}`
                 : row.created_by_email,
             is_expired: row.expires_at ? new Date(row.expires_at) < new Date() : false
         }));
-        
+
         return NextResponse.json(apiKeys);
     } catch (error) {
         console.error('Error fetching API keys:', error);
@@ -59,33 +59,33 @@ export async function POST(req: NextRequest) {
     try {
         const tenantId = await resolveTenantIdFromRequest(req, true);
         const body = await req.json();
-        const { 
-            name, 
-            keyType = 'secret', 
-            permissions = [], 
+        const {
+            name,
+            keyType = 'secret',
+            permissions = [],
             rateLimitPerHour = 1000,
-            expiresInDays 
+            expiresInDays
         } = body;
-        
+
         if (!name?.trim()) {
             return NextResponse.json({ error: 'API key name is required' }, { status: 400 });
         }
-        
+
         // Validate key type
         const validKeyTypes = ['public', 'secret', 'webhook'];
         if (!validKeyTypes.includes(keyType)) {
             return NextResponse.json({ error: 'Invalid key type' }, { status: 400 });
         }
-        
+
         // Validate permissions
         const validPermissions = [
-            'chat.send', 'documents.read', 'documents.write', 
+            'chat.send', 'documents.read', 'documents.write',
             'analytics.read', 'webhooks.send'
         ];
         if (permissions.some((p: string) => !validPermissions.includes(p))) {
             return NextResponse.json({ error: 'Invalid permissions specified' }, { status: 400 });
         }
-        
+
         // Generate API key
         const { rows: keyResult } = await query(
             'SELECT generate_api_key($1) as key_value',
@@ -93,18 +93,18 @@ export async function POST(req: NextRequest) {
         );
         const keyValue = keyResult[0].key_value;
         const keyPrefix = keyValue.substring(0, 12) + '...'; // Show first 12 chars
-        
+
         // Calculate expiry date
         let expiresAt = null;
         if (expiresInDays && expiresInDays > 0) {
             expiresAt = new Date();
             expiresAt.setDate(expiresAt.getDate() + expiresInDays);
         }
-        
+
         // For demo purposes, we'll use a placeholder created_by user
         const createdBy = await query('SELECT id FROM public.users LIMIT 1');
         const createdByUserId = createdBy.rows[0]?.id;
-        
+
         // Insert API key
         const { rows } = await query(
             `INSERT INTO public.api_keys (
@@ -113,10 +113,10 @@ export async function POST(req: NextRequest) {
             ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9) 
             RETURNING id`,
             [
-                tenantId, 
-                name.trim(), 
-                keyType, 
-                keyValue, 
+                tenantId,
+                name.trim(),
+                keyType,
+                keyValue,
                 keyPrefix,
                 permissions,
                 rateLimitPerHour,
@@ -124,20 +124,20 @@ export async function POST(req: NextRequest) {
                 createdByUserId
             ]
         );
-        
+
         // Log activity
         await query(
             `INSERT INTO public.team_activity (tenant_id, user_id, action, resource_type, resource_id, details)
              VALUES ($1, $2, 'api_key_created', 'api_key', $3, $4)`,
             [
-                tenantId, 
-                createdByUserId, 
-                rows[0].id, 
+                tenantId,
+                createdByUserId,
+                rows[0].id,
                 JSON.stringify({ name, keyType, permissions })
             ]
         );
-        
-        return NextResponse.json({ 
+
+        return NextResponse.json({
             id: rows[0].id,
             message: 'API key created successfully',
             key: keyValue, // Only return full key on creation

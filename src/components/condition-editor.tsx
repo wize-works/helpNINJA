@@ -42,7 +42,7 @@ export default function ConditionEditor({
         if (!typeConfig) return;
 
         setSelectedType(typeConfig);
-        
+
         // Reset to default values for the new type
         let defaultValue: unknown = '';
         const defaultOperator = typeConfig.operators[0];

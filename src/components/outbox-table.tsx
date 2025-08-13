@@ -372,7 +372,7 @@ export default function OutboxTable({ tenantId }: OutboxTableProps) {
 
                                                     <div className="text-right">
                                                         <div className={`badge ${item.status === 'sent' ? 'badge-success' :
-                                                                item.status === 'pending' ? 'badge-warning' : 'badge-error'
+                                                            item.status === 'pending' ? 'badge-warning' : 'badge-error'
                                                             }`}>
                                                             {item.status}
                                                         </div>

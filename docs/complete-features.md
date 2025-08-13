@@ -1,7 +1,13 @@
 # HelpNinja – Complete Features Inventory
 
 Scope
-- Stack: Next.js 15 (App Router), Node runtime for DB/AI, Postgres (pgvector + tsvector), OpenAI, Stripe
+- Stack: Next.js 15 (App Router), Node runtime for DB/What's partial or pending
+- Conversation detail transcript page (optional)
+- Tests: unit/integration for usage gating, RAG, escalation, billing.
+- Auth model: auth.ts is a stub; tenant passed via headers/env (prod hardening).
+- Rate limiting beyond plan gates.
+- RLS policies if using Supabase auth directly.
+- Team invitation emails: Infrastructure is ready but sendInvitationEmail() function not implemented (src/app/api/team/invitations/route.ts line 129)stgres (pgvector + tsvector), OpenAI, Stripe
 - Multi-tenant SaaS with an embeddable chat widget, RAG answers, usage gating, and human escalation
 
 Big picture

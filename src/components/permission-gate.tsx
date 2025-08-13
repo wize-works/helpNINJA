@@ -21,24 +21,24 @@ export default function PermissionGate({
     hideIfDenied = false
 }: PermissionGateProps) {
     let hasAccess = true;
-    
+
     if (requiredPermission) {
         hasAccess = hasPermission(userRole, requiredPermission);
     }
-    
+
     if (requiredRoute && hasAccess) {
         hasAccess = canAccessRoute(userRole, requiredRoute);
     }
-    
+
     if (!hasAccess) {
         if (hideIfDenied) {
             return null;
         }
-        
+
         if (fallback) {
             return <>{fallback}</>;
         }
-        
+
         return (
             <div className="card bg-base-100 border border-base-300">
                 <div className="card-body text-center py-12">
@@ -56,7 +56,7 @@ export default function PermissionGate({
             </div>
         );
     }
-    
+
     return <>{children}</>;
 }
 

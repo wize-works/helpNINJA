@@ -28,12 +28,12 @@ interface AnswerEditorProps {
     onDelete?: (answerId: string) => void;
 }
 
-export default function AnswerEditor({ 
-    tenantId, 
-    answer, 
-    onSave, 
-    onCancel, 
-    onDelete 
+export default function AnswerEditor({
+    tenantId,
+    answer,
+    onSave,
+    onCancel,
+    onDelete
 }: AnswerEditorProps) {
     const [formData, setFormData] = useState<Answer>({
         question: '',
@@ -58,15 +58,15 @@ export default function AnswerEditor({
 
     const validateForm = () => {
         const newErrors: Record<string, string> = {};
-        
+
         if (!formData.question.trim()) {
             newErrors.question = 'Question is required';
         }
-        
+
         if (!formData.answer.trim()) {
             newErrors.answer = 'Answer is required';
         }
-        
+
         if (formData.priority < 0 || formData.priority > 100) {
             newErrors.priority = 'Priority must be between 0 and 100';
         }
@@ -77,23 +77,23 @@ export default function AnswerEditor({
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
-        
+
         if (!validateForm()) {
             return;
         }
 
         setLoading(true);
-        
+
         try {
             const url = answer?.id ? `/api/answers/${answer.id}` : '/api/answers';
             const method = answer?.id ? 'PUT' : 'POST';
-            
+
             const payload = {
                 ...formData,
                 siteId: formData.site_id || undefined
             };
             delete payload.site_id; // Remove the frontend field
-            
+
             const response = await fetch(url, {
                 method,
                 headers: {
@@ -120,13 +120,13 @@ export default function AnswerEditor({
 
     const handleDelete = async () => {
         if (!answer?.id) return;
-        
+
         if (!confirm('Are you sure you want to delete this answer? This action cannot be undone.')) {
             return;
         }
 
         setLoading(true);
-        
+
         try {
             const response = await fetch(`/api/answers/${answer.id}`, {
                 method: 'DELETE',
@@ -174,12 +174,11 @@ export default function AnswerEditor({
                     </div>
                     {answer?.id && (
                         <div className="flex items-center gap-3">
-                            <div className={`badge ${
-                                formData.status === 'active' ? 'badge-success' :
-                                formData.status === 'draft' ? 'badge-warning' : 'badge-error'
-                            }`}>
-                                {formData.status === 'active' ? '🟢 Active' : 
-                                 formData.status === 'draft' ? '🟡 Draft' : '🔴 Disabled'}
+                            <div className={`badge ${formData.status === 'active' ? 'badge-success' :
+                                    formData.status === 'draft' ? 'badge-warning' : 'badge-error'
+                                }`}>
+                                {formData.status === 'active' ? '🟢 Active' :
+                                    formData.status === 'draft' ? '🟡 Draft' : '🔴 Disabled'}
                             </div>
                             <div className="text-xs text-base-content/60 bg-base-200/50 px-2 py-1 rounded">
                                 Priority: {formData.priority}
@@ -206,7 +205,7 @@ export default function AnswerEditor({
                     {/* Basic Information */}
                     <fieldset className="space-y-4">
                         <legend className="text-base font-semibold text-base-content mb-3">Answer Content</legend>
-                        
+
                         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
                             <div className="lg:col-span-2 space-y-4">
                                 {/* Question Input */}
@@ -318,7 +317,7 @@ export default function AnswerEditor({
                     {/* Intent Mapping */}
                     <fieldset className="space-y-4">
                         <legend className="text-base font-semibold text-base-content mb-3">Intent Mapping</legend>
-                        
+
                         <div className="bg-base-200/20 rounded-xl p-4">
                             <div className="flex items-center gap-3 mb-4">
                                 <div className="w-8 h-8 bg-secondary/10 rounded-lg flex items-center justify-center">
@@ -331,7 +330,7 @@ export default function AnswerEditor({
                                     </p>
                                 </div>
                             </div>
-                            
+
                             <IntentMapper
                                 keywords={formData.keywords}
                                 tags={formData.tags}
@@ -347,7 +346,7 @@ export default function AnswerEditor({
                         <div className="text-sm text-base-content/60">
                             {answer?.id ? 'Update your curated answer' : 'Create a new answer for your knowledge base'}
                         </div>
-                        
+
                         <div className="flex items-center gap-3">
                             {onCancel && (
                                 <button
@@ -359,7 +358,7 @@ export default function AnswerEditor({
                                     Cancel
                                 </button>
                             )}
-                            
+
                             <HoverScale scale={1.02}>
                                 <button
                                     type="submit"

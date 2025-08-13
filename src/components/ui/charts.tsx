@@ -44,8 +44,8 @@ export function TimeRangeSelector({
                     <button
                         onClick={() => onSelect(range.key)}
                         className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-all duration-200 ${selected === range.key
-                                ? 'bg-primary text-primary-content shadow-sm'
-                                : 'bg-base-200/60 hover:bg-base-200 border border-base-300/40 text-base-content/80 hover:text-base-content'
+                            ? 'bg-primary text-primary-content shadow-sm'
+                            : 'bg-base-200/60 hover:bg-base-200 border border-base-300/40 text-base-content/80 hover:text-base-content'
                             }`}
                     >
                         {range.label}
@@ -93,11 +93,11 @@ function CustomTooltip({ active, payload, label }: TooltipProps) {
 }
 
 // Enhanced Chat volume chart with better styling
-export function ChatVolumeChart({ 
-    data, 
-    loading = false 
-}: { 
-    data: Array<{ date: string; messages: number; conversations: number }>; 
+export function ChatVolumeChart({
+    data,
+    loading = false
+}: {
+    data: Array<{ date: string; messages: number; conversations: number }>;
     loading?: boolean;
 }) {
     if (loading) {
