@@ -9,17 +9,3 @@ data:
   NEXT_PUBLIC_SUPABASE_URL: "{{ .Values.supabase.url }}"
   SUPPORT_FALLBACK_TO_EMAIL: "true"
   SUPPORT_FROM_EMAIL: "support@updates.helpninja.app"
----
-{{- if .Values.staging.enabled }}
-apiVersion: v1
-kind: ConfigMap
-metadata:
-  name: helpninja-staging-config
-  namespace: helpninja-staging
-data:
-  NODE_ENV: "staging"
-  SITE_URL: "https://staging.helpninja.app"
-  NEXT_PUBLIC_SUPABASE_URL: "{{ .Values.supabase.stagingUrl }}"
-  SUPPORT_FALLBACK_TO_EMAIL: "true"
-  SUPPORT_FROM_EMAIL: "support@updates.helpninja.app"
-{{- end }}

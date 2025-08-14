@@ -4,15 +4,6 @@ on:
   push:
     branches: [ main ]
   workflow_dispatch:
-    inputs:
-      environment:
-        description: 'Environment to deploy to'
-        required: true
-        default: 'production'
-        type: choice
-        options:
-        - production
-        - staging
 
 env:
   REGISTRY: ${{ secrets.ACR_NAME }}.azurecr.io
@@ -82,7 +73,7 @@ jobs:
         version: 'latest'
 
     - name: Deploy to Production
-      if: github.ref == 'refs/heads/main' && (github.event.inputs.environment == 'production' || github.event.inputs.environment == null)
+      if: github.ref == 'refs/heads/main'
       run: |
         # Update values with production secrets
         helm upgrade --install helpninja ./k8s \
@@ -90,7 +81,6 @@ jobs:
           --create-namespace \
           --set image.repository=${{ env.REGISTRY }}/${{ env.IMAGE_NAME }} \
           --set image.tag=${{ steps.meta.outputs.version }} \
-          --set staging.enabled=false \
           --set secrets.openaiApiKey="${{ secrets.OPENAI_API_KEY }}" \
           --set secrets.openaiChatModel="${{ secrets.OPENAI_CHAT_MODEL }}" \
           --set secrets.openaiEmbedModel="${{ secrets.OPENAI_EMBED_MODEL }}" \
@@ -106,80 +96,27 @@ jobs:
           --set supabase.url="${{ secrets.SUPABASE_URL }}" \
           --wait --timeout=10m
 
-    - name: Deploy to Staging
-      if: github.ref == 'refs/heads/main' && github.event.inputs.environment == 'staging'
-      run: |
-        # Update values with staging secrets
-        helm upgrade --install helpninja-staging ./k8s \
-          --namespace helpninja-staging \
-          --create-namespace \
-          --set image.repository=${{ env.REGISTRY }}/${{ env.IMAGE_NAME }} \
-          --set image.tag=${{ steps.meta.outputs.version }} \
-          --set staging.enabled=true \
-          --set secrets.openaiApiKey="${{ secrets.OPENAI_API_KEY }}" \
-          --set secrets.openaiChatModel="${{ secrets.OPENAI_CHAT_MODEL }}" \
-          --set secrets.openaiEmbedModel="${{ secrets.OPENAI_EMBED_MODEL }}" \
-          --set secrets.stagingDatabaseUrl="${{ secrets.STAGING_DATABASE_URL }}" \
-          --set secrets.stripeSecretKey="${{ secrets.STRIPE_SECRET_KEY }}" \
-          --set secrets.stripeWebhookSecret="${{ secrets.STRIPE_WEBHOOK_SECRET }}" \
-          --set secrets.stripePriceStarter="${{ secrets.STRIPE_PRICE_STARTER }}" \
-          --set secrets.stripePricePro="${{ secrets.STRIPE_PRICE_PRO }}" \
-          --set secrets.stripePriceAgency="${{ secrets.STRIPE_PRICE_AGENCY }}" \
-          --set secrets.supabaseServiceRoleKey="${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}" \
-          --set secrets.slackWebhookUrl="${{ secrets.SLACK_WEBHOOK_URL }}" \
-          --set secrets.resendApiKey="${{ secrets.RESEND_API_KEY }}" \
-          --set supabase.stagingUrl="${{ secrets.STAGING_SUPABASE_URL }}" \
-          --wait --timeout=10m
-
     - name: Verify deployment
       run: |
-        if [ "${{ github.event.inputs.environment }}" = "staging" ]; then
-          echo "Verifying staging deployment..."
-          kubectl get namespace helpninja-staging || echo "Staging namespace not found"
-          kubectl get pods -n helpninja-staging || echo "No staging pods found"
-          kubectl get svc -n helpninja-staging || echo "No staging services found"
-          kubectl get ingress -n helpninja-staging || echo "No staging ingress found"
-        else
-          echo "Verifying production deployment..."
-          kubectl get namespace helpninja || echo "Production namespace not found"
-          kubectl get pods -n helpninja || echo "No production pods found"
-          kubectl get svc -n helpninja || echo "No production services found"
-          kubectl get ingress -n helpninja || echo "No production ingress found"
-        fi
+        echo "Verifying production deployment..."
+        kubectl get namespace helpninja || echo "Production namespace not found"
+        kubectl get pods -n helpninja || echo "No production pods found"
+        kubectl get svc -n helpninja || echo "No production services found"
+        kubectl get ingress -n helpninja || echo "No production ingress found"
 
     - name: Check deployments
       run: |
-        echo "Checking all deployments..."
+        echo "Checking production deployment..."
         kubectl get deployments --all-namespaces | grep helpninja || echo "No helpninja deployments found"
-        
-        if [ "${{ github.event.inputs.environment }}" = "staging" ]; then
-          echo "Checking specifically for staging deployment..."
-          kubectl get deployment helpninja-staging -n helpninja-staging || echo "Staging deployment not found"
-        else
-          echo "Checking specifically for production deployment..."
-          kubectl get deployment helpninja -n helpninja || echo "Production deployment not found"
-        fi
+        kubectl get deployment helpninja -n helpninja || echo "Production deployment not found"
 
     - name: Health check
       run: |
-        if [ "${{ github.event.inputs.environment }}" = "staging" ]; then
-          # Wait for staging deployment to be ready
-          echo "Waiting for staging deployment to be available..."
-          if kubectl get deployment helpninja-staging -n helpninja-staging >/dev/null 2>&1; then
-            kubectl wait --for=condition=available --timeout=300s deployment/helpninja-staging -n helpninja-staging
-            echo "Staging deployment is ready!"
-          else
-            echo "Staging deployment not found, skipping health check"
-            exit 1
-          fi
+        echo "Waiting for production deployment to be available..."
+        if kubectl get deployment helpninja -n helpninja >/dev/null 2>&1; then
+          kubectl wait --for=condition=available --timeout=300s deployment/helpninja -n helpninja
+          echo "Production deployment is ready!"
         else
-          # Wait for production deployment to be ready
-          echo "Waiting for production deployment to be available..."
-          if kubectl get deployment helpninja -n helpninja >/dev/null 2>&1; then
-            kubectl wait --for=condition=available --timeout=300s deployment/helpninja -n helpninja
-            echo "Production deployment is ready!"
-          else
-            echo "Production deployment not found, skipping health check"
-            exit 1
-          fi
+          echo "Production deployment not found, skipping health check"
+          exit 1
         fi

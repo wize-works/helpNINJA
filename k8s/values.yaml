@@ -9,7 +9,7 @@
 #
 # 2. OPTIONAL CHANGES (adjust based on your needs):
 #    - Resource limits (memory/CPU requests and limits)
-#    - Replica counts for production and staging
+#    - Replica counts for production
 #    - Autoscaling thresholds and limits
 #    - Ingress timeout values
 #
@@ -32,15 +32,10 @@ image:
   tag: "latest"
   pullPolicy: IfNotPresent
 
-staging:
-  enabled: false  # Set to true to deploy staging resources
-  replicaCount: 1
-
 # Supabase configuration
 # TODO: Replace with your actual Supabase project URLs
 supabase:
   url: "https://adrokmnrceksbpwjusjj.supabase.co"
-  stagingUrl: "https://adrokmnrceksbpwjusjj.supabase.co"
 
 # Secrets - these will be populated from GitHub Secrets
 # Note: These values are set via --set flags in the GitHub Actions workflow
@@ -53,7 +48,6 @@ secrets:
   
   # Database Configuration
   databaseUrl: ""                     # Set via DATABASE_URL secret (production)
-  stagingDatabaseUrl: ""              # Set via STAGING_DATABASE_URL secret
   
   # Stripe Configuration
   stripeSecretKey: ""                 # Set via STRIPE_SECRET_KEY secret
@@ -98,21 +92,11 @@ ingress:
         - path: /
           pathType: Prefix
   
-  # Staging domain configuration  
-  staging:
-    - host: staging.helpninja.app
-      paths:
-        - path: /
-          pathType: Prefix
-  
   # TLS certificate configuration
   tls:
     - secretName: helpninja-tls
       hosts:
         - helpninja.app
-    - secretName: helpninja-staging-tls
-      hosts:
-        - staging.helpninja.app
 
 # Autoscaling configuration
 # TODO: Adjust these values based on your traffic patterns and resource requirements
@@ -124,11 +108,6 @@ autoscaling:
   maxReplicas: 10       # Maximum pods to scale up to
   targetCPUUtilizationPercentage: 70    # Scale up when CPU reaches 70%
   targetMemoryUtilizationPercentage: 80 # Scale up when memory reaches 80%
-  
-  # Staging autoscaling (more conservative)
-  staging:
-    minReplicas: 1      # Minimum pods for staging
-    maxReplicas: 3      # Maximum pods for staging
 
 # ==============================================================================
 # VALIDATION & TROUBLESHOOTING
