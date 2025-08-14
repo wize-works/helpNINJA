@@ -6,6 +6,7 @@ metadata:
     name: helpninja
     app: helpninja
 ---
+{{- if .Values.staging.enabled }}
 apiVersion: v1
 kind: Namespace
 metadata:
@@ -13,3 +14,4 @@ metadata:
   labels:
     name: helpninja-staging
     app: helpninja
+{{- end }}

@@ -33,6 +33,7 @@ image:
   pullPolicy: IfNotPresent
 
 staging:
+  enabled: false  # Set to true to deploy staging resources
   replicaCount: 1
 
 # Supabase configuration

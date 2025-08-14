@@ -55,7 +55,9 @@ spec:
           preStop:
             exec:
               command: ["/bin/sh", "-c", "sleep 10"]
+
 ---
+{{- if .Values.staging.enabled }}
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -113,3 +115,4 @@ spec:
           preStop:
             exec:
               command: ["/bin/sh", "-c", "sleep 10"]
+{{- end }}

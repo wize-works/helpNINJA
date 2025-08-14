@@ -37,6 +37,7 @@ spec:
         value: 100
         periodSeconds: 60
 ---
+{{- if .Values.staging.enabled }}
 apiVersion: autoscaling/v2
 kind: HorizontalPodAutoscaler
 metadata:
@@ -75,3 +76,4 @@ spec:
       - type: Percent
         value: 100
         periodSeconds: 60
+{{- end }}

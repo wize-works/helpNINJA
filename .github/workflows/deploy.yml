@@ -90,6 +90,7 @@ jobs:
           --create-namespace \
           --set image.repository=${{ env.REGISTRY }}/${{ env.IMAGE_NAME }} \
           --set image.tag=${{ steps.meta.outputs.version }} \
+          --set staging.enabled=false \
           --set secrets.openaiApiKey="${{ secrets.OPENAI_API_KEY }}" \
           --set secrets.openaiChatModel="${{ secrets.OPENAI_CHAT_MODEL }}" \
           --set secrets.openaiEmbedModel="${{ secrets.OPENAI_EMBED_MODEL }}" \
@@ -114,6 +115,7 @@ jobs:
           --create-namespace \
           --set image.repository=${{ env.REGISTRY }}/${{ env.IMAGE_NAME }} \
           --set image.tag=${{ steps.meta.outputs.version }} \
+          --set staging.enabled=true \
           --set secrets.openaiApiKey="${{ secrets.OPENAI_API_KEY }}" \
           --set secrets.openaiChatModel="${{ secrets.OPENAI_CHAT_MODEL }}" \
           --set secrets.openaiEmbedModel="${{ secrets.OPENAI_EMBED_MODEL }}" \
@@ -132,23 +134,52 @@ jobs:
     - name: Verify deployment
       run: |
         if [ "${{ github.event.inputs.environment }}" = "staging" ]; then
-          kubectl get pods -n helpninja-staging
-          kubectl get svc -n helpninja-staging
-          kubectl get ingress -n helpninja-staging
+          echo "Verifying staging deployment..."
+          kubectl get namespace helpninja-staging || echo "Staging namespace not found"
+          kubectl get pods -n helpninja-staging || echo "No staging pods found"
+          kubectl get svc -n helpninja-staging || echo "No staging services found"
+          kubectl get ingress -n helpninja-staging || echo "No staging ingress found"
         else
-          kubectl get pods -n helpninja
-          kubectl get svc -n helpninja
-          kubectl get ingress -n helpninja
+          echo "Verifying production deployment..."
+          kubectl get namespace helpninja || echo "Production namespace not found"
+          kubectl get pods -n helpninja || echo "No production pods found"
+          kubectl get svc -n helpninja || echo "No production services found"
+          kubectl get ingress -n helpninja || echo "No production ingress found"
+        fi
+
+    - name: Check deployments
+      run: |
+        echo "Checking all deployments..."
+        kubectl get deployments --all-namespaces | grep helpninja || echo "No helpninja deployments found"
+        
+        if [ "${{ github.event.inputs.environment }}" = "staging" ]; then
+          echo "Checking specifically for staging deployment..."
+          kubectl get deployment helpninja-staging -n helpninja-staging || echo "Staging deployment not found"
+        else
+          echo "Checking specifically for production deployment..."
+          kubectl get deployment helpninja -n helpninja || echo "Production deployment not found"
         fi
 
     - name: Health check
       run: |
         if [ "${{ github.event.inputs.environment }}" = "staging" ]; then
           # Wait for staging deployment to be ready
-          kubectl wait --for=condition=available --timeout=300s deployment/helpninja-staging -n helpninja-staging
-          echo "Staging deployment is ready!"
+          echo "Waiting for staging deployment to be available..."
+          if kubectl get deployment helpninja-staging -n helpninja-staging >/dev/null 2>&1; then
+            kubectl wait --for=condition=available --timeout=300s deployment/helpninja-staging -n helpninja-staging
+            echo "Staging deployment is ready!"
+          else
+            echo "Staging deployment not found, skipping health check"
+            exit 1
+          fi
         else
           # Wait for production deployment to be ready
-          kubectl wait --for=condition=available --timeout=300s deployment/helpninja -n helpninja
-          echo "Production deployment is ready!"
+          echo "Waiting for production deployment to be available..."
+          if kubectl get deployment helpninja -n helpninja >/dev/null 2>&1; then
+            kubectl wait --for=condition=available --timeout=300s deployment/helpninja -n helpninja
+            echo "Production deployment is ready!"
+          else
+            echo "Production deployment not found, skipping health check"
+            exit 1
+          fi
         fi
