@@ -75,14 +75,14 @@ jobs:
     - name: Deploy to Production
       if: github.ref == 'refs/heads/main'
       run: |
-        echo "Deploying with image: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:latest"
+        echo "Deploying with image: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:main-${{ github.sha }}"
         
         # Update values with production secrets
         helm upgrade --install helpninja ./k8s \
           --namespace helpninja \
           --create-namespace \
           --set image.repository=${{ env.REGISTRY }}/${{ env.IMAGE_NAME }} \
-          --set image.tag=latest \
+          --set image.tag=main-${{ github.sha }} \
           --set secrets.openaiApiKey="${{ secrets.OPENAI_API_KEY }}" \
           --set secrets.openaiChatModel="${{ secrets.OPENAI_CHAT_MODEL }}" \
           --set secrets.openaiEmbedModel="${{ secrets.OPENAI_EMBED_MODEL }}" \
