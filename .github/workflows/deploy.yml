@@ -77,6 +77,29 @@ jobs:
       run: |
         echo "Deploying with image: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:main-${{ github.sha }}"
         
+        # First, do a dry-run to see what would be deployed
+        echo "=== DRY RUN - What would be deployed ==="
+        helm upgrade --install helpninja ./k8s \
+          --namespace helpninja \
+          --create-namespace \
+          --set image.repository=${{ env.REGISTRY }}/${{ env.IMAGE_NAME }} \
+          --set image.tag=main-${{ github.sha }} \
+          --set secrets.openaiApiKey="${{ secrets.OPENAI_API_KEY }}" \
+          --set secrets.openaiChatModel="${{ secrets.OPENAI_CHAT_MODEL }}" \
+          --set secrets.openaiEmbedModel="${{ secrets.OPENAI_EMBED_MODEL }}" \
+          --set secrets.databaseUrl="${{ secrets.DATABASE_URL }}" \
+          --set secrets.stripeSecretKey="${{ secrets.STRIPE_SECRET_KEY }}" \
+          --set secrets.stripeWebhookSecret="${{ secrets.STRIPE_WEBHOOK_SECRET }}" \
+          --set secrets.stripePriceStarter="${{ secrets.STRIPE_PRICE_STARTER }}" \
+          --set secrets.stripePricePro="${{ secrets.STRIPE_PRICE_PRO }}" \
+          --set secrets.stripePriceAgency="${{ secrets.STRIPE_PRICE_AGENCY }}" \
+          --set secrets.supabaseServiceRoleKey="${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}" \
+          --set secrets.slackWebhookUrl="${{ secrets.SLACK_WEBHOOK_URL }}" \
+          --set secrets.resendApiKey="${{ secrets.RESEND_API_KEY }}" \
+          --set supabase.url="${{ secrets.SUPABASE_URL }}" \
+          --dry-run --debug
+        
+        echo "=== ACTUAL DEPLOYMENT ==="
         # Update values with production secrets
         helm upgrade --install helpninja ./k8s \
           --namespace helpninja \

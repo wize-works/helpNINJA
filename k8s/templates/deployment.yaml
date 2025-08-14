@@ -2,7 +2,6 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: helpninja
-  namespace: helpninja
   labels:
     app: helpninja
     version: "{{ .Values.image.tag }}"
