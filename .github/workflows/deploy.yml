@@ -75,12 +75,14 @@ jobs:
     - name: Deploy to Production
       if: github.ref == 'refs/heads/main'
       run: |
+        echo "Deploying with image: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:latest"
+        
         # Update values with production secrets
         helm upgrade --install helpninja ./k8s \
           --namespace helpninja \
           --create-namespace \
           --set image.repository=${{ env.REGISTRY }}/${{ env.IMAGE_NAME }} \
-          --set image.tag=${{ steps.meta.outputs.version }} \
+          --set image.tag=latest \
           --set secrets.openaiApiKey="${{ secrets.OPENAI_API_KEY }}" \
           --set secrets.openaiChatModel="${{ secrets.OPENAI_CHAT_MODEL }}" \
           --set secrets.openaiEmbedModel="${{ secrets.OPENAI_EMBED_MODEL }}" \
@@ -95,6 +97,15 @@ jobs:
           --set secrets.resendApiKey="${{ secrets.RESEND_API_KEY }}" \
           --set supabase.url="${{ secrets.SUPABASE_URL }}" \
           --wait --timeout=10m
+          
+        echo "Helm deployment completed successfully"
+
+    - name: Check Helm deployment status
+      run: |
+        echo "Checking Helm release status..."
+        helm list -n helpninja
+        echo "Checking Helm deployment values..."
+        helm get values helpninja -n helpninja
 
     - name: Verify deployment
       run: |
