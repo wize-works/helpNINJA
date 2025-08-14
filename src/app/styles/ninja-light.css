@@ -1,51 +1,52 @@
-
 @plugin "daisyui/theme" {
     name: "light";
     default: true;
     color-scheme: light;
     prefersdark: false;
-  /* Brand palette */
-  --color-primary:  #6366f1;
-  --color-primary-content: #ffffff; /* primary-content */
-
-  --color-secondary:  #06b6d4; /* secondary */
-  --color-secondary-content: #062a30; /* secondary-content */
-
-  --color-accent:  #f59e0b; /* accent */
-  --color-accent-content: #231a03; /* accent-content */
-
-  --n:  #111827; /* neutral (cards/nav) */
-  --nc: #e5e7eb; /* neutral-content */
-
-  /* Base (surface) steps */
-  --color-base-100: #ffffff; /* base-100 (page bg) */
-  --color-base-200: #f9fafb; /* base-200 */
-  --color-base-300: #eef2f7; /* base-300 */
-  --color-base-content: #0b1220; /* base-content (text) */
-
-  /* State colors */
-  --in: #60a5fa; /* info */
-  --inc:#0b1b33; /* info-content */
-
-  --color-success: #22c55e; /* success */
-  --color-success-content:#ffffff; /* success-content */
-
-  --color-warning: #f59e0b; /* warning */
-  --color-warning-content:#231a03; /* warning-content */
-
-  --color-error: #ef4444; /* error */
-  --color-error-content:#2a0909; /* error-content */
-
-  /* Radius, animation, borders */
-  --rounded-box:  1rem;
-  --rounded-btn:  .75rem;
-  --rounded-badge:.5rem;
-  --animation-btn: 0.2s;
-  --animation-input: 0.2s;
-  --btn-focus-scale: 0.98;
-  --border-btn: 1px;
-  --tab-border: 1px;
-  --tab-radius: .75rem;
-
-  color-scheme: light;
-}
+  
+    /* Brand palette (vibrant + approachable) */
+    --color-primary:           #4DA8DA; /* Sky Blue */
+    --color-primary-content:   #0b1220; /* dark navy text for contrast on primary */
+  
+    --color-secondary:         #22C55E; /* Bright Green */
+    --color-secondary-content: #062a30; /* deep teal text for contrast on secondary */
+  
+    --color-accent:            #B22222; /* Blood Red */
+    --color-accent-content:    #ffffff; /* strong contrast on accent */
+  
+    --color-neutral:           #E5E7EB; /* card/nav surfaces */
+    --color-neutral-content:   #0b1220; /* readable text on neutral */
+  
+    /* Base (surface) steps */
+    --color-base-100:          #ffffff; /* page bg */
+    --color-base-200:          #f9fafb; /* section bg */
+    --color-base-300:          #eef2f7; /* subtle panels/borders */
+    --color-base-content:      #0b1220; /* default text color */
+  
+    /* State colors */
+    --color-info:              #40E0D0; /* Turquoise */
+    --color-info-content:      #0b1b33; /* deep navy for legibility */
+  
+    --color-success:           #22C55E; /* Bright Green */
+    --color-success-content:   #ffffff; /* readable on success bg */
+  
+    --color-warning:           #FACC15; /* Soft Yellow */
+    --color-warning-content:   #231a03; /* warm dark for legibility */
+  
+    --color-error:             #DC2626; /* Proper red for errors */
+    --color-error-content:     #ffffff; /* readable on error bg */
+  
+    /* Radius, animation, borders */
+    --rounded-box:             1rem;
+    --rounded-btn:             .75rem;
+    --rounded-badge:           .5rem;
+    --animation-btn:           0.2s;
+    --animation-input:         0.2s;
+    --btn-focus-scale:         0.98;
+    --border-btn:              1px;
+    --tab-border:              1px;
+    --tab-radius:              .75rem;
+  
+    color-scheme: light;
+  }
+  

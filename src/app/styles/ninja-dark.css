@@ -3,47 +3,48 @@
     default: false;
     color-scheme: dark;
     prefersdark: false;
-  /* Brand palette tuned for dark contrast */
-  --p:  #8b5cf6; /* primary (brighter for dark) */
-  --pc: #0b0b14; /* primary-content */
-
-  --s:  #22d3ee; /* secondary */
-  --sc: #04171b; /* secondary-content */
-
-  --a:  #fbbf24; /* accent */
-  --ac: #1f1603; /* accent-content */
-
-  --n:  #0b1220; /* neutral (cards/nav) */
-  --nc: #c7d2fe; /* neutral-content */
-
-  /* Base (surface) steps */
-  --b1: #0b0f1a; /* base-100 (page bg) */
-  --b2: #0f172a; /* base-200 */
-  --b3: #111827; /* base-300 */
-  --bc: #e5e7ff; /* base-content (text) */
-
-  /* State colors */
-  --in: #60a5fa; /* info */
-  --inc:#0b1b33;
-
-  --su: #22c55e; /* success */
-  --suc:#072013;
-
-  --wa: #f59e0b; /* warning */
-  --wac:#231a03;
-
-  --er: #ef4444; /* error */
-  --erc:#2a0909;
-
-  /* Radius, animation, borders */
-  --rounded-box:  1rem;
-  --rounded-btn:  .75rem;
-  --rounded-badge:.5rem;
-  --animation-btn: 0.2s;
-  --animation-input: 0.2s;
-  --btn-focus-scale: 0.98;
-  --border-btn: 1px;
-  --tab-border: 1px;
-  --tab-radius: .75rem;
-
-}
+  
+    /* Brand palette tuned for dark contrast (vibrant but legible) */
+    --color-primary:            #4DA8DA; /* Sky Blue */
+    --color-primary-content:    #0b1220; /* dark navy text on bright primary */
+  
+    --color-secondary:          #22C55E; /* Bright Green */
+    --color-secondary-content:  #062a30; /* deep teal text for contrast */
+  
+    --color-accent:             #B22222; /* Blood Red */
+    --color-accent-content:     #ffffff; /* strong contrast on deep red */
+  
+    --color-neutral:            #374151; /* slate card/nav */
+    --color-neutral-content:    #E5E7EB; /* light text for neutral */
+  
+    /* Base (surface) steps — ordered darkest -> lighter */
+    --color-base-100:           #0f172a; /* page bg (slate-900) */
+    --color-base-200:           #111827; /* panels/sections (slate-800) */
+    --color-base-300:           #1f2937; /* cards/raised (slate-700) */
+    --color-base-content:       #E5E7EB; /* default text */
+  
+    /* State colors (bright on dark; content tuned for contrast) */
+    --color-info:               #40E0D0; /* Turquoise */
+    --color-info-content:       #0b1b33; /* dark text on bright info */
+  
+    --color-success:            #22C55E; /* Bright Green */
+    --color-success-content:    #062a30; /* dark text on success */
+  
+    --color-warning:            #FACC15; /* Soft Yellow */
+    --color-warning-content:    #231a03; /* warm dark for legibility */
+  
+    --color-error:              #EF4444; /* vivid error for dark mode */
+    --color-error-content:      #ffffff; /* readable on error bg */
+  
+    /* Radius, animation, borders */
+    --rounded-box:              1rem;
+    --rounded-btn:              .75rem;
+    --rounded-badge:            .5rem;
+    --animation-btn:            0.2s;
+    --animation-input:          0.2s;
+    --btn-focus-scale:          0.98;
+    --border-btn:               1px;
+    --tab-border:               1px;
+    --tab-radius:               .75rem;
+  }
+  
