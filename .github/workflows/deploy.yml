@@ -72,10 +72,19 @@ jobs:
       with:
         version: 'v3.15.4'
 
+    - name: Check for existing Helm operations
+      run: |
+        echo "Checking for any stuck Helm operations..."
+        helm list -n helpninja || echo "No existing releases found"
+        # If there's a stuck operation, this will help identify it
+        kubectl get pods -n helpninja | grep -E "(Pending|Error|CrashLoopBackOff)" || echo "No problematic pods found"
+
     - name: Deploy to Production
       if: github.ref == 'refs/heads/main'
       run: |
-        echo "Deploying with image: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:main-${GITHUB_SHA:0:7}"
+        # Extract the short tag from metadata output
+        SHORT_TAG=$(echo "${{ steps.meta.outputs.tags }}" | grep -o 'main-[a-f0-9]\{7\}' | head -1)
+        echo "Deploying with image: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${SHORT_TAG}"
         
         # First, do a dry-run to see what would be deployed
         echo "=== DRY RUN - What would be deployed ==="
@@ -83,7 +92,7 @@ jobs:
           --namespace helpninja \
           --create-namespace \
           --set image.repository=${{ env.REGISTRY }}/${{ env.IMAGE_NAME }} \
-          --set image.tag=main-${GITHUB_SHA:0:7} \
+          --set image.tag=${SHORT_TAG} \
           --set secrets.openaiApiKey="${{ secrets.OPENAI_API_KEY }}" \
           --set secrets.openaiChatModel="${{ secrets.OPENAI_CHAT_MODEL }}" \
           --set secrets.openaiEmbedModel="${{ secrets.OPENAI_EMBED_MODEL }}" \
@@ -105,7 +114,7 @@ jobs:
           --namespace helpninja \
           --create-namespace \
           --set image.repository=${{ env.REGISTRY }}/${{ env.IMAGE_NAME }} \
-          --set image.tag=main-${GITHUB_SHA:0:7} \
+          --set image.tag=${SHORT_TAG} \
           --set secrets.openaiApiKey="${{ secrets.OPENAI_API_KEY }}" \
           --set secrets.openaiChatModel="${{ secrets.OPENAI_CHAT_MODEL }}" \
           --set secrets.openaiEmbedModel="${{ secrets.OPENAI_EMBED_MODEL }}" \
