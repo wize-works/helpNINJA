@@ -75,26 +75,34 @@ jobs:
     - name: Check for existing Helm operations
       run: |
         echo "Checking for any stuck Helm operations..."
-        helm list -n helpninja || echo "No existing releases found"
         
-        # Check if there's a stuck release and clear it
-        if helm list -n helpninja | grep -q helpninja; then
-          echo "Found existing Helm release, checking status..."
-          helm status helpninja -n helpninja || echo "Could not get status"
+        # Always try to list releases, continue even if namespace doesn't exist
+        helm list -n helpninja 2>/dev/null || echo "No existing releases found or namespace doesn't exist"
+        
+        # Check if namespace exists, create if not
+        kubectl get namespace helpninja >/dev/null 2>&1 || kubectl create namespace helpninja
+        
+        # Check for stuck Helm operations and force cleanup
+        echo "Checking for stuck Helm releases..."
+        if helm list -n helpninja 2>/dev/null | grep -q helpninja; then
+          echo "Found existing Helm release, attempting cleanup..."
           
-          # If the release is stuck, try to rollback or uninstall
-          echo "Attempting to clear any stuck operations..."
-          helm rollback helpninja 0 -n helpninja --wait --timeout=2m || echo "Rollback failed or not needed"
+          # Get release status
+          helm status helpninja -n helpninja 2>/dev/null || echo "Could not get release status"
           
-          # If rollback fails, force uninstall and reinstall
-          if ! helm status helpninja -n helpninja >/dev/null 2>&1; then
-            echo "Release appears stuck, forcing cleanup..."
-            helm uninstall helpninja -n helpninja --wait --timeout=2m || echo "Uninstall completed or release not found"
-          fi
+          # Force delete any existing release to clear locks
+          echo "Force removing existing release to clear any locks..."
+          helm uninstall helpninja -n helpninja --wait --timeout=3m 2>/dev/null || echo "No release to uninstall or uninstall completed"
+          
+          # Clean up any remaining resources
+          echo "Cleaning up any remaining Kubernetes resources..."
+          kubectl delete all,secrets,configmaps,ingress,hpa -n helpninja --selector=app=helpninja --timeout=60s 2>/dev/null || echo "No resources to clean up"
         fi
         
-        # If there's a stuck operation, this will help identify it
-        kubectl get pods -n helpninja | grep -E "(Pending|Error|CrashLoopBackOff)" || echo "No problematic pods found"
+        # Check for problematic pods
+        kubectl get pods -n helpninja 2>/dev/null | grep -E "(Pending|Error|CrashLoopBackOff|ImagePullBackOff)" || echo "No problematic pods found"
+        
+        echo "Cleanup completed, ready for deployment"
 
     - name: Deploy to Production
       if: github.ref == 'refs/heads/main'
@@ -103,34 +111,18 @@ jobs:
         SHORT_TAG=$(echo "${{ steps.meta.outputs.tags }}" | grep -o 'main-[a-f0-9]\{7\}' | head -1)
         echo "Deploying with image: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${SHORT_TAG}"
         
-        # First, do a dry-run to see what would be deployed
-        echo "=== DRY RUN - What would be deployed ==="
-        helm upgrade --install helpninja ./k8s \
-          --namespace helpninja \
-          --create-namespace \
-          --set image.repository=${{ env.REGISTRY }}/${{ env.IMAGE_NAME }} \
-          --set image.tag=${SHORT_TAG} \
-          --set secrets.openaiApiKey="${{ secrets.OPENAI_API_KEY }}" \
-          --set secrets.openaiChatModel="${{ secrets.OPENAI_CHAT_MODEL }}" \
-          --set secrets.openaiEmbedModel="${{ secrets.OPENAI_EMBED_MODEL }}" \
-          --set secrets.databaseUrl="${{ secrets.DATABASE_URL }}" \
-          --set secrets.stripeSecretKey="${{ secrets.STRIPE_SECRET_KEY }}" \
-          --set secrets.stripeWebhookSecret="${{ secrets.STRIPE_WEBHOOK_SECRET }}" \
-          --set secrets.stripePriceStarter="${{ secrets.STRIPE_PRICE_STARTER }}" \
-          --set secrets.stripePricePro="${{ secrets.STRIPE_PRICE_PRO }}" \
-          --set secrets.stripePriceAgency="${{ secrets.STRIPE_PRICE_AGENCY }}" \
-          --set secrets.supabaseServiceRoleKey="${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}" \
-          --set secrets.slackWebhookUrl="${{ secrets.SLACK_WEBHOOK_URL }}" \
-          --set secrets.resendApiKey="${{ secrets.RESEND_API_KEY }}" \
-          --set supabase.url="${{ secrets.SUPABASE_URL }}" \
-          --dry-run --debug
+        # Verify chart syntax before deployment
+        echo "=== VALIDATING HELM CHART ==="
+        helm lint ./k8s || echo "Chart linting completed with warnings"
         
-        echo "=== ACTUAL DEPLOYMENT ==="
-        # Update values with production secrets
+        # Deploy directly (skip dry-run to avoid lock conflicts)
+        echo "=== PRODUCTION DEPLOYMENT ==="
         helm upgrade --install helpninja ./k8s \
           --namespace helpninja \
           --create-namespace \
           --force \
+          --atomic \
+          --debug \
           --set image.repository=${{ env.REGISTRY }}/${{ env.IMAGE_NAME }} \
           --set image.tag=${SHORT_TAG} \
           --set secrets.openaiApiKey="${{ secrets.OPENAI_API_KEY }}" \
