@@ -76,6 +76,23 @@ jobs:
       run: |
         echo "Checking for any stuck Helm operations..."
         helm list -n helpninja || echo "No existing releases found"
+        
+        # Check if there's a stuck release and clear it
+        if helm list -n helpninja | grep -q helpninja; then
+          echo "Found existing Helm release, checking status..."
+          helm status helpninja -n helpninja || echo "Could not get status"
+          
+          # If the release is stuck, try to rollback or uninstall
+          echo "Attempting to clear any stuck operations..."
+          helm rollback helpninja 0 -n helpninja --wait --timeout=2m || echo "Rollback failed or not needed"
+          
+          # If rollback fails, force uninstall and reinstall
+          if ! helm status helpninja -n helpninja >/dev/null 2>&1; then
+            echo "Release appears stuck, forcing cleanup..."
+            helm uninstall helpninja -n helpninja --wait --timeout=2m || echo "Uninstall completed or release not found"
+          fi
+        fi
+        
         # If there's a stuck operation, this will help identify it
         kubectl get pods -n helpninja | grep -E "(Pending|Error|CrashLoopBackOff)" || echo "No problematic pods found"
 
@@ -113,6 +130,7 @@ jobs:
         helm upgrade --install helpninja ./k8s \
           --namespace helpninja \
           --create-namespace \
+          --force \
           --set image.repository=${{ env.REGISTRY }}/${{ env.IMAGE_NAME }} \
           --set image.tag=${SHORT_TAG} \
           --set secrets.openaiApiKey="${{ secrets.OPENAI_API_KEY }}" \
