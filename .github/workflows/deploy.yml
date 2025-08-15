@@ -75,7 +75,7 @@ jobs:
     - name: Deploy to Production
       if: github.ref == 'refs/heads/main'
       run: |
-        echo "Deploying with image: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:main-${{ github.sha }}"
+        echo "Deploying with image: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:main-${GITHUB_SHA:0:7}"
         
         # First, do a dry-run to see what would be deployed
         echo "=== DRY RUN - What would be deployed ==="
@@ -83,7 +83,7 @@ jobs:
           --namespace helpninja \
           --create-namespace \
           --set image.repository=${{ env.REGISTRY }}/${{ env.IMAGE_NAME }} \
-          --set image.tag=main-${{ github.sha }} \
+          --set image.tag=main-${GITHUB_SHA:0:7} \
           --set secrets.openaiApiKey="${{ secrets.OPENAI_API_KEY }}" \
           --set secrets.openaiChatModel="${{ secrets.OPENAI_CHAT_MODEL }}" \
           --set secrets.openaiEmbedModel="${{ secrets.OPENAI_EMBED_MODEL }}" \
@@ -105,7 +105,7 @@ jobs:
           --namespace helpninja \
           --create-namespace \
           --set image.repository=${{ env.REGISTRY }}/${{ env.IMAGE_NAME }} \
-          --set image.tag=main-${{ github.sha }} \
+          --set image.tag=main-${GITHUB_SHA:0:7} \
           --set secrets.openaiApiKey="${{ secrets.OPENAI_API_KEY }}" \
           --set secrets.openaiChatModel="${{ secrets.OPENAI_CHAT_MODEL }}" \
           --set secrets.openaiEmbedModel="${{ secrets.OPENAI_EMBED_MODEL }}" \
