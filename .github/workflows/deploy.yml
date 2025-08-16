@@ -48,7 +48,7 @@ jobs:
       uses: docker/build-push-action@v5
       with:
         context: .
-        platforms: linux/amd64,linux/arm64
+        platforms: linux/amd64
         push: true
         tags: ${{ steps.meta.outputs.tags }}
         labels: ${{ steps.meta.outputs.labels }}
@@ -67,109 +67,74 @@ jobs:
         resource-group: ${{ secrets.AKS_RESOURCE_GROUP }}
         admin: true
 
-    - name: Install Helm
-      uses: azure/setup-helm@v3
-      with:
-        version: 'v3.15.4'
-
-    - name: Check for existing Helm operations
-      run: |
-        echo "Checking for any stuck Helm operations..."
-        
-        # Always try to list releases, continue even if namespace doesn't exist
-        helm list -n helpninja 2>/dev/null || echo "No existing releases found or namespace doesn't exist"
-        
-        # Check if namespace exists, create if not
-        kubectl get namespace helpninja >/dev/null 2>&1 || kubectl create namespace helpninja
-        
-        # Check for stuck Helm operations and force cleanup
-        echo "Checking for stuck Helm releases..."
-        if helm list -n helpninja 2>/dev/null | grep -q helpninja; then
-          echo "Found existing Helm release, attempting cleanup..."
-          
-          # Get release status
-          helm status helpninja -n helpninja 2>/dev/null || echo "Could not get release status"
-          
-          # Force delete any existing release to clear locks
-          echo "Force removing existing release to clear any locks..."
-          helm uninstall helpninja -n helpninja --wait --timeout=3m 2>/dev/null || echo "No release to uninstall or uninstall completed"
-          
-          # Clean up any remaining resources
-          echo "Cleaning up any remaining Kubernetes resources..."
-          kubectl delete all,secrets,configmaps,ingress,hpa -n helpninja --selector=app=helpninja --timeout=60s 2>/dev/null || echo "No resources to clean up"
-        fi
-        
-        # Check for problematic pods
-        kubectl get pods -n helpninja 2>/dev/null | grep -E "(Pending|Error|CrashLoopBackOff|ImagePullBackOff)" || echo "No problematic pods found"
-        
-        echo "Cleanup completed, ready for deployment"
-
     - name: Deploy to Production
       if: github.ref == 'refs/heads/main'
       run: |
         # Extract the short tag from metadata output
         SHORT_TAG=$(echo "${{ steps.meta.outputs.tags }}" | grep -o 'main-[a-f0-9]\{7\}' | head -1)
-        echo "Deploying with image: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${SHORT_TAG}"
+        IMAGE_FULL="${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${SHORT_TAG}"
+        echo "Deploying with image: ${IMAGE_FULL}"
         
-        # Verify chart syntax before deployment
-        echo "=== VALIDATING HELM CHART ==="
-        helm lint ./k8s || echo "Chart linting completed with warnings"
+        # Create namespace first
+        kubectl apply -f ./k8s/namespace.yaml
         
-        # Deploy directly (skip dry-run to avoid lock conflicts)
-        echo "=== PRODUCTION DEPLOYMENT ==="
-        helm upgrade --install helpninja ./k8s \
-          --namespace helpninja \
-          --create-namespace \
-          --force \
-          --atomic \
-          --debug \
-          --set image.repository=${{ env.REGISTRY }}/${{ env.IMAGE_NAME }} \
-          --set image.tag=${SHORT_TAG} \
-          --set secrets.openaiApiKey="${{ secrets.OPENAI_API_KEY }}" \
-          --set secrets.openaiChatModel="${{ secrets.OPENAI_CHAT_MODEL }}" \
-          --set secrets.openaiEmbedModel="${{ secrets.OPENAI_EMBED_MODEL }}" \
-          --set secrets.databaseUrl="${{ secrets.DATABASE_URL }}" \
-          --set secrets.stripeSecretKey="${{ secrets.STRIPE_SECRET_KEY }}" \
-          --set secrets.stripeWebhookSecret="${{ secrets.STRIPE_WEBHOOK_SECRET }}" \
-          --set secrets.stripePriceStarter="${{ secrets.STRIPE_PRICE_STARTER }}" \
-          --set secrets.stripePricePro="${{ secrets.STRIPE_PRICE_PRO }}" \
-          --set secrets.stripePriceAgency="${{ secrets.STRIPE_PRICE_AGENCY }}" \
-          --set secrets.supabaseServiceRoleKey="${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}" \
-          --set secrets.slackWebhookUrl="${{ secrets.SLACK_WEBHOOK_URL }}" \
-          --set secrets.resendApiKey="${{ secrets.RESEND_API_KEY }}" \
-          --set supabase.url="${{ secrets.SUPABASE_URL }}" \
-          --wait --timeout=10m
-          
-        echo "Helm deployment completed successfully"
-
-    - name: Check Helm deployment status
-      run: |
-        echo "Checking Helm release status..."
-        helm list -n helpninja
-        echo "Checking Helm deployment values..."
-        helm get values helpninja -n helpninja
+        # Replace placeholders in YAML files with actual values
+        echo "=== UPDATING CONFIGURATION ==="
+        
+        # Update deployment with correct image
+        sed "s|IMAGE_PLACEHOLDER|${IMAGE_FULL}|g" ./k8s/deployment.yaml > /tmp/deployment.yaml
+        
+        # Update configmap with Supabase URL
+        sed "s|SUPABASE_URL_PLACEHOLDER|${{ secrets.SUPABASE_URL }}|g" ./k8s/configmap.yaml > /tmp/configmap.yaml
+        
+        # Create secrets using kubectl (more reliable than YAML placeholders)
+        echo "=== CREATING SECRETS ==="
+        kubectl create secret generic helpninja-secrets \
+          --namespace=helpninja \
+          --from-literal=OPENAI_API_KEY="${{ secrets.OPENAI_API_KEY }}" \
+          --from-literal=OPENAI_CHAT_MODEL="${{ secrets.OPENAI_CHAT_MODEL }}" \
+          --from-literal=OPENAI_EMBED_MODEL="${{ secrets.OPENAI_EMBED_MODEL }}" \
+          --from-literal=DATABASE_URL="${{ secrets.DATABASE_URL }}" \
+          --from-literal=STRIPE_SECRET_KEY="${{ secrets.STRIPE_SECRET_KEY }}" \
+          --from-literal=STRIPE_WEBHOOK_SECRET="${{ secrets.STRIPE_WEBHOOK_SECRET }}" \
+          --from-literal=STRIPE_PRICE_STARTER="${{ secrets.STRIPE_PRICE_STARTER }}" \
+          --from-literal=STRIPE_PRICE_PRO="${{ secrets.STRIPE_PRICE_PRO }}" \
+          --from-literal=STRIPE_PRICE_AGENCY="${{ secrets.STRIPE_PRICE_AGENCY }}" \
+          --from-literal=SUPABASE_SERVICE_ROLE_KEY="${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}" \
+          --from-literal=SLACK_WEBHOOK_URL="${{ secrets.SLACK_WEBHOOK_URL }}" \
+          --from-literal=RESEND_API_KEY="${{ secrets.RESEND_API_KEY }}" \
+          --dry-run=client -o yaml | kubectl apply -f -
+        
+        # Apply all Kubernetes resources
+        echo "=== DEPLOYING RESOURCES ==="
+        kubectl apply -f /tmp/configmap.yaml
+        kubectl apply -f /tmp/deployment.yaml
+        kubectl apply -f ./k8s/service.yaml
+        kubectl apply -f ./k8s/ingress.yaml
+        kubectl apply -f ./k8s/hpa.yaml
+        
+        # Wait for deployment to be ready
+        echo "=== WAITING FOR DEPLOYMENT ==="
+        kubectl rollout status deployment/helpninja -n helpninja --timeout=300s
+        
+        echo "Deployment completed successfully!"
 
     - name: Verify deployment
       run: |
         echo "Verifying production deployment..."
-        kubectl get namespace helpninja || echo "Production namespace not found"
-        kubectl get pods -n helpninja || echo "No production pods found"
-        kubectl get svc -n helpninja || echo "No production services found"
-        kubectl get ingress -n helpninja || echo "No production ingress found"
+        kubectl get namespace helpninja
+        kubectl get pods -n helpninja
+        kubectl get svc -n helpninja
+        kubectl get ingress -n helpninja
 
     - name: Check deployments
       run: |
-        echo "Checking production deployment..."
-        kubectl get deployments --all-namespaces | grep helpninja || echo "No helpninja deployments found"
-        kubectl get deployment helpninja -n helpninja || echo "Production deployment not found"
+        echo "Checking production deployment status..."
+        kubectl get deployments -n helpninja
+        kubectl describe deployment helpninja -n helpninja
 
     - name: Health check
       run: |
-        echo "Waiting for production deployment to be available..."
-        if kubectl get deployment helpninja -n helpninja >/dev/null 2>&1; then
-          kubectl wait --for=condition=available --timeout=300s deployment/helpninja -n helpninja
-          echo "Production deployment is ready!"
-        else
-          echo "Production deployment not found, skipping health check"
-          exit 1
-        fi
+        echo "Performing health check..."
+        kubectl wait --for=condition=available --timeout=300s deployment/helpninja -n helpninja
+        echo "Production deployment is ready and healthy!"

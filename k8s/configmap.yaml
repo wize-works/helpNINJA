@@ -2,9 +2,10 @@ apiVersion: v1
 kind: ConfigMap
 metadata:
   name: helpninja-config
+  namespace: helpninja
 data:
   NODE_ENV: "production"
   SITE_URL: "https://helpninja.app"
-  NEXT_PUBLIC_SUPABASE_URL: "{{ .Values.supabase.url }}"
+  NEXT_PUBLIC_SUPABASE_URL: "SUPABASE_URL_PLACEHOLDER"
   SUPPORT_FALLBACK_TO_EMAIL: "true"
   SUPPORT_FROM_EMAIL: "support@updates.helpninja.app"

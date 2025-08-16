@@ -2,11 +2,11 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: helpninja
+  namespace: helpninja
   labels:
     app: helpninja
-    version: "{{ .Values.image.tag }}"
 spec:
-  replicas: {{ .Values.replicaCount | default 2 }}
+  replicas: 2
   selector:
     matchLabels:
       app: helpninja
@@ -14,11 +14,10 @@ spec:
     metadata:
       labels:
         app: helpninja
-        version: "{{ .Values.image.tag }}"
     spec:
       containers:
       - name: helpninja
-        image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
+        image: "IMAGE_PLACEHOLDER"
         ports:
         - containerPort: 3000
           name: http
