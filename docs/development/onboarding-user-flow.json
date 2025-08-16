@@ -1,0 +1,254 @@
+{
+  "meta": {
+    "name": "HelpNINJA \u2014 Onboarding User Flow (Account, Company, Plan/Payment)",
+    "version": "1.0.0",
+    "last_updated_utc": "2025-08-16T09:37:35.258034+00:00",
+    "owner": "HelpNINJA",
+    "note": "Build with Clerk Elements (custom UI) \u2014 NOT Clerk hosted/redirect pages."
+  },
+  "assumptions": {
+    "auth": "Clerk (Next.js App Router) using Clerk Elements for custom screens and Organizations for companies",
+    "billing": "Stripe Checkout + Billing Portal, mapped to tenant (organization) records",
+    "db": "PostgreSQL (Supabase) for app data; Clerk for identity",
+    "multi_tenant": "One Clerk Organization maps 1:1 to a tenant",
+    "plans": [
+      "starter",
+      "pro",
+      "agency"
+    ],
+    "themes": [
+      "ninja-light",
+      "ninja-dark"
+    ],
+    "min_mobile_width_px": 360
+  },
+  "goals": [
+    "Get users authenticated, create/join a company (Clerk Organization), choose plan, complete payment, and land in the dashboard.",
+    "Keep installation/website setup out of this flow to minimize friction and support multi-domain setups later.",
+    "Use playful, on-brand microcopy and animations without sacrificing a11y."
+  ],
+  "non_goals": [
+    "Domain/site verification or widget installation (handled by onboarding-site-flow.json)"
+  ],
+  "prerequisites": [
+    "Clerk project created; providers enabled (Email/Password, Google, Microsoft, GitHub; Enterprise SSO enabled when ready).",
+    "Stripe products/prices created and plan keys available.",
+    "Supabase DB migrated with tenants and mapping tables below.",
+    "DaisyUI themes configured (ninja-light, ninja-dark); FontAwesome available."
+  ],
+  "data_model": {
+    "tables": {
+      "tenants": [
+        "id uuid pk",
+        "name text",
+        "plan text",
+        "plan_status text",
+        "stripe_customer_id text",
+        "stripe_subscription_id text",
+        "current_period_end timestamptz",
+        "created_at timestamptz default now()"
+      ],
+      "auth_users": [
+        "id uuid pk",
+        "clerk_user_id text unique",
+        "email text",
+        "created_at timestamptz default now()"
+      ],
+      "org_map": [
+        "clerk_org_id text pk",
+        "tenant_id uuid fk tenants",
+        "created_by_clerk_user_id text",
+        "created_at timestamptz default now()"
+      ]
+    },
+    "mapping_rules": [
+      "On first organization creation, insert tenant and org_map.",
+      "On join to existing organization, read org_map to resolve tenant_id for session.",
+      "All app queries parameterized by tenant_id (derived server-side)."
+    ]
+  },
+  "routes": [
+    "/onboarding/signup",
+    "/onboarding/company",
+    "/onboarding/plan",
+    "/onboarding/payment",
+    "/onboarding/done"
+  ],
+  "components": {
+    "ui": [
+      "OnboardingLayout (progress, step title, subtitle)",
+      "Stepper (mobile-friendly)",
+      "Button{Primary,Secondary,Link}",
+      "Input{Email,Text}",
+      "RadioCardGroup (for plan)",
+      "Alert{success,warning,danger}",
+      "ConfettiSuccess"
+    ],
+    "clerk_elements": [
+      "SignIn and SignUp built with @clerk/elements primitives (custom fields, brand styling)",
+      "OrganizationCreate and OrganizationSwitcher for company step (custom layouts)"
+    ]
+  },
+  "api_contracts": [
+    {
+      "path": "/api/billing/checkout",
+      "method": "POST",
+      "body": {
+        "tenantId": "uuid",
+        "plan": "string"
+      },
+      "returns": {
+        "url": "string"
+      }
+    },
+    {
+      "path": "/api/billing/portal",
+      "method": "POST",
+      "body": {
+        "tenantId": "uuid"
+      },
+      "returns": {
+        "url": "string"
+      }
+    },
+    {
+      "path": "/api/telemetry",
+      "method": "POST",
+      "body": {
+        "event": "string",
+        "props": "object"
+      },
+      "returns": {
+        "ok": true
+      }
+    }
+  ],
+  "telemetry_events": [
+    "user.signup.view",
+    "user.signup.success",
+    "user.signup.error",
+    "user.company.view",
+    "user.company.created",
+    "user.company.joined",
+    "user.plan.view",
+    "user.plan.selected",
+    "user.payment.start",
+    "user.payment.success",
+    "user.payment.cancel",
+    "user.payment.error",
+    "user.onboarding.done"
+  ],
+  "flow": [
+    {
+      "id": "signup",
+      "title": "Sign Up / Sign In",
+      "objective": "Authenticate via SSO or email/password using Clerk Elements with custom UI.",
+      "ui": {
+        "elements": "Custom <SignUp /> / <SignIn /> built with Clerk Elements primitives",
+        "copy": {
+          "title": "Create your HelpNINJA account",
+          "subtitle": "Fast with Google or Microsoft. Email works too.",
+          "success": "Boom! You\u2019re in. \ud83e\udd77"
+        }
+      },
+      "acceptance": [
+        "Works with SSO and email/password",
+        "Accessible (keyboard nav, labels, errors)",
+        "Brand-matched with DaisyUI"
+      ]
+    },
+    {
+      "id": "company",
+      "title": "Create or Join Company",
+      "objective": "Create a Clerk Organization or join existing; map to tenants.org_map.",
+      "logic": [
+        "If user has existing organizations, show list + 'Create new' CTA.",
+        "On create: insert tenant, then org_map {clerk_org_id -> tenant_id}.",
+        "On join: read org_map for tenant_id."
+      ],
+      "ui": {
+        "elements": "Custom org create screen using Clerk Elements Organization primitives",
+        "fields": [
+          "Company name",
+          "Slug preview (optional)"
+        ]
+      },
+      "acceptance": [
+        "tenant created exactly once per clerk_org_id",
+        "switching org sets active tenant_id in session"
+      ]
+    },
+    {
+      "id": "plan",
+      "title": "Select Plan",
+      "objective": "Choose Starter / Pro / Agency; monthly/yearly toggle.",
+      "ui": {
+        "type": "3 plan cards",
+        "recommended_badge": "Most popular"
+      },
+      "logic": [
+        "Save selection in session + tenants.plan (pending until payment)."
+      ]
+    },
+    {
+      "id": "payment",
+      "title": "Stripe Checkout",
+      "objective": "Collect payment; return to app with success/cancel.",
+      "logic": [
+        "POST /api/billing/checkout -> redirect to Stripe",
+        "On return, confirm subscription via webhook and update tenants.plan_status"
+      ],
+      "trust": "Show 'Securely processed by Stripe'"
+    },
+    {
+      "id": "done",
+      "title": "Finish \u2192 Dashboard",
+      "objective": "Celebrate completion and guide to 'Add your first website' CTA.",
+      "ui": {
+        "confetti": true,
+        "cta": "Add your first website"
+      }
+    }
+  ],
+  "a11y": {
+    "wcag": "2.1 AA",
+    "focus_visible": true,
+    "aria_labels": true
+  },
+  "security": [
+    "Server derives tenant_id from Clerk session + org, never from client headers.",
+    "RLS or parameterized queries ensure tenant isolation.",
+    "Stripe webhooks verify signature and update tenant subscription."
+  ],
+  "acceptance_criteria": [
+    "User can complete onboarding without any domain install steps.",
+    "Org/tenant mapping persists across sessions and org switching.",
+    "Stripe success returns to /onboarding/done; cancel returns to /onboarding/plan."
+  ],
+  "iterative_implementation": [
+    {
+      "milestone": "M1 \u2014 Auth & Org",
+      "steps": [
+        "Install Clerk; wrap app with <ClerkProvider>; add middleware.",
+        "Build SignUp/SignIn with Clerk Elements (custom UI).",
+        "Implement Organization create/join screen and org\u2192tenant mapping."
+      ]
+    },
+    {
+      "milestone": "M2 \u2014 Plans & Checkout",
+      "steps": [
+        "Render plan selection; store choice on tenant (pending).",
+        "Implement /api/billing/checkout; Stripe return handlers; webhook to set plan_status.",
+        "Add Done screen with CTA to 'Add your first website'."
+      ]
+    },
+    {
+      "milestone": "M3 \u2014 Polish & Telemetry",
+      "steps": [
+        "Add telemetry events, confetti, microcopy, a11y pass (axe).",
+        "Responsive QA for 360px mobile and desktop.",
+        "Add Storybook stories for key components."
+      ]
+    }
+  ]
+}

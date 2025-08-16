@@ -1,0 +1,230 @@
+{
+    "meta": {
+        "name": "helpNINJA \u2014 Onboarding Site Flow (Add Website, Verify, Install)",
+        "version": "1.0.0",
+        "last_updated_utc": "2025-08-16T09:37:35.258034+00:00",
+        "owner": "helpNINJA",
+        "note": "Triggered from dashboard after user/org/payment flow. Multi-domain by design."
+    },
+    "assumptions": {
+        "scoping": "Per-tenant multiple websites (sites) with independent verification states",
+        "verification_methods": [
+            "script",
+            "meta_tag"
+        ],
+        "widget": "Edge-served script uses tenantId + siteId + siteKey",
+        "limits": "Plan-based site count gating (e.g., starter:1, pro:3, agency:\u221e)"
+    },
+    "goals": [
+        "Let users add one or many websites, verify successfully, and install the widget.",
+        "Provide multiple install options (script, DNS Record, meta tag, file upload, WordPress/GTM guide).",
+        "Offer retries and clear error feedback; allow pausing and resuming later."
+    ],
+    "data_model": {
+        "tables": {
+            "sites": [
+                "id uuid pk",
+                "tenant_id uuid fk tenants",
+                "domain text",
+                "display_name text",
+                "status text check (pending|installed|verified|failed)",
+                "verification_method text check (script|meta)",
+                "verification_token text",
+                "script_key text unique",
+                "default_tone text null",
+                "verified_at timestamptz",
+                "created_at timestamptz default now()"
+            ]
+        },
+        "indexes": [
+            "unique (tenant_id, domain)"
+        ],
+        "notes": [
+            "script_key is embedded in the widget to prevent cross-site reuse",
+            "verification_token used for meta-tag fallback"
+        ]
+    },
+    "routes": [
+        "/onboarding/site/add",
+        "/onboarding/site/install",
+        "/onboarding/site/verify"
+    ],
+    "dashboard_views": [
+        "/dashboard/websites",
+        "/dashboard/websites/:id"
+    ],
+    "components": {
+        "ui": [
+            "WebsiteList (badges: Pending/Installed/Verified/Error)",
+            "WebsiteCard (quick actions: Copy Snippet, Verify, Email Instructions)",
+            "SiteWizard (Add \u2192 Install \u2192 Verify)",
+            "CodeBlockWithCopy",
+            "Tabs (Script, Meta tag, WordPress/GTM)",
+            "StatusBanner (success/warning/error)"
+        ]
+    },
+    "api_contracts": [
+        {
+            "path": "/api/sites",
+            "method": "POST",
+            "body": {
+                "domain": "string",
+                "displayName": "string"
+            },
+            "returns": {
+                "id": "uuid",
+                "script_key": "string"
+            }
+        },
+        {
+            "path": "/api/sites",
+            "method": "GET",
+            "query": {},
+            "returns": {
+                "sites": "array"
+            }
+        },
+        {
+            "path": "/api/sites/:id",
+            "method": "GET",
+            "returns": {
+                "site": "object"
+            }
+        },
+        {
+            "path": "/api/sites/:id/verify",
+            "method": "POST",
+            "body": {
+                "method": "script|meta"
+            },
+            "returns": {
+                "ok": true,
+                "status": "string",
+                "details": "string"
+            }
+        },
+        {
+            "path": "/api/widget",
+            "method": "GET",
+            "query": {
+                "t": "tenantId",
+                "s": "siteId",
+                "voice": "string"
+            }
+        },
+        {
+            "path": "/api/widget/verify",
+            "method": "GET",
+            "query": {
+                "t": "tenantId",
+                "s": "siteId"
+            },
+            "returns": {
+                "ok": true,
+                "status": "string"
+            }
+        }
+    ],
+    "telemetry_events": [
+        "site.add.view",
+        "site.add.created",
+        "site.install.view",
+        "site.install.snippet.copied",
+        "site.install.meta.copied",
+        "site.verify.view",
+        "site.verify.clicked",
+        "site.verify.success",
+        "site.verify.failed"
+    ],
+    "flow": [
+        {
+            "id": "add_site",
+            "title": "Add Website",
+            "objective": "Capture domain/app name and create site record + script_key.",
+            "validation": [
+                "domain format check",
+                "plan limit check (sites per plan)"
+            ],
+            "success_state": "status=pending"
+        },
+        {
+            "id": "verify",
+            "title": "Verify Installation",
+            "objective": "Run detection via /api/sites/:id/verify or /api/widget/verify; allow retries.",
+            "logic": [
+                "Script detection: fetch the target page and look for data-site + data-key beacon request logs (server checks) or probe via CORS endpoint if available.",
+                "Meta detection: fetch homepage and check for verification meta tag."
+            ],
+            "states": [
+                "verified (green)",
+                "failed (red with tips)",
+                "installed (script found but not fully verified)"
+            ]
+        },
+        {
+            "id": "install",
+            "title": "Install Code",
+            "objective": "Provide snippet + alternatives (meta tag, WordPress/GTM).",
+            "snippet": {
+                "script_example": "<script src=\"https://helpninja.app/api/widget.js\" data-tenant=\"{tenantId}\" data-site=\"{siteId}\" data-key=\"{scriptKey}\" async></script>"
+            },
+            "meta_tag": {
+                "example": "<meta name=\"helpninja-verification\" content=\"{verification_token}\" />"
+            },
+            "tips": [
+                "Place script before </body>, or use GTM.",
+                "For SPAs, ensure script runs on route changes."
+            ],
+            "on_copy": "emit telemetry and show toast"
+        }
+    ],
+    "a11y": {
+        "wcag": "2.1 AA",
+        "focus_visible": true,
+        "aria_labels": true
+    },
+    "security": [
+        "Server validates tenant_id from session; ignores client-provided tenant headers.",
+        "Rate-limit verification endpoint to prevent abuse.",
+        "Signed widget responses; never expose secret keys in client."
+    ],
+    "acceptance_criteria": [
+        "Users can add multiple sites and independently verify each.",
+        "Widget cannot be reused across tenants due to siteKey checks.",
+        "Clear status and retry flows; users can pause/resume without data loss."
+    ],
+    "iterative_implementation": [
+        {
+            "milestone": "S1 \u2014 Sites CRUD",
+            "steps": [
+                "Create sites table and API (POST/GET).",
+                "Build Websites dashboard list and Add Site form.",
+                "Enforce plan limits (sites per plan)."
+            ]
+        },
+        {
+            "milestone": "S2 \u2014 Install UX",
+            "steps": [
+                "SiteWizard Install step with Script & Meta tabs and Copy buttons.",
+                "Generate script_key and verification_token on site create.",
+                "Add CodeBlockWithCopy and email-instructions action."
+            ]
+        },
+        {
+            "milestone": "S3 \u2014 Verification",
+            "steps": [
+                "Implement /api/sites/:id/verify (script + meta detection).",
+                "Add Verify button with polling and friendly error states.",
+                "Badges on list/cards for Pending/Installed/Verified/Error."
+            ]
+        },
+        {
+            "milestone": "S4 \u2014 Polish",
+            "steps": [
+                "Telemetry wire-up, responsive QA, a11y pass (axe).",
+                "Per-site tone override (optional).",
+                "Docs/help links for WordPress/GTM."
+            ]
+        }
+    ]
+}

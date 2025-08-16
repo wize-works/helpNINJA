@@ -5,13 +5,21 @@ create table if not exists public.tenants (
   public_key text unique not null,
   secret_key text unique not null,
   plan text not null default 'starter',
-  created_at timestamptz not null default now()
+  created_at timestamptz not null default now(),
+  stripe_customer_id text unique,
+  stripe_subscription_id text unique,
+  current_period_end timestamptz,
+  plan_status text not null default 'active',
 );
 
 create table if not exists public.users (
   id uuid primary key,
   email text unique not null,
-  created_at timestamptz not null default now()
+  first_name text,
+  last_name text,
+  avatar_url text,
+  created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now(),
 );
 
 create table if not exists public.tenant_members (
