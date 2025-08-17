@@ -2,9 +2,11 @@
 
 import * as Clerk from "@clerk/elements/common";
 import * as SignUp from "@clerk/elements/sign-up";
+import { Suspense } from "react";
 
 export default function SignUpPage() {
     return (
+        <Suspense fallback={null}>
         <div className="min-h-[80vh] flex items-center justify-center px-4">
             <div className="w-full max-w-md">
                 <div className="card bg-base-100 shadow-xl rounded-2xl p-6">
@@ -58,6 +60,7 @@ export default function SignUpPage() {
                     </SignUp.Root>
                 </div>
             </div>
-        </div>
+    </div>
+    </Suspense>
     );
 }

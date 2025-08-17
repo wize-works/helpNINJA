@@ -1,10 +1,12 @@
 "use client";
 
 import * as Clerk from "@clerk/elements/common";
-import * as SignIn from "@clerk/elements/sign-up";
+import * as SignIn from "@clerk/elements/sign-in";
+import { Suspense } from "react";
 
 export default function SignInPage() {
     return (
+        <Suspense fallback={null}>
         <div className="min-h-[80vh] flex items-center justify-center px-4">
             <div className="w-full max-w-md">
                 <div className="card bg-base-100 shadow-xl rounded-2xl p-6">
@@ -45,12 +47,11 @@ export default function SignInPage() {
                                 <SignIn.Action submit className="btn btn-primary w-full">Verify</SignIn.Action>
                             </SignIn.Strategy>
                         </SignIn.Step>
-                        <SignIn.Step name="continue" className="space-y-4">
-                            <SignIn.Action submit className="btn btn-primary w-full">Continue</SignIn.Action>
-                        </SignIn.Step>
+                        {/* Additional steps will render automatically per strategy flow (choose-session, etc.) */}
                     </SignIn.Root>
                 </div>
             </div>
-        </div>
+    </div>
+    </Suspense>
     );
 }

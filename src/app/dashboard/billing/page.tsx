@@ -1,5 +1,5 @@
 'use client';
-import { useState } from 'react';
+import { useState, Suspense } from 'react';
 import { useTenant } from '@/components/tenant-context';
 import { Breadcrumb } from '@/components/ui/breadcrumb';
 import { AnimatedPage, StaggerContainer, StaggerChild, HoverScale } from '@/components/ui/animated-page';
@@ -35,6 +35,7 @@ export default function BillingPage() {
     }
 
     return (
+        <Suspense fallback={null}>
         <AnimatedPage>
             <div className="space-y-8">
                 {/* Breadcrumb */}
@@ -177,6 +178,7 @@ export default function BillingPage() {
                     </StaggerChild>
                 </StaggerContainer>
             </div>
-        </AnimatedPage>
+    </AnimatedPage>
+    </Suspense>
     );
 }

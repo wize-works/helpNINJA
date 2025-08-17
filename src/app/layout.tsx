@@ -1,5 +1,6 @@
 import "@/app/globals.css";
 import Script from "next/script";
+import { Suspense } from "react";
 import Titlebar from "@/components/titlebar";
 import { ClerkProvider } from "@clerk/nextjs";
 import { Toaster } from "react-hot-toast";
@@ -18,9 +19,15 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
                     signInFallbackRedirectUrl={process.env.NEXT_PUBLIC_CLERK_AFTER_SIGN_IN_URL || "/dashboard"}
                     signUpFallbackRedirectUrl={process.env.NEXT_PUBLIC_CLERK_AFTER_SIGN_UP_URL || "/sign-up"}
                 >
-                    <Titlebar />
-                    <main>{children}</main>
-                    <AuthDebugPanel />
+                    <Suspense fallback={null}>
+                        <Titlebar />
+                    </Suspense>
+                    <Suspense fallback={null}>
+                        <main>{children}</main>
+                    </Suspense>
+                    <Suspense fallback={null}>
+                        <AuthDebugPanel />
+                    </Suspense>
                 </ClerkProvider>
                 <Toaster
                     position="top-right"

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, Suspense } from "react";
 import { useRouter } from "next/navigation";
 import toast from "react-hot-toast";
 import OnboardingProgress from "@/components/onboarding-progress";
@@ -160,6 +160,7 @@ export default function OnboardingStep2() {
     }
 
     return (
+        <Suspense fallback={null}>
         <AnimatedPage>
             <div className="space-y-8">
                 {/* Progress Indicator */}
@@ -406,6 +407,7 @@ export default function OnboardingStep2() {
                     </StaggerChild>
                 </StaggerContainer>
             </div>
-        </AnimatedPage>
+    </AnimatedPage>
+    </Suspense>
     );
 }
