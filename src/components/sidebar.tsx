@@ -171,7 +171,7 @@ export default function Sidebar() {
     };
 
     return (
-        <aside className="h-[calc(100vh-4rem)] sticky top-16 w-64 bg-base-100/60 backdrop-blur-sm border-r border-base-200/60">
+        <aside className="h-[calc(100vh-4rem)] sticky w-64 bg-base-100/60 backdrop-blur-sm border-r border-base-200/60">
             <div className="h-full flex flex-col">
                 {/* Main Navigation */}
                 <nav className="flex-1 px-3 py-6 space-y-1">

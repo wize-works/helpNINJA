@@ -1,21 +1,27 @@
 import "@/app/globals.css";
 import Script from "next/script";
 import Titlebar from "@/components/titlebar";
+import { ClerkProvider } from "@clerk/nextjs";
 import { Toaster } from "react-hot-toast";
+import Clarity from "@/components/clarity";
+import AuthDebugPanel from "@/components/debug/auth";
+
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
     return (
         <html lang="en" suppressHydrationWarning data-theme="light">
-            <Script id="ms-clarity" strategy="afterInteractive">
-                {`(function(c,l,a,r,i,t,y){
-    c[a]=c[a]||function(){(c[a].q=c[a].q||[]).push(arguments)};
-    t=l.createElement(r);t.async=1;t.src="https://www.clarity.ms/tag/"+i;
-    y=l.getElementsByTagName(r)[0];y.parentNode.insertBefore(t,y);
-})(window, document, "clarity", "script", "stn8nnko3s");`}
-            </Script>
+            <Clarity />
             <body className="bg-base-100">
-                <Titlebar />
-                <main>{children}</main>
+                <ClerkProvider
+                    signInUrl={process.env.NEXT_PUBLIC_CLERK_SIGN_IN_URL || "/sign-in"}
+                    signUpUrl={process.env.NEXT_PUBLIC_CLERK_SIGN_UP_URL || "/sign-up"}
+                    signInFallbackRedirectUrl={process.env.NEXT_PUBLIC_CLERK_AFTER_SIGN_IN_URL || "/dashboard"}
+                    signUpFallbackRedirectUrl={process.env.NEXT_PUBLIC_CLERK_AFTER_SIGN_UP_URL || "/sign-up"}
+                >
+                    <Titlebar />
+                    <main>{children}</main>
+                    <AuthDebugPanel />
+                </ClerkProvider>
                 <Toaster
                     position="top-right"
                     toastOptions={{

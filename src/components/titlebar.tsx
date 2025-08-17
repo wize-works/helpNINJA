@@ -1,9 +1,43 @@
+"use client";
+
 import Link from "next/link";
 import ThemeToggle from "./theme-toggle";
 import Logo from "./logo";
 import { HoverScale, SlideIn } from "./ui/animated-page";
+import { SignOutButton, useUser } from "@clerk/nextjs";
+import React from "react";
 
 export default function Titlebar() {
+    const { isLoaded, user } = useUser();
+    const [plan, setPlan] = React.useState<string | null>(null);
+
+    React.useEffect(() => {
+        let aborted = false;
+        // Best-effort: fetch current plan; server will resolve tenant or fall back in dev
+        fetch('/api/usage')
+            .then(r => (r.ok ? r.json() : null))
+            .then(d => { if (!aborted && d?.plan) setPlan(String(d.plan)); })
+            .catch(() => { });
+        return () => { aborted = true; };
+    }, []);
+
+    const displayName = React.useMemo(() => {
+        if (!isLoaded || !user) return "";
+        const n = [user.firstName, user.lastName].filter(Boolean).join(" ");
+        return n || user.username || user.primaryEmailAddress?.emailAddress || "";
+    }, [isLoaded, user]);
+
+    const displayEmail = user?.primaryEmailAddress?.emailAddress || "";
+    const avatarUrl = user?.imageUrl || "";
+    const initials = React.useMemo(() => {
+        if (displayName) {
+            const parts = displayName.trim().split(/\s+/).slice(0, 2);
+            return parts.map(p => p.charAt(0).toUpperCase()).join("") || "?";
+        }
+        if (displayEmail) return displayEmail.charAt(0).toUpperCase();
+        return "?";
+    }, [displayName, displayEmail]);
+    const planLabel = (plan || "starter").replace(/^./, c => c.toUpperCase()) + " Plan";
     return (
         <header className="sticky top-0 z-50 bg-base-100/60 backdrop-blur-sm border-b border-base-200/60">
             <div className="w-full px-4 sm:px-6">
@@ -28,7 +62,7 @@ export default function Titlebar() {
                                     <div className="relative">
                                         <Logo
                                             size={30}
-                                            className="text-base-content group-hover:text-primary transition-colors duration-200 group-hover:scale-110"
+                                            className="text-base-content group-hover:text-primary transition-all duration-200 group-hover:scale-110"
                                         />
                                     </div>
                                     <div className="hidden sm:block">
@@ -122,14 +156,21 @@ export default function Titlebar() {
                                             className="flex items-center gap-2.5 pl-2 pr-3 py-1.5 rounded-xl bg-base-200/40 hover:bg-base-200/60 border border-base-300/40 transition-all duration-200 group"
                                             aria-label="User menu"
                                         >
-                                            <div className="avatar placeholder">
-                                                <div className="bg-gradient-to-br from-primary to-secondary text-primary-content w-7 h-7 rounded-lg flex items-center justify-center shadow-sm">
-                                                    <span className="text-xs font-semibold">HN</span>
-                                                </div>
+                                            <div className="avatar">
+                                                {avatarUrl ? (
+                                                    <div className="w-7 h-7 rounded-lg overflow-hidden shadow-sm">
+                                                        {/* eslint-disable-next-line @next/next/no-img-element */}
+                                                        <img src={avatarUrl} alt={displayName || "User avatar"} className="w-full h-full object-cover" />
+                                                    </div>
+                                                ) : (
+                                                    <div className="bg-gradient-to-br from-primary to-secondary text-primary-content w-7 h-7 rounded-lg flex items-center justify-center shadow-sm">
+                                                        <span className="text-xs font-semibold">{initials}</span>
+                                                    </div>
+                                                )}
                                             </div>
                                             <div className="hidden sm:block text-left">
-                                                <div className="text-sm font-medium text-base-content">Demo User</div>
-                                                <div className="text-xs text-base-content/50 -mt-0.5">Pro Plan</div>
+                                                <div className="text-sm font-medium text-base-content">{displayName || ""}</div>
+                                                <div className="text-xs text-base-content/50 -mt-0.5">{planLabel}</div>
                                             </div>
                                             <i className="fa-duotone fa-solid fa-chevron-down text-xs text-base-content/50 group-hover:text-base-content/70 transition-colors" aria-hidden />
                                         </div>
@@ -141,15 +182,22 @@ export default function Titlebar() {
                                         {/* User Info Header */}
                                         <li className="mb-2">
                                             <div className="flex items-center gap-3 p-3 bg-gradient-to-r from-primary/5 to-secondary/5 rounded-xl border border-primary/10">
-                                                <div className="avatar placeholder">
-                                                    <div className="bg-gradient-to-br from-primary to-secondary text-primary-content w-10 h-10 rounded-xl flex items-center justify-center">
-                                                        <span className="text-sm font-semibold">HN</span>
-                                                    </div>
+                                                <div className="avatar">
+                                                    {avatarUrl ? (
+                                                        <div className="w-10 h-10 rounded-xl overflow-hidden">
+                                                            {/* eslint-disable-next-line @next/next/no-img-element */}
+                                                            <img src={avatarUrl} alt={displayName || "User avatar"} className="w-full h-full object-cover" />
+                                                        </div>
+                                                    ) : (
+                                                        <div className="bg-gradient-to-br from-primary to-secondary text-primary-content w-10 h-10 rounded-xl flex items-center justify-center">
+                                                            <span className="text-sm font-semibold">{initials}</span>
+                                                        </div>
+                                                    )}
                                                 </div>
                                                 <div className="flex-1">
-                                                    <div className="font-semibold text-base-content">Demo User</div>
-                                                    <div className="text-sm text-base-content/60">demo@helpninja.ai</div>
-                                                    <div className="text-xs text-primary font-medium">Pro Plan • Active</div>
+                                                    <div className="font-semibold text-base-content">{displayName || ""}</div>
+                                                    <div className="text-sm text-base-content/60">{displayEmail}</div>
+                                                    <div className="text-xs text-primary font-medium">{planLabel}</div>
                                                 </div>
                                             </div>
                                         </li>
@@ -208,10 +256,12 @@ export default function Titlebar() {
                                         <div className="divider my-2"></div>
 
                                         <li>
-                                            <button className="flex items-center gap-3 py-2.5 px-3 rounded-xl text-error hover:bg-error/10 transition-colors w-full">
-                                                <i className="fa-duotone fa-solid fa-arrow-right-from-bracket text-base" aria-hidden />
-                                                <span>Sign Out</span>
-                                            </button>
+                                            <SignOutButton redirectUrl={"/"}>
+                                                <button className="flex items-center gap-3 py-2.5 px-3 rounded-xl text-error hover:bg-error/10 transition-colors w-full">
+                                                    <i className="fa-duotone fa-solid fa-arrow-right-from-bracket text-base" aria-hidden />
+                                                    <span>Sign Out</span>
+                                                </button>
+                                            </SignOutButton>
                                         </li>
                                     </ul>
                                 </div>
