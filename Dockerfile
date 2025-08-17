@@ -16,6 +16,7 @@ WORKDIR /app
 ENV NODE_ENV=production
 ARG NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY
 ENV NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY=${NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY}
+ENV NODE_OPTIONS="--dns-result-order=ipv4first"
 
 # Copy the standalone output
 COPY --from=builder /app/.next/standalone ./

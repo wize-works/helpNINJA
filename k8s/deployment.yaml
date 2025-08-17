@@ -21,6 +21,9 @@ spec:
         ports:
         - containerPort: 3000
           name: http
+        env:
+        - name: NODE_OPTIONS
+          value: "--dns-result-order=ipv4first"
         envFrom:
         - configMapRef:
             name: helpninja-config
