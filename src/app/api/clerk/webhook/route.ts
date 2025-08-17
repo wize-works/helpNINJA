@@ -109,9 +109,14 @@ export async function POST(req: NextRequest) {
             console.log('🏢 Organization details - ID:', orgId, 'name:', name, 'slug:', slug)
 
             console.log('💾 Inserting/updating organization in database...')
+            console.log('🔑 Generating API keys for organization...')
+
+            // Always provide public_key and secret_key for new inserts, but only update name/slug on conflict
             await query(
-                `insert into public.tenants (id, clerk_org_id, name, slug)
-                 values (gen_random_uuid(), $1, $2, $3)
+                `insert into public.tenants (id, clerk_org_id, name, slug, public_key, secret_key)
+                 values (gen_random_uuid(), $1, $2, $3, 
+                         'hn_pk_' || encode(gen_random_bytes(18), 'base64'), 
+                         'hn_sk_' || encode(gen_random_bytes(24), 'base64'))
                  on conflict (clerk_org_id) do update
                  set name = coalesce(excluded.name, public.tenants.name),
                      slug = coalesce(excluded.slug, public.tenants.slug),
