@@ -50,6 +50,8 @@ jobs:
         context: .
         platforms: linux/amd64
         push: true
+        build-args: |
+          NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY=${{ secrets.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY }}
         tags: ${{ steps.meta.outputs.tags }}
         labels: ${{ steps.meta.outputs.labels }}
         cache-from: type=gha
@@ -109,6 +111,7 @@ jobs:
           --from-literal=CLERK_WEBHOOK_SECRET="${{ secrets.CLERK_WEBHOOK_SECRET }}" \
           --from-literal=CLERK_SECRET_KEY="${{ secrets.CLERK_SECRET_KEY }}" \
           --from-literal=CLERK_PUBLISHABLE_KEY="${{ secrets.CLERK_PUBLISHABLE_KEY }}" \
+          --from-literal=NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY="${{ secrets.CLERK_PUBLISHABLE_KEY }}" \
           --from-literal=STRIPE_PRICE_STARTER="${{ secrets.STRIPE_PRICE_STARTER }}" \
           --from-literal=STRIPE_PRICE_PRO="${{ secrets.STRIPE_PRICE_PRO }}" \
           --from-literal=STRIPE_PRICE_AGENCY="${{ secrets.STRIPE_PRICE_AGENCY }}" \
