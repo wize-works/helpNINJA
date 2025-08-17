@@ -1,4 +1,10 @@
 import { Pool, QueryResult, QueryResultRow } from 'pg';
+import dns from 'node:dns';
+
+// Prefer IPv4 to avoid ENETUNREACH in IPv6-restricted clusters
+if (typeof dns.setDefaultResultOrder === 'function') {
+    try { dns.setDefaultResultOrder('ipv4first'); } catch { /* no-op */ }
+}
 
 const { DATABASE_URL = '' } = process.env;
 // Treat Supabase cloud as SSL (no-verify), local (localhost/127.0.0.1:54322) as non-SSL

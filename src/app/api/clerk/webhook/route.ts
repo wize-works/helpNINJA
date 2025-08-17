@@ -35,7 +35,8 @@ export async function POST(req: NextRequest) {
         }
 
         const wh = new (WebhookCtor as new (s: string) => { verify: (p: string, h: Record<string, string>) => unknown })(secret)
-        const evt = wh.verify(payload, headers as Record<string, string>) as unknown as { type: string; data: Record<string, unknown> }
+        type ClerkWebhook = { type: string; data: Record<string, unknown> }
+        const evt = wh.verify(payload, headers as Record<string, string>) as unknown as ClerkWebhook
         const type = evt.type
         const data = evt.data
 
@@ -64,7 +65,72 @@ export async function POST(req: NextRequest) {
             )
         }
 
-        // TODO: Handle organization and membership events later
+        // Handle organization + membership events → map to tenants + tenant_members
+        if (type === 'organization.created' || type === 'organization.updated') {
+            const orgId = (data?.id as string) || ''
+            const name = (data?.name as string | undefined) || null
+            const slug = (data?.slug as string | undefined) || null
+
+            await query(
+                `insert into public.tenants (id, clerk_org_id, name, slug)
+                 values (gen_random_uuid(), $1, $2, $3)
+                 on conflict (clerk_org_id) do update
+                 set name = coalesce(excluded.name, public.tenants.name),
+                     slug = coalesce(excluded.slug, public.tenants.slug),
+                     updated_at = now()`,
+                [orgId, name, slug]
+            )
+        }
+
+        if (type === 'organization.deleted') {
+            const orgId = (data?.id as string) || ''
+            await query(`update public.tenants set deleted_at = now(), updated_at = now() where clerk_org_id = $1`, [orgId])
+        }
+
+        if (type === 'organizationMembership.created' || type === 'organizationMembership.updated') {
+            // Narrow unknown data with index signatures to avoid any
+            const d = data as { [k: string]: unknown }
+            const orgFromObj = (d.organization as { [k: string]: unknown } | undefined)?.id as string | undefined
+            const orgFromTop = d.organization_id as string | undefined
+            const orgId = orgFromObj || orgFromTop || ''
+
+            const pud = d.public_user_data as { [k: string]: unknown } | undefined
+            const userId = (pud?.user_id as string | undefined) || (d.user_id as string | undefined) || ''
+            const role = ((d.role as string | undefined) || 'member').toLowerCase()
+
+            if (orgId && userId) {
+                const t = await query<{ id: string }>(`select id from public.tenants where clerk_org_id = $1`, [orgId])
+                const u = await query<{ id: string }>(`select id from public.users where clerk_user_id = $1`, [userId])
+                const tenantId = t.rows[0]?.id
+                const internalUserId = u.rows[0]?.id
+                if (tenantId && internalUserId) {
+                    await query(
+                        `insert into public.tenant_members (tenant_id, user_id, role, status, joined_at)
+                         values ($1, $2, $3, 'active', now())
+                         on conflict (tenant_id, user_id) do update set role = excluded.role, status = 'active', updated_at = now()`,
+                        [tenantId, internalUserId, role]
+                    )
+                }
+            }
+        }
+
+        if (type === 'organizationMembership.deleted') {
+            const d = data as { [k: string]: unknown }
+            const orgFromObj = (d.organization as { [k: string]: unknown } | undefined)?.id as string | undefined
+            const orgFromTop = d.organization_id as string | undefined
+            const orgId = orgFromObj || orgFromTop || ''
+            const pud = d.public_user_data as { [k: string]: unknown } | undefined
+            const userId = (pud?.user_id as string | undefined) || (d.user_id as string | undefined) || ''
+            if (orgId && userId) {
+                const t = await query<{ id: string }>(`select id from public.tenants where clerk_org_id = $1`, [orgId])
+                const u = await query<{ id: string }>(`select id from public.users where clerk_user_id = $1`, [userId])
+                const tenantId = t.rows[0]?.id
+                const internalUserId = u.rows[0]?.id
+                if (tenantId && internalUserId) {
+                    await query(`delete from public.tenant_members where tenant_id = $1 and user_id = $2`, [tenantId, internalUserId])
+                }
+            }
+        }
 
         return NextResponse.json({ ok: true })
     } catch (err) {
