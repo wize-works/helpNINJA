@@ -33,6 +33,9 @@ Go to `Settings > Secrets and variables > Actions` and add:
 - `OPENAI_API_KEY` - Your OpenAI API key
 - `DATABASE_URL` - Production PostgreSQL connection
 - `STRIPE_SECRET_KEY` - Stripe secret key
+ - `CLERK_WEBHOOK_SECRET` - Clerk webhook signing secret (from Clerk Dashboard > Webhooks)
+ - `CLERK_SECRET_KEY` - Clerk backend secret key (server-side)
+ - `CLERK_PUBLISHABLE_KEY` - Clerk publishable key (frontend)
 - `SUPABASE_URL` - Production Supabase URL
 - `SUPABASE_SERVICE_ROLE_KEY` - Supabase service role key
 - And more... (see full list in deployment guide)
