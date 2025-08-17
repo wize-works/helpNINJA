@@ -26,13 +26,13 @@ export default function Home() {
 
                                     <div className="space-y-3">
                                         <HoverScale scale={1.02}>
-                                            <Link href="/dashboard" className="btn btn-primary btn-lg w-full">
+                                            <Link href="/auth/signup" className="btn btn-primary btn-lg w-full">
                                                 <i className="fa-duotone fa-solid fa-user-plus mr-2" />
                                                 Create account
                                             </Link>
                                         </HoverScale>
                                         <HoverScale scale={1.02}>
-                                            <Link href="/dashboard" className="btn btn-outline btn-lg w-full">
+                                            <Link href="/auth/signin" className="btn btn-outline btn-lg w-full">
                                                 <i className="fa-duotone fa-solid fa-right-to-bracket mr-2" />
                                                 Sign in
                                             </Link>
