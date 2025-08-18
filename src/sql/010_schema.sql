@@ -4,12 +4,12 @@ create table if not exists public.tenants (
   slug text unique not null,
   public_key text unique not null,
   secret_key text unique not null,
-  plan text not null default 'starter',
+  plan text not null default 'none',
   created_at timestamptz not null default now(),
   stripe_customer_id text unique,
   stripe_subscription_id text unique,
   current_period_end timestamptz,
-  plan_status text not null default 'active',
+  plan_status text not null default 'inactive',
 );
 
 create table if not exists public.users (

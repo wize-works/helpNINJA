@@ -54,7 +54,7 @@ async function getStats(tenantId: string) {
 
     const defaultStats: StatRow = { conversations: 0, messages_this_month: 0, low_conf: 0, assistant_messages_this_month: 0, integrations_active: 0, escalations_pending: 0, documents: 0, chunks: 0 };
     const stats = statsQ.rows[0] || defaultStats;
-    const plan = (planQ.rows[0]?.plan || "starter") as keyof typeof PLAN_LIMITS;
+    const plan = (planQ.rows[0]?.plan || "none") as keyof typeof PLAN_LIMITS;
     const limit = PLAN_LIMITS[plan].messages;
     return {
         stats: {

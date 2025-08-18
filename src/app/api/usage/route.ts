@@ -19,7 +19,7 @@ export async function GET(req: NextRequest) {
     await resetIfNewMonth(tenantId)
 
     const t = await query<{ plan: keyof typeof PLAN_LIMITS }>('select plan from public.tenants where id=$1', [tenantId])
-    const planKey = (t.rows[0]?.plan || 'starter') as keyof typeof PLAN_LIMITS
+    const planKey = (t.rows[0]?.plan || 'none') as keyof typeof PLAN_LIMITS
     const limit = PLAN_LIMITS[planKey].messages
     // Derive used from user messages during the current UTC calendar month to align with dashboard
     const usedQ = await query<{ used: number }>(

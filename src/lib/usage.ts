@@ -27,7 +27,7 @@ export async function canSendMessage(tenantId: string): Promise<{ ok: boolean; r
     if (bypass) return { ok: true };
     const t = await query<{ plan: string; plan_status: string }>('select plan, plan_status from public.tenants where id=$1', [tenantId]);
     if (!t.rows.length) return { ok: false, reason: 'tenant not found' };
-    const plan = (t.rows[0].plan || 'starter') as keyof typeof PLAN_LIMITS;
+    const plan = (t.rows[0].plan || 'none') as keyof typeof PLAN_LIMITS;
     await resetIfNewMonth(tenantId);
     const u = await query<{ messages_count: number }>('select messages_count from public.usage_counters where tenant_id=$1', [tenantId]);
     const used = u.rows[0]?.messages_count ?? 0;
@@ -45,7 +45,7 @@ export async function canAddSite(tenantId: string, hostToAdd: string): Promise<{
     if (bypass) return { ok: true };
     const t = await query<{ plan: string }>('select plan from public.tenants where id=$1', [tenantId]);
     if (!t.rows.length) return { ok: false, reason: 'tenant not found' };
-    const plan = (t.rows[0].plan || 'starter') as keyof typeof PLAN_LIMITS;
+    const plan = (t.rows[0].plan || 'none') as keyof typeof PLAN_LIMITS;
     const { rows } = await query<{ cnt: number }>(
         `select count(distinct split_part(replace(replace(url,'https://',''),'http://',''), '/', 1)) as cnt
      from public.documents where tenant_id=$1`, [tenantId]
