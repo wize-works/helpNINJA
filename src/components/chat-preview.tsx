@@ -70,7 +70,7 @@ export default function ChatPreview({
 </html>`;
         // data URL is not required because we use srcDoc, but escape for safety if needed
         return html;
-    }, [tenantPublicKey, voice, nonce]);
+    }, [tenantPublicKey, voice]);
 
     const onReset = () => {
         // tell the iframe to clear session + reload
@@ -93,13 +93,13 @@ export default function ChatPreview({
             <div className="mb-2 flex items-center gap-2">
                 <span className="text-sm text-gray-600">Chat preview</span>
                 <div className="ml-auto flex gap-2">
-                    <button onClick={onReset} className="border rounded px-3 py-1 text-sm">
+                    <button onClick={onReset} className="btn btn-sm btn-ghost">
                         Reset conversation
                     </button>
-                    <button onClick={onReload} className="border rounded px-3 py-1 text-sm">
+                    <button onClick={onReload} className="btn btn-sm btn-ghost">
                         Reload
                     </button>
-                    <button onClick={onPopOut} className="border rounded px-3 py-1 text-sm">
+                    <button onClick={onPopOut} className="btn btn-sm btn-outline">
                         Pop out
                     </button>
                 </div>

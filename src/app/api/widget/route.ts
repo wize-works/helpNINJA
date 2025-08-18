@@ -84,11 +84,19 @@ export async function GET(req: NextRequest) {
         console.error('Tenant lookup error:', error);
         return new Response('Server error', { status: 500 });
     }
-    // sanitize variables for embedding into inline JS
     const TENANT_JSON = JSON.stringify(tenantId);
     const VOICE_JSON = JSON.stringify(voice);
     const ORIGIN_JSON = JSON.stringify(origin);
     const js = `(() => {
+        // Load DaisyUI CSS if not already present
+        if (!document.querySelector('link[href*="daisyui"]') && !document.querySelector('script[data-hn-styles]')) {
+            const link = document.createElement('link');
+            link.rel = 'stylesheet';
+            link.href = 'https://cdn.jsdelivr.net/npm/daisyui@5.0.50/dist/full.css';
+            link.setAttribute('data-hn-styles', 'true');
+            document.head.appendChild(link);
+        }
+        
         const sid = (() => {
             try {
                 const existing = localStorage.getItem('hn_sid');
@@ -108,22 +116,30 @@ export async function GET(req: NextRequest) {
     document.body.appendChild(bubble);
 
     const panel = document.createElement('div');
-    panel.style.cssText = 'position:fixed;bottom:90px;right:20px;width:340px;max-height:70vh;background:#fff;border:1px solid #ddd;border-radius:12px;box-shadow:0 10px 40px rgba(0,0,0,.15);display:none;flex-direction:column;overflow:hidden;';
+    panel.style.cssText = 'position:fixed;bottom:90px;right:20px;width:360px;max-height:70vh;background:#fff;border:1px solid #ddd;border-radius:12px;box-shadow:0 10px 40px rgba(0,0,0,.15);display:none;flex-direction:column;overflow:hidden;font-family:ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,Segoe UI,Roboto,Helvetica Neue,Arial,Noto Sans,sans-serif;';
 
     panel.innerHTML = \`
-      <div style="padding:10px 12px;border-bottom:1px solid #eee;font-weight:600">helpNINJA</div>
-      <div id="hn_msgs" style="padding:12px;gap:8px;display:flex;flex-direction:column;overflow:auto"></div>
-      <div style="display:flex;border-top:1px solid #eee">
-        <input id="hn_input" placeholder="Ask a question..." style="flex:1;padding:10px;border:0;outline:none" />
-        <button id="hn_send" style="padding:10px 14px;border:0;background:#111;color:#fff;cursor:pointer">Send</button>
+      <div style="padding:12px 16px;border-bottom:1px solid #e5e7eb;font-weight:600;background:#f8fafc">helpNINJA</div>
+      <div id="hn_msgs" style="padding:16px;gap:12px;display:flex;flex-direction:column;overflow-y:auto;max-height:400px;background:#f8fafc"></div>
+      <div style="display:flex;border-top:1px solid #e5e7eb;background:#fff">
+        <input id="hn_input" placeholder="Ask a question..." style="flex:1;padding:12px 16px;border:0;outline:none;background:transparent" />
+        <button id="hn_send" style="padding:12px 16px;border:0;background:#111;color:#fff;cursor:pointer;border-radius:0 0 12px 0">Send</button>
       </div>\`;
     document.body.appendChild(panel);
 
     function add(role, text){
       const wrap = document.getElementById('hn_msgs');
-      const b = document.createElement('div');
-      b.style.cssText = 'background:'+(role==='user'?'#eef2ff':'#f8fafc')+';padding:10px;border-radius:8px;white-space:pre-wrap;';
-      b.textContent = text; wrap.appendChild(b); wrap.scrollTop = wrap.scrollHeight;
+      const chatDiv = document.createElement('div');
+      chatDiv.className = role === 'user' ? 'chat chat-end' : 'chat chat-start';
+      
+      const bubble = document.createElement('div');
+      bubble.className = role === 'user' ? 'chat-bubble chat-bubble-primary' : 'chat-bubble';
+      bubble.style.cssText = 'white-space:pre-wrap;max-width:280px;';
+      bubble.textContent = text;
+      
+      chatDiv.appendChild(bubble);
+      wrap.appendChild(chatDiv);
+      wrap.scrollTop = wrap.scrollHeight;
     }
 
     async function send(){
