@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { query } from '@/lib/db'
+import { generateUniqueSlug } from '@/lib/slug'
 
 export const runtime = 'nodejs'
 
@@ -105,26 +106,40 @@ export async function POST(req: NextRequest) {
 
             const orgId = (data?.id as string) || ''
             const name = (data?.name as string | undefined) || null
-            const slug = (data?.slug as string | undefined) || null
-            console.log('🏢 Organization details - ID:', orgId, 'name:', name, 'slug:', slug)
+            const clerkSlug = (data?.slug as string | undefined) || null
+            console.log('🏢 Organization details - ID:', orgId, 'name:', name, 'clerkSlug:', clerkSlug)
 
-            console.log('💾 Inserting/updating organization in database...')
-            console.log('🔑 Generating API keys and setting "none" plan with inactive status for new organization...')
+            if (type === 'organization.created') {
+                console.log('🆕 Creating new organization - generating unique slug...')
 
-            // Always provide public_key and secret_key for new inserts, but only update name/slug on conflict
-            await query(
-                `insert into public.tenants (id, clerk_org_id, name, slug, public_key, secret_key, plan, plan_status)
-                 values (gen_random_uuid(), $1, $2, $3, 
-                         'hn_pk_' || encode(gen_random_bytes(18), 'base64'), 
-                         'hn_sk_' || encode(gen_random_bytes(24), 'base64'),
-                         'none', 'inactive')
-                 on conflict (clerk_org_id) do update
-                 set name = coalesce(excluded.name, public.tenants.name),
-                     slug = coalesce(excluded.slug, public.tenants.slug),
-                     updated_at = now()`,
-                [orgId, name, slug]
-            )
-            console.log('✅ Organization database operation completed')
+                // Generate a unique slug from the name
+                const uniqueSlug = name ? await generateUniqueSlug(name) : clerkSlug || 'workspace'
+                console.log('🔗 Generated unique slug:', uniqueSlug)
+
+                console.log('💾 Inserting new organization in database...')
+                console.log('🔑 Generating API keys and setting "none" plan with inactive status for new organization...')
+
+                await query(
+                    `insert into public.tenants (id, clerk_org_id, name, slug, public_key, secret_key, plan, plan_status)
+                     values (gen_random_uuid(), $1, $2, $3, 
+                             'hn_pk_' || encode(gen_random_bytes(18), 'base64'), 
+                             'hn_sk_' || encode(gen_random_bytes(24), 'base64'),
+                             'none', 'inactive')`,
+                    [orgId, name, uniqueSlug]
+                )
+                console.log('✅ New organization created successfully with slug:', uniqueSlug)
+            } else {
+                // For updates, only update name (not slug to avoid breaking existing integrations)
+                console.log('🔄 Updating existing organization...')
+                await query(
+                    `update public.tenants 
+                     set name = coalesce($2, name),
+                         updated_at = now()
+                     where clerk_org_id = $1`,
+                    [orgId, name]
+                )
+                console.log('✅ Organization update completed')
+            }
         }
 
         if (type === 'organization.deleted') {
