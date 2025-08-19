@@ -10,6 +10,7 @@ This guide provides instructions for installing the helpNINJA chat widget in var
 - [Angular Applications](#angular-applications)
 - [WordPress Sites](#wordpress-sites)
 - [Direct Link Integration](#direct-link-integration)
+- [Widget Features](#widget-features)
 - [Troubleshooting](#troubleshooting)
 
 ## Basic HTML Website
@@ -272,3 +273,19 @@ If you're experiencing issues with the widget:
 5. **Try the direct link method** if you're having issues with the configuration object
 
 For further assistance, contact helpNINJA support.
+
+## Widget Features
+
+### Custom Logo
+
+The helpNINJA chat widget uses your brand's logo in both the chat bubble and the header of the chat panel. The logo is automatically applied with a clean, professional design that maintains your brand identity.
+
+![helpNINJA Widget with Logo](/images/widget-preview.png)
+
+The widget includes interactive features:
+- Animated hover effects on the chat bubble
+- Smooth transitions when opening and closing
+- Responsive design that works on all screen sizes
+- Custom AI voice options (friendly, professional, casual, formal)
+
+No additional configuration is needed to enable the logo - it's automatically included when you add the widget to your site.

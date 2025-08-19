@@ -4,6 +4,7 @@ import { useState, useEffect, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import toast from "react-hot-toast";
 import DomainVerification from "./domain-verification";
+import WidgetSetupModal from "./widget-setup-modal";
 
 type Site = {
     id: string;
@@ -22,6 +23,8 @@ export default function SiteManager() {
     const [showAddForm, setShowAddForm] = useState(false);
     const [editingSite, setEditingSite] = useState<Site | null>(null);
     const [verifyingSite, setVerifyingSite] = useState<Site | null>(null);
+    const [setupSite, setSetupSite] = useState<Site | null>(null);
+    const [showSetupModal, setShowSetupModal] = useState(false);
     const router = useRouter();
 
     // Form state
@@ -162,6 +165,16 @@ export default function SiteManager() {
 
     function handleCancelVerification() {
         setVerifyingSite(null);
+    }
+
+    function handleWidgetSetup(site: Site) {
+        setSetupSite(site);
+        setShowSetupModal(true);
+    }
+
+    function handleCloseSetupModal() {
+        setShowSetupModal(false);
+        setSetupSite(null);
     }
 
     if (loading) {
@@ -412,8 +425,8 @@ export default function SiteManager() {
                             <div key={site.id} className="group relative bg-gradient-to-br from-base-100/80 to-base-200/40 backdrop-blur-sm rounded-2xl border border-base-200/60 shadow-sm hover:shadow-xl hover:scale-[1.02] transition-all duration-300 overflow-hidden">
                                 {/* Status indicator bar */}
                                 <div className={`absolute top-0 left-0 right-0 h-1 ${site.status === 'active' ? 'bg-gradient-to-r from-success to-success/60' :
-                                        site.status === 'paused' ? 'bg-gradient-to-r from-warning to-warning/60' :
-                                            'bg-gradient-to-r from-info to-info/60'
+                                    site.status === 'paused' ? 'bg-gradient-to-r from-warning to-warning/60' :
+                                        'bg-gradient-to-r from-info to-info/60'
                                     }`} />
 
 
@@ -421,8 +434,8 @@ export default function SiteManager() {
                                     {/* Header with icon and name */}
                                     <div className="flex items-start gap-4 mb-4">
                                         <div className={`w-14 h-14 rounded-2xl flex items-center justify-center flex-shrink-0 ${site.status === 'active' ? 'bg-success/10 text-success' :
-                                                site.status === 'paused' ? 'bg-warning/10 text-warning' :
-                                                    'bg-info/10 text-info'
+                                            site.status === 'paused' ? 'bg-warning/10 text-warning' :
+                                                'bg-info/10 text-info'
                                             }`}>
                                             <i className="fa-duotone fa-solid fa-globe text-xl" aria-hidden />
                                         </div>
@@ -437,8 +450,8 @@ export default function SiteManager() {
                                         <div className="flex items-center justify-between">
                                             <div className="flex items-center gap-2">
                                                 <div className={`w-2 h-2 rounded-full ${site.status === 'active' ? 'bg-success animate-pulse' :
-                                                        site.status === 'paused' ? 'bg-warning' :
-                                                            'bg-info'
+                                                    site.status === 'paused' ? 'bg-warning' :
+                                                        'bg-info'
                                                     }`} />
                                                 <span className="text-sm font-medium text-base-content">
                                                     {site.status === 'active' ? 'Active' :
@@ -467,10 +480,19 @@ export default function SiteManager() {
 
                                     {/* Action buttons */}
                                     <div className="flex items-center gap-2 pt-3 border-t border-base-200/40">
+                                        {site.verified && (
+                                            <button
+                                                onClick={() => handleWidgetSetup(site)}
+                                                className="btn btn-outline btn-sm rounded-xl group-hover:btn-success transition-all duration-200"
+                                            >
+                                                <i className="fa-duotone fa-solid fa-code mr-2" aria-hidden />
+                                                Widget Setup
+                                            </button>
+                                        )}
                                         {!site.verified && (
                                             <button
                                                 onClick={() => handleVerifySite(site)}
-                                                className="btn btn-outline btn-sm rounded-xl flex-1 group-hover:btn-primary transition-all duration-200"
+                                                className="btn btn-outline btn-sm rounded-xl group-hover:btn-primary transition-all duration-200"
                                             >
                                                 <i className="fa-duotone fa-solid fa-shield-check mr-2" aria-hidden />
                                                 Verify
@@ -497,6 +519,18 @@ export default function SiteManager() {
                         ))}
                     </div>
                 </div>
+            )}
+
+            {/* Widget Setup Modal */}
+            {setupSite && (
+                <WidgetSetupModal
+                    open={showSetupModal}
+                    onClose={handleCloseSetupModal}
+                    siteId={setupSite.id}
+                    siteName={setupSite.name}
+                    domain={setupSite.domain}
+                    scriptKey={setupSite.verification_token || ''}
+                />
             )}
         </div>
     );
