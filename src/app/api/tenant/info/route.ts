@@ -10,15 +10,20 @@ export async function GET(req: NextRequest) {
     }
 
     try {
-        const { rows } = await query<{ public_key: string | null; name: string }>(
-            'select public_key, name from public.tenants where id=$1',
+        const { rows } = await query<{ public_key: string | null; name: string; plan: string; plan_status: string }>(
+            'select public_key, name, plan, plan_status from public.tenants where id=$1',
             [tenantId]
         )
         if (rows.length === 0) {
             return NextResponse.json({ error: 'Tenant not found' }, { status: 404 })
         }
         const t = rows[0]
-        return NextResponse.json({ public_key: t.public_key, name: t.name })
+        return NextResponse.json({
+            public_key: t.public_key,
+            name: t.name,
+            plan: t.plan,
+            plan_status: t.plan_status
+        })
     } catch (e) {
         console.error('tenant info error', e)
         return NextResponse.json({ error: 'Server error' }, { status: 500 })

@@ -9,7 +9,10 @@ const isPublicRoute = createRouteMatcher([
     '/contact',
     // widget/chat must be public for visitors
     '/api/widget(.*)',
-    '/api/chat(.*)'
+    '/api/chat(.*)',
+    // signup API routes should be public during signup flow
+    '/api/signup(.*)',
+    '/api/clerk/webhook(.*)'
 ]);
 
 export default clerkMiddleware(async (auth, req) => {

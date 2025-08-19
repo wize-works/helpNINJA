@@ -1,14 +1,16 @@
 # helpNINJA – Complete Features Inventory
 
 Scope
-- Stack: Next.js 15 (App Router), Node runtime for DB/What's partial or pending
+- Stack: Next.js 15 (App Router), Node runtime for DB/Postgres (pgvector + tsvector), OpenAI, Stripe
+- Multi-tenant SaaS with an embeddable chat widget, RAG answers, usage gating, and human escalation
+
+What's partial or pending
 - Conversation detail transcript page (optional)
 - Tests: unit/integration for usage gating, RAG, escalation, billing.
 - Auth model: auth.ts is a stub; tenant passed via headers/env (prod hardening).
 - Rate limiting beyond plan gates.
 - RLS policies if using Supabase auth directly.
-- Team invitation emails: Infrastructure is ready but sendInvitationEmail() function not implemented (src/app/api/team/invitations/route.ts line 129)stgres (pgvector + tsvector), OpenAI, Stripe
-- Multi-tenant SaaS with an embeddable chat widget, RAG answers, usage gating, and human escalation
+- Team invitation emails: Infrastructure is ready but sendInvitationEmail() function not implemented (src/app/api/team/invitations/route.ts line 129)
 
 Big picture
 - Embeddable widget calls /api/chat with tenant/session
@@ -16,9 +18,23 @@ Big picture
 - Admin dashboard shows usage, docs, integrations health; CRUD pages for documents, integrations, conversations, and settings are present.
 
 Core features (present)
+
+- Signup & Onboarding Flow
+  - Complete signup flow with user registration, organization creation, and plan selection
+  - **Synchronous tenant creation**: Tenants are created immediately when organizations are created, eliminating 2-5 minute wait times for webhooks
+  - Auto-generated unique slugs prevent duplicate tenant slug errors  
+  - Plan selection step with Starter ($29), Pro ($79), and Agency ($199) tiers
+  - Sets plan status to 'trialing' initially, allowing billing to be completed later
+  - **Improved UX**: Users proceed instantly from organization creation to plan selection with no delays
+  - **Webhook redundancy**: Clerk webhooks still work as backup/sync mechanism with idempotent operations
+  - Files: src/app/(pages)/auth/signup/page.tsx, src/components/plan-selection.tsx, src/app/api/signup/select-plan/route.ts, src/app/api/signup/create-checkout/route.ts, src/lib/slug.ts
+
 - Widget embed
   - /api/widget returns a JS snippet; toggles a floating panel; posts to /api/chat with JSON body including tenantId and sessionId. Uses absolute origin so it works cross-origin.
-  - Files: src/app/api/widget/route.ts
+  - Now uses DaisyUI chat bubbles for proper styling (chat-start/chat-end classes)
+  - Automatically loads DaisyUI CSS for consistent styling
+  - Enhanced chat preview component with DaisyUI button styles
+  - Files: src/app/api/widget/route.ts, src/components/chat-preview.tsx, src/components/chat-widget-panel.tsx
 - Chat + RAG + escalation
   - /api/chat (CORS enabled) resolves tenant, gates usage, performs searchHybrid, calls OpenAI, persists messages, enqueues escalation under a confidence threshold.
   - Files: src/app/api/chat/route.ts, src/lib/rag.ts, src/lib/usage.ts

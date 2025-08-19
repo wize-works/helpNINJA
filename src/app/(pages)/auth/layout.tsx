@@ -24,7 +24,7 @@ export default function AuthLayout({ children }: { children: React.ReactNode }) 
             </div>
             {/* Right side: Auth form */}
             <div className="flex flex-1 items-center justify-center p-6 bg-primary">
-                <div className="w-full max-w-md">{children}</div>
+                <div className="w-full">{children}</div>
             </div>
         </div>
     );

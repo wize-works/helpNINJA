@@ -124,10 +124,13 @@ export async function POST(req: NextRequest) {
                      values (gen_random_uuid(), $1, $2, $3, 
                              'hn_pk_' || encode(gen_random_bytes(18), 'base64'), 
                              'hn_sk_' || encode(gen_random_bytes(24), 'base64'),
-                             'none', 'inactive')`,
+                             'none', 'inactive')
+                     on conflict (clerk_org_id) do update set 
+                         name = excluded.name,
+                         updated_at = now()`,
                     [orgId, name, uniqueSlug]
                 )
-                console.log('✅ New organization created successfully with slug:', uniqueSlug)
+                console.log('✅ New organization created successfully (or updated if exists) with slug:', uniqueSlug)
             } else {
                 // For updates, only update name (not slug to avoid breaking existing integrations)
                 console.log('🔄 Updating existing organization...')

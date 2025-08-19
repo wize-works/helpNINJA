@@ -21,7 +21,7 @@ export function generateSlugFromName(name: string): string {
 export async function isSlugTaken(slug: string): Promise<boolean> {
     try {
         const result = await query(
-            'SELECT 1 FROM public.tenants WHERE slug = $1 AND deleted_at IS NULL LIMIT 1',
+            'SELECT 1 FROM public.tenants WHERE slug = $1 LIMIT 1',
             [slug]
         );
         return result.rows.length > 0;

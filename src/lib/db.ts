@@ -34,3 +34,20 @@ export async function query<T extends QueryResultRow = QueryResultRow>(text: str
         throw error; // rethrow to handle upstream
     }
 }
+
+export async function transaction<T>(callback: (query: (text: string, params?: unknown[]) => Promise<QueryResult>) => Promise<T>): Promise<T> {
+    const client = await pool.connect();
+    try {
+        await client.query('BEGIN');
+        const txQuery = (text: string, params?: unknown[]) => client.query(text, params);
+        const result = await callback(txQuery);
+        await client.query('COMMIT');
+        return result;
+    } catch (error) {
+        await client.query('ROLLBACK');
+        console.error('Transaction error:', error);
+        throw error;
+    } finally {
+        client.release();
+    }
+}
