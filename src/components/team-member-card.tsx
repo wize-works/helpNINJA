@@ -107,7 +107,7 @@ export default function TeamMemberCard({
     };
 
     return (
-        <div className="card bg-base-100 border border-base-300 shadow-sm hover:shadow-md transition-shadow">
+        <div className="card bg-base-100 rounded-2xl shadow-sm hover:shadow-md transition-shadow">
             <div className="card-body">
                 <div className="flex items-start justify-between">
                     <div className="flex items-start gap-3 flex-1">

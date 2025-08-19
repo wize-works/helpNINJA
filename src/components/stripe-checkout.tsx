@@ -240,7 +240,7 @@ function CheckoutForm({ plan, billingPeriod, onComplete, onError }: StripeChecko
                 </p>
             </div>
 
-            <div className="card bg-base-100 shadow-lg p-6 rounded-xl">
+            <div className="card bg-base-100 shadow-lg p-6 rounded-2xl">
                 <div className="card-body p-6">
                     <div className="flex justify-between items-center">
                         <div>

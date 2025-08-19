@@ -114,7 +114,7 @@ export default function PlanSelection({ onSelectPlan, loading = false, error }: 
                     return (
                         <div
                             key={plan}
-                            className={`card bg-base-100 rounded-xl border-2 ${details.popular ? 'border-primary' : 'border-base-300'
+                            className={`card bg-base-100 shadow-xl rounded-2xl border-2 ${details.popular ? 'border-primary' : 'border-base-300'
                                 } relative`}
                         >
                             {details.popular && (

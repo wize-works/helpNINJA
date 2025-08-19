@@ -60,7 +60,7 @@ export default async function OutboxPage() {
                 {/* Help Section */}
                 <StaggerContainer>
                     <StaggerChild>
-                        <div className="card bg-base-100 border border-base-300">
+                        <div className="card bg-base-100 border border-base-300 shadow-xl rounded-2xl">
                             <div className="card-body">
                                 <h2 className="card-title">
                                     <i className="fa-duotone fa-solid fa-lightbulb mr-2 text-primary" aria-hidden />

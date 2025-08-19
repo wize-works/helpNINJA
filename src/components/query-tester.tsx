@@ -302,7 +302,7 @@ export default function QueryTester({ onResultsChange }: QueryTesterProps) {
                 <div className="space-y-6">
                     {/* AI Response */}
                     {results.ai_response && (
-                        <div className="card bg-base-100 border border-base-300">
+                        <div className="card bg-base-100 shadow-xl rounded-2xl">
                             <div className="card-body">
                                 <div className="flex items-start justify-between mb-4">
                                     <h4 className="card-title">

@@ -87,7 +87,7 @@ export function IntegrationHealthDashboard() {
 
     if (error || !data) {
         return (
-            <div className="card bg-base-100 p-8 text-center">
+            <div className="card bg-base-100 p-8 text-center shadow-xl rounded-2xl">
                 <div className="w-16 h-16 bg-error/10 rounded-full flex items-center justify-center mx-auto mb-4">
                     <i className="fa-duotone fa-solid fa-triangle-exclamation text-2xl text-error" />
                 </div>
@@ -130,7 +130,7 @@ export function IntegrationHealthDashboard() {
         <div className="space-y-8">
             {/* Overall Health Summary */}
             <FadeIn>
-                <div className="card bg-gradient-to-br from-primary/5 to-primary/10 border border-primary/20 p-6">
+                <div className="card shadow-xl rounded-2xl bg-gradient-to-br from-primary/5 to-primary/10 border border-primary/20 p-6">
                     <div className="flex items-center justify-between mb-6">
                         <div>
                             <h3 className="text-xl font-semibold text-base-content mb-2">Integration Health Overview</h3>
@@ -181,7 +181,7 @@ export function IntegrationHealthDashboard() {
                             {data.integrations.map((integration) => (
                                 <StaggerChild key={integration.id}>
                                     <HoverScale scale={1.01}>
-                                        <div className="card bg-base-100 border border-base-200 shadow-sm hover:shadow-md transition-all duration-300">
+                                        <div className="card bg-base-100 rounded-2xl shadow-sm hover:shadow-md transition-all duration-300">
                                             <div className="card-body p-6">
                                                 <div className="flex items-center justify-between mb-4">
                                                     <div className="flex items-center gap-3">
@@ -238,7 +238,7 @@ export function IntegrationHealthDashboard() {
                         </div>
                     </StaggerContainer>
                 ) : (
-                    <div className="card bg-base-100 border-2 border-dashed border-base-300 p-12 text-center">
+                    <div className="card bg-base-100 rouned-2xl border-2 border-dashed border-base-300 p-12 text-center">
                         <div className="w-16 h-16 bg-base-200 rounded-full flex items-center justify-center mx-auto mb-4">
                             <i className="fa-duotone fa-solid fa-plug text-2xl text-base-content/40" />
                         </div>

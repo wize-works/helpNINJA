@@ -40,7 +40,7 @@ export default function PermissionGate({
         }
 
         return (
-            <div className="card bg-base-100 border border-base-300">
+            <div className="card bg-base-100 shadow-xl rounded-2xl">
                 <div className="card-body text-center py-12">
                     <div className="w-16 h-16 bg-base-200/60 rounded-xl flex items-center justify-center mx-auto mb-4">
                         <i className="fa-duotone fa-solid fa-lock text-2xl text-base-content/40" aria-hidden />

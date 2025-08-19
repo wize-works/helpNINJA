@@ -140,7 +140,7 @@ function IntegrationsPage({ integrations, tenantId }: { integrations: Row[]; ten
                                     </div>
                                 </StaggerContainer>
                             ) : (
-                                <div className="card bg-base-100 border-2 border-dashed border-base-300 p-12 text-center">
+                                <div className="card bg-base-100 border-2 border-dashed border-base-300 p-12 text-center shadow-xl rounded-2xl">
                                     <div className="w-16 h-16 bg-base-200 rounded-full flex items-center justify-center mx-auto mb-4">
                                         <i className="fa-duotone fa-solid fa-plug text-2xl text-base-content/40" />
                                     </div>
@@ -193,7 +193,7 @@ function ActiveIntegrationCard({ integration }: { integration: Row; tenantId?: s
 
     return (
         <HoverScale scale={1.01}>
-            <div className="card bg-base-100 shadow-sm border border-base-200 hover:shadow-md transition-all duration-300">
+            <div className="card bg-base-100 shadow-xl rounded-2xl border border-base-200 hover:shadow-md transition-all duration-300">
                 <div className="card-body p-6">
                     <div className="flex items-center justify-between">
                         <div className="flex items-center gap-4">
@@ -229,7 +229,7 @@ function ActiveIntegrationCard({ integration }: { integration: Row; tenantId?: s
 
 function IntegrationQuickActions() {
     return (
-        <div className="card bg-base-100 border border-base-200 shadow-sm">
+        <div className="card bg-base-100 border border-base-200 shadow-xl rounded-2xl">
             <div className="card-body p-6">
                 <h3 className="font-semibold mb-4">Quick Actions</h3>
                 <div className="space-y-3">
@@ -257,7 +257,7 @@ function IntegrationHealth({ integrations }: { integrations: Row[] }) {
     const errorIntegrations = integrations.filter(i => i.status === 'error').length;
 
     return (
-        <div className="card bg-base-100 border border-base-200 shadow-sm">
+        <div className="card bg-base-100 border border-base-200 shadow-xl rounded-2xl">
             <div className="card-body p-6">
                 <h3 className="font-semibold mb-4">System Health</h3>
                 <div className="space-y-3">

@@ -166,7 +166,7 @@ export function WebhookAnalyticsDashboard() {
             </div>
 
             {/* Daily Trends Chart */}
-            <div className="card bg-base-100 shadow-lg">
+            <div className="card bg-base-100 shadow-xl rounded-2xl">
                 <div className="card-body">
                     <h3 className="card-title">Daily Delivery Trends</h3>
                     <div className="overflow-x-auto">
@@ -214,7 +214,7 @@ export function WebhookAnalyticsDashboard() {
             </div>
 
             {/* Event Type Breakdown */}
-            <div className="card bg-base-100 shadow-lg">
+            <div className="card bg-base-100 shadow-xl rounded-2xl">
                 <div className="card-body">
                     <h3 className="card-title">Event Type Breakdown</h3>
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -244,7 +244,7 @@ export function WebhookAnalyticsDashboard() {
             </div>
 
             {/* Individual Webhook Performance */}
-            <div className="card bg-base-100 shadow-lg">
+            <div className="card bg-base-100 shadow-xl rounded-2xl">
                 <div className="card-body">
                     <h3 className="card-title">Webhook Performance</h3>
                     <div className="overflow-x-auto">

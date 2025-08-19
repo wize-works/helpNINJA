@@ -115,7 +115,7 @@ export default function DomainVerification({
 
     if (loading) {
         return (
-            <div className="card bg-base-100 border border-base-300">
+            <div className="card bg-base-100 shadow-xl rounded-2xl">
                 <div className="card-body">
                     <div className="flex items-center gap-3">
                         <span className="loading loading-spinner loading-sm"></span>
@@ -162,7 +162,7 @@ export default function DomainVerification({
         <div className="space-y-6">
 
             {/* Method Selection */}
-            <div className="card bg-base-100 border border-base-300">
+            <div className="card bg-base-100 shadow-xl rounded-2xl">
                 <div className="card-body">
                     <h4 className="font-semibold mb-4">Choose Verification Method</h4>
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
@@ -215,7 +215,7 @@ export default function DomainVerification({
             </div>
 
             {/* Instructions */}
-            <div className="card bg-base-100 border border-base-300">
+            <div className="card bg-base-100 shadow-xl rounded-2xl">
                 <div className="card-body">
                     <h4 className="font-semibold mb-4">
                         {selectedMethod === 'meta' && 'Meta Tag Instructions'}

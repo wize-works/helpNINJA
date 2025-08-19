@@ -131,7 +131,7 @@ export default function TeamInvitations({ onInvitationCancelled }: TeamInvitatio
                 return (
                     <div
                         key={invitation.id}
-                        className={`card bg-base-100 border transition-all ${invitation.is_expired
+                        className={`card bg-base-100 shadow-xl rounded-2xl border transition-all ${invitation.is_expired
                             ? 'border-error/30 bg-error/5'
                             : isExpiring
                                 ? 'border-warning/30 bg-warning/5'

@@ -232,7 +232,7 @@ export default function OutboxTable() {
             </div>
 
             {/* Filters and Actions */}
-            <div className="card bg-base-100 border border-base-300">
+            <div className="card bg-base-100 shadow-xl rounded-2xl">
                 <div className="card-body">
                     <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -301,7 +301,7 @@ export default function OutboxTable() {
             </div>
 
             {/* Items List */}
-            <div className="card bg-base-100 border border-base-300">
+            <div className="card bg-base-100 shadow-xl rounded-2xl">
                 <div className="card-body p-0">
                     {items.length === 0 ? (
                         <div className="text-center py-12">

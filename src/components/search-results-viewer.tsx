@@ -71,7 +71,7 @@ export default function SearchResultsViewer({
 
     if (curatedAnswers.length === 0 && ragResults.length === 0) {
         return (
-            <div className="card bg-base-100 border border-base-300">
+            <div className="card bg-base-100 shadow-xl rounded-2xl">
                 <div className="card-body text-center py-12">
                     <div className="w-16 h-16 bg-base-200/60 rounded-xl flex items-center justify-center mx-auto mb-4">
                         <i className="fa-duotone fa-solid fa-search text-2xl text-base-content/40" aria-hidden />
@@ -117,7 +117,7 @@ export default function SearchResultsViewer({
                             </div>
                         ) : (
                             curatedAnswers.map((answer, index) => (
-                                <div key={answer.id} className="card bg-base-100 border border-base-300">
+                                <div key={answer.id} className="card bg-base-100 shadow-xl rounded-2xl">
                                     <div className="card-body">
                                         <div className="flex items-start justify-between mb-3">
                                             <div className="flex items-center gap-3">
@@ -193,7 +193,7 @@ export default function SearchResultsViewer({
                             ragResults.map((result, index) => {
                                 const isExpanded = expandedResults.has(result.id);
                                 return (
-                                    <div key={result.id} className="card bg-base-100 border border-base-300">
+                                    <div key={result.id} className="card bg-base-100 shadow-xl rounded-2xl">
                                         <div className="card-body">
                                             <div className="flex items-start justify-between mb-3">
                                                 <div className="flex items-center gap-3">

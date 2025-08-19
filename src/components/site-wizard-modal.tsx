@@ -232,7 +232,7 @@ export default function SiteWizardModal({
 
     return (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm">
-            <div className="bg-base-100 rounded-2xl shadow-2xl w-full max-w-4xl max-h-[90vh] overflow-y-auto mx-4">
+            <div className="bg-base-300 rounded-2xl shadow-2xl w-full max-w-4xl max-h-[90vh] overflow-y-auto mx-4">
                 <div className="sticky top-0 bg-base-100 border-b border-base-200 px-6 py-4 rounded-t-2xl">
                     <div className="flex items-center justify-between">
                         <div>
@@ -297,7 +297,7 @@ export default function SiteWizardModal({
                                         </div>
                                     </div>
 
-                                    <div className="card bg-base-100 rounded-2xl shadow-sm border border-base-200/60">
+                                    <div className="card bg-base-100 rounded-2xl shadow-sm">
                                         <div className="p-6">
                                             <fieldset className="space-y-6">
                                                 <legend className="text-base font-semibold text-base-content mb-4">Site Information</legend>
@@ -347,10 +347,10 @@ export default function SiteWizardModal({
                                                         value={voice}
                                                         onChange={(e) => setVoice(e.target.value)}
                                                     >
-                                                        <option value="friendly">🙂 Friendly & Helpful</option>
-                                                        <option value="professional">💼 Professional</option>
-                                                        <option value="casual">😎 Casual & Conversational</option>
-                                                        <option value="formal">🎩 Formal</option>
+                                                        <option value="friendly">Friendly & Helpful</option>
+                                                        <option value="professional">Professional</option>
+                                                        <option value="casual">Casual & Conversational</option>
+                                                        <option value="formal">Formal</option>
                                                     </select>
                                                     <div className="text-xs text-base-content/60 mt-1">
                                                         Choose how your AI assistant should communicate
@@ -370,7 +370,7 @@ export default function SiteWizardModal({
                                     )}
                                     {/* Domain Verification Section */}
                                     {currentSite && (
-                                        <div className="card bg-base-100 rounded-2xl shadow-sm border border-warning/20">
+                                        <div className="card bg-base-100 rounded-2xl shadow-sm">
                                             <div className="p-6">
                                                 <div className="bg-gradient-to-r from-warning/10 to-warning/5 border border-warning/20 rounded-2xl p-6 mb-6">
                                                     <div className="flex items-start gap-4">
@@ -476,7 +476,7 @@ export default function SiteWizardModal({
                                     </div>
 
                                     {currentSite && (
-                                        <div className="card bg-base-100 rounded-2xl shadow-sm border border-success/20">
+                                        <div className="card bg-base-100 rounded-2xl shadow-sm">
                                             <div className="p-4">
                                                 <div className="flex items-center gap-4">
                                                     <div className="w-12 h-12 bg-success/10 rounded-2xl flex items-center justify-center group-hover:scale-105 transition-transform duration-200 flex-shrink-0">
@@ -492,7 +492,7 @@ export default function SiteWizardModal({
                                         </div>
                                     )}
 
-                                    <div className="card bg-base-100 rounded-2xl shadow-sm border border-base-200/60">
+                                    <div className="card bg-base-100 rounded-2xl shadow-sm">
                                         <div className="p-6">
                                             <fieldset className="space-y-6">
                                                 <legend className="text-base font-semibold text-base-content mb-4">Content Ingestion</legend>

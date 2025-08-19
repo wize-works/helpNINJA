@@ -228,7 +228,7 @@ export function EnhancedTable<T extends Record<string, unknown>>({
             </div>
 
             {/* Table */}
-            <div className="card bg-base-100 border border-base-300">
+            <div className="card bg-base-100 shadow-xl rounded-2xl">
                 <div className="overflow-x-auto">
                     <table
                         className="table table-hover w-full"

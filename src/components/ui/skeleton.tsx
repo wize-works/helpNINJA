@@ -30,7 +30,7 @@ export function TableSkeleton({ rows = 5, columns = 4 }: { rows?: number; column
 
 export function StatCardSkeleton() {
     return (
-        <div className="card bg-base-100 border border-base-300">
+        <div className="card bg-base-100 shadow-xl rounded-2xl">
             <div className="card-body">
                 <div className="flex items-center gap-3">
                     <Skeleton className="w-12 h-12 rounded-full" />

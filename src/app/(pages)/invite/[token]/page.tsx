@@ -112,7 +112,7 @@ export default function InvitationPage() {
     if (status === 'loading') {
         return (
             <div className="min-h-screen bg-gradient-to-br from-base-200 via-base-100 to-base-200 flex items-center justify-center p-4">
-                <div className="card bg-base-100 shadow-xl max-w-md w-full">
+                <div className="card bg-base-100 shadow-xl rounded-2xl max-w-md w-full">
                     <div className="card-body text-center">
                         <div className="loading loading-spinner loading-lg mx-auto mb-4"></div>
                         <p>Loading invitation...</p>
@@ -154,7 +154,7 @@ export default function InvitationPage() {
 
         return (
             <div className="min-h-screen bg-gradient-to-br from-base-200 via-base-100 to-base-200 flex items-center justify-center p-4">
-                <div className="card bg-base-100 shadow-xl max-w-md w-full">
+                <div className="card bg-base-100 shadow-xl rounded-2xl max-w-md w-full">
                     <div className="card-body text-center">
                         <div className={`w-16 h-16 ${statusInfo.color} mx-auto mb-4 flex items-center justify-center`}>
                             <i className={`${statusInfo.icon} text-4xl`} aria-hidden />
@@ -180,7 +180,7 @@ export default function InvitationPage() {
 
     return (
         <div className="min-h-screen bg-gradient-to-br from-base-200 via-base-100 to-base-200 flex items-center justify-center p-4">
-            <div className="card bg-base-100 shadow-xl max-w-lg w-full">
+            <div className="card bg-base-100 shadow-xl rounded-2xl max-w-lg w-full">
                 <div className="card-body">
                     <div className="text-center mb-6">
                         <div className="w-16 h-16 bg-primary/20 text-primary rounded-full mx-auto mb-4 flex items-center justify-center">

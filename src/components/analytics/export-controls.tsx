@@ -79,7 +79,7 @@ export function ExportControls({ selectedSite, selectedRange = '30d', className 
     ];
 
     return (
-        <div className={`card bg-base-100 border border-base-200 shadow-sm ${className}`}>
+        <div className={`card bg-base-100 shadow-xl rounded-2xl ${className}`}>
             <div className="card-body p-6">
                 <div className="flex items-center gap-3 mb-4">
                     <div className="w-8 h-8 bg-info/20 rounded-lg flex items-center justify-center">
