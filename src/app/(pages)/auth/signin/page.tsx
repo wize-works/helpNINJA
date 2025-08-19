@@ -2,9 +2,21 @@
 
 import * as Clerk from "@clerk/elements/common";
 import * as SignIn from "@clerk/elements/sign-in";
-import { Suspense } from "react";
+import { Suspense, useEffect } from "react";
+import { useUser } from "@clerk/nextjs";
+import { useRouter } from "next/navigation";
 
 export default function SignInPage() {
+    const router = useRouter();
+    const { isSignedIn, isLoaded } = useUser();
+
+    // Redirect to dashboard if user is already signed in
+    useEffect(() => {
+        if (isLoaded && isSignedIn) {
+            router.replace("/dashboard");
+        }
+    }, [isSignedIn, isLoaded, router]);
+
     return (
         <Suspense fallback={null}>
             <div className="min-h-[80vh] flex items-center justify-center px-4">
@@ -13,7 +25,7 @@ export default function SignInPage() {
                         <h1 className="text-2xl font-bold mb-1">Welcome back</h1>
                         <p className="text-base-content/60 mb-6">Sign in to continue</p>
 
-                        <SignIn.Root>
+                        <SignIn.Root routing="path" path="/dashboard">
                             <SignIn.Step name="start" className="space-y-4">
                                 <Clerk.GlobalError />
                                 <Clerk.Field name="emailAddress" className="fieldset">
@@ -27,7 +39,7 @@ export default function SignInPage() {
                                     <Clerk.Input className="input w-full" placeholder="Ninja Password!" />
                                     <Clerk.FieldError />
                                 </Clerk.Field>
-                                <SignIn.Action submit className="btn btn-primary w-full">Continue</SignIn.Action>
+                                <SignIn.Action submit className="btn btn-primary w-full">Login</SignIn.Action>
                                 <div className="divider">or</div>
                                 <div className="grid grid-cols-3 gap-3">
                                     <Clerk.Connection name="google" className="btn btn-outline"><Clerk.Icon />Google</Clerk.Connection>
