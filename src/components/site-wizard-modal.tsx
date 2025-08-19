@@ -846,6 +846,7 @@ export default function SiteWizardModal({
                                                                     scriptKey={currentSite.script_key || ''}
                                                                     voice={voice}
                                                                     serviceUrl={process.env.NODE_ENV === "production" ? "https://helpninja.app" : "http://localhost:3001"}
+                                                                    domain={currentSite.domain}
                                                                     // This is unused but added to satisfy the linter
                                                                     {...(embedCode ? { fallbackCode: embedCode } : {})}
                                                                 />

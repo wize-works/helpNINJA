@@ -13,6 +13,7 @@ interface IntegrationOptionsProps {
     voice?: string;
     serviceUrl: string;
     fallbackCode?: string; // For backwards compatibility
+    domain?: string; // Site domain for display in instructions
 }
 
 export default function IntegrationOptions({
@@ -20,7 +21,8 @@ export default function IntegrationOptions({
     siteId,
     scriptKey,
     voice = 'friendly',
-    serviceUrl
+    serviceUrl,
+    domain
 }: IntegrationOptionsProps) {
     const [activeTab, setActiveTab] = useState<IntegrationTab>('html');
 
@@ -296,9 +298,10 @@ add_action('wp_footer', 'add_helpninja_widget');
                             </p>
                         )}
                         {activeTab === 'html' && (
-                            <p className="text-sm text-base-content/70 mt-1">
-                                For HTML sites, add this script just before the closing <code className="bg-base-300/50 px-1 rounded">&lt;/body&gt;</code> tag. This will add the helpNINJA widget to your site.
-                            </p>
+                            <div className="text-sm text-base-content/70 mt-1">
+                                <p>For HTML sites, add this script just before the closing <code className="bg-base-300/50 px-1 rounded">&lt;/body&gt;</code> tag. This will add the helpNINJA widget to your site.</p>
+                                <p className="mt-1 text-warning font-medium"><i className="fa-duotone fa-solid fa-triangle-exclamation mr-1" aria-hidden />Important: Make sure to embed this on the exact domain you registered{domain ? ` (${domain})` : ''}. Domain verification is strict and will not work on other domains or subdomains.</p>
+                            </div>
                         )}
                         {activeTab === 'direct' && (
                             <p className="text-sm text-base-content/70 mt-1">

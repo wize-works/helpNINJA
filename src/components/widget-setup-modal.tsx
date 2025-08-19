@@ -137,6 +137,7 @@ export default function WidgetSetupModal({
                                     scriptKey={scriptKey || ''}
                                     voice={voice}
                                     serviceUrl={serviceUrl}
+                                    domain={domain}
                                 />
                             </div>
                         </div>

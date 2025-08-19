@@ -60,11 +60,21 @@ export async function GET(req: NextRequest) {
                 );
                 if (!meta.length) return new Response('Site not found for tenant', { status: 404 });
                 const m = meta[0] as { domain: string; verified: boolean; status: string; key_match: boolean };
-                if (m.domain !== refererDomain) return new Response('Domain mismatch for site', { status: 403 });
+
+                // Detailed error response with debugging info
+                const debug = {
+                    registeredDomain: m.domain,
+                    refererDomain,
+                    keyMatch: m.key_match,
+                    status: m.status,
+                    verified: m.verified
+                };
+
+                if (m.domain !== refererDomain) return new Response(`Domain mismatch: Expected ${m.domain}, got ${refererDomain}`, { status: 403 });
                 if (!m.key_match) return new Response('Invalid site key', { status: 403 });
-                if (m.status !== 'active') return new Response('Site not active', { status: 403 });
+                if (m.status !== 'active') return new Response(`Site not active: ${m.status}`, { status: 403 });
                 if (!m.verified) return new Response('Domain not verified', { status: 403 });
-                return new Response('Unauthorized', { status: 403 });
+                return new Response(`Unauthorized: ${JSON.stringify(debug)}`, { status: 403 });
             }
             validatedTenantId = siteRows[0].tenant_id;
         } catch (error) {
