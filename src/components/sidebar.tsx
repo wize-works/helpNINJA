@@ -296,7 +296,7 @@ export default function Sidebar() {
                             <HoverScale scale={1.02}>
                                 <Link
                                     href="/dashboard/billing"
-                                    className="mt-3 w-full btn btn-primary btn-sm bg-gradient-to-r from-primary to-secondary border-none text-primary-content shadow-lg hover:shadow-xl transition-all duration-200"
+                                    className="mt-3 w-full btn btn-primary btn-sm rounded-lg bg-gradient-to-r from-primary to-secondary border-none text-primary-content shadow-lg hover:shadow-xl transition-all duration-200"
                                 >
                                     <i className="fa-duotone fa-solid fa-arrow-up-right-from-square mr-2" aria-hidden />
                                     Upgrade Plan

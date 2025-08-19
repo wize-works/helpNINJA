@@ -105,7 +105,7 @@ export default function BillingPage() {
                                                 <button
                                                     onClick={() => checkout(plan.key)}
                                                     disabled={loading === plan.key}
-                                                    className={`btn w-full ${index === 1 ? 'btn-primary' : 'btn-outline'} ${loading === plan.key ? 'loading' : ''}`}
+                                                    className={`btn w-full rounded-xl mt-auto ${index === 1 ? 'btn-primary' : 'btn-outline'} ${loading === plan.key ? 'loading' : ''}`}
                                                 >
                                                     {loading === plan.key ? (
                                                         <>

@@ -161,7 +161,7 @@ export function ExportControls({ selectedSite, selectedRange = '30d', className 
                     <button
                         onClick={handleExport}
                         disabled={isExporting}
-                        className={`btn btn-primary w-full ${isExporting ? 'loading' : ''}`}
+                        className={`btn btn-primary rounded-xl w-full ${isExporting ? 'loading' : ''}`}
                     >
                         {!isExporting && <i className="fa-duotone fa-solid fa-download mr-2" />}
                         {isExporting ? 'Exporting...' : 'Export Data'}

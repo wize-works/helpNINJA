@@ -37,14 +37,14 @@ function IntegrationsPage({ integrations, tenantId }: { integrations: Row[]; ten
                     <div className="flex gap-3">
                         <Link
                             href="/dashboard/integrations/marketplace"
-                            className="btn btn-outline btn-primary"
+                            className="btn btn-outline btn-primary rounded-xl"
                         >
                             <i className="fa-duotone fa-solid fa-plus mr-2" />
                             Add Integration
                         </Link>
                         <Link
                             href="/dashboard/settings/api"
-                            className="btn btn-ghost"
+                            className="btn btn-ghost rounded-xl"
                         >
                             <i className="fa-duotone fa-solid fa-key mr-2" />
                             API Keys

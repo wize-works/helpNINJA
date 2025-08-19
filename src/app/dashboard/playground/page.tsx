@@ -151,7 +151,7 @@ export default function PlaygroundPage() {
                                     </div>
                                 )}
                                 <HoverScale scale={1.02}>
-                                    <a href="/dashboard/analytics" className="btn btn-outline btn-sm">
+                                    <a href="/dashboard/analytics" className="btn btn-outline btn-sm rounded-lg">
                                         <i className="fa-duotone fa-solid fa-chart-line mr-2" aria-hidden />
                                         View Analytics
                                     </a>

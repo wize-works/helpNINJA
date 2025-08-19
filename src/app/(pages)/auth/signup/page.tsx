@@ -8,6 +8,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 import PlanSelection from "@/components/plan-selection";
 import StripeCheckout from "@/components/stripe-checkout";
 import { type Plan } from "@/lib/limits";
+import { Sign } from "crypto";
 
 export default function SignUpPage() {
     const router = useRouter();

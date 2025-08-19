@@ -244,7 +244,7 @@ export function IntegrationHealthDashboard() {
                         </div>
                         <h3 className="text-lg font-semibold mb-2">No Integrations Found</h3>
                         <p className="text-base-content/60 mb-6">Set up integrations to monitor their health and performance</p>
-                        <a href="/dashboard/integrations/marketplace" className="btn btn-primary">
+                        <a href="/dashboard/integrations/marketplace" className="btn btn-primary rounded-xl">
                             <i className="fa-duotone fa-solid fa-plus mr-2" />
                             Browse Integrations
                         </a>

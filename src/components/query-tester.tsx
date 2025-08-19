@@ -261,7 +261,7 @@ export default function QueryTester({ onResultsChange }: QueryTesterProps) {
                             <HoverScale scale={1.02}>
                                 <button
                                     type="submit"
-                                    className={`btn btn-primary ${loading ? 'loading' : ''} min-w-32`}
+                                    className={`btn btn-primary rounded-xl ${loading ? 'loading' : ''} min-w-32`}
                                     disabled={loading || !query.trim()}
                                 >
                                     {loading ? (

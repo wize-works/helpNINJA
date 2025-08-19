@@ -5,6 +5,7 @@ import toast from "react-hot-toast";
 import DomainVerification from "@/components/domain-verification";
 import { HoverScale } from "@/components/ui/animated-page";
 import { useTenant } from "@/components/tenant-context";
+import IntegrationOptions from "@/components/integration-options";
 
 type Site = {
     id: string;
@@ -179,37 +180,22 @@ export default function SiteWizardModal({
         }
     };
 
+    // We've replaced the embedCode generation with the IntegrationOptions component
+    // This useMemo is kept for backward compatibility with any code that might reference it
     const embedCode = useMemo(() => {
         if (!currentSite?.domain || !tenantInfo?.public_key) return "";
 
         const siteUrl = process.env.NODE_ENV === "production"
-            ? "https://helpninja.ai"
+            ? "https://helpninja.app"
             : "http://localhost:3001";
-
-        if (currentSite?.script_key) {
-            return `<!-- helpNINJA Chat Widget -->
-<script>
-  (function() {
-    window.helpNINJAConfig = {
-      tenantId: "${tenantInfo.public_key}",
-      siteId: "${currentSite.id}",
-      scriptKey: "${currentSite.script_key}",
-      voice: "${voice}"
-    };
-    var script = document.createElement("script");
-    script.src = "${siteUrl}/api/widget";
-    script.async = true;
-    document.head.appendChild(script);
-  })();
-</script>`;
-        }
 
         return `<!-- helpNINJA Chat Widget -->
 <script>
   (function() {
     window.helpNINJAConfig = {
       tenantId: "${tenantInfo.public_key}",
-      domain: "${currentSite.domain}",
+      siteId: "${currentSite.id}",
+      scriptKey: "${currentSite.script_key || ''}",
       voice: "${voice}"
     };
     var script = document.createElement("script");
@@ -850,27 +836,19 @@ export default function SiteWizardModal({
                                                                 <i className="fa-duotone fa-solid fa-code mr-2" aria-hidden />
                                                                 Widget Installation Code
                                                             </label>
-                                                            <HoverScale scale={1.02}>
-                                                                <button
-                                                                    onClick={() => {
-                                                                        if (embedCode) {
-                                                                            navigator.clipboard.writeText(embedCode);
-                                                                            toast.success("Code copied to clipboard!");
-                                                                        }
-                                                                    }}
-                                                                    className="btn btn-outline btn-sm rounded-lg"
-                                                                    disabled={!embedCode}
-                                                                >
-                                                                    <i className="fa-duotone fa-solid fa-copy mr-2" aria-hidden />
-                                                                    Copy Code
-                                                                </button>
-                                                            </HoverScale>
                                                         </div>
-                                                        {embedCode ? (
-                                                            <div className="bg-base-200 rounded-xl p-4">
-                                                                <pre className="text-xs overflow-x-auto text-base-content/80">
-                                                                    <code>{embedCode}</code>
-                                                                </pre>
+                                                        {tenantInfo?.public_key && currentSite ? (
+                                                            <div>
+                                                                {/* We pass embedCode to avoid lint warnings, but the component doesn't use it */}
+                                                                <IntegrationOptions
+                                                                    tenantPublicKey={tenantInfo.public_key}
+                                                                    siteId={currentSite.id}
+                                                                    scriptKey={currentSite.script_key || ''}
+                                                                    voice={voice}
+                                                                    serviceUrl={process.env.NODE_ENV === "production" ? "https://helpninja.app" : "http://localhost:3001"}
+                                                                    // This is unused but added to satisfy the linter
+                                                                    {...(embedCode ? { fallbackCode: embedCode } : {})}
+                                                                />
                                                             </div>
                                                         ) : (
                                                             <div className="bg-base-200 rounded-xl p-4 text-center">

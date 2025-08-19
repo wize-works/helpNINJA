@@ -492,7 +492,7 @@ async function IntegrationsOverview({ tenantId }: { tenantId: string }) {
                             </div>
                             <p className="text-sm text-base-content/60">No integrations configured</p>
                             <HoverScale scale={1.02}>
-                                <a href="/dashboard/integrations" className="btn btn-primary btn-sm mt-3">
+                                <a href="/dashboard/integrations" className="btn btn-primary btn-sm rounded-lg mt-3">
                                     <i className="fa-duotone fa-solid fa-plus mr-2" aria-hidden />
                                     Add Integration
                                 </a>
