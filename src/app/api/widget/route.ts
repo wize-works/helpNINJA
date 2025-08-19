@@ -12,6 +12,14 @@ export async function GET(req: NextRequest) {
     const originUrl = new URL(req.url);
     const origin = originUrl.origin;
 
+    console.log('Widget script request:', {
+        tenantPublicKey,
+        siteId,
+        siteKey,
+        voice,
+        origin
+    });
+
     // Validate required params (tenant always; site/key validated after we know preview mode)
     if (!tenantPublicKey) return new Response('Missing tenant parameter "t"', { status: 400 });
 
