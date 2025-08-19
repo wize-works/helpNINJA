@@ -1017,7 +1017,7 @@ export default function BillingPage(){
         ))}
       </div>
       <div>
-        <button onClick={portal} className="btn">Manage subscription</button>
+        <button onClick={portal} className="btn btn-primary rounded-xl">Manage subscription</button>
       </div>
     </div>
   );

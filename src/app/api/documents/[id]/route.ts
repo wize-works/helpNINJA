@@ -1,13 +1,13 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { query } from '@/lib/db'
-import { resolveTenantIdFromRequest } from '@/lib/auth'
+import { getTenantIdStrict } from '@/lib/tenant-resolve'
 
 export const runtime = 'nodejs'
 
 type Context = { params: Promise<{ id: string }> }
 
 export async function DELETE(req: NextRequest, ctx: Context) {
-    const tenantId = await resolveTenantIdFromRequest(req, true)
+    const tenantId = await getTenantIdStrict()
     const { id } = await ctx.params
     if (!id) return NextResponse.json({ error: 'missing id' }, { status: 400 })
     try {

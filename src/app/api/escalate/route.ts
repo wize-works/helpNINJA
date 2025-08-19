@@ -1,15 +1,15 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { dispatchEscalation } from '@/lib/integrations/dispatch'
-import { resolveTenantIdFromRequest } from '@/lib/auth'
+import { getTenantIdStrict } from '@/lib/tenant-resolve'
 
 export const runtime = 'nodejs'
 
 export async function POST(req: NextRequest) {
     if (req.method !== 'POST') return NextResponse.json({ error: 'method not allowed' }, { status: 405 })
     const ev = await req.json()
-    // ensure tenantId present
+    // ensure tenantId present via strict server resolution
     if (!ev?.tenantId) {
-        try { ev.tenantId = await resolveTenantIdFromRequest(req, true) } catch { }
+        try { ev.tenantId = await getTenantIdStrict() } catch { }
     }
     if (!ev?.tenantId || !ev?.conversationId || !ev?.sessionId || !ev?.reason || !ev?.userMessage) {
         return NextResponse.json({ error: 'missing fields' }, { status: 400 })

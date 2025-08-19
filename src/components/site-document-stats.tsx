@@ -13,24 +13,21 @@ type SiteStats = {
 };
 
 interface SiteDocumentStatsProps {
-    tenantId: string;
     selectedSite?: string;
     onSiteSelect?: (siteId: string) => void;
 }
 
-export default function SiteDocumentStats({ tenantId, selectedSite, onSiteSelect }: SiteDocumentStatsProps) {
+export default function SiteDocumentStats({ selectedSite, onSiteSelect }: SiteDocumentStatsProps) {
     const [siteStats, setSiteStats] = useState<SiteStats[]>([]);
     const [loading, setLoading] = useState(true);
 
     useEffect(() => {
         loadSiteStats();
-    }, [tenantId]);
+    }, []);
 
     const loadSiteStats = async () => {
         try {
-            const response = await fetch('/api/sites/stats', {
-                headers: { 'x-tenant-id': tenantId }
-            });
+            const response = await fetch('/api/sites/stats');
             if (response.ok) {
                 const data = await response.json();
                 setSiteStats(data);
@@ -78,31 +75,28 @@ export default function SiteDocumentStats({ tenantId, selectedSite, onSiteSelect
                     All Sites
                 </button>
             </div>
-            
+
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                 {siteStats.map((site) => (
                     <HoverScale key={site.id} scale={1.02}>
-                        <div 
-                            className={`p-4 rounded-xl border cursor-pointer transition-all duration-200 ${
-                                selectedSite === site.id
+                        <div
+                            className={`p-4 rounded-xl border cursor-pointer transition-all duration-200 ${selectedSite === site.id
                                     ? 'bg-primary/10 border-primary/20 text-primary'
                                     : 'bg-base-100 border-base-300 hover:border-base-400'
-                            }`}
+                                }`}
                             onClick={() => onSiteSelect?.(site.id)}
                         >
                             <div className="flex items-center justify-between mb-3">
-                                <div className={`w-8 h-8 rounded-lg flex items-center justify-center ${
-                                    selectedSite === site.id ? 'bg-primary/20' : 'bg-base-200'
-                                }`}>
-                                    <i className={`fa-duotone fa-solid fa-globe text-sm ${
-                                        selectedSite === site.id ? 'text-primary' : 'text-base-content/60'
-                                    }`} aria-hidden />
+                                <div className={`w-8 h-8 rounded-lg flex items-center justify-center ${selectedSite === site.id ? 'bg-primary/20' : 'bg-base-200'
+                                    }`}>
+                                    <i className={`fa-duotone fa-solid fa-globe text-sm ${selectedSite === site.id ? 'text-primary' : 'text-base-content/60'
+                                        }`} aria-hidden />
                                 </div>
                                 {selectedSite === site.id && (
                                     <i className="fa-duotone fa-solid fa-check text-primary" aria-hidden />
                                 )}
                             </div>
-                            
+
                             <div className="mb-2">
                                 <div className="font-semibold text-sm text-base-content truncate" title={site.name}>
                                     {site.name}
@@ -111,7 +105,7 @@ export default function SiteDocumentStats({ tenantId, selectedSite, onSiteSelect
                                     {site.domain}
                                 </div>
                             </div>
-                            
+
                             <div className="grid grid-cols-3 gap-2 text-xs">
                                 <div className="text-center">
                                     <div className="font-semibold">{site.source_count}</div>

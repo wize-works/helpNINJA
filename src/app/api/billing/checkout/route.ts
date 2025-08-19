@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { stripe, PRICE_BY_PLAN, Plan } from '@/lib/stripe';
 import { transaction } from '@/lib/db';
-import { resolveTenantIdFromRequest } from '@/lib/auth';
+import { getTenantIdStrict } from '@/lib/tenant-resolve';
 import { QueryResult } from 'pg';
 
 export const runtime = 'nodejs';
@@ -9,7 +9,7 @@ export const runtime = 'nodejs';
 export async function POST(req: NextRequest) {
     try {
         const { plan } = (await req.json()) as { plan: Plan };
-        const tenantId = await resolveTenantIdFromRequest(req, true);
+        const tenantId = await getTenantIdStrict();
         if (!tenantId || !plan || !(plan in PRICE_BY_PLAN)) {
             return NextResponse.json({ error: 'tenantId and valid plan required' }, { status: 400 });
         }

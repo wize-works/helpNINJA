@@ -29,11 +29,7 @@ type Site = {
     verified: boolean;
 };
 
-interface SourcesTableProps {
-    tenantId: string;
-}
-
-export default function SourcesTable({ tenantId }: SourcesTableProps) {
+export default function SourcesTable() {
     const [sources, setSources] = useState<Source[]>([]);
     const [sites, setSites] = useState<Site[]>([]);
     const [loading, setLoading] = useState(true);
@@ -58,9 +54,7 @@ export default function SourcesTable({ tenantId }: SourcesTableProps) {
             const params = new URLSearchParams();
             if (selectedSite) params.set('siteId', selectedSite);
 
-            const response = await fetch(`/api/sources?${params}`, {
-                headers: { 'x-tenant-id': tenantId }
-            });
+            const response = await fetch(`/api/sources?${params}`);
             if (response.ok) {
                 const data = await response.json();
                 setSources(data);
@@ -70,13 +64,11 @@ export default function SourcesTable({ tenantId }: SourcesTableProps) {
         } finally {
             setLoading(false);
         }
-    }, [tenantId, selectedSite]);
+    }, [selectedSite]);
 
     const loadSites = useCallback(async () => {
         try {
-            const response = await fetch('/api/sites', {
-                headers: { 'x-tenant-id': tenantId }
-            });
+            const response = await fetch('/api/sites');
             if (response.ok) {
                 const data = await response.json();
                 setSites(data);
@@ -84,7 +76,7 @@ export default function SourcesTable({ tenantId }: SourcesTableProps) {
         } catch (error) {
             console.error('Error loading sites:', error);
         }
-    }, [tenantId]);
+    }, []);
 
     useEffect(() => {
         loadSources();
@@ -103,7 +95,6 @@ export default function SourcesTable({ tenantId }: SourcesTableProps) {
                 method,
                 headers: {
                     'Content-Type': 'application/json',
-                    'x-tenant-id': tenantId
                 },
                 body: JSON.stringify(formData)
             });
@@ -143,7 +134,6 @@ export default function SourcesTable({ tenantId }: SourcesTableProps) {
         try {
             const response = await fetch(`/api/sources/${source.id}`, {
                 method: 'DELETE',
-                headers: { 'x-tenant-id': tenantId }
             });
 
             if (response.ok) {
@@ -165,7 +155,6 @@ export default function SourcesTable({ tenantId }: SourcesTableProps) {
         try {
             const response = await fetch(`/api/sources/${source.id}/crawl`, {
                 method: 'POST',
-                headers: { 'x-tenant-id': tenantId }
             });
 
             if (response.ok) {
@@ -302,7 +291,6 @@ export default function SourcesTable({ tenantId }: SourcesTableProps) {
                                             Associated Site
                                         </span>
                                         <SiteSelector
-                                            tenantId={tenantId}
                                             value={formData.siteId}
                                             onChange={(siteId) => setFormData({ ...formData, siteId: siteId || '' })}
                                             allowNone={true}

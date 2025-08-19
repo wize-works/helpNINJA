@@ -16,7 +16,7 @@ export default function OutboxRetryButton() {
         try {
             const res = await fetch("/api/integrations/outbox/retry", {
                 method: "POST",
-                headers: { "x-tenant-id": tenantId, "content-type": "application/json" },
+                headers: { "content-type": "application/json" },
             });
             if (!res.ok) {
                 console.error("Retry outbox failed", await res.text());
@@ -30,7 +30,7 @@ export default function OutboxRetryButton() {
     }
 
     return (
-        <button className="btn btn-sm" onClick={onClick} disabled={loading}>
+        <button className="btn btn-sm rounded-lg" onClick={onClick} disabled={loading}>
             <i className="fa-duotone fa-arrows-rotate mr-2" aria-hidden />
             {loading ? "Retrying..." : "Retry outbox"}
         </button>

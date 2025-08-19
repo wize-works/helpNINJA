@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import toast from "react-hot-toast";
 import SiteSelector from "./site-selector";
 
-export default function IngestForm({ tenantId }: { tenantId: string }) {
+export default function IngestForm() {
     const [input, setInput] = useState("");
     const [siteId, setSiteId] = useState("");
     const [loading, setLoading] = useState(false);
@@ -32,10 +32,9 @@ export default function IngestForm({ tenantId }: { tenantId: string }) {
         try {
             const res = await fetch("/api/ingest", {
                 method: "POST",
-                headers: { "content-type": "application/json", "x-tenant-id": tenantId },
+                headers: { "content-type": "application/json" },
                 body: JSON.stringify({
                     input: input.trim(),
-                    tenantId,
                     siteId: siteId || undefined
                 }),
             });
@@ -95,7 +94,6 @@ export default function IngestForm({ tenantId }: { tenantId: string }) {
                             <label className="block">
                                 <span className="text-sm font-medium text-base-content mb-2 block">Associate with site (optional)</span>
                                 <SiteSelector
-                                    tenantId={tenantId}
                                     value={siteId}
                                     onChange={(value) => setSiteId(value || "")}
                                     allowNone={true}

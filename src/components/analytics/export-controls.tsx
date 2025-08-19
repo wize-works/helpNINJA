@@ -34,9 +34,7 @@ export function ExportControls({ selectedSite, selectedRange = '30d', className 
                 params.append('site', selectedSite);
             }
 
-            const response = await fetch(`/api/analytics/export?${params}`, {
-                headers: { 'x-tenant-id': tenantId }
-            });
+            const response = await fetch(`/api/analytics/export?${params}`);
 
             if (!response.ok) {
                 throw new Error('Export failed');

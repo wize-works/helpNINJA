@@ -34,7 +34,6 @@ type TopSourcesData = Array<{ source: string; count: number; percentage: number;
 
 interface AnalyticsClientProps {
     initialData: AnalyticsData;
-    tenantId: string;
     AnalyticsOverview: React.ComponentType<{ data: AnalyticsData }>;
     ConversationTrendsCard: React.ComponentType<{ data: ConversationTrendsData }>;
     ConfidenceAnalysisCard: React.ComponentType<{ data: ConfidenceDistributionData }>;
@@ -44,7 +43,6 @@ interface AnalyticsClientProps {
 
 export function AnalyticsContentClient({
     initialData,
-    tenantId,
     AnalyticsOverview,
     ConversationTrendsCard,
     ConfidenceAnalysisCard,
@@ -65,9 +63,7 @@ export function AnalyticsContentClient({
             if (siteId) params.append('site', siteId);
             params.append('timeframe', timeRange);
 
-            const response = await fetch(`/api/analytics?${params}`, {
-                headers: { 'x-tenant-id': tenantId }
-            });
+            const response = await fetch(`/api/analytics?${params}`);
 
             if (response.ok) {
                 const newData = await response.json();

@@ -1,13 +1,13 @@
-import { NextRequest, NextResponse } from 'next/server';
+import { NextResponse } from 'next/server';
 import { query } from '@/lib/db';
-import { resolveTenantIdFromRequest } from '@/lib/auth';
+import { getTenantIdStrict } from '@/lib/tenant-resolve';
 
 export const runtime = 'nodejs';
 
-export async function GET(req: NextRequest) {
+export async function GET() {
     try {
-        const tenantId = await resolveTenantIdFromRequest(req, true);
-        
+        const tenantId = await getTenantIdStrict();
+
         const { rows } = await query(`
             SELECT 
                 ts.id,
@@ -35,7 +35,7 @@ export async function GET(req: NextRequest) {
                 AND ts.status = 'active'
             ORDER BY stats.document_count DESC NULLS LAST, ts.name
         `, [tenantId]);
-        
+
         return NextResponse.json(rows);
     } catch (error) {
         console.error('Error fetching site stats:', error);

@@ -31,8 +31,12 @@ async function crawlSitemap(url: string, maxPages: number): Promise<CrawledDoc[]
 
 function extractFromHtml(url: string, html: string): CrawledDoc {
     const { document } = new JSDOM(html).window;
-    const title = document.querySelector('title')?.textContent ?? url;
+    const title = document.querySelector('title')?.textContent?.trim() ?? url;
     document.querySelectorAll('script,style,noscript,header,footer,nav').forEach((n: Element) => n.remove());
     const content = document.body?.textContent?.replace(/\s+/g, ' ').trim() ?? '';
-    return { url, title, content };
+
+    // Ensure we have some meaningful content - if empty, use the title as content
+    const finalContent = content.length > 0 ? content : `${title} - No content extracted from this page`;
+
+    return { url, title, content: finalContent };
 }

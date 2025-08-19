@@ -6,14 +6,12 @@ import { HoverScale } from './ui/animated-page';
 import { toastUtils } from '@/lib/toast';
 
 interface AddTeamMemberFormProps {
-    tenantId: string;
     currentUserRole: Role;
     onSuccess: () => void;
     onCancel: () => void;
 }
 
 export default function AddTeamMemberForm({
-    tenantId,
     currentUserRole,
     onSuccess,
     onCancel
@@ -71,8 +69,7 @@ export default function AddTeamMemberForm({
             const response = await fetch(endpoint, {
                 method: 'POST',
                 headers: {
-                    'Content-Type': 'application/json',
-                    'x-tenant-id': tenantId
+                    'Content-Type': 'application/json'
                 },
                 body: JSON.stringify(payload)
             });
@@ -323,7 +320,7 @@ export default function AddTeamMemberForm({
                         <div className="flex items-center gap-3">
                             <button
                                 type="button"
-                                className="btn btn-ghost"
+                                className="btn btn-ghost rounded-xl"
                                 onClick={onCancel}
                                 disabled={loading}
                             >

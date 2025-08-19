@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getTenantIdServer } from '@/lib/auth';
+import { getTenantIdStrict } from '@/lib/tenant-resolve';
 import { query } from '@/lib/db';
 
 export const runtime = 'nodejs';
@@ -7,7 +7,7 @@ export const runtime = 'nodejs';
 type ExportType = 'conversations' | 'messages' | 'integrations' | 'webhooks' | 'all';
 type ExportFormat = 'csv' | 'json';
 
-type ExportData = Record<string, unknown>[] | Record<string, Record<string, unknown>[]>;
+// Note: keep types minimal; avoid unused type aliases
 
 function convertToCSV(data: Record<string, unknown>[]): string {
     if (data.length === 0) return '';
@@ -131,7 +131,7 @@ async function getWebhooksData(tenantId: string, days: number = 30) {
 
 export async function GET(request: NextRequest) {
     try {
-        const tenantId = await getTenantIdServer({ allowEnvFallback: true });
+        const tenantId = await getTenantIdStrict();
         const url = new URL(request.url);
 
         const exportType = (url.searchParams.get('type') || 'conversations') as ExportType;

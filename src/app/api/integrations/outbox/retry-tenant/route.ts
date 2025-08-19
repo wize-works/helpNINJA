@@ -1,8 +1,8 @@
-import { NextRequest, NextResponse } from 'next/server'
+import { NextResponse } from 'next/server'
 import { query } from '@/lib/db'
 import { getProvider } from '@/lib/integrations/registry'
 import type { EscalationEvent, IntegrationRecord } from '@/lib/integrations/types'
-import { resolveTenantIdFromRequest } from '@/lib/auth'
+import { getTenantIdStrict } from '@/lib/tenant-resolve'
 
 export const runtime = 'nodejs'
 
@@ -19,8 +19,8 @@ function minsFromAttempts(attempts: number): number {
     return Math.min(Math.pow(2, Math.max(1, attempts + 1)), 60)
 }
 
-export async function POST(req: NextRequest) {
-    const tenantId = await resolveTenantIdFromRequest(req, true)
+export async function POST() {
+    const tenantId = await getTenantIdStrict()
     const { rows } = await query<OutboxRow>(
         `select id, tenant_id, provider, integration_id, payload, attempts
      from public.integration_outbox

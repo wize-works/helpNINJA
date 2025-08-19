@@ -1,12 +1,14 @@
 import OutboxRetryButton from "@/components/outbox-retry-button";
 import { query } from "@/lib/db";
 import { PLAN_LIMITS } from "@/lib/limits";
-import { getTenantIdServer } from "@/lib/auth";
+import { getTenantIdStrict } from "@/lib/tenant-resolve";
 import { ChatVolumeChart, SourcesChart, MetricTrend, TimeRange } from "@/components/ui/charts";
 import { Suspense } from "react";
 import { ChartSkeleton, StatCardSkeleton } from "@/components/ui/skeleton";
 import { AnimatedPage, StaggerContainer, StaggerChild, HoverScale } from "@/components/ui/animated-page";
 import { TenantProvider } from "@/components/tenant-context";
+import QuickStartDismiss from "../../components/quickstart-dismiss";
+import SiteWizardLauncher from "@/components/site-wizard-launcher";
 
 export const runtime = "nodejs"; // ensure Node runtime for pg
 export const dynamic = "force-dynamic"; // always fetch fresh stats/charts
@@ -151,7 +153,7 @@ async function getChartData(tenantId: string, timeRange: TimeRange = '30d'): Pro
 }
 
 export default async function Dashboard() {
-    const tenantId = await getTenantIdServer({ allowEnvFallback: true });
+    const tenantId = await getTenantIdStrict();
 
     return (
         <AnimatedPage>
@@ -816,35 +818,13 @@ async function QuickStartBanner({ tenantId }: { tenantId: string }) {
                     </div>
 
                     <div className="flex-shrink-0 flex gap-3">
-                        {needsSites ? (
-                            <HoverScale scale={1.02}>
-                                <a href="/onboarding" className="btn btn-primary">
-                                    <i className="fa-duotone fa-solid fa-play mr-2" aria-hidden />
-                                    Start Setup
-                                </a>
-                            </HoverScale>
-                        ) : needsDocs ? (
-                            <HoverScale scale={1.02}>
-                                <a href="/dashboard/documents" className="btn btn-primary">
-                                    <i className="fa-duotone fa-solid fa-plus mr-2" aria-hidden />
-                                    Add Content
-                                </a>
-                            </HoverScale>
-                        ) : (
-                            <HoverScale scale={1.02}>
-                                <a href="/dashboard/settings" className="btn btn-primary">
-                                    <i className="fa-duotone fa-solid fa-code mr-2" aria-hidden />
-                                    Get Widget Code
-                                </a>
-                            </HoverScale>
+                        {needsSites ? <SiteWizardLauncher /> : (
+                            <a href="/dashboard/documents" className="btn btn-primary">
+                                <i className="fa-duotone fa-solid fa-plus mr-2" aria-hidden />
+                                Add Content
+                            </a>
                         )}
-
-                        <button className="btn btn-ghost btn-sm rounded-lg" onClick={() => {
-                            const banner = document.querySelector('[data-banner="quickstart"]');
-                            if (banner) banner.remove();
-                        }}>
-                            <i className="fa-duotone fa-solid fa-times" aria-hidden />
-                        </button>
+                        <QuickStartDismiss />
                     </div>
                 </div>
             </div>

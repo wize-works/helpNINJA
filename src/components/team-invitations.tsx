@@ -1,7 +1,8 @@
 "use client";
 
 import { useState, useEffect } from 'react';
-import { getRoleInfo, type Role } from '@/lib/permissions';
+import { useTenant } from '@/components/tenant-context';
+import { type Role } from '@/lib/permissions';
 import RoleBadge from './role-badge';
 import { HoverScale } from './ui/animated-page';
 import { toastUtils } from '@/lib/toast';
@@ -19,11 +20,11 @@ type Invitation = {
 };
 
 interface TeamInvitationsProps {
-    tenantId: string;
     onInvitationCancelled?: () => void;
 }
 
-export default function TeamInvitations({ tenantId, onInvitationCancelled }: TeamInvitationsProps) {
+export default function TeamInvitations({ onInvitationCancelled }: TeamInvitationsProps) {
+    const { tenantId } = useTenant();
     const [invitations, setInvitations] = useState<Invitation[]>([]);
     const [loading, setLoading] = useState(true);
     const [cancelling, setCancelling] = useState<Set<string>>(new Set());
@@ -34,9 +35,7 @@ export default function TeamInvitations({ tenantId, onInvitationCancelled }: Tea
 
     const loadInvitations = async () => {
         try {
-            const response = await fetch('/api/team/invitations', {
-                headers: { 'x-tenant-id': tenantId }
-            });
+            const response = await fetch('/api/team/invitations');
 
             if (response.ok) {
                 const data = await response.json();
@@ -55,10 +54,7 @@ export default function TeamInvitations({ tenantId, onInvitationCancelled }: Tea
         setCancelling(prev => new Set([...prev, invitationId]));
 
         try {
-            const response = await fetch(`/api/team/invitations?id=${invitationId}`, {
-                method: 'DELETE',
-                headers: { 'x-tenant-id': tenantId }
-            });
+            const response = await fetch(`/api/team/invitations?id=${invitationId}`, { method: 'DELETE' });
 
             if (response.ok) {
                 setInvitations(prev => prev.filter(inv => inv.id !== invitationId));

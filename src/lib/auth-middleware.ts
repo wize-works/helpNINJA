@@ -211,9 +211,9 @@ export async function authenticateRequest(
     // Fall back to session-based authentication if allowed
     if (allowSessionAuth) {
         try {
-            // Import the existing auth function
-            const { resolveTenantIdFromRequest } = await import('@/lib/auth');
-            const tenantId = await resolveTenantIdFromRequest(req, true);
+            // Use strict tenant resolver tied to authenticated session/org mapping
+            const { getTenantIdStrict } = await import('@/lib/tenant-resolve');
+            const tenantId = await getTenantIdStrict();
 
             return {
                 success: true,

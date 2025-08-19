@@ -41,7 +41,7 @@ export function AnalyticsContent() {
     const [data, setData] = useState<AnalyticsData | null>(null);
     const [loading, setLoading] = useState(true);
     const [selectedSite, setSelectedSite] = useState<string | null>(null);
-    const [timeRange, setTimeRange] = useState('30d');
+    const [timeRange] = useState('30d');
 
     useEffect(() => {
         if (!tenantId) return;
@@ -53,9 +53,7 @@ export function AnalyticsContent() {
                 if (selectedSite) params.append('site', selectedSite);
                 params.append('timeframe', timeRange);
 
-                const response = await fetch(`/api/analytics?${params}`, {
-                    headers: { 'x-tenant-id': tenantId }
-                });
+                const response = await fetch(`/api/analytics?${params}`);
 
                 if (!response.ok) {
                     throw new Error('Failed to fetch analytics data');

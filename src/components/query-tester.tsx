@@ -48,11 +48,10 @@ type TestResult = {
 };
 
 interface QueryTesterProps {
-    tenantId: string;
     onResultsChange?: (results: TestResult | null) => void;
 }
 
-export default function QueryTester({ tenantId, onResultsChange }: QueryTesterProps) {
+export default function QueryTester({ onResultsChange }: QueryTesterProps) {
     const [query, setQuery] = useState('');
     const [siteId, setSiteId] = useState('');
     const [includeAI, setIncludeAI] = useState(true);
@@ -61,22 +60,21 @@ export default function QueryTester({ tenantId, onResultsChange }: QueryTesterPr
     const [loading, setLoading] = useState(false);
     const [results, setResults] = useState<TestResult | null>(null);
     const [error, setError] = useState<string | null>(null);
-    
+
     const handleTest = async () => {
         if (!query.trim()) {
             setError('Please enter a query to test');
             return;
         }
-        
+
         setLoading(true);
         setError(null);
-        
+
         try {
             const response = await fetch('/api/playground/test', {
                 method: 'POST',
                 headers: {
-                    'Content-Type': 'application/json',
-                    'x-tenant-id': tenantId
+                    'Content-Type': 'application/json'
                 },
                 body: JSON.stringify({
                     query: query.trim(),
@@ -86,7 +84,7 @@ export default function QueryTester({ tenantId, onResultsChange }: QueryTesterPr
                     voice
                 })
             });
-            
+
             if (response.ok) {
                 const data = await response.json();
                 setResults(data);
@@ -106,28 +104,16 @@ export default function QueryTester({ tenantId, onResultsChange }: QueryTesterPr
             setLoading(false);
         }
     };
-    
+
     const handleKeyPress = (e: React.KeyboardEvent) => {
         if (e.key === 'Enter' && e.ctrlKey) {
             e.preventDefault();
             handleTest();
         }
     };
-    
-    const getConfidenceColor = (confidence: number) => {
-        if (confidence >= 0.8) return 'text-success';
-        if (confidence >= 0.5) return 'text-warning';
-        return 'text-error';
-    };
-    
-    const getConfidenceLabel = (confidence: number) => {
-        if (confidence >= 0.9) return 'Very High';
-        if (confidence >= 0.7) return 'High';
-        if (confidence >= 0.5) return 'Medium';
-        if (confidence >= 0.3) return 'Low';
-        return 'Very Low';
-    };
-    
+
+    // Confidence helpers removed (not used in current UI)
+
     return (
         <div className="space-y-6">
             {/* Query Input Form */}
@@ -142,7 +128,7 @@ export default function QueryTester({ tenantId, onResultsChange }: QueryTesterPr
                             <p className="text-base-content/60 text-sm">Ask questions to test your AI responses</p>
                         </div>
                     </div>
-                    
+
                     <form className="space-y-6" onSubmit={(e) => { e.preventDefault(); handleTest(); }}>
                         {/* Main Query Input */}
                         <fieldset className="space-y-3">
@@ -153,9 +139,8 @@ export default function QueryTester({ tenantId, onResultsChange }: QueryTesterPr
                                     <span className="text-error ml-1">*</span>
                                 </span>
                                 <textarea
-                                    className={`textarea textarea-bordered w-full h-24 transition-all duration-200 focus:scale-[1.02] ${
-                                        error && !query.trim() ? 'textarea-error' : 'focus:textarea-primary'
-                                    }`}
+                                    className={`textarea textarea-bordered w-full h-24 transition-all duration-200 focus:scale-[1.02] ${error && !query.trim() ? 'textarea-error' : 'focus:textarea-primary'
+                                        }`}
                                     placeholder="How do I reset my password?"
                                     value={query}
                                     onChange={(e) => setQuery(e.target.value)}
@@ -168,17 +153,16 @@ export default function QueryTester({ tenantId, onResultsChange }: QueryTesterPr
                                 </div>
                             </label>
                         </fieldset>
-                        
+
                         {/* Advanced Settings */}
                         <fieldset className="space-y-4">
                             <legend className="text-base font-semibold text-base-content mb-3">Test Configuration</legend>
-                            
+
                             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
                                 {/* Site Filter */}
                                 <label className="block">
                                     <span className="text-sm font-medium text-base-content mb-2 block">Site Filter</span>
                                     <SiteSelector
-                                        tenantId={tenantId}
                                         value={siteId}
                                         onChange={(value) => setSiteId(value || '')}
                                         allowNone={true}
@@ -190,7 +174,7 @@ export default function QueryTester({ tenantId, onResultsChange }: QueryTesterPr
                                         Limit search to specific site
                                     </div>
                                 </label>
-                                
+
                                 {/* Max Results */}
                                 <label className="block">
                                     <span className="text-sm font-medium text-base-content mb-2 block">Max Results</span>
@@ -209,7 +193,7 @@ export default function QueryTester({ tenantId, onResultsChange }: QueryTesterPr
                                         Number of search results
                                     </div>
                                 </label>
-                                
+
                                 {/* AI Voice */}
                                 <label className="block">
                                     <span className="text-sm font-medium text-base-content mb-2 block">Response Tone</span>
@@ -228,7 +212,7 @@ export default function QueryTester({ tenantId, onResultsChange }: QueryTesterPr
                                         AI response personality
                                     </div>
                                 </label>
-                                
+
                                 {/* AI Toggle */}
                                 <label className="block">
                                     <span className="text-sm font-medium text-base-content mb-2 block">AI Response</span>
@@ -250,7 +234,7 @@ export default function QueryTester({ tenantId, onResultsChange }: QueryTesterPr
                                 </label>
                             </div>
                         </fieldset>
-                        
+
                         {/* Actions */}
                         <div className="flex items-center justify-between pt-4 border-t border-base-200/60">
                             <div className="text-sm text-base-content/60">
@@ -273,7 +257,7 @@ export default function QueryTester({ tenantId, onResultsChange }: QueryTesterPr
                                     </div>
                                 )}
                             </div>
-                            
+
                             <HoverScale scale={1.02}>
                                 <button
                                     type="submit"
@@ -297,7 +281,7 @@ export default function QueryTester({ tenantId, onResultsChange }: QueryTesterPr
                     </form>
                 </div>
             </div>
-            
+
             {/* Error Display */}
             {error && (
                 <div className="bg-gradient-to-r from-error/10 to-error/5 border border-error/20 rounded-2xl p-4">
@@ -312,7 +296,7 @@ export default function QueryTester({ tenantId, onResultsChange }: QueryTesterPr
                     </div>
                 </div>
             )}
-            
+
             {/* Results */}
             {results && (
                 <div className="space-y-6">
@@ -334,7 +318,7 @@ export default function QueryTester({ tenantId, onResultsChange }: QueryTesterPr
                                         </div>
                                     </div>
                                 </div>
-                                
+
                                 {results.ai_response.error ? (
                                     <div className="alert alert-error">
                                         <span>{results.ai_response.error}</span>
@@ -344,7 +328,7 @@ export default function QueryTester({ tenantId, onResultsChange }: QueryTesterPr
                                         <div className="prose max-w-none mb-4">
                                             <p className="text-base-content">{results.ai_response.answer}</p>
                                         </div>
-                                        
+
                                         <div className="flex items-center gap-4 text-sm text-base-content/60">
                                             <span>Source: {results.ai_response.source}</span>
                                             {results.ai_response.model && (
@@ -359,7 +343,7 @@ export default function QueryTester({ tenantId, onResultsChange }: QueryTesterPr
                             </div>
                         </div>
                     )}
-                    
+
                     {/* Performance Metrics */}
                     <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
                         <div className="stat bg-base-100 border border-base-300 rounded-xl">
@@ -367,19 +351,19 @@ export default function QueryTester({ tenantId, onResultsChange }: QueryTesterPr
                             <div className="stat-value text-lg">{results.search_time_ms}ms</div>
                             <div className="stat-desc">Knowledge base query</div>
                         </div>
-                        
+
                         <div className="stat bg-base-100 border border-base-300 rounded-xl">
                             <div className="stat-title">Curated</div>
                             <div className="stat-value text-lg text-primary">{results.curated_answers.length}</div>
                             <div className="stat-desc">Manual answers</div>
                         </div>
-                        
+
                         <div className="stat bg-base-100 border border-base-300 rounded-xl">
                             <div className="stat-title">Documents</div>
                             <div className="stat-value text-lg text-secondary">{results.rag_results.length}</div>
                             <div className="stat-desc">From knowledge base</div>
                         </div>
-                        
+
                         <div className="stat bg-base-100 border border-base-300 rounded-xl">
                             <div className="stat-title">Total Time</div>
                             <div className="stat-value text-lg">{results.total_time_ms}ms</div>

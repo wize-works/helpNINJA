@@ -141,7 +141,7 @@ export default function Sidebar() {
         async function load() {
             if (!tenantId) return;
             try {
-                const res = await fetch(`/api/usage`, { headers: { 'x-tenant-id': tenantId } });
+                const res = await fetch(`/api/usage`);
                 if (!res.ok) throw new Error('bad');
                 const data = await res.json();
                 if (!cancelled) {

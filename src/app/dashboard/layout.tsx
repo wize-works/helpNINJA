@@ -1,9 +1,11 @@
 import Sidebar from "@/components/sidebar";
 import { TenantProvider } from "@/components/tenant-context";
-import { getTenantIdServer } from "@/lib/auth";
+import { getTenantIdStrict } from "@/lib/tenant-resolve";
+import AuthDebugPanel from "@/components/debug/auth";
+import { Suspense } from "react";
 
 export default async function DashboardLayout({ children }: { children: React.ReactNode }) {
-    const tenantId = await getTenantIdServer({ allowEnvFallback: true });
+    const tenantId = await getTenantIdStrict();
     return (
         <div className="min-h-[calc(100vh-4rem)]">{/* 4rem = titlebar height */}
             <TenantProvider tenantId={tenantId}>
@@ -19,6 +21,9 @@ export default async function DashboardLayout({ children }: { children: React.Re
                         <Sidebar />
                     </div>
                 </div>
+                <Suspense fallback={null}>
+                    <AuthDebugPanel />
+                </Suspense>
             </TenantProvider>
         </div>
     );

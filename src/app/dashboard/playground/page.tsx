@@ -93,7 +93,7 @@ export default function PlaygroundPage() {
     const loadAnalytics = async () => {
         try {
             const response = await fetch('/api/playground/analytics', {
-                headers: { 'x-tenant-id': tenantId }
+                // tenant derived server-side; no client headers
             });
 
             if (response.ok) {
@@ -258,10 +258,7 @@ export default function PlaygroundPage() {
                 {/* Query Tester */}
                 <StaggerContainer>
                     <StaggerChild>
-                        <QueryTester
-                            tenantId={tenantId}
-                            onResultsChange={setResults}
-                        />
+                        <QueryTester onResultsChange={setResults} />
                     </StaggerChild>
                 </StaggerContainer>
 

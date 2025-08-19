@@ -21,7 +21,6 @@ type Answer = {
 };
 
 interface AnswerEditorProps {
-    tenantId: string;
     answer?: Answer;
     onSave?: (answer: Answer) => void;
     onCancel?: () => void;
@@ -29,7 +28,6 @@ interface AnswerEditorProps {
 }
 
 export default function AnswerEditor({
-    tenantId,
     answer,
     onSave,
     onCancel,
@@ -97,8 +95,7 @@ export default function AnswerEditor({
             const response = await fetch(url, {
                 method,
                 headers: {
-                    'Content-Type': 'application/json',
-                    'x-tenant-id': tenantId
+                    'Content-Type': 'application/json'
                 },
                 body: JSON.stringify(payload)
             });
@@ -130,7 +127,7 @@ export default function AnswerEditor({
         try {
             const response = await fetch(`/api/answers/${answer.id}`, {
                 method: 'DELETE',
-                headers: { 'x-tenant-id': tenantId }
+
             });
 
             if (response.ok) {
@@ -175,7 +172,7 @@ export default function AnswerEditor({
                     {answer?.id && (
                         <div className="flex items-center gap-3">
                             <div className={`badge ${formData.status === 'active' ? 'badge-success' :
-                                    formData.status === 'draft' ? 'badge-warning' : 'badge-error'
+                                formData.status === 'draft' ? 'badge-warning' : 'badge-error'
                                 }`}>
                                 {formData.status === 'active' ? '🟢 Active' :
                                     formData.status === 'draft' ? '🟡 Draft' : '🔴 Disabled'}
@@ -298,7 +295,6 @@ export default function AnswerEditor({
                                 <label className="block">
                                     <span className="text-sm font-medium text-base-content mb-2 block">Associated Site</span>
                                     <SiteSelector
-                                        tenantId={tenantId}
                                         value={formData.site_id}
                                         onChange={(value) => updateFormData('site_id', value || '')}
                                         allowNone={true}
@@ -351,7 +347,7 @@ export default function AnswerEditor({
                             {onCancel && (
                                 <button
                                     type="button"
-                                    className="btn btn-ghost"
+                                    className="btn btn-ghost rounded-xl"
                                     onClick={onCancel}
                                     disabled={loading}
                                 >
@@ -387,7 +383,7 @@ export default function AnswerEditor({
                             <HoverScale scale={1.02}>
                                 <button
                                     type="button"
-                                    className="btn btn-error btn-outline btn-sm"
+                                    className="btn btn-error btn-outline btn-sm rounded-lg"
                                     onClick={handleDelete}
                                     disabled={loading}
                                 >

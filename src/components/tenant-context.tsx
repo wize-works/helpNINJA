@@ -35,9 +35,7 @@ export function TenantProvider({ tenantId, children }: { tenantId: string; child
 
         try {
             setError(null);
-            const response = await fetch('/api/tenant/info', {
-                headers: { 'x-tenant-id': tenantId }
-            });
+            const response = await fetch('/api/tenant/info');
 
             if (!response.ok) {
                 throw new Error(`Failed to fetch tenant info: ${response.status}`);

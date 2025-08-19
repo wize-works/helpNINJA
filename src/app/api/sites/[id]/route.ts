@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { query } from '@/lib/db'
-import { resolveTenantIdFromRequest } from '@/lib/auth'
+import { getTenantIdStrict } from '@/lib/tenant-resolve'
 
 export const runtime = 'nodejs'
 
@@ -14,12 +14,13 @@ type SiteRow = {
     status: 'active' | 'paused' | 'pending'
     verified: boolean
     verification_token: string | null
+    script_key?: string
     created_at: string
     updated_at: string
 }
 
-export async function GET(req: NextRequest, ctx: Context) {
-    const tenantId = await resolveTenantIdFromRequest(req, true)
+export async function GET(_req: NextRequest, ctx: Context) {
+    const tenantId = await getTenantIdStrict()
     const { id } = await ctx.params
 
     if (!id) {
@@ -28,7 +29,7 @@ export async function GET(req: NextRequest, ctx: Context) {
 
     try {
         const { rows } = await query<SiteRow>(
-            `SELECT id, tenant_id, domain, name, status, verified, verification_token, created_at, updated_at
+            `SELECT id, tenant_id, domain, name, status, verified, verification_token, script_key, created_at, updated_at
        FROM public.tenant_sites 
        WHERE id = $1 AND tenant_id = $2`,
             [id, tenantId]
@@ -46,7 +47,7 @@ export async function GET(req: NextRequest, ctx: Context) {
 }
 
 export async function PUT(req: NextRequest, ctx: Context) {
-    const tenantId = await resolveTenantIdFromRequest(req, true)
+    const tenantId = await getTenantIdStrict()
     const { id } = await ctx.params
 
     if (!id) {
@@ -127,7 +128,7 @@ export async function PUT(req: NextRequest, ctx: Context) {
             `UPDATE public.tenant_sites 
        SET ${updates.join(', ')}
        WHERE id = $${paramIndex++} AND tenant_id = $${paramIndex++}
-       RETURNING id, tenant_id, domain, name, status, verified, verification_token, created_at, updated_at`,
+       RETURNING id, tenant_id, domain, name, status, verified, verification_token, script_key, created_at, updated_at`,
             values
         )
 
@@ -138,8 +139,8 @@ export async function PUT(req: NextRequest, ctx: Context) {
     }
 }
 
-export async function DELETE(req: NextRequest, ctx: Context) {
-    const tenantId = await resolveTenantIdFromRequest(req, true)
+export async function DELETE(_req: NextRequest, ctx: Context) {
+    const tenantId = await getTenantIdStrict()
     const { id } = await ctx.params
 
     if (!id) {

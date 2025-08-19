@@ -1,17 +1,16 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { query } from '@/lib/db';
-import { resolveTenantIdFromRequest } from '@/lib/auth';
-import { hasPermission, canManageUser, type Role } from '@/lib/permissions';
+import { getTenantIdStrict } from '@/lib/tenant-resolve';
 
 export const runtime = 'nodejs';
 
-export async function GET(req: NextRequest) {
+export async function GET() {
     try {
-        const tenantId = await resolveTenantIdFromRequest(req, true);
-        
+        const tenantId = await getTenantIdStrict();
+
         // Get current user's role for permission checking
         // For now, we'll assume they have permission - this should be enhanced with proper auth
-        
+
         const { rows } = await query(`
             SELECT 
                 tm.user_id,
@@ -44,7 +43,7 @@ export async function GET(req: NextRequest) {
                 tm.joined_at ASC NULLS LAST,
                 u.email ASC
         `, [tenantId]);
-        
+
         const members = rows.map(row => ({
             user_id: row.user_id,
             email: row.email,
@@ -54,7 +53,7 @@ export async function GET(req: NextRequest) {
             role: row.role,
             status: row.status,
             invited_by: row.invited_by,
-            invited_by_name: row.invited_by_first_name && row.invited_by_last_name 
+            invited_by_name: row.invited_by_first_name && row.invited_by_last_name
                 ? `${row.invited_by_first_name} ${row.invited_by_last_name}`
                 : row.invited_by_email,
             invited_at: row.invited_at,
@@ -62,7 +61,7 @@ export async function GET(req: NextRequest) {
             last_active_at: row.last_active_at,
             user_created_at: row.user_created_at
         }));
-        
+
         return NextResponse.json(members);
     } catch (error) {
         console.error('Error fetching team members:', error);
@@ -72,20 +71,20 @@ export async function GET(req: NextRequest) {
 
 export async function POST(req: NextRequest) {
     try {
-        const tenantId = await resolveTenantIdFromRequest(req, true);
+        const tenantId = await getTenantIdStrict();
         const body = await req.json();
         const { email, role, firstName, lastName } = body;
-        
+
         if (!email?.trim() || !role) {
             return NextResponse.json({ error: 'Email and role are required' }, { status: 400 });
         }
-        
+
         // Validate role
         const validRoles = ['admin', 'analyst', 'support', 'viewer'];
         if (!validRoles.includes(role)) {
             return NextResponse.json({ error: 'Invalid role' }, { status: 400 });
         }
-        
+
         // Check if user already exists in this tenant
         const existingMember = await query(
             `SELECT tm.user_id, tm.role, tm.status 
@@ -94,40 +93,40 @@ export async function POST(req: NextRequest) {
              WHERE tm.tenant_id = $1 AND u.email = $2`,
             [tenantId, email.trim().toLowerCase()]
         );
-        
+
         if (existingMember.rows.length > 0) {
             const member = existingMember.rows[0];
-            return NextResponse.json({ 
-                error: `User is already a ${member.role} with status: ${member.status}` 
+            return NextResponse.json({
+                error: `User is already a ${member.role} with status: ${member.status}`
             }, { status: 400 });
         }
-        
+
         // Check for existing invitation
         const existingInvitation = await query(
             'SELECT id, expires_at FROM public.team_invitations WHERE tenant_id = $1 AND email = $2 AND accepted_at IS NULL',
             [tenantId, email.trim().toLowerCase()]
         );
-        
+
         if (existingInvitation.rows.length > 0) {
             const invitation = existingInvitation.rows[0];
             const expiresAt = new Date(invitation.expires_at);
             if (expiresAt > new Date()) {
-                return NextResponse.json({ 
-                    error: 'User already has a pending invitation' 
+                return NextResponse.json({
+                    error: 'User already has a pending invitation'
                 }, { status: 400 });
             } else {
                 // Delete expired invitation
                 await query('DELETE FROM public.team_invitations WHERE id = $1', [invitation.id]);
             }
         }
-        
+
         // Create or get user
         let userId: string;
         const userResult = await query('SELECT id FROM public.users WHERE email = $1', [email.trim().toLowerCase()]);
-        
+
         if (userResult.rows.length > 0) {
             userId = userResult.rows[0].id;
-            
+
             // Update user info if provided
             if (firstName || lastName) {
                 await query(
@@ -143,7 +142,7 @@ export async function POST(req: NextRequest) {
             );
             userId = newUserResult.rows[0].id;
         }
-        
+
         // For demo purposes, we'll add them directly as active
         // In a real implementation, this would send an invitation email
         await query(
@@ -151,15 +150,15 @@ export async function POST(req: NextRequest) {
              VALUES ($1, $2, $3, 'active', NOW())`,
             [tenantId, userId, role]
         );
-        
+
         // Log activity
         await query(
             `INSERT INTO public.team_activity (tenant_id, user_id, action, resource_type, resource_id, details)
              VALUES ($1, $2, 'user_added', 'user', $3, $4)`,
             [tenantId, null, userId, JSON.stringify({ email, role, method: 'direct_add' })]
         );
-        
-        return NextResponse.json({ 
+
+        return NextResponse.json({
             message: 'Team member added successfully',
             user_id: userId
         });

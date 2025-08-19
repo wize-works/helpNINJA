@@ -1,12 +1,15 @@
-import { NextRequest, NextResponse } from 'next/server'
+import { NextResponse } from 'next/server'
 import { query } from '@/lib/db'
+import { getTenantIdStrict } from '@/lib/tenant-resolve'
 
 export const runtime = 'nodejs'
 
-export async function GET(req: NextRequest) {
-    const tenantId = req.headers.get('x-tenant-id') || undefined
-    if (!tenantId) {
-        return NextResponse.json({ error: 'Missing x-tenant-id' }, { status: 400 })
+export async function GET() {
+    let tenantId: string
+    try {
+        tenantId = await getTenantIdStrict()
+    } catch (e) {
+        return NextResponse.json({ error: (e as Error).message || 'unauthorized' }, { status: 401 })
     }
 
     try {

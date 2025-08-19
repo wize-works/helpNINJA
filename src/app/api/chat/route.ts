@@ -3,7 +3,7 @@ import OpenAI from 'openai';
 import { searchWithCuratedAnswers } from '@/lib/rag';
 import { query } from '@/lib/db';
 import { canSendMessage, incMessages } from '@/lib/usage';
-import { resolveTenantIdFromRequest } from '@/lib/auth';
+// Note: Admin/dashboard no longer use header-based tenant resolution. The widget passes a public identifier in body.
 import { webhookEvents } from '@/lib/webhooks';
 
 export const runtime = 'nodejs';
@@ -28,7 +28,7 @@ function corsHeaders(req: NextRequest) {
     return {
         'access-control-allow-origin': origin,
         'access-control-allow-credentials': 'true',
-        'access-control-allow-headers': 'content-type,x-tenant-id,x-tenant,x-hn-tenant',
+        'access-control-allow-headers': 'content-type',
         'access-control-allow-methods': 'POST, OPTIONS',
         'vary': 'Origin'
     } as Record<string, string>;
@@ -60,10 +60,8 @@ async function ensureConversation(tenantId: string, sessionId: string) {
 }
 
 // Accept public identifiers from the widget and resolve to internal tenant UUID
-async function resolveTenantInternalId(token: string | null, req: NextRequest): Promise<string | null> {
-    const candidate = token || (await (async () => {
-        try { return await resolveTenantIdFromRequest(req, true) } catch { return null }
-    })());
+async function resolveTenantInternalId(token: string | null): Promise<string | null> {
+    const candidate = token;
     if (!candidate) return null;
     // If it's already a UUID, use as-is
     const uuidRe = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
@@ -92,7 +90,7 @@ export async function POST(req: NextRequest) {
         }
 
         const { tenantId: bodyTid, sessionId, message, voice } = await req.json();
-        const tenantId = await resolveTenantInternalId(bodyTid, req);
+        const tenantId = await resolveTenantInternalId(bodyTid);
         if (!tenantId) return NextResponse.json({ error: 'tenant_not_found', message: 'Unknown tenant identifier.' }, { status: 400, headers: headersOut });
         if (!sessionId || !message) return NextResponse.json({ error: 'missing fields' }, { status: 400, headers: headersOut });
 

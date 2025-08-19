@@ -119,7 +119,7 @@ export default function SignUpPage() {
                                         />
                                         <div className="text-xs text-base-content/60">We&apos;ll create a unique workspace URL for you.</div>
                                     </div>
-                                    <button type="submit" className="btn btn-primary w-full" disabled={creating || !orgListLoaded}>
+                                    <button type="submit" className="btn btn-primary rounded-xl w-full" disabled={creating || !orgListLoaded}>
                                         {creating ? "Creating..." : "Create workspace"}
                                     </button>
                                 </form>

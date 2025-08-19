@@ -44,14 +44,12 @@
             "verification_token used for meta-tag fallback"
         ]
     },
-    "routes": [
-        "/onboarding/site/add",
-        "/onboarding/site/install",
-        "/onboarding/site/verify"
-    ],
+    "route-instructions": {
+        "Rather than dedicated pages, this flow is integrated into the dashboard with a wizard-like experience. Users can add sites, install code, and verify in a single flow."
+    },
     "dashboard_views": [
-        "/dashboard/websites",
-        "/dashboard/websites/:id"
+        "/dashboard/sites",
+        "/dashboard/sites/:id"
     ],
     "components": {
         "ui": [

@@ -1,17 +1,17 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { query } from '@/lib/db';
-import { resolveTenantIdFromRequest } from '@/lib/auth';
+import { getTenantIdStrict } from '@/lib/tenant-resolve';
 
 export const runtime = 'nodejs';
 
 export async function GET(req: NextRequest) {
     try {
-        const tenantId = await resolveTenantIdFromRequest(req, true);
+        const tenantId = await getTenantIdStrict();
         const { searchParams } = new URL(req.url);
         const siteId = searchParams.get('siteId');
         const enabled = searchParams.get('enabled');
         const ruleType = searchParams.get('type');
-        
+
         let queryText = `
             SELECT er.*, 
                    ts.name as site_name,
@@ -23,30 +23,30 @@ export async function GET(req: NextRequest) {
             LEFT JOIN public.integration_outbox io ON io.rule_id = er.id
             WHERE er.tenant_id = $1
         `;
-        
+
         const params: unknown[] = [tenantId];
         let paramIndex = 2;
-        
+
         if (siteId) {
             queryText += ` AND er.site_id = $${paramIndex++}`;
             params.push(siteId);
         }
-        
+
         if (enabled !== null && enabled !== undefined) {
             queryText += ` AND er.enabled = $${paramIndex++}`;
             params.push(enabled === 'true');
         }
-        
+
         if (ruleType) {
             queryText += ` AND er.rule_type = $${paramIndex++}`;
             params.push(ruleType);
         }
-        
+
         queryText += `
             GROUP BY er.id, ts.name, ts.domain
             ORDER BY er.priority DESC, er.created_at DESC
         `;
-        
+
         const { rows } = await query(queryText, params);
         return NextResponse.json(rows);
     } catch (error) {
@@ -57,37 +57,37 @@ export async function GET(req: NextRequest) {
 
 export async function POST(req: NextRequest) {
     try {
-        const tenantId = await resolveTenantIdFromRequest(req, true);
+        const tenantId = await getTenantIdStrict();
         const body = await req.json();
-        const { 
-            name, 
-            description, 
-            predicate, 
-            destinations, 
-            priority, 
-            enabled, 
+        const {
+            name,
+            description,
+            predicate,
+            destinations,
+            priority,
+            enabled,
             ruleType,
-            siteId 
+            siteId
         } = body;
-        
+
         if (!name?.trim()) {
             return NextResponse.json({ error: 'Rule name is required' }, { status: 400 });
         }
-        
+
         if (!predicate || typeof predicate !== 'object') {
             return NextResponse.json({ error: 'Valid predicate is required' }, { status: 400 });
         }
-        
+
         if (!destinations || !Array.isArray(destinations) || destinations.length === 0) {
             return NextResponse.json({ error: 'At least one destination is required' }, { status: 400 });
         }
-        
+
         // Validate rule type
         const validRuleTypes = ['escalation', 'routing', 'notification'];
         if (ruleType && !validRuleTypes.includes(ruleType)) {
             return NextResponse.json({ error: 'Invalid rule type' }, { status: 400 });
         }
-        
+
         // Validate siteId if provided
         if (siteId) {
             const siteCheck = await query(
@@ -98,7 +98,7 @@ export async function POST(req: NextRequest) {
                 return NextResponse.json({ error: 'Invalid siteId for this tenant' }, { status: 400 });
             }
         }
-        
+
         // Validate destinations reference valid integrations
         for (const dest of destinations) {
             if (dest.type === 'integration' && dest.integrationId) {
@@ -107,13 +107,13 @@ export async function POST(req: NextRequest) {
                     [dest.integrationId, tenantId]
                 );
                 if (integrationCheck.rowCount === 0) {
-                    return NextResponse.json({ 
-                        error: `Invalid integration ID: ${dest.integrationId}` 
+                    return NextResponse.json({
+                        error: `Invalid integration ID: ${dest.integrationId}`
                     }, { status: 400 });
                 }
             }
         }
-        
+
         // Insert rule
         const { rows } = await query(
             `INSERT INTO public.escalation_rules (
@@ -133,10 +133,10 @@ export async function POST(req: NextRequest) {
                 siteId || null
             ]
         );
-        
-        return NextResponse.json({ 
-            id: rows[0].id, 
-            message: 'Escalation rule created successfully' 
+
+        return NextResponse.json({
+            id: rows[0].id,
+            message: 'Escalation rule created successfully'
         });
     } catch (error) {
         console.error('Error creating escalation rule:', error);

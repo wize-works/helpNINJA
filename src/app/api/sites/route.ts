@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { query } from '@/lib/db'
-import { resolveTenantIdFromRequest } from '@/lib/auth'
+import { PLAN_LIMITS } from '@/lib/limits'
+import { getTenantIdStrict } from '@/lib/tenant-resolve'
 
 export const runtime = 'nodejs'
 
@@ -16,17 +17,12 @@ type SiteRow = {
     updated_at: string
 }
 
-export async function GET(req: NextRequest) {
-    let tenantId: string
-    try {
-        tenantId = await resolveTenantIdFromRequest(req, true)
-    } catch {
-        return NextResponse.json([], { status: 200 })
-    }
+export async function GET() {
+    const tenantId = await getTenantIdStrict()
 
     try {
-        const { rows } = await query<SiteRow>(
-            `SELECT id, tenant_id, domain, name, status, verified, verification_token, created_at, updated_at 
+        const { rows } = await query<SiteRow & { script_key: string }>(
+            `SELECT id, tenant_id, domain, name, status, verified, verification_token, script_key, created_at, updated_at 
        FROM public.tenant_sites 
        WHERE tenant_id = $1 
        ORDER BY created_at DESC`,
@@ -47,7 +43,7 @@ export async function POST(req: NextRequest) {
         status?: 'active' | 'paused' | 'pending'
     }
 
-    const tenantId = body.tenantId || (await resolveTenantIdFromRequest(req, true))
+    const tenantId = await getTenantIdStrict()
     const { domain, name, status = 'pending' } = body
 
     // Validate required fields
@@ -62,6 +58,16 @@ export async function POST(req: NextRequest) {
     }
 
     try {
+        // Plan-based gating: max sites per plan
+        const t = await query<{ plan: keyof typeof PLAN_LIMITS }>('select plan from public.tenants where id=$1', [tenantId])
+        const planKey = (t.rows[0]?.plan || 'none') as keyof typeof PLAN_LIMITS
+        const limit = PLAN_LIMITS[planKey].sites
+        const c = await query<{ cnt: string }>('select count(*)::int as cnt from public.tenant_sites where tenant_id=$1', [tenantId])
+        const current = Number(c.rows[0]?.cnt || 0)
+        if (current >= limit) {
+            return NextResponse.json({ error: 'site limit reached', plan: planKey, current, limit, host: domain }, { status: 402 })
+        }
+
         // Check if domain already exists for this tenant
         const existingDomain = await query(
             'SELECT id FROM public.tenant_sites WHERE tenant_id = $1 AND domain = $2',
@@ -75,11 +81,11 @@ export async function POST(req: NextRequest) {
         // Generate verification token
         const verificationToken = crypto.randomUUID()
 
-        // Insert new site
-        const { rows } = await query<{ id: string }>(
+        // Insert new site (script_key has a DB default; return it)
+        const { rows } = await query<{ id: string; script_key: string }>(
             `INSERT INTO public.tenant_sites (tenant_id, domain, name, status, verified, verification_token)
        VALUES ($1, $2, $3, $4, false, $5)
-       RETURNING id`,
+       RETURNING id, script_key`,
             [tenantId, domain, name, status, verificationToken]
         )
 
@@ -89,7 +95,8 @@ export async function POST(req: NextRequest) {
             name,
             status,
             verified: false,
-            verification_token: verificationToken
+            verification_token: verificationToken,
+            script_key: rows[0].script_key
         })
     } catch (error) {
         console.error('Error creating tenant site:', error)

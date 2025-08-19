@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { query } from '@/lib/db';
-import { resolveTenantIdFromRequest } from '@/lib/auth';
+import { getTenantIdStrict } from '@/lib/tenant-resolve';
 import crypto from 'crypto';
 
 export const runtime = 'nodejs';
@@ -9,7 +9,7 @@ type Context = { params: Promise<{ id: string }> };
 
 export async function POST(req: NextRequest, ctx: Context) {
     try {
-        const tenantId = await resolveTenantIdFromRequest(req, true);
+        const tenantId = await getTenantIdStrict();
         const { id } = await ctx.params;
 
         if (!id) {

@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { query } from '@/lib/db';
-import { resolveTenantIdFromRequest } from '@/lib/auth';
+import { getTenantIdStrict } from '@/lib/tenant-resolve';
 
 export const runtime = 'nodejs';
 
@@ -8,7 +8,7 @@ type Context = { params: Promise<{ id: string }> };
 
 export async function GET(req: NextRequest, ctx: Context) {
     try {
-        const tenantId = await resolveTenantIdFromRequest(req, true);
+        const tenantId = await getTenantIdStrict();
         const { id } = await ctx.params;
 
         if (!id) {
@@ -38,7 +38,7 @@ export async function GET(req: NextRequest, ctx: Context) {
 
 export async function PUT(req: NextRequest, ctx: Context) {
     try {
-        const tenantId = await resolveTenantIdFromRequest(req, true);
+        const tenantId = await getTenantIdStrict();
         const { id } = await ctx.params;
         const body = await req.json();
 
@@ -131,7 +131,7 @@ export async function PUT(req: NextRequest, ctx: Context) {
 
 export async function DELETE(req: NextRequest, ctx: Context) {
     try {
-        const tenantId = await resolveTenantIdFromRequest(req, true);
+        const tenantId = await getTenantIdStrict();
         const { id } = await ctx.params;
 
         if (!id) {

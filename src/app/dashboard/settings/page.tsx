@@ -1,4 +1,4 @@
-import { getTenantIdServer } from "@/lib/auth";
+import { getTenantIdStrict } from "@/lib/tenant-resolve";
 import { query } from "@/lib/db";
 import ChatWidgetPanel from "@/components/chat-widget-panel";
 import { Breadcrumb } from "@/components/ui/breadcrumb";
@@ -21,7 +21,7 @@ async function getTenant(tenantId: string) {
 }
 
 export default async function SettingsPage() {
-    const tenantId = await getTenantIdServer({ allowEnvFallback: true })
+    const tenantId = await getTenantIdStrict()
     const t = await getTenant(tenantId)
 
     const breadcrumbItems = [
@@ -194,11 +194,11 @@ export default async function SettingsPage() {
 function RotateKeysButton({ tenantId }: { tenantId: string }) {
     async function action() {
         'use server'
-        await fetch(`${process.env.SITE_URL || ''}/api/tenants/${tenantId}/rotate-keys`, { method: 'POST', headers: { 'x-tenant-id': tenantId } })
+        await fetch(`${process.env.SITE_URL || ''}/api/tenants/${tenantId}/rotate-keys`, { method: 'POST' })
     }
     return (
         <form action={action}>
-            <button className="btn btn-outline btn-sm">
+            <button className="btn btn-outline btn-sm rounded-lg">
                 <i className="fa-duotone fa-solid fa-arrows-rotate mr-2" aria-hidden />
                 Rotate Keys
             </button>

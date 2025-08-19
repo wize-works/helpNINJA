@@ -1,12 +1,12 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { query } from '@/lib/db';
-import { resolveTenantIdFromRequest } from '@/lib/auth';
+import { getTenantIdStrict } from '@/lib/tenant-resolve';
 
 export const runtime = 'nodejs';
 
 export async function GET(req: NextRequest) {
     try {
-        const tenantId = await resolveTenantIdFromRequest(req, true);
+        const tenantId = await getTenantIdStrict();
         const { searchParams } = new URL(req.url);
         const days = parseInt(searchParams.get('days') || '30');
 

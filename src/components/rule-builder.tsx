@@ -16,7 +16,6 @@ type Destination = {
 };
 
 interface RuleBuilderProps {
-    tenantId: string;
     predicate?: RulePredicate;
     destinations?: Destination[];
     onPredicateChange: (predicate: RulePredicate) => void;
@@ -25,7 +24,6 @@ interface RuleBuilderProps {
 }
 
 export default function RuleBuilder({
-    tenantId,
     predicate,
     destinations = [],
     onPredicateChange,
@@ -145,12 +143,11 @@ export default function RuleBuilder({
                                             </div>
                                         </div>
                                     )}
-                                    
+
                                     <div className="bg-base-200/40 border border-base-300 rounded-xl p-4">
                                         <ConditionEditor
                                             condition={condition as RuleCondition}
                                             availableTypes={availableConditions}
-                                            tenantId={tenantId}
                                             onChange={(updatedCondition) => updateCondition(index, updatedCondition)}
                                             onRemove={() => removeCondition(index)}
                                             disabled={disabled}
@@ -175,9 +172,8 @@ export default function RuleBuilder({
                             <p className="text-base-content/60 text-sm">Define what happens when the conditions are met</p>
                         </div>
                     </div>
-                    
+
                     <ActionSelector
-                        tenantId={tenantId}
                         destinations={destinations}
                         onChange={onDestinationsChange}
                         disabled={disabled}
@@ -211,7 +207,7 @@ export default function RuleBuilder({
                     {testMode && (
                         <fieldset className="space-y-6">
                             <legend className="text-base font-semibold text-base-content mb-4">Test Data</legend>
-                            
+
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                                 <label className="block">
                                     <span className="text-sm font-medium text-base-content mb-2 block">
@@ -318,7 +314,7 @@ export default function RuleBuilder({
                             <p className="text-base-content/60 text-sm">Overview of your rule configuration</p>
                         </div>
                     </div>
-                    
+
                     <div className="text-sm text-base-content/70">
                         {currentPredicate.conditions.length === 0 ? (
                             <div className="text-center py-6 bg-base-200/40 rounded-xl border border-base-300">

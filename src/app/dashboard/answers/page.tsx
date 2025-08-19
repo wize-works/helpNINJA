@@ -1,7 +1,6 @@
 "use client";
 
 import { useState, useEffect } from 'react';
-import { getTenantIdServer } from "@/lib/auth";
 import AnswerEditor from "@/components/answer-editor";
 import SiteSelector from "@/components/site-selector";
 import { Breadcrumb } from "@/components/ui/breadcrumb";
@@ -45,7 +44,8 @@ export default function AnswersPage() {
         if (tenantId) {
             loadAnswers();
         }
-    }, [tenantId, filters]);
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [tenantId, filters.status, filters.siteId, filters.search]);
 
     const loadAnswers = async () => {
         try {
@@ -55,7 +55,7 @@ export default function AnswersPage() {
             if (filters.search) params.set('search', filters.search);
 
             const response = await fetch(`/api/answers?${params}`, {
-                headers: { 'x-tenant-id': tenantId }
+                // tenant derived server-side; no client headers
             });
             if (response.ok) {
                 const data = await response.json();
@@ -68,15 +68,14 @@ export default function AnswersPage() {
         }
     };
 
-    const handleSave = (answer: Answer) => {
+    const handleSave = () => {
         setShowEditor(false);
         setEditingAnswer(undefined);
         loadAnswers();
     };
 
-    const handleDelete = (answerId: string) => {
+    const handleDelete = () => {
         setShowEditor(false);
-        setEditingAnswer(undefined);
         loadAnswers();
     };
 
@@ -130,14 +129,13 @@ export default function AnswersPage() {
                                         <div className="stat-figure text-primary">
                                             <i className="fa-duotone fa-solid fa-comment-question text-2xl" aria-hidden />
                                         </div>
-                                        <div className="stat-title">Total Answers</div>
                                         <div className="stat-value text-primary text-lg">{answers.length}</div>
                                         <div className="stat-desc">Active: {answers.filter(a => a.status === 'active').length}</div>
                                     </div>
                                 </div>
                                 <HoverScale scale={1.02}>
                                     <button
-                                        className="btn btn-primary"
+                                        className="btn btn-primary rounded-xl"
                                         onClick={() => {
                                             setEditingAnswer(undefined);
                                             setShowEditor(true);
@@ -157,7 +155,6 @@ export default function AnswersPage() {
                     <StaggerContainer>
                         <StaggerChild>
                             <AnswerEditor
-                                tenantId={tenantId}
                                 answer={editingAnswer}
                                 onSave={handleSave}
                                 onCancel={() => {
@@ -182,7 +179,6 @@ export default function AnswersPage() {
                                                 <span className="label-text">Filter by site</span>
                                             </label>
                                             <SiteSelector
-                                                tenantId={tenantId}
                                                 value={filters.siteId}
                                                 onChange={(siteId) => setFilters(prev => ({ ...prev, siteId: siteId || '' }))}
                                                 allowNone={true}
@@ -251,7 +247,7 @@ export default function AnswersPage() {
                                                 }
                                             </p>
                                             <button
-                                                className="btn btn-primary"
+                                                className="btn btn-primary rounded-xl"
                                                 onClick={() => {
                                                     setEditingAnswer(undefined);
                                                     setShowEditor(true);
@@ -330,7 +326,7 @@ export default function AnswersPage() {
                                                         <div className="flex items-center gap-2">
                                                             <HoverScale scale={1.05}>
                                                                 <button
-                                                                    className="btn btn-sm btn-ghost"
+                                                                    className="btn btn-sm btn-ghost rounded-lg"
                                                                     onClick={() => handleEdit(answer)}
                                                                     title="Edit answer"
                                                                 >

@@ -6,7 +6,7 @@
   
     /* Brand palette (vibrant + approachable) */
     --color-primary:           #4DA8DA; /* Sky Blue */
-    --color-primary-content:   #0b1220; /* dark navy text for contrast on primary */
+    --color-primary-content:   #ffffff; /*#0b1220;*/ /* dark navy text for contrast on primary */
   
     --color-secondary:         #22C55E; /* Bright Green */
     --color-secondary-content: #062a30; /* deep teal text for contrast on secondary */

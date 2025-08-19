@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { getTenantIdServer } from '@/lib/auth';
+import { getTenantIdStrict } from '@/lib/tenant-resolve';
 import { query } from '@/lib/db';
 
 export const runtime = 'nodejs';
@@ -39,7 +39,7 @@ type IntegrationHealthResponse = {
 
 export async function GET() {
     try {
-        const tenantId = await getTenantIdServer({ allowEnvFallback: true });
+        const tenantId = await getTenantIdStrict();
         const days = 30; // Could be made configurable later
 
         // Get integration health data with outbox metrics

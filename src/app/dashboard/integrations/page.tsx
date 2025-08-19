@@ -1,4 +1,4 @@
-import { getTenantIdServer } from "@/lib/auth";
+import { getTenantIdStrict } from "@/lib/tenant-resolve";
 import { query } from "@/lib/db";
 import { Breadcrumb } from "@/components/ui/breadcrumb";
 import { AnimatedPage, StaggerContainer, StaggerChild, HoverScale, FadeIn, SlideIn } from "@/components/ui/animated-page";
@@ -146,7 +146,7 @@ function IntegrationsPage({ integrations, tenantId }: { integrations: Row[]; ten
                                     </div>
                                     <h3 className="text-lg font-semibold mb-2">No Active Integrations</h3>
                                     <p className="text-base-content/60 mb-6">Connect external services to enhance your workflow</p>
-                                    <Link href="/dashboard/integrations/marketplace" className="btn btn-primary">
+                                    <Link href="/dashboard/integrations/marketplace" className="btn btn-primary rounded-xl">
                                         <i className="fa-duotone fa-solid fa-plus mr-2" />
                                         Browse Marketplace
                                     </Link>
@@ -210,7 +210,7 @@ function ActiveIntegrationCard({ integration }: { integration: Row; tenantId?: s
                                 {integration.status}
                             </span>
                             <div className="dropdown dropdown-end">
-                                <button className="btn btn-ghost btn-sm btn-square">
+                                <button className="btn btn-ghost btn-sm btn-square rounded-xl">
                                     <i className="fa-duotone fa-solid fa-ellipsis-vertical" />
                                 </button>
                                 <ul className="dropdown-content menu p-2 shadow bg-base-100 rounded-box w-52">
@@ -287,7 +287,7 @@ function IntegrationHealth({ integrations }: { integrations: Row[] }) {
 }
 
 export default async function IntegrationsPageRoute() {
-    const tenantId = await getTenantIdServer({ allowEnvFallback: true });
+    const tenantId = await getTenantIdStrict();
     const integrations = await list(tenantId);
 
     return (

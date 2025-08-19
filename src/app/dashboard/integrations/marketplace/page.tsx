@@ -1,7 +1,6 @@
 "use client";
 
 import { useState } from 'react';
-import { useTenant } from "@/components/tenant-context";
 import { Breadcrumb } from "@/components/ui/breadcrumb";
 import { AnimatedPage, StaggerContainer, StaggerChild, HoverScale, FadeIn, SlideIn } from "@/components/ui/animated-page";
 import { toastUtils } from '@/lib/toast';
@@ -89,7 +88,6 @@ const integrationTypes = [
 ];
 
 export default function IntegrationsMarketplacePage() {
-    const { tenantId } = useTenant();
     const [showSetupModal, setShowSetupModal] = useState<string | null>(null);
     const [loading, setLoading] = useState(false);
 
@@ -99,8 +97,7 @@ export default function IntegrationsMarketplacePage() {
             const response = await fetch('/api/integrations', {
                 method: 'POST',
                 headers: {
-                    'Content-Type': 'application/json',
-                    'x-tenant-id': tenantId
+                    'Content-Type': 'application/json'
                 },
                 body: JSON.stringify({
                     provider,
@@ -329,7 +326,7 @@ function IntegrationSetupModal({
 
                     {/* Actions */}
                     <div className="modal-action">
-                        <button type="button" className="btn btn-ghost" onClick={onClose} disabled={loading}>
+                        <button type="button" className="btn btn-ghost rounded-xl" onClick={onClose} disabled={loading}>
                             Cancel
                         </button>
                         <button type="submit" className={`btn btn-${integration.color}`} disabled={loading}>

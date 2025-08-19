@@ -79,7 +79,7 @@ export default function IntentMapper({
                         />
                         <button
                             type="button"
-                            className="btn btn-outline join-item"
+                            className="btn btn-outline join-item rounded-lg"
                             onClick={addKeyword}
                             disabled={disabled || !keywordInput.trim()}
                         >
@@ -146,7 +146,7 @@ export default function IntentMapper({
                         />
                         <button
                             type="button"
-                            className="btn btn-outline join-item"
+                            className="btn btn-outline join-item rounded-lg"
                             onClick={addTag}
                             disabled={disabled || !tagInput.trim()}
                         >

@@ -75,13 +75,13 @@ export default function PaymentSuccessPage() {
                     <div className="space-x-4">
                         <button
                             onClick={() => router.push('/auth/signup')}
-                            className="btn btn-primary"
+                            className="btn btn-primary rounded-xl"
                         >
                             Try Again
                         </button>
                         <button
                             onClick={() => router.push('/dashboard')}
-                            className="btn btn-outline"
+                            className="btn btn-outline rounded-xl"
                         >
                             Go to Dashboard
                         </button>

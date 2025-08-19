@@ -21,14 +21,12 @@ type Destination = {
 };
 
 interface ActionSelectorProps {
-    tenantId: string;
     destinations: Destination[];
     onChange: (destinations: Destination[]) => void;
     disabled?: boolean;
 }
 
 export default function ActionSelector({
-    tenantId,
     destinations,
     onChange,
     disabled = false
@@ -43,13 +41,11 @@ export default function ActionSelector({
 
     useEffect(() => {
         loadIntegrations();
-    }, [tenantId]);
+    }, []);
 
     const loadIntegrations = async () => {
         try {
-            const response = await fetch('/api/integrations', {
-                headers: { 'x-tenant-id': tenantId }
-            });
+            const response = await fetch('/api/integrations');
             if (response.ok) {
                 const data = await response.json();
                 setIntegrations(data.filter((i: Integration) => i.status === 'active'));
@@ -87,12 +83,13 @@ export default function ActionSelector({
         onChange(destinations.filter((_, i) => i !== index));
     };
 
-    const updateDestination = (index: number, updates: Partial<Destination>) => {
-        const updated = destinations.map((dest, i) =>
-            i === index ? { ...dest, ...updates } : dest
-        );
-        onChange(updated);
-    };
+    // Reserved for future inline editing support
+    // const updateDestination = (index: number, updates: Partial<Destination>) => {
+    //     const updated = destinations.map((dest, i) =>
+    //         i === index ? { ...dest, ...updates } : dest
+    //     );
+    //     onChange(updated);
+    // };
 
     const getDestinationIcon = (type: string) => {
         switch (type) {
@@ -103,14 +100,14 @@ export default function ActionSelector({
         }
     };
 
-    const getIntegrationIcon = (provider: string) => {
-        switch (provider) {
-            case 'slack': return 'fa-slack';
-            case 'email': return 'fa-envelope';
-            case 'teams': return 'fa-microsoft';
-            default: return 'fa-puzzle-piece';
-        }
-    };
+    // const getIntegrationIcon = (provider: string) => {
+    //     switch (provider) {
+    //         case 'slack': return 'fa-slack';
+    //         case 'email': return 'fa-envelope';
+    //         case 'teams': return 'fa-microsoft';
+    //         default: return 'fa-puzzle-piece';
+    //     }
+    // };
 
     if (loading) {
         return (
@@ -201,7 +198,7 @@ export default function ActionSelector({
                     <HoverScale scale={1.02}>
                         <button
                             type="button"
-                            className="btn btn-outline btn-primary"
+                            className="btn btn-outline btn-primary rounded-xl"
                             onClick={() => setShowAddForm(true)}
                             disabled={disabled}
                         >
@@ -373,7 +370,7 @@ export default function ActionSelector({
                                 <div className="flex items-center gap-3">
                                     <button
                                         type="button"
-                                        className="btn btn-ghost"
+                                        className="btn btn-ghost rounded-xl"
                                         onClick={() => setShowAddForm(false)}
                                         disabled={disabled}
                                     >
@@ -383,7 +380,7 @@ export default function ActionSelector({
                                     <HoverScale scale={1.02}>
                                         <button
                                             type="button"
-                                            className="btn btn-primary"
+                                            className="btn btn-primary rounded-xl"
                                             onClick={addDestination}
                                             disabled={disabled}
                                         >

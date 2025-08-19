@@ -1,4 +1,4 @@
-import { getTenantIdServer } from "@/lib/auth";
+import { getTenantIdStrict } from "@/lib/tenant-resolve";
 import OutboxTable from "@/components/outbox-table";
 import { Breadcrumb } from "@/components/ui/breadcrumb";
 import { AnimatedPage, StaggerContainer, StaggerChild } from "@/components/ui/animated-page";
@@ -6,14 +6,14 @@ import { AnimatedPage, StaggerContainer, StaggerChild } from "@/components/ui/an
 export const runtime = 'nodejs';
 
 export default async function OutboxPage() {
-    const tenantId = await getTenantIdServer({ allowEnvFallback: true });
-    
+    await getTenantIdStrict();
+
     const breadcrumbItems = [
         { label: "Dashboard", href: "/dashboard", icon: "fa-gauge-high" },
         { label: "Conversations", href: "/dashboard/conversations", icon: "fa-comments" },
         { label: "Delivery Status", icon: "fa-inbox" }
     ];
-    
+
     return (
         <AnimatedPage>
             <div className="space-y-8">
@@ -23,7 +23,7 @@ export default async function OutboxPage() {
                         <Breadcrumb items={breadcrumbItems} />
                     </StaggerChild>
                 </StaggerContainer>
-                
+
                 {/* Header */}
                 <StaggerContainer>
                     <StaggerChild>
@@ -49,14 +49,14 @@ export default async function OutboxPage() {
                         </div>
                     </StaggerChild>
                 </StaggerContainer>
-                
+
                 {/* Content */}
                 <StaggerContainer>
                     <StaggerChild>
-                        <OutboxTable tenantId={tenantId} />
+                        <OutboxTable />
                     </StaggerChild>
                 </StaggerContainer>
-                
+
                 {/* Help Section */}
                 <StaggerContainer>
                     <StaggerChild>
@@ -80,7 +80,7 @@ export default async function OutboxPage() {
                                             <span>No action needed</span>
                                         </div>
                                     </div>
-                                    
+
                                     <div>
                                         <div className="flex items-center gap-2 mb-2">
                                             <i className="fa-duotone fa-solid fa-clock text-warning" aria-hidden />
@@ -94,7 +94,7 @@ export default async function OutboxPage() {
                                             <span>Processing...</span>
                                         </div>
                                     </div>
-                                    
+
                                     <div>
                                         <div className="flex items-center gap-2 mb-2">
                                             <i className="fa-duotone fa-solid fa-exclamation-circle text-error" aria-hidden />
@@ -109,7 +109,7 @@ export default async function OutboxPage() {
                                         </div>
                                     </div>
                                 </div>
-                                
+
                                 <div className="mt-6 p-4 bg-base-200/40 rounded-xl">
                                     <div className="flex items-start gap-3">
                                         <div className="w-6 h-6 bg-info/20 rounded-md flex items-center justify-center flex-shrink-0 mt-0.5">
@@ -126,7 +126,7 @@ export default async function OutboxPage() {
                                         </div>
                                     </div>
                                 </div>
-                                
+
                                 <div className="mt-6 flex gap-3">
                                     <a href="/dashboard/integrations" className="btn btn-outline btn-sm">
                                         <i className="fa-duotone fa-solid fa-puzzle-piece mr-2" aria-hidden />

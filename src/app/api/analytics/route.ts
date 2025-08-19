@@ -1,15 +1,12 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { query } from '@/lib/db';
+import { getTenantIdStrict } from '@/lib/tenant-resolve';
 
 export const runtime = 'nodejs';
 
 export async function GET(request: NextRequest) {
     try {
-        // Get tenant ID from headers
-        const tenantId = request.headers.get('x-tenant-id');
-        if (!tenantId) {
-            return NextResponse.json({ error: 'Tenant ID required' }, { status: 400 });
-        }
+        const tenantId = await getTenantIdStrict();
 
         // Get query parameters
         const url = new URL(request.url);

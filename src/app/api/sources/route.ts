@@ -1,12 +1,12 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { query } from '@/lib/db';
-import { resolveTenantIdFromRequest, resolveTenantIdAndBodyFromRequest } from '@/lib/auth';
+import { getTenantIdStrict } from '@/lib/tenant-resolve';
 
 export const runtime = 'nodejs';
 
 export async function GET(req: NextRequest) {
     try {
-        const tenantId = await resolveTenantIdFromRequest(req, true);
+        const tenantId = await getTenantIdStrict();
         const { searchParams } = new URL(req.url);
         const siteId = searchParams.get('siteId');
 
@@ -45,7 +45,8 @@ export async function GET(req: NextRequest) {
 
 export async function POST(req: NextRequest) {
     try {
-        const { tenantId, body } = await resolveTenantIdAndBodyFromRequest(req, true);
+        const tenantId = await getTenantIdStrict();
+        const body = await req.json();
 
         if (!body) {
             return NextResponse.json({ error: 'Request body is required' }, { status: 400 });

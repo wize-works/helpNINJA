@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { query } from '@/lib/db'
-import { resolveTenantIdFromRequest } from '@/lib/auth'
+import { getTenantIdStrict } from '@/lib/tenant-resolve'
 
 export const runtime = 'nodejs'
 
@@ -14,7 +14,7 @@ type SiteRow = {
 }
 
 export async function POST(req: NextRequest, ctx: Context) {
-    const tenantId = await resolveTenantIdFromRequest(req, true)
+    const tenantId = await getTenantIdStrict()
     const { id } = await ctx.params
 
     if (!id) {
@@ -99,8 +99,8 @@ export async function POST(req: NextRequest, ctx: Context) {
     }
 }
 
-export async function GET(req: NextRequest, ctx: Context) {
-    const tenantId = await resolveTenantIdFromRequest(req, true)
+export async function GET(_req: NextRequest, ctx: Context) {
+    const tenantId = await getTenantIdStrict()
     const { id } = await ctx.params
 
     if (!id) {

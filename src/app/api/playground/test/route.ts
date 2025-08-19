@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { searchWithCuratedAnswers, searchHybrid } from '@/lib/rag';
-import { resolveTenantIdFromRequest } from '@/lib/auth';
+import { searchWithCuratedAnswers } from '@/lib/rag';
+import { getTenantIdStrict } from '@/lib/tenant-resolve';
 import OpenAI from 'openai';
 
 export const runtime = 'nodejs';
@@ -10,11 +10,9 @@ export const runtime = 'nodejs';
 export async function POST(req: NextRequest) {
     try {
         const body = await req.json();
-        const tenantId = body.tenantId || req.headers.get('x-tenant-id') || process.env.DEMO_TENANT_ID || process.env.NEXT_PUBLIC_DEMO_TENANT_ID;
+        const tenantId = await getTenantIdStrict();
 
-        if (!tenantId) {
-            return NextResponse.json({ error: 'Tenant ID required' }, { status: 400 });
-        }
+        // tenant resolves strictly via authenticated Clerk org
         const {
             query: userQuery,
             siteId,

@@ -30,7 +30,6 @@ type DomainVerificationProps = {
     siteId: string;
     siteName: string;
     domain: string;
-    tenantId: string;
     initialVerified?: boolean;
     onVerificationChange?: (verified: boolean) => void;
 };
@@ -39,7 +38,6 @@ export default function DomainVerification({
     siteId,
     siteName,
     domain,
-    tenantId,
     initialVerified = false,
     onVerificationChange
 }: DomainVerificationProps) {
@@ -54,7 +52,7 @@ export default function DomainVerification({
         setLoading(true);
         try {
             const res = await fetch(`/api/sites/${siteId}/verify`, {
-                headers: { 'x-tenant-id': tenantId }
+                // strict server-side tenant resolution; no client headers
             });
 
             if (res.ok) {
@@ -69,7 +67,7 @@ export default function DomainVerification({
         } finally {
             setLoading(false);
         }
-    }, [siteId, tenantId]);
+    }, [siteId]);
 
     useEffect(() => {
         if (!verified) {
@@ -85,8 +83,7 @@ export default function DomainVerification({
             const res = await fetch(`/api/sites/${siteId}/verify`, {
                 method: 'POST',
                 headers: {
-                    'content-type': 'application/json',
-                    'x-tenant-id': tenantId
+                    'content-type': 'application/json'
                 },
                 body: JSON.stringify({ method: selectedMethod })
             });

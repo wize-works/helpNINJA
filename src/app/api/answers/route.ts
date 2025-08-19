@@ -1,17 +1,17 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { query } from '@/lib/db';
-import { resolveTenantIdFromRequest } from '@/lib/auth';
+import { getTenantIdStrict } from '@/lib/tenant-resolve';
 
 export const runtime = 'nodejs';
 
 export async function GET(req: NextRequest) {
     try {
-        const tenantId = await resolveTenantIdFromRequest(req, true);
+        const tenantId = await getTenantIdStrict();
         const { searchParams } = new URL(req.url);
         const siteId = searchParams.get('siteId');
         const status = searchParams.get('status') || 'active';
         const search = searchParams.get('search');
-        
+
         let queryText = `
             SELECT a.*, 
                    ts.name as site_name,
@@ -20,20 +20,20 @@ export async function GET(req: NextRequest) {
             LEFT JOIN public.tenant_sites ts ON ts.id = a.site_id
             WHERE a.tenant_id = $1
         `;
-        
+
         const params: unknown[] = [tenantId];
         let paramIndex = 2;
-        
+
         if (status && status !== 'all') {
             queryText += ` AND a.status = $${paramIndex++}`;
             params.push(status);
         }
-        
+
         if (siteId) {
             queryText += ` AND a.site_id = $${paramIndex++}`;
             params.push(siteId);
         }
-        
+
         if (search) {
             queryText += ` AND (
                 a.question_tsv @@ plainto_tsquery('english', $${paramIndex}) OR
@@ -45,9 +45,9 @@ export async function GET(req: NextRequest) {
             params.push(search, `%${search}%`);
             paramIndex += 2;
         }
-        
+
         queryText += ' ORDER BY a.priority DESC, a.updated_at DESC';
-        
+
         const { rows } = await query(queryText, params);
         return NextResponse.json(rows);
     } catch (error) {
@@ -58,20 +58,20 @@ export async function GET(req: NextRequest) {
 
 export async function POST(req: NextRequest) {
     try {
-        const tenantId = await resolveTenantIdFromRequest(req, true);
+        const tenantId = await getTenantIdStrict();
         const body = await req.json();
         const { question, answer, keywords, tags, priority, status, siteId } = body;
-        
+
         if (!question?.trim() || !answer?.trim()) {
             return NextResponse.json({ error: 'Question and answer are required' }, { status: 400 });
         }
-        
+
         // Validate status
         const validStatuses = ['active', 'draft', 'disabled'];
         if (status && !validStatuses.includes(status)) {
             return NextResponse.json({ error: 'Invalid status' }, { status: 400 });
         }
-        
+
         // Validate siteId if provided
         if (siteId) {
             const siteCheck = await query(
@@ -82,11 +82,11 @@ export async function POST(req: NextRequest) {
                 return NextResponse.json({ error: 'Invalid siteId for this tenant' }, { status: 400 });
             }
         }
-        
+
         // Ensure arrays are properly formatted
         const keywordsArray = Array.isArray(keywords) ? keywords : (keywords ? [keywords] : []);
         const tagsArray = Array.isArray(tags) ? tags : (tags ? [tags] : []);
-        
+
         // Insert answer
         const { rows } = await query(
             `INSERT INTO public.answers (
@@ -104,10 +104,10 @@ export async function POST(req: NextRequest) {
                 siteId || null
             ]
         );
-        
-        return NextResponse.json({ 
-            id: rows[0].id, 
-            message: 'Answer created successfully' 
+
+        return NextResponse.json({
+            id: rows[0].id,
+            message: 'Answer created successfully'
         });
     } catch (error) {
         console.error('Error creating answer:', error);

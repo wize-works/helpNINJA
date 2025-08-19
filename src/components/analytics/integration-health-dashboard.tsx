@@ -49,9 +49,7 @@ export function IntegrationHealthDashboard() {
         async function fetchData() {
             try {
                 setLoading(true);
-                const response = await fetch('/api/analytics/integration-health', {
-                    headers: { 'x-tenant-id': tenantId }
-                });
+                const response = await fetch('/api/analytics/integration-health');
 
                 if (!response.ok) {
                     throw new Error('Failed to fetch integration health data');

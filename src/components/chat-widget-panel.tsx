@@ -42,7 +42,7 @@ export default function ChatWidgetPanel({ tenantPublicKey }: Props) {
             <div className="rounded border border-base-300 bg-base-100">
                 <div className="px-3 py-2 flex items-center justify-between">
                     <div className="text-sm opacity-70">Embed snippet</div>
-                    <button type="button" onClick={copy} className="btn btn-xs">
+                    <button type="button" onClick={copy} className="btn btn-xs rounded-lg">
                         {copied ? "Copied" : "Copy"}
                     </button>
                 </div>

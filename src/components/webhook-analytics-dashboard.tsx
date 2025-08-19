@@ -51,9 +51,7 @@ export function WebhookAnalyticsDashboard() {
         setError(null);
 
         try {
-            const response = await fetch(`/api/webhooks/analytics?timeframe=${timeframe}`, {
-                headers: { 'x-tenant-id': tenantId }
-            });
+            const response = await fetch(`/api/webhooks/analytics?timeframe=${timeframe}`);
 
             if (!response.ok) {
                 throw new Error('Failed to load webhook analytics');

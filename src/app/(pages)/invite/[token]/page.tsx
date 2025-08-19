@@ -165,7 +165,7 @@ export default function InvitationPage() {
                         {status === 'already_accepted' && (
                             <HoverScale scale={1.02}>
                                 <button
-                                    className="btn btn-primary"
+                                    className="btn btn-primary rounded-xl"
                                     onClick={() => router.push('/dashboard')}
                                 >
                                     Go to Dashboard

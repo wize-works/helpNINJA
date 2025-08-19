@@ -16,7 +16,7 @@ export default function TeamPage() {
     const [members, setMembers] = useState<UserMember[]>([]);
     const [loading, setLoading] = useState(true);
     const [showAddForm, setShowAddForm] = useState(false);
-    const [currentUserRole, setCurrentUserRole] = useState<Role>('admin'); // For demo - should come from auth
+    const [currentUserRole] = useState<Role>('admin'); // For demo - should come from auth
     const [activeTab, setActiveTab] = useState<'members' | 'invitations'>('members');
     const [stats, setStats] = useState({
         total: 0,
@@ -39,9 +39,7 @@ export default function TeamPage() {
 
     const loadTeamMembers = async () => {
         try {
-            const response = await fetch('/api/team', {
-                headers: { 'x-tenant-id': tenantId }
-            });
+            const response = await fetch('/api/team');
 
             if (response.ok) {
                 const data = await response.json();
@@ -76,7 +74,7 @@ export default function TeamPage() {
         try {
             const response = await fetch(`/api/team/${member.user_id}`, {
                 method: 'DELETE',
-                headers: { 'x-tenant-id': tenantId }
+
             });
 
             if (response.ok) {
@@ -97,8 +95,7 @@ export default function TeamPage() {
             const response = await fetch(`/api/team/${member.user_id}`, {
                 method: 'PUT',
                 headers: {
-                    'Content-Type': 'application/json',
-                    'x-tenant-id': tenantId
+                    'Content-Type': 'application/json'
                 },
                 body: JSON.stringify({ role: newRole })
             });
@@ -121,8 +118,7 @@ export default function TeamPage() {
             const response = await fetch(`/api/team/${member.user_id}`, {
                 method: 'PUT',
                 headers: {
-                    'Content-Type': 'application/json',
-                    'x-tenant-id': tenantId
+                    'Content-Type': 'application/json'
                 },
                 body: JSON.stringify({ status: newStatus })
             });
@@ -167,7 +163,7 @@ export default function TeamPage() {
                             <div className="flex items-center gap-3">
                                 <HoverScale scale={1.02}>
                                     <button
-                                        className="btn btn-primary"
+                                        className="btn btn-primary rounded-xl"
                                         onClick={() => setShowAddForm(true)}
                                     >
                                         <i className="fa-duotone fa-solid fa-user-plus mr-2" aria-hidden />
@@ -219,7 +215,6 @@ export default function TeamPage() {
                     <StaggerContainer>
                         <StaggerChild>
                             <AddTeamMemberForm
-                                tenantId={tenantId}
                                 currentUserRole={currentUserRole}
                                 onSuccess={handleAddSuccess}
                                 onCancel={() => setShowAddForm(false)}
@@ -279,7 +274,7 @@ export default function TeamPage() {
                                             </div>
                                             <HoverScale scale={1.02}>
                                                 <button
-                                                    className="btn btn-primary"
+                                                    className="btn btn-primary rounded-xl"
                                                     onClick={() => setShowAddForm(true)}
                                                 >
                                                     <i className="fa-duotone fa-solid fa-user-plus mr-2" aria-hidden />
@@ -304,10 +299,7 @@ export default function TeamPage() {
                                     </div>
                                 )
                             ) : (
-                                <TeamInvitations
-                                    tenantId={tenantId}
-                                    onInvitationCancelled={loadTeamMembers}
-                                />
+                                <TeamInvitations onInvitationCancelled={loadTeamMembers} />
                             )}
                         </StaggerChild>
                     </StaggerContainer>

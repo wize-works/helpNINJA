@@ -5,7 +5,6 @@ import Titlebar from "@/components/titlebar";
 import { ClerkProvider } from "@clerk/nextjs";
 import { Toaster } from "react-hot-toast";
 import Clarity from "@/components/clarity";
-import AuthDebugPanel from "@/components/debug/auth";
 
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
@@ -24,9 +23,6 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
                     </Suspense>
                     <Suspense fallback={null}>
                         <main>{children}</main>
-                    </Suspense>
-                    <Suspense fallback={null}>
-                        <AuthDebugPanel />
                     </Suspense>
                 </ClerkProvider>
                 <Toaster

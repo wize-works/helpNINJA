@@ -122,7 +122,7 @@ export function EnhancedTable<T extends Record<string, unknown>>({
 
     const getSortIcon = (column: TableColumn<T>) => {
         if (!column.sortable) return null;
-        
+
         const isActive = sortConfig?.key === column.key;
         if (!isActive) {
             return (
@@ -139,16 +139,15 @@ export function EnhancedTable<T extends Record<string, unknown>>({
 
     const getSortAriaLabel = (column: TableColumn<T>) => {
         if (!column.sortable) return undefined;
-        
+
         const isActive = sortConfig?.key === column.key;
         if (!isActive) {
             return `Sort by ${column.header}`;
         }
-        
+
         const direction = sortConfig?.direction === 'asc' ? 'ascending' : 'descending';
-        return `Currently sorted by ${column.header} in ${direction} order. Click to ${
-            sortConfig?.direction === 'asc' ? 'sort descending' : 'remove sort'
-        }`;
+        return `Currently sorted by ${column.header} in ${direction} order. Click to ${sortConfig?.direction === 'asc' ? 'sort descending' : 'remove sort'
+            }`;
     };
 
     // Keyboard shortcuts
@@ -231,8 +230,8 @@ export function EnhancedTable<T extends Record<string, unknown>>({
             {/* Table */}
             <div className="card bg-base-100 border border-base-300">
                 <div className="overflow-x-auto">
-                    <table 
-                        className="table table-hover w-full" 
+                    <table
+                        className="table table-hover w-full"
                         role="table"
                         aria-label={caption || "Data table"}
                     >
@@ -248,7 +247,7 @@ export function EnhancedTable<T extends Record<string, unknown>>({
                                         tabIndex={column.sortable ? 0 : undefined}
                                         role="columnheader"
                                         aria-sort={
-                                            sortConfig?.key === column.key 
+                                            sortConfig?.key === column.key
                                                 ? sortConfig.direction === 'asc' ? 'ascending' : 'descending'
                                                 : column.sortable ? 'none' : undefined
                                         }
@@ -289,7 +288,7 @@ export function EnhancedTable<T extends Record<string, unknown>>({
                         </div>
                         <div className="join" role="group" aria-label="Pagination controls">
                             <button
-                                className="join-item btn btn-sm"
+                                className="join-item btn btn-sm rounded-lg"
                                 onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
                                 disabled={currentPage === 1}
                                 aria-label="Go to previous page"
@@ -297,7 +296,7 @@ export function EnhancedTable<T extends Record<string, unknown>>({
                                 <i className="fa-duotone fa-solid fa-chevron-left" aria-hidden />
                                 Previous
                             </button>
-                            
+
                             {/* Page numbers */}
                             {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
                                 let pageNumber;
@@ -325,7 +324,7 @@ export function EnhancedTable<T extends Record<string, unknown>>({
                             })}
 
                             <button
-                                className="join-item btn btn-sm"
+                                className="join-item btn btn-sm rounded-lg"
                                 onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
                                 disabled={currentPage === totalPages}
                                 aria-label="Go to next page"

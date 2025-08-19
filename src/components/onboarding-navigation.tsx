@@ -61,7 +61,7 @@ export default function OnboardingNavigation({
                 {!isFirstStep && (
                     <button
                         onClick={handlePrev}
-                        className="btn btn-ghost"
+                        className="btn btn-ghost rounded-xl"
                         disabled={isLoading}
                     >
                         <i className="fa-duotone fa-solid fa-arrow-left mr-2" aria-hidden />
@@ -146,7 +146,7 @@ export function SimpleOnboardingNavigation({
             {showBack ? (
                 <button
                     onClick={onBack}
-                    className="btn btn-ghost"
+                    className="btn btn-ghost rounded-xl"
                     disabled={isLoading}
                 >
                     <i className="fa-duotone fa-solid fa-arrow-left mr-2" aria-hidden />

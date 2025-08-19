@@ -4,20 +4,25 @@ import { useState } from "react";
 import SiteSelector from "./site-selector";
 
 interface DocumentsFiltersProps {
-    tenantId: string;
     onFiltersChange?: (filters: {
         searchQuery: string;
         selectedSite: string;
         sourceType: string;
         sortBy: string;
     }) => void;
+    initialFilters?: {
+        searchQuery: string;
+        selectedSite: string;
+        sourceType: string;
+        sortBy: string;
+    };
 }
 
-export default function DocumentsFilters({ tenantId, onFiltersChange }: DocumentsFiltersProps) {
-    const [searchQuery, setSearchQuery] = useState("");
-    const [selectedSite, setSelectedSite] = useState("");
-    const [sourceType, setSourceType] = useState("");
-    const [sortBy, setSortBy] = useState("created_desc");
+export default function DocumentsFilters({ onFiltersChange, initialFilters }: DocumentsFiltersProps) {
+    const [searchQuery, setSearchQuery] = useState(initialFilters?.searchQuery || "");
+    const [selectedSite, setSelectedSite] = useState(initialFilters?.selectedSite || "");
+    const [sourceType, setSourceType] = useState(initialFilters?.sourceType || "");
+    const [sortBy, setSortBy] = useState(initialFilters?.sortBy || "created_desc");
 
     const handleFilterChange = (key: string, value: string) => {
         const newFilters = {
@@ -71,7 +76,6 @@ export default function DocumentsFilters({ tenantId, onFiltersChange }: Document
                                 <span className="label-text text-sm">Site</span>
                             </label>
                             <SiteSelector
-                                tenantId={tenantId}
                                 value={selectedSite}
                                 onChange={(value) => handleFilterChange('selectedSite', value || "")}
                                 placeholder="All sites"
@@ -82,7 +86,7 @@ export default function DocumentsFilters({ tenantId, onFiltersChange }: Document
                             <label className="label">
                                 <span className="label-text text-sm">Source Type</span>
                             </label>
-                            <select 
+                            <select
                                 className="select select-bordered select-sm w-36"
                                 value={sourceType}
                                 onChange={(e) => handleFilterChange('sourceType', e.target.value)}
@@ -98,7 +102,7 @@ export default function DocumentsFilters({ tenantId, onFiltersChange }: Document
                             <label className="label">
                                 <span className="label-text text-sm">Sort by</span>
                             </label>
-                            <select 
+                            <select
                                 className="select select-bordered select-sm w-32"
                                 value={sortBy}
                                 onChange={(e) => handleFilterChange('sortBy', e.target.value)}

@@ -15,7 +15,6 @@ type ConditionType = {
 interface ConditionEditorProps {
     condition: RuleCondition;
     availableTypes: ConditionType[];
-    tenantId: string;
     onChange: (condition: RuleCondition) => void;
     onRemove: () => void;
     disabled?: boolean;
@@ -24,7 +23,6 @@ interface ConditionEditorProps {
 export default function ConditionEditor({
     condition,
     availableTypes,
-    tenantId,
     onChange,
     onRemove,
     disabled = false
@@ -103,7 +101,6 @@ export default function ConditionEditor({
                 // Multiple site selection - for now, simplified to single site
                 return (
                     <SiteSelector
-                        tenantId={tenantId}
                         value={Array.isArray(value) ? value[0] : String(value || '')}
                         onChange={(siteId) => handleValueChange([siteId])}
                         allowNone={false}
@@ -114,7 +111,6 @@ export default function ConditionEditor({
             } else {
                 return (
                     <SiteSelector
-                        tenantId={tenantId}
                         value={String(value || '')}
                         onChange={(siteId) => handleValueChange(siteId)}
                         allowNone={false}
@@ -282,7 +278,7 @@ export default function ConditionEditor({
                 </label>
                 <button
                     type="button"
-                    className="btn btn-error btn-outline btn-sm"
+                    className="btn btn-error btn-outline btn-sm rounded-lg"
                     onClick={onRemove}
                     disabled={disabled}
                     title="Remove condition"

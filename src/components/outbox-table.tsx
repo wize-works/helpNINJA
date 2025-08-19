@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { HoverScale } from './ui/animated-page';
 import { toastUtils } from '@/lib/toast';
 
@@ -23,11 +23,7 @@ type OutboxItem = {
 
 type OutboxStats = Record<string, Record<string, number>>;
 
-interface OutboxTableProps {
-    tenantId: string;
-}
-
-export default function OutboxTable({ tenantId }: OutboxTableProps) {
+export default function OutboxTable() {
     const [items, setItems] = useState<OutboxItem[]>([]);
     const [stats, setStats] = useState<OutboxStats>({});
     const [loading, setLoading] = useState(true);
@@ -43,11 +39,7 @@ export default function OutboxTable({ tenantId }: OutboxTableProps) {
         hasMore: false
     });
 
-    useEffect(() => {
-        loadOutboxItems();
-    }, [tenantId, filters, pagination.offset]);
-
-    const loadOutboxItems = async () => {
+    const loadOutboxItems = useCallback(async () => {
         try {
             const params = new URLSearchParams({
                 limit: pagination.limit.toString(),
@@ -57,9 +49,7 @@ export default function OutboxTable({ tenantId }: OutboxTableProps) {
             if (filters.status) params.set('status', filters.status);
             if (filters.provider) params.set('provider', filters.provider);
 
-            const response = await fetch(`/api/outbox?${params}`, {
-                headers: { 'x-tenant-id': tenantId }
-            });
+            const response = await fetch(`/api/outbox?${params}`);
 
             if (response.ok) {
                 const data = await response.json();
@@ -75,7 +65,11 @@ export default function OutboxTable({ tenantId }: OutboxTableProps) {
         } finally {
             setLoading(false);
         }
-    };
+    }, [filters, pagination.limit, pagination.offset]);
+
+    useEffect(() => {
+        loadOutboxItems();
+    }, [loadOutboxItems]);
 
     const retryItems = async (itemIds: string[]) => {
         if (itemIds.length === 0) return;
@@ -90,8 +84,7 @@ export default function OutboxTable({ tenantId }: OutboxTableProps) {
             const response = await fetch('/api/outbox/retry', {
                 method: 'POST',
                 headers: {
-                    'Content-Type': 'application/json',
-                    'x-tenant-id': tenantId
+                    'Content-Type': 'application/json'
                 },
                 body: JSON.stringify({ itemIds })
             });
@@ -126,8 +119,7 @@ export default function OutboxTable({ tenantId }: OutboxTableProps) {
             const response = await fetch('/api/outbox/retry', {
                 method: 'POST',
                 headers: {
-                    'Content-Type': 'application/json',
-                    'x-tenant-id': tenantId
+                    'Content-Type': 'application/json'
                 },
                 body: JSON.stringify({ retryAll: true })
             });
@@ -281,7 +273,7 @@ export default function OutboxTable({ tenantId }: OutboxTableProps) {
                             {selectedItems.size > 0 && (
                                 <HoverScale scale={1.02}>
                                     <button
-                                        className={`btn btn-primary ${retrying.size > 0 ? 'loading' : ''}`}
+                                        className={`btn btn-primary rounded-xl ${retrying.size > 0 ? 'loading' : ''}`}
                                         onClick={() => retryItems(Array.from(selectedItems))}
                                         disabled={retrying.size > 0}
                                     >
@@ -414,7 +406,7 @@ export default function OutboxTable({ tenantId }: OutboxTableProps) {
                             {pagination.hasMore && (
                                 <div className="p-4 border-t border-base-300 text-center">
                                     <button
-                                        className="btn btn-outline"
+                                        className="btn btn-outline rounded-xl"
                                         onClick={() => setPagination(prev => ({ ...prev, offset: prev.offset + prev.limit }))}
                                     >
                                         Load More

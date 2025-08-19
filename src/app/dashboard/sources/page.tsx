@@ -1,4 +1,4 @@
-import { getTenantIdServer } from "@/lib/auth";
+import { getTenantIdStrict } from "@/lib/tenant-resolve";
 import SourcesTable from "@/components/sources-table";
 import { Breadcrumb } from "@/components/ui/breadcrumb";
 import { AnimatedPage, StaggerContainer, StaggerChild, HoverScale } from "@/components/ui/animated-page";
@@ -43,7 +43,7 @@ async function getSourcesStats(tenantId: string) {
 }
 
 export default async function SourcesPage() {
-    const tenantId = await getTenantIdServer({ allowEnvFallback: true });
+    const tenantId = await getTenantIdStrict();
     const stats = await getSourcesStats(tenantId);
 
     const breadcrumbItems = [
@@ -158,7 +158,7 @@ export default async function SourcesPage() {
                 {/* Content */}
                 <StaggerContainer>
                     <StaggerChild>
-                        <SourcesTable tenantId={tenantId} />
+                        <SourcesTable />
                     </StaggerChild>
                 </StaggerContainer>
 

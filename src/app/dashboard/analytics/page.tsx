@@ -1,5 +1,5 @@
 import { Suspense } from "react";
-import { getTenantIdServer } from "@/lib/auth";
+import { getTenantIdStrict } from "@/lib/tenant-resolve";
 import { query } from "@/lib/db";
 import { Breadcrumb } from "@/components/ui/breadcrumb";
 import { StatCardSkeleton, ChartSkeleton } from "@/components/ui/skeleton";
@@ -275,7 +275,7 @@ async function getAnalyticsData(tenantId: string): Promise<AnalyticsData> {
 }
 
 export default async function AnalyticsPage() {
-    const tenantId = await getTenantIdServer({ allowEnvFallback: true });
+    const tenantId = await getTenantIdStrict();
 
     const breadcrumbItems = [
         { label: "Dashboard", href: "/dashboard", icon: "fa-gauge-high" },

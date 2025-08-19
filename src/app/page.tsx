@@ -26,13 +26,13 @@ export default function Home() {
 
                                     <div className="space-y-3">
                                         <HoverScale scale={1.02}>
-                                            <Link href="/auth/signup" className="btn btn-primary btn-lg w-full">
+                                            <Link href="/auth/signup" className="btn btn-primary btn-lg w-full rounded-xl">
                                                 <i className="fa-duotone fa-solid fa-user-plus mr-2" />
                                                 Create account
                                             </Link>
                                         </HoverScale>
                                         <HoverScale scale={1.02}>
-                                            <Link href="/auth/signin" className="btn btn-outline btn-lg w-full">
+                                            <Link href="/auth/signin" className="btn btn-outline btn-lg w-full rounded-xl">
                                                 <i className="fa-duotone fa-solid fa-right-to-bracket mr-2" />
                                                 Sign in
                                             </Link>
@@ -98,13 +98,13 @@ export default function Home() {
 
                                         <div className="mt-8 space-y-3">
                                             <HoverScale scale={1.02}>
-                                                <Link href="https://helpninja.ai/features" className="btn btn-primary btn-lg w-full">
+                                                <Link href="https://helpninja.ai/features" className="btn btn-primary btn-lg w-full rounded-xl">
                                                     <i className="fa-duotone fa-solid fa-list mr-2" />
                                                     Explore features
                                                 </Link>
                                             </HoverScale>
                                             <HoverScale scale={1.02}>
-                                                <Link href="https://helpninja.ai/help" target="_blank" className="btn btn-outline btn-lg w-full">
+                                                <Link href="https://helpninja.ai/help" target="_blank" className="btn btn-outline btn-lg w-full rounded-xl">
                                                     <i className="fa-duotone fa-solid fa-graduation-cap mr-2" />
                                                     Documentation
                                                 </Link>

@@ -4,14 +4,14 @@ import { chunkText } from '@/lib/chunk';
 import { embedBatch } from '@/lib/embeddings';
 import { query } from '@/lib/db';
 import { canAddSite } from '@/lib/usage';
-import { resolveTenantIdFromRequest } from '@/lib/auth';
+import { getTenantIdStrict } from '@/lib/tenant-resolve';
 import { webhookEvents } from '@/lib/webhooks';
 
 export const runtime = 'nodejs';
 
 export async function POST(req: NextRequest) {
     const body = await req.json();
-    const tenantId = body?.tenantId || await resolveTenantIdFromRequest(req, true);
+    const tenantId = await getTenantIdStrict();
     const input = body?.input;
     const siteId = body?.siteId;
 
@@ -77,20 +77,29 @@ export async function POST(req: NextRequest) {
 
         const docId = ins.rows[0].id;
         const chunks = chunkText(d.content);
-        const embs = await embedBatch(chunks);
 
-        for (let i = 0; i < chunks.length; i++) {
+        // Filter chunks to match what embedBatch will process
+        const validChunks = chunks.filter(chunk => chunk && chunk.trim().length > 0);
+
+        if (validChunks.length === 0) {
+            console.warn(`No valid chunks for document: ${normUrl}`);
+            continue;
+        }
+
+        const embs = await embedBatch(validChunks);
+
+        for (let i = 0; i < validChunks.length; i++) {
             const v = `[${embs[i].join(',')}]`;
             await query(
                 `INSERT INTO public.chunks (tenant_id, document_id, url, content, token_count, embedding, site_id)
                  VALUES ($1, $2, $3, $4, $5, $6::vector, $7)`,
-                [tenantId, docId, normUrl, chunks[i], Math.ceil(chunks[i].length / 4), v, siteId || null]
+                [tenantId, docId, normUrl, validChunks[i], Math.ceil(validChunks[i].length / 4), v, siteId || null]
             );
         }
 
         // Trigger document ingested webhook
         try {
-            await webhookEvents.documentIngested(tenantId, docId, normUrl, chunks.length);
+            await webhookEvents.documentIngested(tenantId, docId, normUrl, validChunks.length);
         } catch (error) {
             console.error('Failed to trigger document.ingested webhook:', error);
         }

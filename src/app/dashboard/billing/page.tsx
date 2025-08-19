@@ -1,6 +1,5 @@
 'use client';
 import { useState, Suspense } from 'react';
-import { useTenant } from '@/components/tenant-context';
 import { Breadcrumb } from '@/components/ui/breadcrumb';
 import { AnimatedPage, StaggerContainer, StaggerChild, HoverScale } from '@/components/ui/animated-page';
 import { toastUtils } from '@/lib/toast';
@@ -13,7 +12,6 @@ const PLANS = [
 
 export default function BillingPage() {
     const [loading, setLoading] = useState<string | null>(null);
-    const { tenantId } = useTenant();
 
     const breadcrumbItems = [
         { label: "Dashboard", href: "/dashboard", icon: "fa-gauge-high" },
@@ -22,14 +20,14 @@ export default function BillingPage() {
 
     async function checkout(plan: string) {
         setLoading(plan);
-        const r = await fetch('/api/billing/checkout', { method: 'POST', headers: { 'content-type': 'application/json', 'x-tenant-id': tenantId || '' }, body: JSON.stringify({ plan }) });
+        const r = await fetch('/api/billing/checkout', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ plan }) });
         const j = await r.json();
         setLoading(null);
         if (j.url) window.location.href = j.url; else toastUtils.error(j.error || 'Error creating checkout');
     }
 
     async function portal() {
-        const r = await fetch('/api/billing/portal', { method: 'POST', headers: { 'content-type': 'application/json', 'x-tenant-id': tenantId || '' } });
+        const r = await fetch('/api/billing/portal', { method: 'POST', headers: { 'content-type': 'application/json' } });
         const j = await r.json();
         if (j.url) window.location.href = j.url; else toastUtils.error(j.error || 'Error accessing billing portal');
     }
@@ -67,7 +65,7 @@ export default function BillingPage() {
                                         </div>
                                     </div>
                                     <HoverScale scale={1.02}>
-                                        <button onClick={portal} className="btn btn-outline btn-sm">
+                                        <button onClick={portal} className="btn btn-outline rounded-lg btn-sm">
                                             <i className="fa-duotone fa-solid fa-gear mr-2" aria-hidden />
                                             Manage Subscription
                                         </button>
@@ -161,13 +159,13 @@ export default function BillingPage() {
 
                                     <div className="flex gap-3">
                                         <HoverScale scale={1.02}>
-                                            <button onClick={portal} className="btn btn-primary">
+                                            <button onClick={portal} className="btn btn-primary rounded-xl">
                                                 <i className="fa-duotone fa-solid fa-external-link mr-2" aria-hidden />
                                                 Customer Portal
                                             </button>
                                         </HoverScale>
                                         <HoverScale scale={1.02}>
-                                            <a href="/dashboard/billing/history" className="btn btn-outline">
+                                            <a href="/dashboard/billing/history" className="btn btn-outline rounded-xl">
                                                 <i className="fa-duotone fa-solid fa-receipt mr-2" aria-hidden />
                                                 Billing History
                                             </a>

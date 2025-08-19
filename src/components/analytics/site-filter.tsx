@@ -27,9 +27,7 @@ export function SiteFilter({ selectedSite, onSiteChange, className = "" }: SiteF
         async function fetchSites() {
             try {
                 setLoading(true);
-                const response = await fetch('/api/sites', {
-                    headers: { 'x-tenant-id': tenantId }
-                });
+                const response = await fetch('/api/sites');
 
                 if (response.ok) {
                     const data = await response.json();
@@ -142,7 +140,7 @@ export function AnalyticsFilters({
             {onRefresh && (
                 <button
                     onClick={onRefresh}
-                    className="btn btn-ghost btn-sm"
+                    className="btn btn-ghost btn-sm rounded-lg"
                     title="Refresh data"
                 >
                     <i className="fa-duotone fa-solid fa-refresh" />

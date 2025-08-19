@@ -62,8 +62,8 @@ export default function ApiKeysPage() {
 
         try {
             const [apiKeysRes, webhooksRes] = await Promise.all([
-                fetch('/api/api-keys', { headers: { 'x-tenant-id': tenantId } }),
-                fetch('/api/webhooks', { headers: { 'x-tenant-id': tenantId } })
+                fetch('/api/api-keys'),
+                fetch('/api/webhooks')
             ]);
 
             if (apiKeysRes.ok) {
@@ -97,10 +97,7 @@ export default function ApiKeysPage() {
         }
 
         try {
-            const response = await fetch(`/api/api-keys/${id}`, {
-                method: 'DELETE',
-                headers: { 'x-tenant-id': tenantId }
-            });
+            const response = await fetch(`/api/api-keys/${id}`, { method: 'DELETE' });
 
             if (!response.ok) {
                 const error = await response.json();
@@ -121,10 +118,7 @@ export default function ApiKeysPage() {
         }
 
         try {
-            const response = await fetch(`/api/api-keys/${id}/rotate`, {
-                method: 'POST',
-                headers: { 'x-tenant-id': tenantId }
-            });
+            const response = await fetch(`/api/api-keys/${id}/rotate`, { method: 'POST' });
 
             if (!response.ok) {
                 const error = await response.json();
@@ -153,10 +147,7 @@ export default function ApiKeysPage() {
         }
 
         try {
-            const response = await fetch(`/api/webhooks/${id}`, {
-                method: 'DELETE',
-                headers: { 'x-tenant-id': tenantId }
-            });
+            const response = await fetch(`/api/webhooks/${id}`, { method: 'DELETE' });
 
             if (!response.ok) {
                 const error = await response.json();
@@ -173,10 +164,7 @@ export default function ApiKeysPage() {
 
     const testWebhook = async (id: string, name: string) => {
         try {
-            const response = await fetch(`/api/webhooks/${id}/test`, {
-                method: 'POST',
-                headers: { 'x-tenant-id': tenantId }
-            });
+            const response = await fetch(`/api/webhooks/${id}/test`, { method: 'POST' });
 
             if (!response.ok) {
                 const error = await response.json();
@@ -246,7 +234,7 @@ export default function ApiKeysPage() {
                             <div className="flex items-center gap-3">
                                 {activeTab === 'api-keys' && (
                                     <button
-                                        className="btn btn-primary"
+                                        className="btn btn-primary rounded-xl"
                                         onClick={() => setShowCreateApiKey(true)}
                                     >
                                         <i className="fa-duotone fa-solid fa-plus mr-2" aria-hidden />
@@ -255,7 +243,7 @@ export default function ApiKeysPage() {
                                 )}
                                 {activeTab === 'webhooks' && (
                                     <button
-                                        className="btn btn-primary"
+                                        className="btn btn-primary rounded-xl"
                                         onClick={() => setShowCreateWebhook(true)}
                                     >
                                         <i className="fa-duotone fa-solid fa-plus mr-2" aria-hidden />
@@ -372,7 +360,7 @@ export default function ApiKeysPage() {
                                             Create your first API key to access the helpNINJA API programmatically
                                         </p>
                                         <button
-                                            className="btn btn-primary"
+                                            className="btn btn-primary rounded-xl"
                                             onClick={() => setShowCreateApiKey(true)}
                                         >
                                             <i className="fa-duotone fa-solid fa-plus mr-2" aria-hidden />
@@ -403,7 +391,7 @@ export default function ApiKeysPage() {
                                                             <div className="font-mono text-sm bg-base-200/60 px-3 py-2 rounded-lg mb-3 flex items-center justify-between">
                                                                 <span>{apiKey.key_prefix}</span>
                                                                 <button
-                                                                    className="btn btn-ghost btn-xs"
+                                                                    className="btn btn-ghost btn-xs rounded-lg"
                                                                     onClick={() => copyToClipboard(apiKey.key_prefix)}
                                                                     title="Copy key prefix"
                                                                 >
@@ -500,7 +488,7 @@ export default function ApiKeysPage() {
                                             Create webhook endpoints to receive real-time notifications about events
                                         </p>
                                         <button
-                                            className="btn btn-primary"
+                                            className="btn btn-primary rounded-xl"
                                             onClick={() => setShowCreateWebhook(true)}
                                         >
                                             <i className="fa-duotone fa-solid fa-plus mr-2" aria-hidden />
@@ -672,7 +660,6 @@ export default function ApiKeysPage() {
                                                 <p className="mb-2">Include your API key in request headers:</p>
                                                 <div className="mockup-code text-xs bg-base-300/60">
                                                     <pre><code>Authorization: Bearer sk_your_secret_key</code></pre>
-                                                    <pre><code>x-tenant-id: your_tenant_id</code></pre>
                                                     <pre><code>Content-Type: application/json</code></pre>
                                                 </div>
                                             </div>
@@ -726,7 +713,6 @@ export default function ApiKeysPage() {
                                         <pre><code># Send a message to the AI assistant</code></pre>
                                         <pre><code>curl -X POST https://yourdomain.com/api/chat \</code></pre>
                                         <pre><code>  -H &quot;Authorization: Bearer sk_your_secret_key&quot; \</code></pre>
-                                        <pre><code>  -H &quot;x-tenant-id: your_tenant_id&quot; \</code></pre>
                                         <pre><code>  -H &quot;Content-Type: application/json&quot; \</code></pre>
                                         <pre><code>  -d &apos;{`{`}&quot;message&quot;: &quot;Hello&quot;, &quot;sessionId&quot;: &quot;session_123&quot;{`}`}&apos;</code></pre>
                                     </div>
@@ -744,7 +730,6 @@ export default function ApiKeysPage() {
                             setShowCreateApiKey(false);
                             loadData();
                         }}
-                        tenantId={tenantId}
                     />
                 )}
 
@@ -756,7 +741,6 @@ export default function ApiKeysPage() {
                             setShowCreateWebhook(false);
                             loadData();
                         }}
-                        tenantId={tenantId}
                     />
                 )}
 
@@ -769,7 +753,6 @@ export default function ApiKeysPage() {
                             setShowEditApiKey(null);
                             loadData();
                         }}
-                        tenantId={tenantId}
                     />
                 )}
 
@@ -782,7 +765,6 @@ export default function ApiKeysPage() {
                             setShowEditWebhook(null);
                             loadData();
                         }}
-                        tenantId={tenantId}
                     />
                 )}
             </div>
@@ -793,12 +775,10 @@ export default function ApiKeysPage() {
 // Create API Key Modal Component
 function CreateApiKeyModal({
     onClose,
-    onSuccess,
-    tenantId
+    onSuccess
 }: {
     onClose: () => void;
     onSuccess: () => void;
-    tenantId: string;
 }) {
     const [loading, setLoading] = useState(false);
     const [formData, setFormData] = useState({
@@ -838,8 +818,7 @@ function CreateApiKeyModal({
             const response = await fetch('/api/api-keys', {
                 method: 'POST',
                 headers: {
-                    'Content-Type': 'application/json',
-                    'x-tenant-id': tenantId
+                    'Content-Type': 'application/json'
                 },
                 body: JSON.stringify({
                     name: formData.name.trim(),
@@ -1013,7 +992,7 @@ function CreateApiKeyModal({
                         <div className="flex justify-end gap-3 pt-4">
                             <button
                                 type="button"
-                                className="btn btn-ghost"
+                                className="btn btn-ghost rounded-xl"
                                 onClick={onClose}
                                 disabled={loading}
                             >
@@ -1021,7 +1000,7 @@ function CreateApiKeyModal({
                             </button>
                             <button
                                 type="submit"
-                                className="btn btn-primary"
+                                className="btn btn-primary rounded-xl"
                                 disabled={loading || !formData.name.trim()}
                             >
                                 {loading && <span className="loading loading-spinner loading-sm"></span>}
@@ -1038,12 +1017,10 @@ function CreateApiKeyModal({
 // Create Webhook Modal Component
 function CreateWebhookModal({
     onClose,
-    onSuccess,
-    tenantId
+    onSuccess
 }: {
     onClose: () => void;
     onSuccess: () => void;
-    tenantId: string;
 }) {
     const [loading, setLoading] = useState(false);
     const [formData, setFormData] = useState({
@@ -1108,8 +1085,7 @@ function CreateWebhookModal({
             const response = await fetch('/api/webhooks', {
                 method: 'POST',
                 headers: {
-                    'Content-Type': 'application/json',
-                    'x-tenant-id': tenantId
+                    'Content-Type': 'application/json'
                 },
                 body: JSON.stringify({
                     name: formData.name.trim(),
@@ -1258,7 +1234,7 @@ function CreateWebhookModal({
                         <div className="flex justify-end gap-3 pt-4">
                             <button
                                 type="button"
-                                className="btn btn-ghost"
+                                className="btn btn-ghost rounded-xl"
                                 onClick={onClose}
                                 disabled={loading}
                             >
@@ -1266,7 +1242,7 @@ function CreateWebhookModal({
                             </button>
                             <button
                                 type="submit"
-                                className="btn btn-primary"
+                                className="btn btn-primary rounded-xl"
                                 disabled={loading || !formData.name.trim() || !formData.url.trim() || formData.events.length === 0}
                             >
                                 {loading && <span className="loading loading-spinner loading-sm"></span>}
@@ -1281,25 +1257,25 @@ function CreateWebhookModal({
 }
 
 // Placeholder components for edit modals (we'll implement these next)
-function EditApiKeyModal({ onClose }: { apiKeyId: string; onClose: () => void; onSuccess: () => void; tenantId: string; }) {
+function EditApiKeyModal({ onClose }: { apiKeyId: string; onClose: () => void; onSuccess: () => void; }) {
     return (
         <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
             <div className="bg-base-100 rounded-2xl shadow-xl w-full max-w-md p-6">
                 <h2 className="text-xl font-bold mb-4">Edit API Key</h2>
                 <p className="text-base-content/60 mb-4">Edit functionality coming soon...</p>
-                <button className="btn btn-ghost" onClick={onClose}>Close</button>
+                <button className="btn btn-ghost rounded-xl" onClick={onClose}>Close</button>
             </div>
         </div>
     );
 }
 
-function EditWebhookModal({ onClose }: { webhookId: string; onClose: () => void; onSuccess: () => void; tenantId: string; }) {
+function EditWebhookModal({ onClose }: { webhookId: string; onClose: () => void; onSuccess: () => void; }) {
     return (
         <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
             <div className="bg-base-100 rounded-2xl shadow-xl w-full max-w-md p-6">
                 <h2 className="text-xl font-bold mb-4">Edit Webhook</h2>
                 <p className="text-base-content/60 mb-4">Edit functionality coming soon...</p>
-                <button className="btn btn-ghost" onClick={onClose}>Close</button>
+                <button className="btn btn-ghost rounded-xl" onClick={onClose}>Close</button>
             </div>
         </div>
     );

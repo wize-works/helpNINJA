@@ -1,18 +1,13 @@
-import { NextRequest, NextResponse } from 'next/server'
-import { resolveTenantIdFromRequest } from '@/lib/auth'
+import { NextResponse } from 'next/server'
+import { getTenantIdStrict } from '@/lib/tenant-resolve'
 import { query } from '@/lib/db'
 import { PLAN_LIMITS } from '@/lib/limits'
 import { ensureUsageRow, resetIfNewMonth } from '@/lib/usage'
 
 export const runtime = 'nodejs'
 
-export async function GET(req: NextRequest) {
-    let tenantId: string
-    try {
-        tenantId = await resolveTenantIdFromRequest(req, true)
-    } catch {
-        return NextResponse.json({ error: 'tenantId not resolved' }, { status: 400 })
-    }
+export async function GET() {
+    const tenantId = await getTenantIdStrict()
 
     // Ensure counters exist for other flows, but we derive display usage from messages for UTC month alignment
     await ensureUsageRow(tenantId)

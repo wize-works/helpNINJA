@@ -1,8 +1,9 @@
-import { getTenantIdServer } from "@/lib/auth";
+import { getTenantIdStrict } from "@/lib/tenant-resolve";
 import SiteManager from "@/components/site-manager";
 import { Breadcrumb } from "@/components/ui/breadcrumb";
 import { AnimatedPage, StaggerContainer, StaggerChild, HoverScale } from "@/components/ui/animated-page";
 import StatCard from "@/components/ui/stat-card";
+import SiteWizardLauncher from "@/components/site-wizard-launcher";
 import { query } from "@/lib/db";
 
 export const runtime = 'nodejs';
@@ -64,7 +65,7 @@ async function getSitesStats(tenantId: string) {
 }
 
 export default async function SitesPage() {
-    const tenantId = await getTenantIdServer({ allowEnvFallback: true });
+    const tenantId = await getTenantIdStrict();
     console.log('SitesPage tenantId resolved:', tenantId);
     const stats = await getSitesStats(tenantId);
 
@@ -93,7 +94,9 @@ export default async function SitesPage() {
                                     Register and manage the domains where your chat widget can be embedded. Domain verification ensures security and prevents unauthorized use.
                                 </p>
                             </div>
-                            <div className="flex-shrink-0">
+                            <div className="flex-shrink-0 flex items-center gap-3">
+                                {/* Rerunnable site onboarding wizard, gated by plan limits */}
+                                <SiteWizardLauncher />
                                 <div className="stats shadow">
                                     <div className="stat">
                                         <div className="stat-figure text-primary">
@@ -153,7 +156,7 @@ export default async function SitesPage() {
                     <div className="lg:col-span-2">
                         <StaggerContainer>
                             <StaggerChild>
-                                <SiteManager tenantId={tenantId} />
+                                <SiteManager />
                             </StaggerChild>
                         </StaggerContainer>
                     </div>

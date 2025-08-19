@@ -7,7 +7,7 @@ Scope
 What's partial or pending
 - Conversation detail transcript page (optional)
 - Tests: unit/integration for usage gating, RAG, escalation, billing.
-- Auth model: auth.ts is a stub; tenant passed via headers/env (prod hardening).
+- Auth model: Strict for admin/dashboard via Clerk org → tenant (getTenantIdStrict). Legacy header/env resolver remains only for public/widget contexts.
 - Rate limiting beyond plan gates.
 - RLS policies if using Supabase auth directly.
 - Team invitation emails: Infrastructure is ready but sendInvitationEmail() function not implemented (src/app/api/team/invitations/route.ts line 129)
@@ -55,8 +55,8 @@ Core features (present)
   - Files: src/app/api/billing/**, src/app/api/stripe/webhook/route.ts, src/lib/stripe.ts
 - Dashboard
   - KPI cards (conversations, usage this month, low-confidence, active integrations), sources indexed, integrations list, usage panel.
-  - Tenant resolved server-side; outbox retry button.
-  - Files: src/app/dashboard/page.tsx, src/components/sidebar.tsx, src/lib/auth.ts
+  - Tenant resolved strictly server-side (Clerk org → tenant); outbox retry button.
+  - Files: src/app/dashboard/page.tsx, src/components/sidebar.tsx, src/lib/tenant-resolve.ts
   - Notes: "Messages (this month)" derives from `public.messages` for the current calendar month, counting `role='user'` messages (aligned with the Chat Volume chart). Low-confidence counts use assistant messages with confidence < 0.55 in the same period.
 - Admin pages
   - Documents: src/app/dashboard/documents/page.tsx and DELETE API src/app/api/documents/[id]/route.ts
@@ -95,6 +95,8 @@ Core features (present)
   - Components: src/components/site-manager.tsx, src/components/site-selector.tsx, src/components/domain-verification.tsx
   - Database: tenant_sites table with verification tokens and status tracking
   - Domain validation: Widget validates allowed origins per tenant (updated src/app/api/widget/route.ts)
+  - Script key enforcement: Each site has a unique script_key returned by POST /api/sites; widget requires t (tenant public key) + s (site id) + k (site key), preventing cross-tenant snippet reuse
+  - Onboarding Install step now generates site-specific embed code and includes a site selector
   - Site-specific content: Documents and chunks associated with specific tenant sites (updated src/app/api/ingest/route.ts)
 - Onboarding experience (NEW - Phase 2 completed)
   - Complete 3-step onboarding flow: account setup → site registration → widget installation
@@ -102,6 +104,8 @@ Core features (present)
   - Components: src/components/onboarding-progress.tsx, src/components/onboarding-navigation.tsx
   - Features: Progress tracking, site registration with verification, live widget preview, installation guide
   - Layout: Custom onboarding layout with branded header and streamlined UX
+  - Dashboard-embedded modal: Site onboarding wizard is available directly from the dashboard Quick Start banner and opens as a modal, not a separate page
+    - Files: src/components/site-wizard-modal.tsx (modal), src/components/quickstart-actions.tsx (launcher), wired in src/app/dashboard/page.tsx
 - DB access
   - pg Pool with Supabase-friendly SSL (cloud: no-verify; local: no SSL); parameterized queries.
   - Files: src/lib/db.ts
@@ -110,7 +114,8 @@ Core features (present)
   - Files: scripts/seed.mjs
 
 Security and conventions
-- Tenant resolution via headers/cookies/env; keep all queries tenant-scoped.
+- Admin/dashboard tenant resolution is strict (Clerk org → tenant) and does not trust client headers/cookies/env.
+- Widget/public endpoints accept a tenant identifier in the body and map to internal tenant id; CORS allows only 'content-type' header.
 - Stripe webhook uses raw body and Node runtime.
 - CORS on /api/chat for widget origins.
 - Use lib/db.ts query() with parameters; avoid string interpolation.

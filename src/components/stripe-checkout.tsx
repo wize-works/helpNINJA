@@ -192,7 +192,7 @@ function CheckoutForm({ plan, billingPeriod, onComplete, onError }: StripeChecko
                         setHasFetched(false);
                         fetchClientSecret().then((secret) => secret && setClientSecret(secret));
                     }}
-                    className="btn btn-outline btn-sm mt-4"
+                    className="btn btn-outline btn-sm rounded-lg mt-4"
                     disabled={isCreatingCheckout}
                 >
                     {isCreatingCheckout ? 'Retrying...' : 'Try Again'}
@@ -336,7 +336,7 @@ function CheckoutForm({ plan, billingPeriod, onComplete, onError }: StripeChecko
                                 type="button"
                                 onClick={applyCoupon}
                                 disabled={!couponCode.trim() || processing || applyingCoupon}
-                                className="btn btn-outline btn-sm"
+                                className="btn btn-outline btn-sm rounded-lg"
                             >
                                 {applyingCoupon ? (<><span className="loading loading-spinner loading-xs"></span>Applying…</>) : 'Apply'}
                             </button>
@@ -353,7 +353,7 @@ function CheckoutForm({ plan, billingPeriod, onComplete, onError }: StripeChecko
                         )}
                     </div>
 
-                    <button type="submit" disabled={!stripe || processing} className="btn btn-primary btn-lg w-full">
+                    <button type="submit" disabled={!stripe || processing} className="btn btn-primary btn-lg w-full rounded-xl">
                         {processing ? (<><span className="loading loading-spinner loading-sm"></span>Processing…</>) : 'Start 14‑day Free Trial'}
                     </button>
                     <p className="text-xs text-base-content/40 text-center">Secure payment powered by Stripe • SSL encrypted</p>

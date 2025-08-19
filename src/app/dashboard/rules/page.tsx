@@ -97,9 +97,7 @@ export default function RulesPage() {
             if (filters.enabled !== '') params.set('enabled', filters.enabled);
             if (filters.type) params.set('type', filters.type);
 
-            const response = await fetch(`/api/rules?${params}`, {
-                headers: { 'x-tenant-id': tenantId }
-            });
+            const response = await fetch(`/api/rules?${params}`);
             if (response.ok) {
                 const data = await response.json();
                 setRules(data);
@@ -109,7 +107,7 @@ export default function RulesPage() {
         } finally {
             setLoading(false);
         }
-    }, [tenantId, filters]);
+    }, [filters]);
 
     useEffect(() => {
         if (tenantId) {
@@ -130,8 +128,7 @@ export default function RulesPage() {
             const response = await fetch(url, {
                 method,
                 headers: {
-                    'Content-Type': 'application/json',
-                    'x-tenant-id': tenantId
+                    'Content-Type': 'application/json'
                 },
                 body: JSON.stringify(payload)
             });
@@ -158,7 +155,7 @@ export default function RulesPage() {
         try {
             const response = await fetch(`/api/rules/${rule.id}`, {
                 method: 'DELETE',
-                headers: { 'x-tenant-id': tenantId }
+
             });
 
             if (response.ok) {
@@ -194,8 +191,7 @@ export default function RulesPage() {
             const response = await fetch(`/api/rules/${rule.id}`, {
                 method: 'PUT',
                 headers: {
-                    'Content-Type': 'application/json',
-                    'x-tenant-id': tenantId
+                    'Content-Type': 'application/json'
                 },
                 body: JSON.stringify({ enabled: !rule.enabled })
             });
@@ -219,8 +215,7 @@ export default function RulesPage() {
             const response = await fetch(`/api/rules/${ruleId}/test`, {
                 method: 'POST',
                 headers: {
-                    'Content-Type': 'application/json',
-                    'x-tenant-id': tenantId
+                    'Content-Type': 'application/json'
                 },
                 body: JSON.stringify(testData)
             });
@@ -306,7 +301,7 @@ export default function RulesPage() {
                             <div className="flex items-center gap-3">
                                 <HoverScale scale={1.02}>
                                     <button
-                                        className="btn btn-primary"
+                                        className="btn btn-primary rounded-xl"
                                         onClick={() => {
                                             setEditingRule(undefined);
                                             resetForm();
@@ -356,7 +351,7 @@ export default function RulesPage() {
                                     {/* Basic Information */}
                                     <fieldset className="space-y-6 mb-6">
                                         <legend className="text-base font-semibold text-base-content mb-4">Rule Information</legend>
-                                        
+
                                         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                                             <div className="space-y-4">
                                                 <label className="block">
@@ -430,7 +425,6 @@ export default function RulesPage() {
                                                 <label className="block">
                                                     <span className="text-sm font-medium text-base-content mb-2 block">Associated Site</span>
                                                     <SiteSelector
-                                                        tenantId={tenantId}
                                                         value={formData.siteId}
                                                         onChange={(siteId) => setFormData(prev => ({ ...prev, siteId: siteId || '' }))}
                                                         allowNone={true}
@@ -467,7 +461,6 @@ export default function RulesPage() {
                                     <fieldset className="space-y-4 mb-6">
                                         <legend className="text-base font-semibold text-base-content mb-4">Rule Logic & Actions</legend>
                                         <RuleBuilder
-                                            tenantId={tenantId}
                                             predicate={formData.predicate}
                                             destinations={formData.destinations}
                                             onPredicateChange={(predicate) => setFormData(prev => ({ ...prev, predicate }))}
@@ -480,10 +473,10 @@ export default function RulesPage() {
                                         <div className="text-sm text-base-content/60">
                                             {editingRule ? 'Update your escalation rule configuration' : 'Create a new rule to automate conversation handling'}
                                         </div>
-                                        
+
                                         <div className="flex items-center gap-3">
                                             <button
-                                                className="btn btn-ghost"
+                                                className="btn btn-ghost rounded-xl"
                                                 onClick={() => {
                                                     setShowEditor(false);
                                                     setEditingRule(undefined);
@@ -491,10 +484,10 @@ export default function RulesPage() {
                                             >
                                                 Cancel
                                             </button>
-                                            
+
                                             <HoverScale scale={1.02}>
                                                 <button
-                                                    className={`btn btn-primary ${!formData.name.trim() || formData.predicate.conditions.length === 0 || formData.destinations.length === 0 ? 'btn-disabled' : ''}`}
+                                                    className={`btn btn-primary rounded-xl ${!formData.name.trim() || formData.predicate.conditions.length === 0 || formData.destinations.length === 0 ? 'btn-disabled' : ''}`}
                                                     onClick={handleSave}
                                                     disabled={!formData.name.trim() || formData.predicate.conditions.length === 0 || formData.destinations.length === 0}
                                                 >
@@ -534,12 +527,11 @@ export default function RulesPage() {
                                             <p className="text-base-content/60 text-sm">Narrow down your rules by specific criteria</p>
                                         </div>
                                     </div>
-                                    
+
                                     <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                                         <label className="block">
                                             <span className="text-sm font-medium text-base-content mb-2 block">Filter by site</span>
                                             <SiteSelector
-                                                tenantId={tenantId}
                                                 value={filters.siteId}
                                                 onChange={(siteId) => setFilters(prev => ({ ...prev, siteId: siteId || '' }))}
                                                 allowNone={true}
@@ -606,7 +598,7 @@ export default function RulesPage() {
                                                 }
                                             </p>
                                             <button
-                                                className="btn btn-primary"
+                                                className="btn btn-primary rounded-xl"
                                                 onClick={() => {
                                                     setEditingRule(undefined);
                                                     resetForm();
@@ -752,7 +744,7 @@ export default function RulesPage() {
                                         {/* Test Input Form */}
                                         <fieldset className="space-y-6">
                                             <legend className="text-base font-semibold text-base-content mb-4">Test Data</legend>
-                                            
+
                                             <label className="block">
                                                 <span className="text-sm font-medium text-base-content mb-2 block">
                                                     Test Message
@@ -827,7 +819,7 @@ export default function RulesPage() {
                                             <div className="pt-4">
                                                 <HoverScale scale={1.02}>
                                                     <button
-                                                        className={`btn btn-secondary w-full ${testingRule ? 'loading' : ''}`}
+                                                        className={`btn btn-secondary rounded-xl w-full ${testingRule ? 'loading' : ''}`}
                                                         onClick={() => testRule(rules[0]?.id || '')}
                                                         disabled={!!testingRule || !testData.message.trim()}
                                                     >
@@ -850,7 +842,7 @@ export default function RulesPage() {
                                         {/* Test Results */}
                                         <div className="space-y-4">
                                             <h4 className="text-base font-semibold text-base-content">Test Results</h4>
-                                            
+
                                             {!testResult ? (
                                                 <div className="text-center py-12 bg-base-200/40 rounded-xl border border-base-300">
                                                     <div className="w-16 h-16 bg-base-300/60 rounded-xl flex items-center justify-center mx-auto mb-3">
@@ -861,15 +853,13 @@ export default function RulesPage() {
                                             ) : (
                                                 <div className="space-y-4">
                                                     {/* Overall Result */}
-                                                    <div className={`p-4 rounded-xl border-2 ${
-                                                        testResult.matched 
-                                                            ? 'border-success bg-success/10 text-success' 
-                                                            : 'border-error bg-error/10 text-error'
-                                                    }`}>
+                                                    <div className={`p-4 rounded-xl border-2 ${testResult.matched
+                                                        ? 'border-success bg-success/10 text-success'
+                                                        : 'border-error bg-error/10 text-error'
+                                                        }`}>
                                                         <div className="flex items-center gap-2">
-                                                            <i className={`fa-duotone fa-solid ${
-                                                                testResult.matched ? 'fa-check-circle' : 'fa-times-circle'
-                                                            } text-lg`} aria-hidden />
+                                                            <i className={`fa-duotone fa-solid ${testResult.matched ? 'fa-check-circle' : 'fa-times-circle'
+                                                                } text-lg`} aria-hidden />
                                                             <span className="font-semibold">
                                                                 {testResult.matched ? 'Rule MATCHED ✅' : 'Rule NOT MATCHED ❌'}
                                                             </span>
@@ -880,18 +870,16 @@ export default function RulesPage() {
                                                     <div className="space-y-3">
                                                         <h5 className="text-sm font-medium text-base-content">Condition Results</h5>
                                                         {testResult.details.map((detail: TestDetail, index: number) => (
-                                                            <div key={index} className={`p-3 rounded-lg border ${
-                                                                detail.result === true
-                                                                    ? 'border-success/30 bg-success/5' 
-                                                                    : 'border-error/30 bg-error/5'
-                                                            }`}>
+                                                            <div key={index} className={`p-3 rounded-lg border ${detail.result === true
+                                                                ? 'border-success/30 bg-success/5'
+                                                                : 'border-error/30 bg-error/5'
+                                                                }`}>
                                                                 <div className="flex items-center justify-between">
                                                                     <span className="text-sm text-base-content">
                                                                         {detail.reason}
                                                                     </span>
-                                                                    <div className={`badge badge-sm ${
-                                                                        detail.result === true ? 'badge-success' : 'badge-error'
-                                                                    }`}>
+                                                                    <div className={`badge badge-sm ${detail.result === true ? 'badge-success' : 'badge-error'
+                                                                        }`}>
                                                                         {detail.result === true ? 'Pass' : 'Fail'}
                                                                     </div>
                                                                 </div>

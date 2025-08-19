@@ -16,11 +16,7 @@ type Site = {
     updated_at: string;
 };
 
-type SiteManagerProps = {
-    tenantId: string;
-};
-
-export default function SiteManager({ tenantId }: SiteManagerProps) {
+export default function SiteManager() {
     const [sites, setSites] = useState<Site[]>([]);
     const [loading, setLoading] = useState(true);
     const [showAddForm, setShowAddForm] = useState(false);
@@ -39,7 +35,7 @@ export default function SiteManager({ tenantId }: SiteManagerProps) {
     const loadSites = useCallback(async () => {
         try {
             const res = await fetch('/api/sites', {
-                headers: { 'x-tenant-id': tenantId }
+                // strict server-side tenant resolution; no client headers
             });
 
             if (res.ok) {
@@ -53,7 +49,7 @@ export default function SiteManager({ tenantId }: SiteManagerProps) {
         } finally {
             setLoading(false);
         }
-    }, [tenantId]);
+    }, []);
 
     useEffect(() => {
         loadSites();
@@ -85,7 +81,7 @@ export default function SiteManager({ tenantId }: SiteManagerProps) {
                 method,
                 headers: {
                     'content-type': 'application/json',
-                    'x-tenant-id': tenantId
+                    // strict server-side tenant resolution; no client headers
                 },
                 body: JSON.stringify(formData),
             });
@@ -127,7 +123,7 @@ export default function SiteManager({ tenantId }: SiteManagerProps) {
         try {
             const res = await fetch(`/api/sites/${site.id}`, {
                 method: 'DELETE',
-                headers: { 'x-tenant-id': tenantId }
+                // strict server-side tenant resolution; no client headers
             });
 
             if (!res.ok) {
@@ -345,7 +341,7 @@ export default function SiteManager({ tenantId }: SiteManagerProps) {
                     </div>
                 </div>
             )}
-            
+
 
             {/* Domain Verification Section */}
             {verifyingSite && (
@@ -371,12 +367,11 @@ export default function SiteManager({ tenantId }: SiteManagerProps) {
                                 <i className="fa-duotone fa-solid fa-times" aria-hidden />
                             </button>
                         </div>
-                        
+
                         <DomainVerification
                             siteId={verifyingSite.id}
                             siteName={verifyingSite.name}
                             domain={verifyingSite.domain}
-                            tenantId={tenantId}
                             initialVerified={verifyingSite.verified}
                             onVerificationChange={(verified) => {
                                 if (verified) {
@@ -416,21 +411,19 @@ export default function SiteManager({ tenantId }: SiteManagerProps) {
                         {sites.map((site) => (
                             <div key={site.id} className="group relative bg-gradient-to-br from-base-100/80 to-base-200/40 backdrop-blur-sm rounded-2xl border border-base-200/60 shadow-sm hover:shadow-xl hover:scale-[1.02] transition-all duration-300 overflow-hidden">
                                 {/* Status indicator bar */}
-                                <div className={`absolute top-0 left-0 right-0 h-1 ${
-                                    site.status === 'active' ? 'bg-gradient-to-r from-success to-success/60' :
-                                    site.status === 'paused' ? 'bg-gradient-to-r from-warning to-warning/60' :
-                                    'bg-gradient-to-r from-info to-info/60'
-                                }`} />
-                                
-                                
+                                <div className={`absolute top-0 left-0 right-0 h-1 ${site.status === 'active' ? 'bg-gradient-to-r from-success to-success/60' :
+                                        site.status === 'paused' ? 'bg-gradient-to-r from-warning to-warning/60' :
+                                            'bg-gradient-to-r from-info to-info/60'
+                                    }`} />
+
+
                                 <div className="p-6">
                                     {/* Header with icon and name */}
                                     <div className="flex items-start gap-4 mb-4">
-                                        <div className={`w-14 h-14 rounded-2xl flex items-center justify-center flex-shrink-0 ${
-                                            site.status === 'active' ? 'bg-success/10 text-success' :
-                                            site.status === 'paused' ? 'bg-warning/10 text-warning' :
-                                            'bg-info/10 text-info'
-                                        }`}>
+                                        <div className={`w-14 h-14 rounded-2xl flex items-center justify-center flex-shrink-0 ${site.status === 'active' ? 'bg-success/10 text-success' :
+                                                site.status === 'paused' ? 'bg-warning/10 text-warning' :
+                                                    'bg-info/10 text-info'
+                                            }`}>
                                             <i className="fa-duotone fa-solid fa-globe text-xl" aria-hidden />
                                         </div>
                                         <div className="flex-1 min-w-0">
@@ -443,24 +436,22 @@ export default function SiteManager({ tenantId }: SiteManagerProps) {
                                     <div className="space-y-3 mb-4">
                                         <div className="flex items-center justify-between">
                                             <div className="flex items-center gap-2">
-                                                <div className={`w-2 h-2 rounded-full ${
-                                                    site.status === 'active' ? 'bg-success animate-pulse' :
-                                                    site.status === 'paused' ? 'bg-warning' :
-                                                    'bg-info'
-                                                }`} />
+                                                <div className={`w-2 h-2 rounded-full ${site.status === 'active' ? 'bg-success animate-pulse' :
+                                                        site.status === 'paused' ? 'bg-warning' :
+                                                            'bg-info'
+                                                    }`} />
                                                 <span className="text-sm font-medium text-base-content">
                                                     {site.status === 'active' ? 'Active' :
-                                                     site.status === 'paused' ? 'Paused' :
-                                                     'Pending'}
+                                                        site.status === 'paused' ? 'Paused' :
+                                                            'Pending'}
                                                 </span>
                                             </div>
-                                            <div className={`badge badge-sm ${
-                                                site.verified ? 'badge-success' : 'badge-warning'
-                                            }`}>
+                                            <div className={`badge badge-sm ${site.verified ? 'badge-success' : 'badge-warning'
+                                                }`}>
                                                 {site.verified ? 'Verified' : 'Unverified'}
                                             </div>
                                         </div>
-                                        
+
                                         {/* Additional metadata */}
                                         <div className="flex items-center justify-between text-xs text-base-content/60">
                                             <span className="flex items-center gap-1">
@@ -477,7 +468,7 @@ export default function SiteManager({ tenantId }: SiteManagerProps) {
                                     {/* Action buttons */}
                                     <div className="flex items-center gap-2 pt-3 border-t border-base-200/40">
                                         {!site.verified && (
-                                            <button 
+                                            <button
                                                 onClick={() => handleVerifySite(site)}
                                                 className="btn btn-outline btn-sm rounded-xl flex-1 group-hover:btn-primary transition-all duration-200"
                                             >

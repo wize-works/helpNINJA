@@ -1,14 +1,14 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { query } from '@/lib/db';
-import { resolveTenantIdFromRequest } from '@/lib/auth';
+import { getTenantIdStrict } from '@/lib/tenant-resolve';
 import { sendTeamInvitationEmail } from '@/lib/emails/team-invitation';
 import crypto from 'crypto';
 
 export const runtime = 'nodejs';
 
-export async function GET(req: NextRequest) {
+export async function GET() {
     try {
-        const tenantId = await resolveTenantIdFromRequest(req, true);
+        const tenantId = await getTenantIdStrict();
 
         const { rows } = await query(`
             SELECT 
@@ -51,7 +51,7 @@ export async function GET(req: NextRequest) {
 
 export async function POST(req: NextRequest) {
     try {
-        const tenantId = await resolveTenantIdFromRequest(req, true);
+        const tenantId = await getTenantIdStrict();
         const body = await req.json();
         const { email, role, message } = body;
 
@@ -184,7 +184,7 @@ export async function POST(req: NextRequest) {
 
 export async function DELETE(req: NextRequest) {
     try {
-        const tenantId = await resolveTenantIdFromRequest(req, true);
+        const tenantId = await getTenantIdStrict();
         const { searchParams } = new URL(req.url);
         const invitationId = searchParams.get('id');
 

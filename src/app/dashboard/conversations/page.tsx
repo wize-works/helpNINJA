@@ -1,4 +1,4 @@
-import { getTenantIdServer } from "@/lib/auth";
+import { getTenantIdStrict } from "@/lib/tenant-resolve";
 import { query } from "@/lib/db";
 import { TableSkeleton } from "@/components/ui/skeleton";
 import { Breadcrumb } from "@/components/ui/breadcrumb";
@@ -206,7 +206,7 @@ function ConversationsTable({ conversations }: { conversations: Row[] }) {
 }
 
 export default async function ConversationsPage() {
-    const tenantId = await getTenantIdServer({ allowEnvFallback: true })
+    const tenantId = await getTenantIdStrict()
 
     const breadcrumbItems = [
         { label: "Dashboard", href: "/dashboard", icon: "fa-gauge-high" },

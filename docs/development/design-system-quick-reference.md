@@ -92,7 +92,7 @@ export default function PageComponent() {
               <div className="flex items-center gap-3">
                 <StatsCard />
                 <HoverScale scale={1.02}>
-                  <button className="btn btn-primary">Action</button>
+                  <button className="btn btn-primary rounded-xl">Action</button>
                 </HoverScale>
               </div>
             </div>
@@ -223,7 +223,7 @@ text-primary          // Full opacity primary text
 import { HoverScale } from "@/components/ui/animated-page";
 
 <HoverScale scale={1.02}>
-  <button className="btn btn-primary">Click me</button>
+  <button className="btn btn-primary rounded-xl">Click me</button>
 </HoverScale>
 
 // Button sizes

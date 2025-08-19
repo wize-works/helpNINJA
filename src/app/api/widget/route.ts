@@ -6,14 +6,14 @@ export const runtime = 'nodejs';
 export async function GET(req: NextRequest) {
     const { searchParams } = new URL(req.url);
     const tenantPublicKey = searchParams.get('t');
+    const siteId = searchParams.get('s');
+    const siteKey = searchParams.get('k');
     const voice = searchParams.get('voice') || 'friendly';
     const originUrl = new URL(req.url);
     const origin = originUrl.origin;
 
-    // Validate tenant public key
-    if (!tenantPublicKey) {
-        return new Response('Missing tenant parameter', { status: 400 });
-    }
+    // Validate required params (tenant always; site/key validated after we know preview mode)
+    if (!tenantPublicKey) return new Response('Missing tenant parameter "t"', { status: 400 });
 
     // Get referer to validate domain
     const referer = req.headers.get('referer');
@@ -34,55 +34,65 @@ export async function GET(req: NextRequest) {
         }
     }
 
-    // Validate domain if referer is provided
+    // Validate domain + site + key if referer is provided
+    const previewMode = skipDomainValidation === true;
+    let validatedTenantId = '';
     if (refererDomain && !skipDomainValidation) {
         try {
-            const { rows: siteRows } = await query(
-                `SELECT ts.domain, ts.verified, t.id as tenant_id
+            const { rows: siteRows } = await query<{ tenant_id: string }>(
+                `SELECT ts.tenant_id
                  FROM public.tenant_sites ts
                  JOIN public.tenants t ON t.id = ts.tenant_id
-                 WHERE t.public_key = $1 AND ts.domain = $2 AND ts.verified = true AND ts.status = 'active'`,
-                [tenantPublicKey, refererDomain]
+                 WHERE t.public_key = $1 AND ts.id = $2 AND ts.script_key = $3 AND ts.domain = $4 AND ts.verified = true AND ts.status = 'active'
+                 LIMIT 1`,
+                [tenantPublicKey, siteId, siteKey, refererDomain]
             );
 
             if (siteRows.length === 0) {
-                // Check if domain exists but is not verified
-                const { rows: unverifiedRows } = await query(
-                    `SELECT ts.domain
+                // Provide more granular errors for troubleshooting
+                const { rows: meta } = await query(
+                    `SELECT ts.domain, ts.verified, ts.status, (ts.script_key = $3) as key_match
                      FROM public.tenant_sites ts
                      JOIN public.tenants t ON t.id = ts.tenant_id
-                     WHERE t.public_key = $1 AND ts.domain = $2`,
-                    [tenantPublicKey, refererDomain]
+                     WHERE t.public_key = $1 AND ts.id = $2
+                     LIMIT 1`,
+                    [tenantPublicKey, siteId, siteKey]
                 );
-
-                if (unverifiedRows.length > 0) {
-                    return new Response('Domain not verified', { status: 403 });
-                } else {
-                    return new Response('Domain not registered', { status: 403 });
-                }
+                if (!meta.length) return new Response('Site not found for tenant', { status: 404 });
+                const m = meta[0] as { domain: string; verified: boolean; status: string; key_match: boolean };
+                if (m.domain !== refererDomain) return new Response('Domain mismatch for site', { status: 403 });
+                if (!m.key_match) return new Response('Invalid site key', { status: 403 });
+                if (m.status !== 'active') return new Response('Site not active', { status: 403 });
+                if (!m.verified) return new Response('Domain not verified', { status: 403 });
+                return new Response('Unauthorized', { status: 403 });
             }
+            validatedTenantId = siteRows[0].tenant_id;
         } catch (error) {
-            console.error('Domain validation error:', error);
-            // Continue without domain validation if DB error occurs
+            console.error('Domain/site validation error:', error);
+            return new Response('Server error', { status: 500 });
         }
     }
 
-    // Get tenant ID for the widget
-    let tenantId = '';
-    try {
-        const { rows: tenantRows } = await query(
-            'SELECT id FROM public.tenants WHERE public_key = $1',
-            [tenantPublicKey]
-        );
+    // Require siteId + siteKey when not in preview
+    if (!previewMode) {
+        if (!siteId) return new Response('Missing site parameter "s"', { status: 400 });
+        if (!siteKey) return new Response('Missing site key parameter "k"', { status: 400 });
+    }
 
-        if (tenantRows.length === 0) {
-            return new Response('Invalid tenant', { status: 404 });
+    // Get tenant ID for the widget (fallback if loaded in preview where referer validation was skipped)
+    let tenantId = validatedTenantId;
+    if (!tenantId) {
+        try {
+            const { rows: tenantRows } = await query(
+                'SELECT id FROM public.tenants WHERE public_key = $1',
+                [tenantPublicKey]
+            );
+            if (tenantRows.length === 0) return new Response('Invalid tenant', { status: 404 });
+            tenantId = tenantRows[0].id;
+        } catch (error) {
+            console.error('Tenant lookup error:', error);
+            return new Response('Server error', { status: 500 });
         }
-
-        tenantId = tenantRows[0].id;
-    } catch (error) {
-        console.error('Tenant lookup error:', error);
-        return new Response('Server error', { status: 500 });
     }
     const TENANT_JSON = JSON.stringify(tenantId);
     const VOICE_JSON = JSON.stringify(voice);
@@ -145,7 +155,7 @@ export async function GET(req: NextRequest) {
     async function send(){
       const i = document.getElementById('hn_input'); const text = i.value.trim(); if(!text) return;
       i.value=''; add('user', text);
-  const r = await fetch(${ORIGIN_JSON} + '/api/chat', {method:'POST', headers:{'content-type':'application/json'}, body: JSON.stringify({ tenantId: ${TENANT_JSON}, sessionId: sid, message: text, voice: ${VOICE_JSON} })});
+    const r = await fetch(${ORIGIN_JSON} + '/api/chat', {method:'POST', headers:{'content-type':'application/json'}, body: JSON.stringify({ tenantId: ${TENANT_JSON}, sessionId: sid, message: text, voice: ${VOICE_JSON} })});
   let j = null; try { j = await r.json(); } catch(_) {}
   if(!r.ok){ add('assistant', (j && (j.message||j.error)) || 'Sorry, something went wrong.'); return; }
   add('assistant', (j && j.answer) || '…');
