@@ -421,7 +421,7 @@ export async function GET(req: NextRequest) {
         if(!r.ok) { 
           add('assistant', (j && (j.message || j.error)) || 'Sorry, something went wrong.'); 
         } else {
-          add('assistant', (j && j.answer) || 'I didn\'t understand that. Could you try asking in a different way?');
+          add('assistant', (j && j.answer) || 'I didn&apos;t understand that. Could you try asking in a different way?');
         }
       } catch (error) {
         // Remove loading indicator
