@@ -19,14 +19,6 @@ export async function GET(req: NextRequest) {
     const xfHost = req.headers.get('x-forwarded-host') || '';
     const host = xfHost || req.headers.get('host') || '';
 
-    console.log('Widget script request:', {
-        tenantPublicKey,
-        siteId,
-        siteKey,
-        voice,
-        host,
-    });
-
     // Validate required params (tenant always; site/key validated after we know preview mode)
     if (!tenantPublicKey) return new Response('Missing tenant parameter "t"', { status: 400 });
 
@@ -51,16 +43,32 @@ export async function GET(req: NextRequest) {
         }
     }
 
+    console.log('Widget script request:', {
+        tenantPublicKey,
+        siteId,
+        siteKey,
+        voice,
+        host,
+        refererDomain,
+    });
+
     // Validate domain + site + key if referer is provided
     const previewMode = skipDomainValidation === true;
     let validatedTenantId = '';
     if (refererDomain && !skipDomainValidation) {
         try {
+            // Using hostname from referer URL already removes protocol (http/https)
+            // We just need to handle cases where the domain is stored with/without www
             const { rows: siteRows } = await query<{ tenant_id: string }>(
                 `SELECT ts.tenant_id
          FROM public.tenant_sites ts
          JOIN public.tenants t ON t.id = ts.tenant_id
-         WHERE t.public_key = $1 AND ts.id = $2 AND ts.script_key = $3 AND ts.domain = $4
+         WHERE t.public_key = $1 AND ts.id = $2 AND ts.script_key = $3 
+               AND (
+                   ts.domain = $4 
+                   OR REPLACE(ts.domain, 'www.', '') = REPLACE($4, 'www.', '')
+                   OR $4 LIKE CONCAT('%', ts.domain) -- Handle cases where domain is stored without protocol
+                )
                AND ts.verified = true AND ts.status = 'active'
          LIMIT 1`,
                 [tenantPublicKey, siteId, siteKey, refererDomain]
@@ -88,7 +96,18 @@ export async function GET(req: NextRequest) {
                     verified: m.verified
                 };
                 console.log('m.domain:', m.domain, 'refererDomain:', refererDomain, 'key_match:', m.key_match, 'status:', m.status, 'verified:', m.verified);
-                if (m.domain !== refererDomain) return new Response(`Domain mismatch: Expected ${m.domain}, got ${refererDomain}`, { status: 403 });
+                if (m.domain !== refererDomain) {
+                    // Normalize domains by removing www. prefix and any protocol for comparison
+                    const normalizedDomain = m.domain.replace(/^www\./, '').replace(/^https?:\/\//, '').replace(/\/$/, '');
+                    const normalizedReferer = refererDomain.replace(/^www\./, '').replace(/^https?:\/\//, '').replace(/\/$/, '');
+
+                    // Also check if one is a substring of the other (handles domain.com vs. subdomain.domain.com)
+                    if (normalizedDomain !== normalizedReferer &&
+                        !normalizedReferer.endsWith(normalizedDomain) &&
+                        !normalizedDomain.endsWith(normalizedReferer)) {
+                        return new Response(`Domain mismatch: Expected ${m.domain}, got ${refererDomain}`, { status: 403 });
+                    }
+                }
                 if (!m.key_match) return new Response('Invalid site key', { status: 403 });
                 if (m.status !== 'active') return new Response(`Site not active: ${m.status}`, { status: 403 });
                 if (!m.verified) return new Response('Domain not verified', { status: 403 });
