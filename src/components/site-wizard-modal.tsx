@@ -843,7 +843,7 @@ export default function SiteWizardModal({
                                                                 <IntegrationOptions
                                                                     tenantPublicKey={tenantInfo.public_key}
                                                                     siteId={currentSite.id}
-                                                                    scriptKey={currentSite.script_key || ''}
+                                                                    scriptKey={currentSite.verification_token || ''} /* Using verification_token, not script_key */
                                                                     voice={voice}
                                                                     serviceUrl={process.env.NODE_ENV === "production" ? "https://helpninja.app" : "http://localhost:3001"}
                                                                     domain={currentSite.domain}

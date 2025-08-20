@@ -135,7 +135,7 @@ export default function WidgetSetupModal({
                                 <IntegrationOptions
                                     tenantPublicKey={tenantInfo.public_key}
                                     siteId={siteId}
-                                    scriptKey={scriptKey || ''} 
+                                    scriptKey={scriptKey || ''}
                                     voice={voice}
                                     serviceUrl={serviceUrl}
                                     domain={domain}
