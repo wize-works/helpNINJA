@@ -24,6 +24,7 @@ Add this script just before the closing `</body>` tag in your HTML:
 <!-- helpNINJA Chat Widget -->
 <script>
   (function() {
+    // Store configuration for client-side use
     window.helpNINJAConfig = {
       tenantId: "YOUR_TENANT_PUBLIC_KEY",
       siteId: "YOUR_SITE_ID",
@@ -31,7 +32,8 @@ Add this script just before the closing `</body>` tag in your HTML:
       voice: "friendly"
     };
     var script = document.createElement("script");
-    script.src = "https://helpninja.app/api/widget";
+    // Include necessary parameters in URL for server-side validation
+    script.src = "https://helpninja.app/api/widget?t=YOUR_TENANT_PUBLIC_KEY&s=YOUR_SITE_ID&k=YOUR_SITE_VERIFICATION_TOKEN&voice=friendly";
     script.async = true;
     document.head.appendChild(script);
   })();
@@ -57,6 +59,7 @@ export default function Layout({ children }) {
         dangerouslySetInnerHTML={{
           __html: `
             (function() {
+              // Store configuration for client-side use
               window.helpNINJAConfig = {
                 tenantId: "YOUR_TENANT_PUBLIC_KEY",
                 siteId: "YOUR_SITE_ID",
@@ -64,7 +67,8 @@ export default function Layout({ children }) {
                 voice: "friendly"
               };
               var script = document.createElement("script");
-              script.src = "https://helpninja.app/api/widget";
+              // Include necessary parameters in URL for server-side validation
+              script.src = "https://helpninja.app/api/widget?t=YOUR_TENANT_PUBLIC_KEY&s=YOUR_SITE_ID&k=YOUR_SITE_VERIFICATION_TOKEN&voice=friendly";
               script.async = true;
               document.head.appendChild(script);
             })();
@@ -87,6 +91,7 @@ import { useEffect } from 'react';
 
 export default function HelpNinjaWidget() {
   useEffect(() => {
+    // Store configuration for client-side use
     window.helpNINJAConfig = {
       tenantId: "YOUR_TENANT_PUBLIC_KEY",
       siteId: "YOUR_SITE_ID",
@@ -95,7 +100,8 @@ export default function HelpNinjaWidget() {
     };
 
     const script = document.createElement("script");
-    script.src = "https://helpninja.app/api/widget";
+    // Include necessary parameters in URL for server-side validation
+    script.src = "https://helpninja.app/api/widget?t=YOUR_TENANT_PUBLIC_KEY&s=YOUR_SITE_ID&k=YOUR_SITE_VERIFICATION_TOKEN&voice=friendly";
     script.async = true;
     document.head.appendChild(script);
 
@@ -135,7 +141,7 @@ import { useEffect } from 'react';
 
 function HelpNinjaWidget() {
   useEffect(() => {
-    // Set configuration
+    // Store configuration for client-side use
     window.helpNINJAConfig = {
       tenantId: "YOUR_TENANT_PUBLIC_KEY",
       siteId: "YOUR_SITE_ID",
@@ -143,9 +149,9 @@ function HelpNinjaWidget() {
       voice: "friendly"
     };
 
-    // Create and load script
+    // Create and load script with required parameters in URL
     const script = document.createElement("script");
-    script.src = "https://helpninja.app/api/widget";
+    script.src = "https://helpninja.app/api/widget?t=YOUR_TENANT_PUBLIC_KEY&s=YOUR_SITE_ID&k=YOUR_SITE_VERIFICATION_TOKEN&voice=friendly";
     script.async = true;
     document.head.appendChild(script);
 
@@ -179,7 +185,7 @@ For Vue.js applications:
 export default {
   name: 'App',
   mounted() {
-    // Set configuration
+    // Store configuration for client-side use
     window.helpNINJAConfig = {
       tenantId: "YOUR_TENANT_PUBLIC_KEY",
       siteId: "YOUR_SITE_ID",
@@ -187,9 +193,9 @@ export default {
       voice: "friendly"
     };
 
-    // Create and load script
+    // Create and load script with required parameters in URL
     const script = document.createElement("script");
-    script.src = "https://helpninja.app/api/widget";
+    script.src = "https://helpninja.app/api/widget?t=YOUR_TENANT_PUBLIC_KEY&s=YOUR_SITE_ID&k=YOUR_SITE_VERIFICATION_TOKEN&voice=friendly";
     script.async = true;
     document.head.appendChild(script);
   }
@@ -210,7 +216,7 @@ import { Component, OnInit } from '@angular/core';
 })
 export class AppComponent implements OnInit {
   ngOnInit() {
-    // Set configuration
+    // Store configuration for client-side use
     (window as any).helpNINJAConfig = {
       tenantId: "YOUR_TENANT_PUBLIC_KEY",
       siteId: "YOUR_SITE_ID",
@@ -218,9 +224,9 @@ export class AppComponent implements OnInit {
       voice: "friendly"
     };
 
-    // Create and load script
+    // Create and load script with required parameters in URL
     const script = document.createElement("script");
-    script.src = "https://helpninja.app/api/widget";
+    script.src = "https://helpninja.app/api/widget?t=YOUR_TENANT_PUBLIC_KEY&s=YOUR_SITE_ID&k=YOUR_SITE_VERIFICATION_TOKEN&voice=friendly";
     script.async = true;
     document.head.appendChild(script);
   }
@@ -240,6 +246,7 @@ function add_helpninja_widget() {
     <!-- helpNINJA Chat Widget -->
     <script>
       (function() {
+        // Store configuration for client-side use
         window.helpNINJAConfig = {
           tenantId: "<?php echo 'YOUR_TENANT_PUBLIC_KEY'; ?>",
           siteId: "<?php echo 'YOUR_SITE_ID'; ?>",
@@ -247,7 +254,7 @@ function add_helpninja_widget() {
           voice: "<?php echo 'friendly'; ?>"
         };
         var script = document.createElement("script");
-        script.src = "<?php echo 'https://helpninja.app/api/widget'; ?>";
+        script.src = "<?php echo 'https://helpninja.app/api/widget?t=YOUR_TENANT_PUBLIC_KEY&s=YOUR_SITE_ID&k=YOUR_SITE_VERIFICATION_TOKEN&voice=friendly'; ?>";
         script.async = true;
         document.head.appendChild(script);
       })();

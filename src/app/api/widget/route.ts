@@ -164,17 +164,11 @@ export async function GET(req: NextRequest) {
         return window.location.origin; // last resort
       } catch (_) { return window.location.origin; }
     })();
-
-    // Load DaisyUI CSS if not already present
-    if (!document.querySelector('link[href*="daisyui"]') && !document.querySelector('link[data-hn-styles]')) {
-      const link = document.createElement('link');
-      link.rel = 'stylesheet';
-      link.href = 'https://cdn.jsdelivr.net/npm/daisyui@5.0.50/dist/full.css';
-      link.setAttribute('data-hn-styles', 'true');
-      document.head.appendChild(link);
-    }
-
-    const sid = (() => {
+    
+    // Read configuration from helpNINJAConfig if available
+    const config = window.helpNINJAConfig || {};
+    const tenantId = ${TENANT_JSON}; // From URL parameters
+    const sessionId = (() => {
       try {
         const existing = localStorage.getItem('hn_sid');
         if (existing) return existing;
@@ -187,6 +181,18 @@ export async function GET(req: NextRequest) {
         return 'sid_' + Math.random().toString(36).slice(2);
       }
     })();
+    const voiceStyle = ${VOICE_JSON}; // From URL parameters
+
+    // Load DaisyUI CSS if not already present
+    if (!document.querySelector('link[href*="daisyui"]') && !document.querySelector('link[data-hn-styles]')) {
+      const link = document.createElement('link');
+      link.rel = 'stylesheet';
+      link.href = 'https://cdn.jsdelivr.net/npm/daisyui@5.0.50/dist/full.css';
+      link.setAttribute('data-hn-styles', 'true');
+      document.head.appendChild(link);
+    }
+
+    // Session ID is already defined above
 
     const bubble = document.createElement('div');
     bubble.style.cssText = 'position:fixed;bottom:20px;right:20px;width:60px;height:60px;border-radius:30px;box-shadow:0 10px 30px rgba(0,0,0,.2);background:#111;color:#fff;display:flex;align-items:center;justify-content:center;cursor:pointer;z-index:999999;transition:all 0.3s ease;';
@@ -194,8 +200,8 @@ export async function GET(req: NextRequest) {
       <path d="M881.79,312.74c39.7-2.7,69.63,32.16,72.85,69.65,2.49,28.99,2.84,71.14,0,99.98-3.32,33.71-25.27,64.29-60.77,68.23-3.79.42-15.01-.53-16.75,1.25-1.57,1.6-3.92,11.56-5.29,14.71-36.91,85.11-121.05,139.58-212.45,148.55-21.08,34.37-64.81,45.83-102.74,37.28-73.64-16.61-62.97-110.41,15.52-118.5,30.57-3.15,53.55-.69,77.04,19.95,4.58,4.03.85,4.59,9.83,3.91,150.57-11.41,192.52-154.99,173.45-284.2-31.77-215.33-222.58-341.22-435.02-298.35C205.65,113.9,108.17,278.52,121.66,467.37c1.64,22.9,8.34,46.43,9.97,68.02,1.48,19.58-12.44,13.97-25.52,14.45-29.32,1.07-49.44,6.57-75.18-11.74-13.35-9.5-21.84-21.17-25.79-37.21-3.43-33.3-6.48-73.04-4.53-106.55,1.9-32.51,14.65-68,48.5-78.5,4.27-1.33,21.8-3.24,23.04-4.96,1.41-1.97,5.57-22.28,7.01-26.99C145.21,69.49,373.1-40.91,587.08,13.95c145.03,37.18,261.97,151.64,294.72,298.79Z"/>
       <path d="M428.45,329.17c42.73-1.25,88.12-1.04,130.7,1.72,66.55,4.31,205.78,20.26,213.38,106.62,8.53,96.89-108.27,127.26-183.69,109.69-28.27-6.59-51.79-21.81-78.66-30.34-68.8-21.84-107.58,30.48-171.03,35.01-65.52,4.67-173.87-28.91-159.04-113.04,17.6-99.83,168.87-107.34,248.34-109.66ZM322.44,399.16c-48.11,6.17-52.08,102.36,2.84,107.6,65.56,6.25,68.28-116.71-2.84-107.6ZM620.45,399.17c-51,5.3-55.76,92.59-5.58,105.99,68.17,18.2,78.14-113.52,5.58-105.99Z"/>
     </svg>\`;
-    bubble.onmouseover = () => { bubble.style.transform = 'scale(1.1)'; bubble.querySelector('svg')!.style.transform = 'scale(1.1)'; };
-    bubble.onmouseout  = () => { bubble.style.transform = 'scale(1)';     bubble.querySelector('svg')!.style.transform = 'scale(1)'; };
+    bubble.onmouseover = () => { bubble.style.transform = 'scale(1.1)'; bubble.querySelector('svg')?.style.transform = 'scale(1.1)'; };
+    bubble.onmouseout  = () => { bubble.style.transform = 'scale(1)';     bubble.querySelector('svg')?.style.transform = 'scale(1)'; };
     document.body.appendChild(bubble);
 
     const panel = document.createElement('div');
@@ -234,7 +240,12 @@ export async function GET(req: NextRequest) {
       const r = await fetch(__base + '/api/chat', {
         method:'POST',
         headers:{'content-type':'application/json'},
-        body: JSON.stringify({ tenantId: ${TENANT_JSON}, sessionId: sid, message: text, voice: ${VOICE_JSON} })
+        body: JSON.stringify({ 
+          tenantId: config.tenantId || tenantId, 
+          sessionId: sessionId, 
+          message: text, 
+          voice: config.voice || voiceStyle 
+        })
       });
       let j = null; try { j = await r.json(); } catch(_) {}
       if(!r.ok){ add('assistant', (j && (j.message||j.error)) || 'Sorry, something went wrong.'); return; }

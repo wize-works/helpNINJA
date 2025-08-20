@@ -9,7 +9,8 @@ type IntegrationTab = 'html' | 'nextjs' | 'react' | 'vue' | 'angular' | 'wordpre
 interface IntegrationOptionsProps {
     tenantPublicKey: string;
     siteId: string;
-    scriptKey: string; // This is actually the verification_token, keeping prop name for backwards compatibility
+    verificationToken: string; // Renamed from scriptKey for clarity
+    scriptKey?: string; // Keeping for backwards compatibility
     voice?: string;
     serviceUrl: string;
     fallbackCode?: string; // For backwards compatibility
@@ -19,11 +20,14 @@ interface IntegrationOptionsProps {
 export default function IntegrationOptions({
     tenantPublicKey,
     siteId,
-    scriptKey, // This contains the verification_token value
+    verificationToken,
+    scriptKey, // For backwards compatibility
     voice = 'friendly',
     serviceUrl,
     domain
 }: IntegrationOptionsProps) {
+    // Use verificationToken, fall back to scriptKey for backwards compatibility
+    const token = verificationToken || scriptKey || '';
     const [activeTab, setActiveTab] = useState<IntegrationTab>('html');
 
     const copyToClipboard = (code: string) => {
@@ -35,14 +39,16 @@ export default function IntegrationOptions({
     const htmlCode = `<!-- helpNINJA Chat Widget -->
 <script>
   (function() {
+    // Store configuration for client-side use
     window.helpNINJAConfig = {
       tenantId: "${tenantPublicKey}",
       siteId: "${siteId}",
-      verificationToken: "${scriptKey}", // The verification token for site authentication
+      verificationToken: "${token}", // The verification token for site authentication
       voice: "${voice}"
     };
     var script = document.createElement("script");
-    script.src = "${serviceUrl}/api/widget";
+    // Include necessary parameters in URL for server-side validation
+    script.src = "${serviceUrl}/api/widget?t=${tenantPublicKey}&s=${siteId}&k=${token}&voice=${voice}";
     script.async = true;
     document.head.appendChild(script);
   })();
@@ -62,14 +68,16 @@ export default function Layout({ children }) {
         dangerouslySetInnerHTML={{
           __html: \`
             (function() {
+              // Store configuration for client-side use
               window.helpNINJAConfig = {
                 tenantId: "${tenantPublicKey}",
                 siteId: "${siteId}",
-                verificationToken: "${scriptKey}", // The verification token for site authentication
+                verificationToken: "${token}", // The verification token for site authentication
                 voice: "${voice}"
               };
               var script = document.createElement("script");
-              script.src = "${serviceUrl}/api/widget";
+              // Include necessary parameters in URL for server-side validation
+              script.src = "${serviceUrl}/api/widget?t=${tenantPublicKey}&s=${siteId}&k=${token}&voice=${voice}";
               script.async = true;
               document.head.appendChild(script);
             })();
@@ -84,23 +92,23 @@ export default function Layout({ children }) {
 
 function HelpNinjaWidget() {
   useEffect(() => {
-    // Set configuration
+    // Store configuration for client-side use
     window.helpNINJAConfig = {
       tenantId: "${tenantPublicKey}",
       siteId: "${siteId}",
-      verificationToken: "${scriptKey}", // The verification token for site authentication
+      verificationToken: "${token}", // The verification token for site authentication
       voice: "${voice}"
     };
 
-    // Create and load script
+    // Create and load script with required parameters in URL
     const script = document.createElement("script");
-    script.src = "${serviceUrl}/api/widget";
+    script.src = "${serviceUrl}/api/widget?t=${tenantPublicKey}&s=${siteId}&k=${token}&voice=${voice}";
     script.async = true;
     document.head.appendChild(script);
 
     return () => {
-      // Optional: Remove script on unmount
-      const existingScript = document.querySelector('script[src="${serviceUrl}/api/widget"]');
+      // Optional: Remove script on unmount (using partial match since URL has parameters)
+      const existingScript = document.querySelector('script[src^="${serviceUrl}/api/widget"]');
       if (existingScript) document.head.removeChild(existingScript);
     };
   }, []);
@@ -122,17 +130,17 @@ function HelpNinjaWidget() {
 export default {
   name: 'App',
   mounted() {
-    // Set configuration
+    // Store configuration for client-side use
     window.helpNINJAConfig = {
       tenantId: "${tenantPublicKey}",
       siteId: "${siteId}",
-      verificationToken: "${scriptKey}", // The verification token for site authentication
+      verificationToken: "${token}", // The verification token for site authentication
       voice: "${voice}"
     };
 
-    // Create and load script
+    // Create and load script with required parameters in URL
     const script = document.createElement("script");
-    script.src = "${serviceUrl}/api/widget";
+    script.src = "${serviceUrl}/api/widget?t=${tenantPublicKey}&s=${siteId}&k=${token}&voice=${voice}";
     script.async = true;
     document.head.appendChild(script);
   }
@@ -147,17 +155,17 @@ export default {
 })
 export class AppComponent implements OnInit {
   ngOnInit() {
-    // Set configuration
+    // Store configuration for client-side use
     (window as any).helpNINJAConfig = {
       tenantId: "${tenantPublicKey}",
       siteId: "${siteId}",
-      verificationToken: "${scriptKey}", // The verification token for site authentication
+      verificationToken: "${token}", // The verification token for site authentication
       voice: "${voice}"
     };
 
-    // Create and load script
+    // Create and load script with required parameters in URL
     const script = document.createElement("script");
-    script.src = "${serviceUrl}/api/widget";
+    script.src = "${serviceUrl}/api/widget?t=${tenantPublicKey}&s=${siteId}&k=${token}&voice=${voice}";
     script.async = true;
     document.head.appendChild(script);
   }
@@ -171,14 +179,15 @@ function add_helpninja_widget() {
     <!-- helpNINJA Chat Widget -->
     <script>
       (function() {
+        // Store configuration for client-side use
         window.helpNINJAConfig = {
           tenantId: "<?php echo '${tenantPublicKey}'; ?>",
           siteId: "<?php echo '${siteId}'; ?>",
-          verificationToken: "<?php echo '${scriptKey}'; ?>", // The verification token for site authentication
+          verificationToken: "<?php echo '${token}'; ?>", // The verification token for site authentication
           voice: "<?php echo '${voice}'; ?>"
         };
         var script = document.createElement("script");
-        script.src = "<?php echo '${serviceUrl}/api/widget'; ?>";
+        script.src = "<?php echo '${serviceUrl}/api/widget?t=${tenantPublicKey}&s=${siteId}&k=${token}&voice=${voice}'; ?>";
         script.async = true;
         document.head.appendChild(script);
       })();
@@ -189,7 +198,7 @@ add_action('wp_footer', 'add_helpninja_widget');
 
 // Add this code to your theme's functions.php file`;
 
-    const directLinkCode = `<script async src="${serviceUrl}/api/widget?t=${tenantPublicKey}&s=${siteId}&k=${encodeURIComponent(scriptKey)}&voice=${voice}"></script>
+    const directLinkCode = `<script async src="${serviceUrl}/api/widget?t=${tenantPublicKey}&s=${siteId}&k=${encodeURIComponent(token)}&voice=${voice}"></script>
 <!-- Note: The 'k' parameter uses the verification token, not the script key -->`;
 
     // Get the current tab's code

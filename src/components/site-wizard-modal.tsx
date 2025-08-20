@@ -192,6 +192,7 @@ export default function SiteWizardModal({
         return `<!-- helpNINJA Chat Widget -->
 <script>
   (function() {
+    // Store configuration for client-side use
     window.helpNINJAConfig = {
       tenantId: "${tenantInfo.public_key}",
       siteId: "${currentSite.id}",
@@ -199,7 +200,8 @@ export default function SiteWizardModal({
       voice: "${voice}"
     };
     var script = document.createElement("script");
-    script.src = "${siteUrl}/api/widget";
+    // Include necessary parameters in URL for server-side validation
+    script.src = "${siteUrl}/api/widget?t=${tenantInfo.public_key}&s=${currentSite.id}&k=${currentSite.verification_token || ''}&voice=${voice}";
     script.async = true;
     document.head.appendChild(script);
   })();
@@ -843,7 +845,7 @@ export default function SiteWizardModal({
                                                                 <IntegrationOptions
                                                                     tenantPublicKey={tenantInfo.public_key}
                                                                     siteId={currentSite.id}
-                                                                    scriptKey={currentSite.verification_token || ''} /* Using verification_token, not script_key */
+                                                                    verificationToken={currentSite.verification_token || ''} /* Using proper parameter name for clarity */
                                                                     voice={voice}
                                                                     serviceUrl={process.env.NODE_ENV === "production" ? "https://helpninja.app" : "http://localhost:3001"}
                                                                     domain={currentSite.domain}
