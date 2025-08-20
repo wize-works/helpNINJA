@@ -49,10 +49,10 @@ const navigationSections: NavSection[] = [
         defaultOpen: true,
         items: [
             { href: "/dashboard/sites", label: "Manage Sites", badge: null },
-            { href: "/dashboard/widget", label: "Widget Settings", badge: null },
             { href: "/dashboard/sources", label: "Sources", badge: null },
             { href: "/dashboard/documents", label: "Documents", badge: null },
             { href: "/dashboard/answers", label: "Answers", badge: null },
+            { href: "/dashboard/widget", label: "Widget Settings", badge: null },
         ]
     },
     {

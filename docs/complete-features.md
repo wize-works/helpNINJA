@@ -29,12 +29,15 @@ Core features (present)
   - **Webhook redundancy**: Clerk webhooks still work as backup/sync mechanism with idempotent operations
   - Files: src/app/(pages)/auth/signup/page.tsx, src/components/plan-selection.tsx, src/app/api/signup/select-plan/route.ts, src/app/api/signup/create-checkout/route.ts, src/lib/slug.ts
 
-- Widget embed
+- Widget embed and configuration
   - /api/widget returns a JS snippet; toggles a floating panel; posts to /api/chat with JSON body including tenantId and sessionId. Uses absolute origin so it works cross-origin.
   - Now uses DaisyUI chat bubbles for proper styling (chat-start/chat-end classes)
   - Automatically loads DaisyUI CSS for consistent styling
   - Enhanced chat preview component with DaisyUI button styles
-  - Files: src/app/api/widget/route.ts, src/components/chat-preview.tsx, src/components/chat-widget-panel.tsx
+  - Real-time widget preview in configuration UI shows instant feedback as settings are changed
+  - Dedicated widget configuration page with appearance, behavior, and content tabs
+  - Interactive preview simulates chat interactions and displays configuration changes in real-time
+  - Files: src/app/api/widget/route.ts, src/components/chat-preview.tsx, src/components/chat-widget-panel.tsx, src/components/widget-configuration.tsx, src/app/dashboard/widget/page.tsx
 - Chat + RAG + escalation
   - /api/chat (CORS enabled) resolves tenant, gates usage, performs searchHybrid, calls OpenAI, persists messages, enqueues escalation under a confidence threshold.
   - Files: src/app/api/chat/route.ts, src/lib/rag.ts, src/lib/usage.ts

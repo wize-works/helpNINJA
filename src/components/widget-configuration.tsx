@@ -141,15 +141,119 @@ export default function WidgetConfiguration({
 
     // Widget preview component
     const WidgetPreview = () => {
+        const [showChat, setShowChat] = useState(false);
+        const [autoOpenTriggered, setAutoOpenTriggered] = useState(false);
+        const [iframeError, setIframeError] = useState(false);
+        const [iframeLoading, setIframeLoading] = useState(true);
+
+        // Handle auto-open functionality
+        useEffect(() => {
+            // Use a local value from the current render to avoid dependency issues
+            const currentDelay = config.autoOpenDelay;
+
+            if (currentDelay > 0 && !autoOpenTriggered) {
+                const timer = setTimeout(() => {
+                    setShowChat(true);
+                    setAutoOpenTriggered(true);
+                }, currentDelay);
+
+                return () => clearTimeout(timer);
+            }
+        }, [autoOpenTriggered]);
+
+        // Toggle chat window open/closed
+        const toggleChat = () => {
+            setShowChat(prev => !prev);
+        };
+
         return (
-            <div className="relative w-full h-80 bg-base-200 rounded-xl overflow-hidden border border-base-300 mb-6">
-                <div className="absolute inset-0 flex items-center justify-center">
-                    <div className="text-base-content/50">Website Content Placeholder</div>
+            <div className="relative w-full h-96 bg-base-200 rounded-xl overflow-hidden border border-base-300 mb-6">
+                {/* Website iframe */}
+                {!iframeError && (
+                    <>
+                        <iframe
+                            src={domain.includes('://') ? domain : `https://${domain}`}
+                            className="absolute inset-0 w-full h-full border-0"
+                            title={`Preview of ${domain}`}
+                            sandbox="allow-same-origin allow-scripts allow-forms"
+                            referrerPolicy="no-referrer"
+                            loading="lazy"
+                            style={{ opacity: iframeLoading ? 0 : 1 }}
+                            onError={() => {
+                                setIframeError(true);
+                                setIframeLoading(false);
+                            }}
+                            onLoad={() => {
+                                // If the iframe loads, make sure error state is reset
+                                setIframeError(false);
+                                setIframeLoading(false);
+                            }}
+                        />
+
+                        {/* Loading indicator */}
+                        {iframeLoading && (
+                            <div className="absolute inset-0 flex items-center justify-center">
+                                <div className="text-base-content/50 flex flex-col items-center">
+                                    <div className="loading loading-spinner loading-lg mb-2"></div>
+                                    <div>Loading website preview...</div>
+                                </div>
+                            </div>
+                        )}
+                    </>
+                )}
+
+                {/* Fallback if iframe fails to load */}
+                {iframeError && (
+                    <div className="absolute inset-0 flex items-center justify-center">
+                        <div className="text-base-content/50 flex flex-col items-center">
+                            <i className="fa-duotone fa-solid fa-globe mb-2 text-2xl" aria-hidden />
+                            <div>{domain}</div>
+                            <div className="text-xs mt-1 opacity-70">
+                                Unable to load website preview
+                            </div>
+                            <div className="flex gap-2 mt-3">
+                                <button
+                                    className="btn btn-sm btn-outline"
+                                    onClick={() => setIframeError(false)}
+                                >
+                                    <i className="fa-duotone fa-solid fa-rotate-right mr-2" aria-hidden />
+                                    Try again
+                                </button>
+                                <a
+                                    href={domain.includes('://') ? domain : `https://${domain}`}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    className="btn btn-sm"
+                                >
+                                    <i className="fa-duotone fa-solid fa-external-link mr-2" aria-hidden />
+                                    Open site
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                )}
+
+                {/* Real-time configuration indicator */}
+                <div className="absolute top-2 left-2 flex items-center gap-2 bg-success/10 text-success px-3 py-1 rounded-lg text-xs">
+                    <span className="relative flex h-2 w-2">
+                        <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-success opacity-75"></span>
+                        <span className="relative inline-flex rounded-full h-2 w-2 bg-success"></span>
+                    </span>
+                    <span>Real-time preview</span>
                 </div>
+
+                {/* Info about preview limitations */}
+                {!iframeError && !iframeLoading && (
+                    <div className="absolute top-2 right-2 tooltip tooltip-left" data-tip="Some sites may restrict embedding in iframes">
+                        <button className="btn btn-circle btn-xs btn-ghost text-base-content/50">
+                            <i className="fa-duotone fa-solid fa-circle-info" />
+                        </button>
+                    </div>
+                )}
 
                 {/* Chat widget preview */}
                 <div
-                    className="absolute"
+                    className="absolute transition-all duration-300"
                     style={{
                         bottom: config.position.includes("bottom") ? "20px" : "auto",
                         top: config.position.includes("top") ? "20px" : "auto",
@@ -157,12 +261,105 @@ export default function WidgetConfiguration({
                         left: config.position.includes("left") ? "20px" : "auto",
                     }}
                 >
+                    {/* Chat window (shown when button is clicked) */}
+                    {showChat && (
+                        <div
+                            className="bg-base-100 rounded-xl shadow-2xl mb-4 w-72 transform transition-all duration-300"
+                            style={{
+                                boxShadow: `0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1)`,
+                                borderColor: config.theme === 'dark' ? '#1e293b' : '#f1f5f9',
+                                borderWidth: '1px',
+                                animation: 'fadeInUp 0.3s ease-out forwards'
+                            }}
+                        >
+                            {/* Chat header */}
+                            <div className="p-4 border-b flex items-center justify-between rounded-t-xl"
+                                style={{ backgroundColor: config.primaryColor, borderColor: 'rgba(255,255,255,0.1)' }}
+                            >
+                                <div className="flex items-center gap-2">
+                                    <div className="w-8 h-8 rounded-full bg-white/20 flex items-center justify-center">
+                                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 956.64 755.1"
+                                            style={{ width: "20px", height: "20px", fill: "white" }}
+                                        >
+                                            <path d="M881.79,312.74c39.7-2.7,69.63,32.16,72.85,69.65,2.49,28.99,2.84,71.14,0,99.98-3.32,33.71-25.27,64.29-60.77,68.23-3.79.42-15.01-.53-16.75,1.25-1.57,1.6-3.92,11.56-5.29,14.71-36.91,85.11-121.05,139.58-212.45,148.55-21.08,34.37-64.81,45.83-102.74,37.28-73.64-16.61-62.97-110.41,15.52-118.5,30.57-3.15,53.55-.69,77.04,19.95,4.58,4.03.85,4.59,9.83,3.91,150.57-11.41,192.52-154.99,173.45-284.2-31.77-215.33-222.58-341.22-435.02-298.35C205.65,113.9,108.17,278.52,121.66,467.37c1.64,22.9,8.34,46.43,9.97,68.02,1.48,19.58-12.44,13.97-25.52,14.45-29.32,1.07-49.44,6.57-75.18-11.74-13.35-9.5-21.84-21.17-25.79-37.21-3.43-33.3-6.48-73.04-4.53-106.55,1.9-32.51,14.65-68,48.5-78.5,4.27-1.33,21.8-3.24,23.04-4.96,1.41-1.97,5.57-22.28,7.01-26.99C145.21,69.49,373.1-40.91,587.08,13.95,145.03,37.18,261.97,151.64,294.72,298.79Z" />
+                                        </svg>
+                                    </div>
+                                    <span className="text-white font-medium">{config.aiName || 'AI Assistant'}</span>
+                                </div>
+                                <button onClick={toggleChat} className="text-white/80 hover:text-white transition-colors">
+                                    <i className="fa-duotone fa-solid fa-xmark" />
+                                </button>
+                            </div>
+
+                            {/* Chat content */}
+                            <div className="p-4 h-64 overflow-y-auto">
+                                {/* AI message */}
+                                <div className="flex gap-2 mb-4">
+                                    <div className="w-8 h-8 rounded-full bg-primary/20 flex-shrink-0 flex items-center justify-center">
+                                        <i className="fa-duotone fa-solid fa-robot text-primary text-sm" />
+                                    </div>
+                                    <div className="bg-base-200 p-3 rounded-xl rounded-tl-none max-w-[80%] animate-fadeIn">
+                                        <p className="text-sm">{config.welcomeMessage || '👋 Hi there! How can I help you today?'}</p>
+                                    </div>
+                                </div>
+
+                                {/* User message */}
+                                <div className="flex flex-row-reverse gap-2 mb-4">
+                                    <div className="w-8 h-8 rounded-full bg-base-200 flex-shrink-0 flex items-center justify-center">
+                                        <i className="fa-duotone fa-solid fa-user text-base-content/60 text-sm" />
+                                    </div>
+                                    <div className="bg-primary/10 p-3 rounded-xl rounded-tr-none max-w-[80%] animate-fadeIn" style={{ animationDelay: '0.3s' }}>
+                                        <p className="text-sm">Hi, I have a question about your services.</p>
+                                    </div>
+                                </div>
+
+                                {/* Typing indicator - AI response */}
+                                <div className="flex gap-2 mb-4">
+                                    <div className="w-8 h-8 rounded-full bg-primary/20 flex-shrink-0 flex items-center justify-center">
+                                        <i className="fa-duotone fa-solid fa-robot text-primary text-sm" />
+                                    </div>
+                                    <div className="bg-base-200 p-3 rounded-xl rounded-tl-none max-w-[80%] animate-fadeIn" style={{ animationDelay: '0.6s' }}>
+                                        <div className="flex items-center gap-1">
+                                            <div className="w-2 h-2 bg-primary/50 rounded-full animate-bounce" style={{ animationDelay: '0s' }}></div>
+                                            <div className="w-2 h-2 bg-primary/50 rounded-full animate-bounce" style={{ animationDelay: '0.2s' }}></div>
+                                            <div className="w-2 h-2 bg-primary/50 rounded-full animate-bounce" style={{ animationDelay: '0.4s' }}></div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            {/* Chat input */}
+                            <div className="p-3 border-t">
+                                <div className="flex items-center gap-2">
+                                    <input type="text"
+                                        placeholder="Type your message..."
+                                        className="input input-sm input-bordered flex-grow rounded-full text-sm"
+                                        disabled
+                                    />
+                                    <button className="btn btn-sm btn-circle" style={{ backgroundColor: config.primaryColor }}>
+                                        <i className="fa-duotone fa-solid fa-paper-plane text-white" />
+                                    </button>
+                                </div>
+
+                                {/* Branding */}
+                                {config.showBranding && (
+                                    <div className="text-center mt-2 text-xs text-base-content/40">
+                                        Powered by helpNINJA
+                                    </div>
+                                )}
+                            </div>
+                        </div>
+                    )}
+
                     {/* Chat bubble */}
                     <div
-                        className="w-14 h-14 rounded-full shadow-lg flex items-center justify-center cursor-pointer"
+                        className={`w-14 h-14 rounded-full shadow-lg flex items-center justify-center cursor-pointer hover:scale-110 transition-all duration-300 ${showChat ? 'scale-110 rotate-180' : ''}`}
                         style={{ backgroundColor: config.primaryColor }}
+                        onClick={toggleChat}
                     >
-                        {config.buttonIcon === "default" ? (
+                        {showChat ? (
+                            <i className="fa-duotone fa-solid fa-xmark text-white text-xl" />
+                        ) : config.buttonIcon === "default" ? (
                             <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 956.64 755.1" style={{ width: "32px", height: "32px", fill: "white" }}>
                                 <path d="M881.79,312.74c39.7-2.7,69.63,32.16,72.85,69.65,2.49,28.99,2.84,71.14,0,99.98-3.32,33.71-25.27,64.29-60.77,68.23-3.79.42-15.01-.53-16.75,1.25-1.57,1.6-3.92,11.56-5.29,14.71-36.91,85.11-121.05,139.58-212.45,148.55-21.08,34.37-64.81,45.83-102.74,37.28-73.64-16.61-62.97-110.41,15.52-118.5,30.57-3.15,53.55-.69,77.04,19.95,4.58,4.03.85,4.59,9.83,3.91,150.57-11.41,192.52-154.99,173.45-284.2-31.77-215.33-222.58-341.22-435.02-298.35C205.65,113.9,108.17,278.52,121.66,467.37c1.64,22.9,8.34,46.43,9.97,68.02,1.48,19.58-12.44,13.97-25.52,14.45-29.32,1.07-49.44,6.57-75.18-11.74-13.35-9.5-21.84-21.17-25.79-37.21-3.43-33.3-6.48-73.04-4.53-106.55,1.9-32.51,14.65-68,48.5-78.5,4.27-1.33,21.8-3.24,23.04-4.96,1.41-1.97,5.57-22.28,7.01-26.99C145.21,69.49,373.1-40.91,587.08,13.95c145.03,37.18,261.97,151.64,294.72,298.79Z" />
                                 <path d="M428.45,329.17c42.73-1.25,88.12-1.04,130.7,1.72,66.55,4.31,205.78,20.26,213.38,106.62,8.53,96.89-108.27,127.26-183.69,109.69-28.27-6.59-51.79-21.81-78.66-30.34-68.8-21.84-107.58,30.48-171.03,35.01-65.52,4.67-173.87-28.91-159.04-113.04,17.6-99.83,168.87-107.34,248.34-109.66ZM322.44,399.16c-48.11,6.17-52.08,102.36,2.84,107.6,65.56,6.25,68.28-116.71-2.84-107.6ZM620.45,399.17c-51,5.3-55.76,92.59-5.58,105.99,68.17,18.2,78.14-113.52,5.58-105.99Z" />
@@ -197,6 +394,10 @@ export default function WidgetConfiguration({
                     <div className="mb-6">
                         <h2 className="text-2xl font-bold text-base-content">Widget Configuration</h2>
                         <p className="text-base-content/60 mt-1">Customize how your chat widget appears on {domain}</p>
+                        <div className="flex items-center gap-2 mt-2 text-sm text-info">
+                            <i className="fa-duotone fa-solid fa-sparkles" aria-hidden />
+                            <span>New! Changes now appear in real-time in the preview area</span>
+                        </div>
                     </div>
                 )}
 

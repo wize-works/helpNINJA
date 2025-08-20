@@ -4,10 +4,22 @@ import ChatWidgetPanel from "@/components/chat-widget-panel";
 import { Breadcrumb } from "@/components/ui/breadcrumb";
 import { AnimatedPage, StaggerContainer, StaggerChild } from "@/components/ui/animated-page";
 import DefaultWidgetConfigurationWrapper from "@/components/default-widget-configuration-wrapper";
+import StatCard from "@/components/ui/stat-card";
 
 export const runtime = 'nodejs';
 
 type Row = { id: string; name: string; plan: string; plan_status: string; public_key?: string | null; secret_key?: string | null };
+
+type WidgetStats = {
+    total_interactions: number;
+    active_deployments: number;
+    messages_per_day: number;
+    answer_quality_rate: number;
+    high_confidence_count: number;
+    low_confidence_count: number;
+    total_messages: number;
+    total_conversations: number;
+};
 
 async function getTenant(tenantId: string) {
     const { rows } = await query<Row>(
@@ -18,9 +30,84 @@ async function getTenant(tenantId: string) {
     return rows[0];
 }
 
+async function getWidgetStats(tenantId: string): Promise<WidgetStats> {
+    // Get active deployments (sites with the widget installed)
+    const deploymentsResult = await query(
+        `SELECT COUNT(*) as count FROM public.tenant_sites 
+        WHERE tenant_id=$1 AND verified=true`,
+        [tenantId]
+    );
+
+    // Get total interactions (messages sent to the widget)
+    const interactionsResult = await query(
+        `SELECT COUNT(*) as count FROM public.messages 
+        WHERE tenant_id=$1 AND role='user'`,
+        [tenantId]
+    );
+
+    // Get message count per day (activity trend)
+    const messageFrequencyResult = await query(
+        `SELECT COUNT(*) as count 
+        FROM public.messages 
+        WHERE tenant_id=$1 AND created_at > NOW() - INTERVAL '30 days'`,
+        [tenantId]
+    );
+
+    // Get conversation stats - simplify since we don't have those fields
+    const conversationStatsResult = await query(
+        `SELECT 
+            COUNT(*) as total_conversations
+        FROM public.conversations
+        WHERE tenant_id=$1`,
+        [tenantId]
+    );
+
+    // Get count of messages by confidence level
+    const confidenceStatsResult = await query(
+        `SELECT 
+            COUNT(*) as total_messages,
+            SUM(CASE WHEN confidence < 0.55 THEN 1 ELSE 0 END) as low_confidence_count,
+            SUM(CASE WHEN confidence >= 0.55 THEN 1 ELSE 0 END) as high_confidence_count
+        FROM public.messages
+        WHERE tenant_id=$1 AND role='assistant' AND confidence IS NOT NULL`,
+        [tenantId]
+    );
+
+    const deployments = parseInt(deploymentsResult.rows[0]?.count || '0');
+    const interactions = parseInt(interactionsResult.rows[0]?.count || '0');
+    const messagesLast30Days = parseInt(messageFrequencyResult.rows[0]?.count || '0');
+
+    // Calculate messages per day based on 30-day count
+    const messagesPerDay = Math.round(messagesLast30Days / 30);
+
+    const totalConversations = parseInt(conversationStatsResult.rows[0]?.total_conversations || '0');
+
+    // Use confidence data from messages instead
+    const totalMessages = parseInt(confidenceStatsResult.rows[0]?.total_messages || '0');
+    const lowConfidenceCount = parseInt(confidenceStatsResult.rows[0]?.low_confidence_count || '0');
+    const highConfidenceCount = parseInt(confidenceStatsResult.rows[0]?.high_confidence_count || '0');
+
+    // Calculate answer quality rate - what percentage of messages had high confidence
+    const answerQualityRate = totalMessages > 0
+        ? Math.round((highConfidenceCount / totalMessages) * 100)
+        : 0;
+
+    return {
+        total_interactions: interactions,
+        active_deployments: deployments,
+        messages_per_day: messagesPerDay,
+        answer_quality_rate: answerQualityRate,
+        high_confidence_count: highConfidenceCount,
+        low_confidence_count: lowConfidenceCount,
+        total_messages: totalMessages,
+        total_conversations: totalConversations
+    };
+}
+
 export default async function WidgetPage() {
     const tenantId = await getTenantIdStrict();
     const t = await getTenant(tenantId);
+    const stats = await getWidgetStats(tenantId);
 
     const breadcrumbItems = [
         { label: "Dashboard", href: "/dashboard", icon: "fa-gauge-high" },
@@ -57,37 +144,83 @@ export default async function WidgetPage() {
                     </StaggerChild>
                 </StaggerContainer>
 
-                {/* Integration Panel */}
-                {t.public_key && (
-                    <StaggerContainer>
-                        <StaggerChild>
-                            <div className="card bg-base-100 rounded-2xl shadow-sm">
-                                <div className="p-6">
-                                    <div className="flex items-center gap-3 mb-6">
-                                        <div className="w-12 h-12 bg-primary/10 rounded-2xl flex items-center justify-center">
-                                            <i className="fa-duotone fa-solid fa-code text-lg text-primary" aria-hidden />
-                                        </div>
-                                        <div>
-                                            <h2 className="text-lg font-semibold text-base-content">Widget Integration</h2>
-                                            <p className="text-base-content/60 text-sm">Add the chat widget to your website</p>
-                                        </div>
-                                    </div>
+                {/* Widget Stats */}
+                <StaggerContainer>
+                    <StaggerChild>
+                        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+                            <StatCard
+                                title="Widget Engagement"
+                                value={stats.total_interactions || 0}
+                                icon="fa-message-bot"
+                                color="primary"
+                                subtitle={stats.total_interactions === 1 ? "user interaction" : "user interactions"}
+                            />
 
-                                    <div className="bg-base-200/20 rounded-xl p-4 mb-6">
-                                        <h3 className="font-medium text-base-content mb-2">Embed Code</h3>
-                                        <p className="text-sm text-base-content/70 mb-4">
-                                            Add this code to the <span className="font-mono">&lt;body&gt;</span> of your website. The widget will appear on all pages where this code is present.
-                                        </p>
+                            <StatCard
+                                title="Messages Per Day"
+                                value={stats.messages_per_day || 0}
+                                icon="fa-bolt"
+                                color="info"
+                                subtitle="daily average"
+                            />
 
-                                        <div className="client-only">
-                                            <ChatWidgetPanel tenantPublicKey={t.public_key} />
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        </StaggerChild>
-                    </StaggerContainer>
-                )}
+                            <StatCard
+                                title="Answer Quality"
+                                value={stats.answer_quality_rate ? `${stats.answer_quality_rate}%` : "N/A"}
+                                icon="fa-chart-line-up"
+                                color="success"
+                                subtitle="high confidence answers"
+                            />
+
+                            <StatCard
+                                title="Active Deployments"
+                                value={stats.active_deployments || 0}
+                                icon="fa-globe-stand"
+                                color="secondary"
+                                subtitle={stats.active_deployments === 1 ? "verified site" : "verified sites"}
+                            />
+                        </div>
+                    </StaggerChild>
+                </StaggerContainer>
+
+                {/* Additional Stats */}
+                <StaggerContainer>
+                    <StaggerChild>
+                        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mt-2">
+                            <StatCard
+                                title="Total Messages"
+                                value={stats.total_messages || 0}
+                                icon="fa-comments"
+                                color="success"
+                                subtitle="AI responses"
+                            />
+
+                            <StatCard
+                                title="Total Conversations"
+                                value={stats.total_conversations || 0}
+                                icon="fa-messages"
+                                color="warning"
+                                subtitle="chat sessions"
+                            />
+
+                            <StatCard
+                                title="High Confidence"
+                                value={stats.high_confidence_count || 0}
+                                icon="fa-badge-check"
+                                color="info"
+                                subtitle="confident responses"
+                            />
+
+                            <StatCard
+                                title="Low Confidence"
+                                value={stats.low_confidence_count || 0}
+                                icon="fa-circle-exclamation"
+                                color="error"
+                                subtitle="needs improvement"
+                            />
+                        </div>
+                    </StaggerChild>
+                </StaggerContainer>
 
                 {/* Widget Configuration */}
                 <StaggerContainer>

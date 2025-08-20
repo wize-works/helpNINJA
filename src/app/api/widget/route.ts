@@ -32,6 +32,7 @@ export async function GET(req: NextRequest) {
 
     // Get referer to validate domain
     const referer = req.headers.get('referer');
+    console.log('Referer:', referer);
     let refererDomain = '';
     let skipDomainValidation = false;
 
@@ -86,7 +87,7 @@ export async function GET(req: NextRequest) {
                     status: m.status,
                     verified: m.verified
                 };
-
+                console.log('m.domain:', m.domain, 'refererDomain:', refererDomain, 'key_match:', m.key_match, 'status:', m.status, 'verified:', m.verified);
                 if (m.domain !== refererDomain) return new Response(`Domain mismatch: Expected ${m.domain}, got ${refererDomain}`, { status: 403 });
                 if (!m.key_match) return new Response('Invalid site key', { status: 403 });
                 if (m.status !== 'active') return new Response(`Site not active: ${m.status}`, { status: 403 });

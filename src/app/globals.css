@@ -43,3 +43,28 @@ html, body { height: 100%; }
   outline: 2px solid hsl(var(--p));
   outline-offset: 2px;
 }
+
+/* Widget Preview Animations */
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-fadeIn {
+  animation: fadeIn 0.3s ease-in-out forwards;
+}
+
+.animate-fade-in {
+  animation: fadeInUp 0.3s ease-out forwards;
+}

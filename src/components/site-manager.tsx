@@ -507,7 +507,7 @@ export default function SiteManager() {
                                                     className="btn btn-outline btn-sm rounded-xl group-hover:btn-secondary transition-all duration-200"
                                                 >
                                                     <i className="fa-duotone fa-solid fa-wand-magic-sparkles mr-2" aria-hidden />
-                                                    Configure
+                                                    Widget
                                                 </button>
                                             </>
                                         )}

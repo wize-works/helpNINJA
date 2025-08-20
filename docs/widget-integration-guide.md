@@ -326,7 +326,7 @@ The site-specific widget configuration includes tabs for:
 - AI Name
 - Voice Style
 
-Changes to the configuration are saved immediately and will be applied to the widget on your site.
+Changes to the configuration now feature a real-time preview, allowing you to see how your widget will look and behave as you make adjustments. This interactive preview shows both the chat bubble and the expanded chat interface with your chosen settings applied instantly. The configuration is saved when you click the "Save Configuration" button and will be applied to the widget on your site.
 
 ## Troubleshooting
 
