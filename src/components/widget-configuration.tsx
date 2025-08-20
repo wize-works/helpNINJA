@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import { HoverScale } from "@/components/ui/animated-page";
 import toast from "react-hot-toast";
 import { useTenant } from "./tenant-context";
+import Logo from "./logo";
 
 // Define the widget configuration schema
 export interface WidgetConfigSchema {
@@ -18,19 +19,43 @@ export interface WidgetConfigSchema {
     theme: "light" | "dark" | "auto";
     fontFamily?: string;
     voice: "friendly" | "professional" | "casual" | "formal";
+    // New styling options
+    bubbleBackground?: string;
+    bubbleColor?: string;
+    panelBackground?: string;
+    panelHeaderBackground?: string;
+    messagesBackground?: string;
+    userBubbleBackground?: string;
+    userBubbleColor?: string;
+    assistantBubbleBackground?: string;
+    assistantBubbleColor?: string;
+    buttonBackground?: string;
+    buttonColor?: string;
 }
 
 // Default configuration values
 const defaultConfig: WidgetConfigSchema = {
-    primaryColor: "#7C3AED", // Purple
+    primaryColor: "#4DA8DA", // Purple
     position: "bottom-right",
     welcomeMessage: "👋 Hi there! How can I help you today?",
     aiName: "AI Assistant",
     showBranding: true,
     autoOpenDelay: 0,
     buttonIcon: "default",
-    theme: "auto",
-    voice: "friendly"
+    theme: "light",
+    voice: "friendly",
+    // New styling defaults
+    bubbleBackground: "#111",
+    bubbleColor: "#fff",
+    panelBackground: "#fff",
+    panelHeaderBackground: "#4DA8DA",
+    messagesBackground: "#f8fafc",
+    userBubbleBackground: "#3b82f6",
+    userBubbleColor: "#fff",
+    assistantBubbleBackground: "#e5e7eb",
+    assistantBubbleColor: "#111",
+    buttonBackground: "#111",
+    buttonColor: "#fff"
 };
 
 interface WidgetConfigurationProps {
@@ -116,6 +141,102 @@ export default function WidgetConfiguration({
         setConfig(prev => ({ ...prev, primaryColor: color }));
     };
 
+    // Handle specific color changes
+    const handleSpecificColorChange = (field: keyof WidgetConfigSchema, color: string) => {
+        setConfig(prev => ({ ...prev, [field]: color }));
+    };
+
+    // Apply theme presets
+    const applyThemePreset = (preset: 'default' | 'dark' | 'light' | 'corporate' | 'warm') => {
+        switch (preset) {
+            case 'default':
+                setConfig(prev => ({
+                    ...prev,
+                    primaryColor: defaultConfig.primaryColor,
+                    bubbleBackground: defaultConfig.bubbleBackground,
+                    bubbleColor: defaultConfig.bubbleColor,
+                    panelBackground: defaultConfig.panelBackground,
+                    panelHeaderBackground: defaultConfig.panelHeaderBackground,
+                    messagesBackground: defaultConfig.messagesBackground,
+                    userBubbleBackground: defaultConfig.userBubbleBackground,
+                    userBubbleColor: defaultConfig.userBubbleColor,
+                    assistantBubbleBackground: defaultConfig.assistantBubbleBackground,
+                    assistantBubbleColor: defaultConfig.assistantBubbleColor,
+                    buttonBackground: defaultConfig.buttonBackground,
+                    buttonColor: defaultConfig.buttonColor
+                }));
+                break;
+            case 'dark':
+                setConfig(prev => ({
+                    ...prev,
+                    primaryColor: "#1E293B",
+                    bubbleBackground: "#0f172a",
+                    bubbleColor: "#fff",
+                    panelBackground: "#1E293B",
+                    panelHeaderBackground: "#0f172a",
+                    messagesBackground: "#334155",
+                    userBubbleBackground: "#3b82f6",
+                    userBubbleColor: "#fff",
+                    assistantBubbleBackground: "#475569",
+                    assistantBubbleColor: "#f8fafc",
+                    buttonBackground: "#1E293B",
+                    buttonColor: "#fff"
+                }));
+                break;
+            case 'light':
+                setConfig(prev => ({
+                    ...prev,
+                    primaryColor: "#64748b",
+                    bubbleBackground: "#f1f5f9",
+                    bubbleColor: "#334155",
+                    panelBackground: "#fff",
+                    panelHeaderBackground: "#f8fafc",
+                    messagesBackground: "#f1f5f9",
+                    userBubbleBackground: "#64748b",
+                    userBubbleColor: "#fff",
+                    assistantBubbleBackground: "#e2e8f0",
+                    assistantBubbleColor: "#334155",
+                    buttonBackground: "#64748b",
+                    buttonColor: "#fff"
+                }));
+                break;
+            case 'corporate':
+                setConfig(prev => ({
+                    ...prev,
+                    primaryColor: "#0369a1",
+                    bubbleBackground: "#0284c7",
+                    bubbleColor: "#fff",
+                    panelBackground: "#fff",
+                    panelHeaderBackground: "#0369a1",
+                    messagesBackground: "#f0f9ff",
+                    userBubbleBackground: "#0284c7",
+                    userBubbleColor: "#fff",
+                    assistantBubbleBackground: "#e0f2fe",
+                    assistantBubbleColor: "#0c4a6e",
+                    buttonBackground: "#0369a1",
+                    buttonColor: "#fff"
+                }));
+                break;
+            case 'warm':
+                setConfig(prev => ({
+                    ...prev,
+                    primaryColor: "#ea580c",
+                    bubbleBackground: "#f97316",
+                    bubbleColor: "#fff",
+                    panelBackground: "#fff",
+                    panelHeaderBackground: "#ea580c",
+                    messagesBackground: "#fff7ed",
+                    userBubbleBackground: "#f97316",
+                    userBubbleColor: "#fff",
+                    assistantBubbleBackground: "#ffedd5",
+                    assistantBubbleColor: "#7c2d12",
+                    buttonBackground: "#ea580c",
+                    buttonColor: "#fff"
+                }));
+                break;
+        }
+    };
+
     // Handle position change
     const handlePositionChange = (position: WidgetConfigSchema["position"]) => {
         setConfig(prev => ({ ...prev, position }));
@@ -167,7 +288,7 @@ export default function WidgetConfiguration({
         };
 
         return (
-            <div className="relative w-full h-96 bg-base-200 rounded-xl overflow-hidden border border-base-300 mb-6">
+            <div className="relative w-full h-180 bg-base-200 rounded-xl overflow-hidden border border-base-300 mb-6">
                 {/* Website iframe */}
                 {!iframeError && (
                     <>
@@ -274,15 +395,11 @@ export default function WidgetConfiguration({
                         >
                             {/* Chat header */}
                             <div className="p-4 border-b flex items-center justify-between rounded-t-xl"
-                                style={{ backgroundColor: config.primaryColor, borderColor: 'rgba(255,255,255,0.1)' }}
+                                style={{ backgroundColor: config.panelHeaderBackground, borderColor: 'rgba(255,255,255,0.1)' }}
                             >
                                 <div className="flex items-center gap-2">
-                                    <div className="w-8 h-8 rounded-full bg-white/20 flex items-center justify-center">
-                                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 956.64 755.1"
-                                            style={{ width: "20px", height: "20px", fill: "white" }}
-                                        >
-                                            <path d="M881.79,312.74c39.7-2.7,69.63,32.16,72.85,69.65,2.49,28.99,2.84,71.14,0,99.98-3.32,33.71-25.27,64.29-60.77,68.23-3.79.42-15.01-.53-16.75,1.25-1.57,1.6-3.92,11.56-5.29,14.71-36.91,85.11-121.05,139.58-212.45,148.55-21.08,34.37-64.81,45.83-102.74,37.28-73.64-16.61-62.97-110.41,15.52-118.5,30.57-3.15,53.55-.69,77.04,19.95,4.58,4.03.85,4.59,9.83,3.91,150.57-11.41,192.52-154.99,173.45-284.2-31.77-215.33-222.58-341.22-435.02-298.35C205.65,113.9,108.17,278.52,121.66,467.37c1.64,22.9,8.34,46.43,9.97,68.02,1.48,19.58-12.44,13.97-25.52,14.45-29.32,1.07-49.44,6.57-75.18-11.74-13.35-9.5-21.84-21.17-25.79-37.21-3.43-33.3-6.48-73.04-4.53-106.55,1.9-32.51,14.65-68,48.5-78.5,4.27-1.33,21.8-3.24,23.04-4.96,1.41-1.97,5.57-22.28,7.01-26.99C145.21,69.49,373.1-40.91,587.08,13.95,145.03,37.18,261.97,151.64,294.72,298.79Z" />
-                                        </svg>
+                                    <div className="w-8 h-8 p-1 rounded-full bg-white/20 flex items-center justify-center">
+                                        <Logo className="text-base-100" />
                                     </div>
                                     <span className="text-white font-medium">{config.aiName || 'AI Assistant'}</span>
                                 </div>
@@ -432,6 +549,82 @@ export default function WidgetConfiguration({
                 {/* Appearance Tab */}
                 {activeTab === "appearance" && (
                     <div className="space-y-6">
+                        {/* Theme Presets */}
+                        <div className="mb-8">
+                            <label className="text-sm font-medium text-base-content block mb-3">Theme Presets</label>
+                            <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-5 gap-4">
+                                <div
+                                    className={`border rounded-xl p-3 cursor-pointer transition-all hover:shadow-md ${config.primaryColor === defaultConfig.primaryColor &&
+                                        config.bubbleBackground === defaultConfig.bubbleBackground ?
+                                        'ring-2 ring-primary' : ''
+                                        }`}
+                                    onClick={() => applyThemePreset('default')}
+                                >
+                                    <div className="flex gap-2 items-center mb-2">
+                                        <div className="w-5 h-5 rounded-full" style={{ backgroundColor: defaultConfig.primaryColor }}></div>
+                                        <div className="font-medium">Default</div>
+                                    </div>
+                                    <p className="text-xs text-base-content/60">Our signature theme with perfect contrast</p>
+                                </div>
+
+                                <div
+                                    className={`border rounded-xl p-3 cursor-pointer transition-all hover:shadow-md ${config.primaryColor === "#1E293B" &&
+                                        config.bubbleBackground === "#0f172a" ?
+                                        'ring-2 ring-primary' : ''
+                                        }`}
+                                    onClick={() => applyThemePreset('dark')}
+                                >
+                                    <div className="flex gap-2 items-center mb-2">
+                                        <div className="w-5 h-5 rounded-full bg-[#1E293B]"></div>
+                                        <div className="font-medium">Dark Mode</div>
+                                    </div>
+                                    <p className="text-xs text-base-content/60">Sleek dark theme with light text</p>
+                                </div>
+
+                                <div
+                                    className={`border rounded-xl p-3 cursor-pointer transition-all hover:shadow-md ${config.primaryColor === "#64748b" &&
+                                        config.bubbleBackground === "#f1f5f9" ?
+                                        'ring-2 ring-primary' : ''
+                                        }`}
+                                    onClick={() => applyThemePreset('light')}
+                                >
+                                    <div className="flex gap-2 items-center mb-2">
+                                        <div className="w-5 h-5 rounded-full bg-[#64748b]"></div>
+                                        <div className="font-medium">Light Modern</div>
+                                    </div>
+                                    <p className="text-xs text-base-content/60">Minimal light theme with gray accents</p>
+                                </div>
+
+                                <div
+                                    className={`border rounded-xl p-3 cursor-pointer transition-all hover:shadow-md ${config.primaryColor === "#0369a1" &&
+                                        config.bubbleBackground === "#0284c7" ?
+                                        'ring-2 ring-primary' : ''
+                                        }`}
+                                    onClick={() => applyThemePreset('corporate')}
+                                >
+                                    <div className="flex gap-2 items-center mb-2">
+                                        <div className="w-5 h-5 rounded-full bg-[#0369a1]"></div>
+                                        <div className="font-medium">Corporate Blue</div>
+                                    </div>
+                                    <p className="text-xs text-base-content/60">Professional blue theme for business sites</p>
+                                </div>
+
+                                <div
+                                    className={`border rounded-xl p-3 cursor-pointer transition-all hover:shadow-md ${config.primaryColor === "#ea580c" &&
+                                        config.bubbleBackground === "#f97316" ?
+                                        'ring-2 ring-primary' : ''
+                                        }`}
+                                    onClick={() => applyThemePreset('warm')}
+                                >
+                                    <div className="flex gap-2 items-center mb-2">
+                                        <div className="w-5 h-5 rounded-full bg-[#ea580c]"></div>
+                                        <div className="font-medium">Warm Orange</div>
+                                    </div>
+                                    <p className="text-xs text-base-content/60">Friendly orange theme for welcoming experience</p>
+                                </div>
+                            </div>
+                        </div>
+
                         <div className="flex flex-col md:flex-row justify-items-start gap-4">
                             {/* Theme */}
                             <div className="flex flex-col gap-4 flex-1">
@@ -574,6 +767,239 @@ export default function WidgetConfiguration({
                             </div>
                         </div>
 
+                        {/* Advanced Styling Section */}
+                        <details className="collapse collapse-plus bg-base-200 rounded-lg">
+                            <summary className="collapse-title font-medium">
+                                Advanced Styling Options
+                            </summary>
+                            <div className="collapse-content space-y-6">
+                                {/* Bubble Styling */}
+                                <div className="p-4 border border-base-300 rounded-lg">
+                                    <h3 className="text-lg font-medium mb-3">Bubble Styling</h3>
+                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                        <div>
+                                            <label className="text-sm font-medium text-base-content block mb-2">Bubble Background</label>
+                                            <div className="flex items-center gap-3">
+                                                <input
+                                                    type="color"
+                                                    value={config.bubbleBackground || "#111"}
+                                                    onChange={(e) => handleSpecificColorChange('bubbleBackground', e.target.value)}
+                                                    className="w-10 h-10 rounded cursor-pointer border-none"
+                                                />
+                                                <input
+                                                    type="text"
+                                                    name="bubbleBackground"
+                                                    value={config.bubbleBackground || "#111"}
+                                                    onChange={handleInputChange}
+                                                    className="input input-bordered w-32 font-mono"
+                                                />
+                                            </div>
+                                        </div>
+                                        <div>
+                                            <label className="text-sm font-medium text-base-content block mb-2">Bubble Text Color</label>
+                                            <div className="flex items-center gap-3">
+                                                <input
+                                                    type="color"
+                                                    value={config.bubbleColor || "#fff"}
+                                                    onChange={(e) => handleSpecificColorChange('bubbleColor', e.target.value)}
+                                                    className="w-10 h-10 rounded cursor-pointer border-none"
+                                                />
+                                                <input
+                                                    type="text"
+                                                    name="bubbleColor"
+                                                    value={config.bubbleColor || "#fff"}
+                                                    onChange={handleInputChange}
+                                                    className="input input-bordered w-32 font-mono"
+                                                />
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                {/* Panel Styling */}
+                                <div className="p-4 border border-base-300 rounded-lg">
+                                    <h3 className="text-lg font-medium mb-3">Panel Styling</h3>
+                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                        <div>
+                                            <label className="text-sm font-medium text-base-content block mb-2">Panel Background</label>
+                                            <div className="flex items-center gap-3">
+                                                <input
+                                                    type="color"
+                                                    value={config.panelBackground || "#fff"}
+                                                    onChange={(e) => handleSpecificColorChange('panelBackground', e.target.value)}
+                                                    className="w-10 h-10 rounded cursor-pointer border-none"
+                                                />
+                                                <input
+                                                    type="text"
+                                                    name="panelBackground"
+                                                    value={config.panelBackground || "#fff"}
+                                                    onChange={handleInputChange}
+                                                    className="input input-bordered w-32 font-mono"
+                                                />
+                                            </div>
+                                        </div>
+                                        <div>
+                                            <label className="text-sm font-medium text-base-content block mb-2">Header Background</label>
+                                            <div className="flex items-center gap-3">
+                                                <input
+                                                    type="color"
+                                                    value={config.panelHeaderBackground || "#f8fafc"}
+                                                    onChange={(e) => handleSpecificColorChange('panelHeaderBackground', e.target.value)}
+                                                    className="w-10 h-10 rounded cursor-pointer border-none"
+                                                />
+                                                <input
+                                                    type="text"
+                                                    name="panelHeaderBackground"
+                                                    value={config.panelHeaderBackground || "#f8fafc"}
+                                                    onChange={handleInputChange}
+                                                    className="input input-bordered w-32 font-mono"
+                                                />
+                                            </div>
+                                        </div>
+                                        <div>
+                                            <label className="text-sm font-medium text-base-content block mb-2">Messages Area Background</label>
+                                            <div className="flex items-center gap-3">
+                                                <input
+                                                    type="color"
+                                                    value={config.messagesBackground || "#f8fafc"}
+                                                    onChange={(e) => handleSpecificColorChange('messagesBackground', e.target.value)}
+                                                    className="w-10 h-10 rounded cursor-pointer border-none"
+                                                />
+                                                <input
+                                                    type="text"
+                                                    name="messagesBackground"
+                                                    value={config.messagesBackground || "#f8fafc"}
+                                                    onChange={handleInputChange}
+                                                    className="input input-bordered w-32 font-mono"
+                                                />
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                {/* Message Styling */}
+                                <div className="p-4 border border-base-300 rounded-lg">
+                                    <h3 className="text-lg font-medium mb-3">Message Styling</h3>
+                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                        <div>
+                                            <label className="text-sm font-medium text-base-content block mb-2">User Message Background</label>
+                                            <div className="flex items-center gap-3">
+                                                <input
+                                                    type="color"
+                                                    value={config.userBubbleBackground || "#3b82f6"}
+                                                    onChange={(e) => handleSpecificColorChange('userBubbleBackground', e.target.value)}
+                                                    className="w-10 h-10 rounded cursor-pointer border-none"
+                                                />
+                                                <input
+                                                    type="text"
+                                                    name="userBubbleBackground"
+                                                    value={config.userBubbleBackground || "#3b82f6"}
+                                                    onChange={handleInputChange}
+                                                    className="input input-bordered w-32 font-mono"
+                                                />
+                                            </div>
+                                        </div>
+                                        <div>
+                                            <label className="text-sm font-medium text-base-content block mb-2">User Message Text Color</label>
+                                            <div className="flex items-center gap-3">
+                                                <input
+                                                    type="color"
+                                                    value={config.userBubbleColor || "#fff"}
+                                                    onChange={(e) => handleSpecificColorChange('userBubbleColor', e.target.value)}
+                                                    className="w-10 h-10 rounded cursor-pointer border-none"
+                                                />
+                                                <input
+                                                    type="text"
+                                                    name="userBubbleColor"
+                                                    value={config.userBubbleColor || "#fff"}
+                                                    onChange={handleInputChange}
+                                                    className="input input-bordered w-32 font-mono"
+                                                />
+                                            </div>
+                                        </div>
+                                        <div>
+                                            <label className="text-sm font-medium text-base-content block mb-2">Assistant Message Background</label>
+                                            <div className="flex items-center gap-3">
+                                                <input
+                                                    type="color"
+                                                    value={config.assistantBubbleBackground || "#e5e7eb"}
+                                                    onChange={(e) => handleSpecificColorChange('assistantBubbleBackground', e.target.value)}
+                                                    className="w-10 h-10 rounded cursor-pointer border-none"
+                                                />
+                                                <input
+                                                    type="text"
+                                                    name="assistantBubbleBackground"
+                                                    value={config.assistantBubbleBackground || "#e5e7eb"}
+                                                    onChange={handleInputChange}
+                                                    className="input input-bordered w-32 font-mono"
+                                                />
+                                            </div>
+                                        </div>
+                                        <div>
+                                            <label className="text-sm font-medium text-base-content block mb-2">Assistant Message Text Color</label>
+                                            <div className="flex items-center gap-3">
+                                                <input
+                                                    type="color"
+                                                    value={config.assistantBubbleColor || "#111"}
+                                                    onChange={(e) => handleSpecificColorChange('assistantBubbleColor', e.target.value)}
+                                                    className="w-10 h-10 rounded cursor-pointer border-none"
+                                                />
+                                                <input
+                                                    type="text"
+                                                    name="assistantBubbleColor"
+                                                    value={config.assistantBubbleColor || "#111"}
+                                                    onChange={handleInputChange}
+                                                    className="input input-bordered w-32 font-mono"
+                                                />
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                {/* Button Styling */}
+                                <div className="p-4 border border-base-300 rounded-lg">
+                                    <h3 className="text-lg font-medium mb-3">Button Styling</h3>
+                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                        <div>
+                                            <label className="text-sm font-medium text-base-content block mb-2">Send Button Background</label>
+                                            <div className="flex items-center gap-3">
+                                                <input
+                                                    type="color"
+                                                    value={config.buttonBackground || "#111"}
+                                                    onChange={(e) => handleSpecificColorChange('buttonBackground', e.target.value)}
+                                                    className="w-10 h-10 rounded cursor-pointer border-none"
+                                                />
+                                                <input
+                                                    type="text"
+                                                    name="buttonBackground"
+                                                    value={config.buttonBackground || "#111"}
+                                                    onChange={handleInputChange}
+                                                    className="input input-bordered w-32 font-mono"
+                                                />
+                                            </div>
+                                        </div>
+                                        <div>
+                                            <label className="text-sm font-medium text-base-content block mb-2">Send Button Text Color</label>
+                                            <div className="flex items-center gap-3">
+                                                <input
+                                                    type="color"
+                                                    value={config.buttonColor || "#fff"}
+                                                    onChange={(e) => handleSpecificColorChange('buttonColor', e.target.value)}
+                                                    className="w-10 h-10 rounded cursor-pointer border-none"
+                                                />
+                                                <input
+                                                    type="text"
+                                                    name="buttonColor"
+                                                    value={config.buttonColor || "#fff"}
+                                                    onChange={handleInputChange}
+                                                    className="input input-bordered w-32 font-mono"
+                                                />
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </details>
 
                     </div>
                 )}

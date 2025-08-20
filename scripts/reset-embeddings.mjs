@@ -3,8 +3,11 @@
 /**
  * Reset Embeddings Script
  * 
- * This script clears all existing document embeddings in the database
+ * This script deletes all existing document chunks with embeddings in the database
  * to ensure we can start fresh with a consistent embedding model.
+ * 
+ * Note: This will delete chunks, not just clear embeddings, due to NOT NULL constraints
+ * on the embedding column. Documents will be preserved but need to be re-ingested.
  * 
  * Usage:
  * node scripts/reset-embeddings.mjs
@@ -29,9 +32,9 @@ const rl = readline.createInterface({
     output: process.stdout
 });
 
-console.log('⚠️  WARNING: This script will delete all document embeddings from the database.');
-console.log('📝 Documents and chunks will remain, but their vector embeddings will be cleared.');
-console.log('🔄 You will need to re-ingest your content to regenerate embeddings.');
+console.log('⚠️  WARNING: This script will delete all chunks with embeddings from the database.');
+console.log('📝 Documents will remain, but chunks with embeddings will be deleted.');
+console.log('🔄 You will need to re-ingest your content to regenerate chunks and embeddings.');
 console.log('');
 
 rl.question('Are you sure you want to continue? (type "yes" to confirm): ', async (answer) => {
@@ -55,7 +58,7 @@ rl.question('Are you sure you want to continue? (type "yes" to confirm): ', asyn
     `);
 
         const count = parseInt(countResult.rows[0].count, 10);
-        console.log(`📊 Found ${count} chunks with embeddings that will be cleared`);
+        console.log(`📊 Found ${count} chunks with embeddings that will be deleted`);
 
         if (count === 0) {
             console.log('✅ No embeddings to clear. Your database is already empty.');
@@ -81,7 +84,7 @@ rl.question('Are you sure you want to continue? (type "yes" to confirm): ', asyn
         }
 
         // 3. Final confirmation
-        rl.question(`Confirm clearing ${count} embeddings? (type "yes" to confirm): `, async (finalAnswer) => {
+        rl.question(`Confirm deletion of ${count} chunks with embeddings? (type "yes" to confirm): `, async (finalAnswer) => {
             if (finalAnswer.toLowerCase() !== 'yes') {
                 console.log('❌ Operation cancelled');
                 await client.end();
@@ -96,12 +99,13 @@ rl.question('Are you sure you want to continue? (type "yes" to confirm): ', asyn
             await client.query('BEGIN');
 
             try {
-                // Set all embeddings to NULL
+                // Instead of setting embeddings to NULL, we need to delete the chunks
+                // as the embedding column has a NOT NULL constraint
                 const result = await client.query(`
-          UPDATE public.chunks SET embedding = NULL WHERE embedding IS NOT NULL
+          DELETE FROM public.chunks WHERE embedding IS NOT NULL
         `);
 
-                console.log(`✅ Successfully cleared ${result.rowCount} embeddings`);
+                console.log(`✅ Successfully removed ${result.rowCount} chunks with embeddings`);
 
                 // Commit the transaction
                 await client.query('COMMIT');
@@ -116,7 +120,7 @@ rl.question('Are you sure you want to continue? (type "yes" to confirm): ', asyn
             console.log('🔄 Next steps:');
             console.log('1. Make sure your OPENAI_EMBED_MODEL is set to "text-embedding-3-small" in .env');
             console.log('2. Re-ingest your documents using the API or dashboard');
-            console.log('3. New embeddings will be consistent and use the text-embedding-3-small model');
+            console.log('3. This will recreate chunks and generate consistent embeddings using the text-embedding-3-small model');
 
             await client.end();
             rl.close();

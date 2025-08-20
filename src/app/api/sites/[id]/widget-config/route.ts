@@ -64,7 +64,19 @@ export async function GET(
                 customIconUrl: dbConfig.custom_icon_url,
                 theme: dbConfig.theme,
                 fontFamily: dbConfig.font_family,
-                voice: dbConfig.voice
+                voice: dbConfig.voice,
+                // New styling options
+                bubbleBackground: dbConfig.bubble_background || '#111',
+                bubbleColor: dbConfig.bubble_color || '#fff',
+                panelBackground: dbConfig.panel_background || '#fff',
+                panelHeaderBackground: dbConfig.panel_header_background || '#f8fafc',
+                messagesBackground: dbConfig.messages_background || '#f8fafc',
+                userBubbleBackground: dbConfig.user_bubble_background || '#3b82f6',
+                userBubbleColor: dbConfig.user_bubble_color || '#fff',
+                assistantBubbleBackground: dbConfig.assistant_bubble_background || '#e5e7eb',
+                assistantBubbleColor: dbConfig.assistant_bubble_color || '#111',
+                buttonBackground: dbConfig.button_background || '#111',
+                buttonColor: dbConfig.button_color || '#fff'
             };
             return NextResponse.json(clientConfig);
         }
@@ -79,7 +91,19 @@ export async function GET(
             autoOpenDelay: 0,
             buttonIcon: "default",
             theme: "auto",
-            voice: "friendly"
+            voice: "friendly",
+            // Default styling options
+            bubbleBackground: '#111',
+            bubbleColor: '#fff',
+            panelBackground: '#fff',
+            panelHeaderBackground: '#f8fafc',
+            messagesBackground: '#f8fafc',
+            userBubbleBackground: '#3b82f6',
+            userBubbleColor: '#fff',
+            assistantBubbleBackground: '#e5e7eb',
+            assistantBubbleColor: '#111',
+            buttonBackground: '#111',
+            buttonColor: '#fff'
         });
     } catch (error) {
         console.error("Error getting widget configuration:", error);
@@ -170,7 +194,19 @@ export async function POST(
             customIconUrl,
             theme,
             fontFamily,
-            voice
+            voice,
+            // New styling options
+            bubbleBackground,
+            bubbleColor,
+            panelBackground,
+            panelHeaderBackground,
+            messagesBackground,
+            userBubbleBackground,
+            userBubbleColor,
+            assistantBubbleBackground,
+            assistantBubbleColor,
+            buttonBackground,
+            buttonColor
         } = config;
 
         if (existingConfig.rowCount && existingConfig.rowCount > 0) {
@@ -189,8 +225,19 @@ export async function POST(
            theme = $9,
            font_family = $10,
            voice = $11,
+           bubble_background = $12,
+           bubble_color = $13,
+           panel_background = $14,
+           panel_header_background = $15,
+           messages_background = $16,
+           user_bubble_background = $17,
+           user_bubble_color = $18,
+           assistant_bubble_background = $19,
+           assistant_bubble_color = $20,
+           button_background = $21,
+           button_color = $22,
            updated_at = NOW()
-         WHERE site_id = $12
+         WHERE site_id = $23
          RETURNING *`,
                 [
                     primaryColor,
@@ -204,6 +251,17 @@ export async function POST(
                     theme,
                     fontFamily,
                     voice,
+                    bubbleBackground || '#111',
+                    bubbleColor || '#fff',
+                    panelBackground || '#fff',
+                    panelHeaderBackground || '#f8fafc',
+                    messagesBackground || '#f8fafc',
+                    userBubbleBackground || '#3b82f6',
+                    userBubbleColor || '#fff',
+                    assistantBubbleBackground || '#e5e7eb',
+                    assistantBubbleColor || '#111',
+                    buttonBackground || '#111',
+                    buttonColor || '#fff',
                     siteId
                 ]
             );
@@ -222,8 +280,19 @@ export async function POST(
            custom_icon_url,
            theme,
            font_family,
-           voice
-         ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)
+           voice,
+           bubble_background,
+           bubble_color,
+           panel_background,
+           panel_header_background,
+           messages_background,
+           user_bubble_background,
+           user_bubble_color,
+           assistant_bubble_background,
+           assistant_bubble_color,
+           button_background,
+           button_color
+         ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20, $21, $22, $23)
          RETURNING *`,
                 [
                     siteId,
@@ -237,7 +306,18 @@ export async function POST(
                     customIconUrl,
                     theme,
                     fontFamily,
-                    voice
+                    voice,
+                    bubbleBackground || '#111',
+                    bubbleColor || '#fff',
+                    panelBackground || '#fff',
+                    panelHeaderBackground || '#f8fafc',
+                    messagesBackground || '#f8fafc',
+                    userBubbleBackground || '#3b82f6',
+                    userBubbleColor || '#fff',
+                    assistantBubbleBackground || '#e5e7eb',
+                    assistantBubbleColor || '#111',
+                    buttonBackground || '#111',
+                    buttonColor || '#fff'
                 ]
             );
         }

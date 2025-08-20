@@ -111,3 +111,17 @@ We're using `text-embedding-3-small` for embeddings as it's the most cost-effect
 - Fast response times
 
 This setting is configured via the `OPENAI_EMBED_MODEL` variable in GitHub Actions Variables.
+
+## Reset Embeddings
+
+If you encounter dimension mismatch errors (e.g., "different vector dimensions 3072 and 1536"), you can use the reset script to clear out all chunks with embeddings:
+
+```bash
+node scripts/reset-embeddings.mjs
+```
+
+**Important Notes:**
+1. This script will DELETE chunks with embeddings (not just clear them) due to NOT NULL constraints
+2. Original documents will be preserved
+3. You'll need to re-ingest your content after running this script
+4. Make sure `OPENAI_EMBED_MODEL=text-embedding-3-small` is set before re-ingesting

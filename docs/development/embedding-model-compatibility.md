@@ -19,19 +19,20 @@ When pgvector tried to compare these vectors with different dimensions, it threw
 
 ## The Solution: Standardizing on a Single Model
 
-After attempting to create an adaptive solution that would detect existing embedding dimensions, we decided on a simpler approach:
+After further analysis and considering cost and performance factors, we decided on the following approach:
 
-1. Standardize on using the `text-embedding-ada-002` model (3072 dimensions)
-2. Clear all existing embeddings that might be using different dimensions
-3. Regenerate embeddings consistently using this model
+1. Standardize on using the `text-embedding-3-small` model (1536 dimensions)
+2. Delete all existing chunks with embeddings that might be using different dimensions
+3. Regenerate chunks and embeddings consistently using this model
 
 ### Implementation Details
 
 The `embeddings.ts` file now includes:
 
-- Consistent use of the `text-embedding-ada-002` model by default
+- Consistent use of the `text-embedding-3-small` model by default
 - No attempt to adapt to different dimensions in the database
 - Hardcoded consistency rather than runtime detection
+- Significantly lower cost ($0.02 vs $0.10 per million tokens)
 
 ### Reset Script
 
@@ -42,29 +43,43 @@ node scripts/reset-embeddings.mjs
 ```
 
 This script:
-1. Clears all vector embeddings from the `chunks` table
-2. Preserves the documents and chunks themselves
-3. Allows you to regenerate embeddings consistently
+1. Deletes all chunks with embeddings from the `chunks` table (due to NOT NULL constraints)
+2. Preserves the original documents
+3. Allows you to regenerate chunks and embeddings consistently
 
 ### How It Works
 
 1. The system now uses a single embedding model (configurable via environment variable)
-2. By default, it uses `text-embedding-ada-002` which produces 3072-dimensional vectors
+2. By default, it uses `text-embedding-3-small` which produces 1536-dimensional vectors
 3. This ensures compatibility with existing data in the database
 4. If you want to change models, you must first run the reset script
+5. After running the reset script, you need to re-ingest your content to generate new chunks and embeddings
 
 ## Configuration Options
 
-- Set `OPENAI_EMBED_MODEL` environment variable to explicitly choose an embedding model
+- Set `OPENAI_EMBED_MODEL=text-embedding-3-small` environment variable to explicitly choose the embedding model
 - If you change models, you must reset and regenerate all embeddings
+
+## NOT NULL Constraint Issue
+
+When attempting to set embeddings to NULL, you may encounter this error:
+
+```
+❌ Error clearing embeddings: error: null value in column "embedding" of relation "chunks" violates not-null constraint
+```
+
+This occurs because:
+1. The `embedding` column in the `chunks` table has a NOT NULL constraint
+2. The reset script must DELETE chunks with embeddings rather than setting embeddings to NULL
+3. Original documents remain intact, but chunks must be regenerated
 
 ## Troubleshooting
 
 If you encounter dimension mismatch errors:
 
-1. Run the reset script to clear all embeddings: `node scripts/reset-embeddings.mjs`
-2. Verify your environment variables are set correctly
-3. Re-ingest your documents to regenerate embeddings
+1. Run the reset script to delete chunks with embeddings: `node scripts/reset-embeddings.mjs`
+2. Verify your environment variables are set correctly: `OPENAI_EMBED_MODEL=text-embedding-3-small`
+3. Re-ingest your documents to regenerate chunks and embeddings
 4. Look for console logs showing which model is being used
 
 ## Note for Developers
