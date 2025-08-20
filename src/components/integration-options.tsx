@@ -9,7 +9,7 @@ type IntegrationTab = 'html' | 'nextjs' | 'react' | 'vue' | 'angular' | 'wordpre
 interface IntegrationOptionsProps {
     tenantPublicKey: string;
     siteId: string;
-    scriptKey: string;
+    scriptKey: string; // This is actually the verification_token, keeping prop name for backwards compatibility
     voice?: string;
     serviceUrl: string;
     fallbackCode?: string; // For backwards compatibility
@@ -19,7 +19,7 @@ interface IntegrationOptionsProps {
 export default function IntegrationOptions({
     tenantPublicKey,
     siteId,
-    scriptKey,
+    scriptKey, // This contains the verification_token value
     voice = 'friendly',
     serviceUrl,
     domain
@@ -38,7 +38,7 @@ export default function IntegrationOptions({
     window.helpNINJAConfig = {
       tenantId: "${tenantPublicKey}",
       siteId: "${siteId}",
-      scriptKey: "${scriptKey}",
+      verificationToken: "${scriptKey}", // The verification token for site authentication
       voice: "${voice}"
     };
     var script = document.createElement("script");
@@ -65,7 +65,7 @@ export default function Layout({ children }) {
               window.helpNINJAConfig = {
                 tenantId: "${tenantPublicKey}",
                 siteId: "${siteId}",
-                scriptKey: "${scriptKey}",
+                verificationToken: "${scriptKey}", // The verification token for site authentication
                 voice: "${voice}"
               };
               var script = document.createElement("script");
@@ -88,7 +88,7 @@ function HelpNinjaWidget() {
     window.helpNINJAConfig = {
       tenantId: "${tenantPublicKey}",
       siteId: "${siteId}",
-      scriptKey: "${scriptKey}",
+      verificationToken: "${scriptKey}", // The verification token for site authentication
       voice: "${voice}"
     };
 
@@ -126,7 +126,7 @@ export default {
     window.helpNINJAConfig = {
       tenantId: "${tenantPublicKey}",
       siteId: "${siteId}",
-      scriptKey: "${scriptKey}",
+      verificationToken: "${scriptKey}", // The verification token for site authentication
       voice: "${voice}"
     };
 
@@ -151,7 +151,7 @@ export class AppComponent implements OnInit {
     (window as any).helpNINJAConfig = {
       tenantId: "${tenantPublicKey}",
       siteId: "${siteId}",
-      scriptKey: "${scriptKey}",
+      verificationToken: "${scriptKey}", // The verification token for site authentication
       voice: "${voice}"
     };
 
@@ -174,7 +174,7 @@ function add_helpninja_widget() {
         window.helpNINJAConfig = {
           tenantId: "<?php echo '${tenantPublicKey}'; ?>",
           siteId: "<?php echo '${siteId}'; ?>",
-          scriptKey: "<?php echo '${scriptKey}'; ?>",
+          verificationToken: "<?php echo '${scriptKey}'; ?>", // The verification token for site authentication
           voice: "<?php echo '${voice}'; ?>"
         };
         var script = document.createElement("script");
@@ -189,7 +189,8 @@ add_action('wp_footer', 'add_helpninja_widget');
 
 // Add this code to your theme's functions.php file`;
 
-    const directLinkCode = `<script async src="${serviceUrl}/api/widget?t=${tenantPublicKey}&s=${siteId}&k=${encodeURIComponent(scriptKey)}&voice=${voice}"></script>`;
+    const directLinkCode = `<script async src="${serviceUrl}/api/widget?t=${tenantPublicKey}&s=${siteId}&k=${encodeURIComponent(scriptKey)}&voice=${voice}"></script>
+<!-- Note: The 'k' parameter uses the verification token, not the script key -->`;
 
     // Get the current tab's code
     const getActiveCode = () => {

@@ -551,7 +551,7 @@ export default function SiteManager() {
                     siteId={setupSite.id}
                     siteName={setupSite.name}
                     domain={setupSite.domain}
-                    scriptKey={setupSite.verification_token || ''}
+                    scriptKey={setupSite.verification_token || ''} /* Using verification_token, not script_key */
                 />
             )}
 

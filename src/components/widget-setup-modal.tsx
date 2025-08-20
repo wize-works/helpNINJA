@@ -11,7 +11,7 @@ interface WidgetSetupModalProps {
     siteId: string;
     siteName: string;
     domain: string;
-    scriptKey: string;
+    scriptKey: string; // Actually contains the verification_token
 }
 
 export default function WidgetSetupModal({
@@ -131,10 +131,11 @@ export default function WidgetSetupModal({
                                         Installation Code
                                     </label>
                                 </div>
+                                {/* Note: scriptKey prop actually receives verification_token value */}
                                 <IntegrationOptions
                                     tenantPublicKey={tenantInfo.public_key}
                                     siteId={siteId}
-                                    scriptKey={scriptKey || ''}
+                                    scriptKey={scriptKey || ''} 
                                     voice={voice}
                                     serviceUrl={serviceUrl}
                                     domain={domain}

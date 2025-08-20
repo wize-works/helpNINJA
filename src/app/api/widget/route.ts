@@ -12,7 +12,9 @@ export async function GET(req: NextRequest) {
     const { searchParams } = new URL(req.url);
     const tenantPublicKey = searchParams.get('t');
     const siteId = searchParams.get('s');
-    const siteKey = searchParams.get('k');
+    // Parameter 'k' contains the verification_token (not script_key)
+    // This is what clients currently send and expect to work
+    const verificationToken = searchParams.get('k');
     const voice = searchParams.get('voice') || 'friendly';
 
     // Host info for robust preview-origin detection behind proxies
@@ -46,7 +48,7 @@ export async function GET(req: NextRequest) {
     console.log('Widget script request:', {
         tenantPublicKey,
         siteId,
-        siteKey,
+        verificationToken,
         voice,
         host,
         refererDomain,
@@ -59,11 +61,12 @@ export async function GET(req: NextRequest) {
         try {
             // Using hostname from referer URL already removes protocol (http/https)
             // We just need to handle cases where the domain is stored with/without www
+            // Note: The 'k' parameter contains the verification_token, not script_key
             const { rows: siteRows } = await query<{ tenant_id: string }>(
                 `SELECT ts.tenant_id
          FROM public.tenant_sites ts
          JOIN public.tenants t ON t.id = ts.tenant_id
-         WHERE t.public_key = $1 AND ts.id = $2 AND ts.script_key = $3 
+         WHERE t.public_key = $1 AND ts.id = $2 AND ts.verification_token = $3 
                AND (
                    ts.domain = $4 
                    OR REPLACE(ts.domain, 'www.', '') = REPLACE($4, 'www.', '')
@@ -71,18 +74,18 @@ export async function GET(req: NextRequest) {
                 )
                AND ts.verified = true AND ts.status = 'active'
          LIMIT 1`,
-                [tenantPublicKey, siteId, siteKey, refererDomain]
+                [tenantPublicKey, siteId, verificationToken, refererDomain]
             );
 
             if (siteRows.length === 0) {
                 // Provide more granular errors for troubleshooting
                 const { rows: meta } = await query(
-                    `SELECT ts.domain, ts.verified, ts.status, (ts.script_key = $3) as key_match
+                    `SELECT ts.domain, ts.verified, ts.status, (ts.verification_token = $3) as key_match
            FROM public.tenant_sites ts
            JOIN public.tenants t ON t.id = ts.tenant_id
            WHERE t.public_key = $1 AND ts.id = $2
            LIMIT 1`,
-                    [tenantPublicKey, siteId, siteKey]
+                    [tenantPublicKey, siteId, verificationToken]
                 );
                 if (!meta.length) return new Response('Site not found for tenant', { status: 404 });
                 const m = meta[0] as { domain: string; verified: boolean; status: string; key_match: boolean };
@@ -108,7 +111,7 @@ export async function GET(req: NextRequest) {
                         return new Response(`Domain mismatch: Expected ${m.domain}, got ${refererDomain}`, { status: 403 });
                     }
                 }
-                if (!m.key_match) return new Response('Invalid site key', { status: 403 });
+                if (!m.key_match) return new Response('Invalid verification token', { status: 403 });
                 if (m.status !== 'active') return new Response(`Site not active: ${m.status}`, { status: 403 });
                 if (!m.verified) return new Response('Domain not verified', { status: 403 });
                 return new Response(`Unauthorized: ${JSON.stringify(debug)}`, { status: 403 });
@@ -120,10 +123,10 @@ export async function GET(req: NextRequest) {
         }
     }
 
-    // Require siteId + siteKey when not in preview
+    // Require siteId + verification token when not in preview mode
     if (!previewMode) {
         if (!siteId) return new Response('Missing site parameter "s"', { status: 400 });
-        if (!siteKey) return new Response('Missing site key parameter "k"', { status: 400 });
+        if (!verificationToken) return new Response('Missing verification token parameter "k"', { status: 400 });
     }
 
     // Get tenant ID for the widget (fallback if loaded in preview where referer validation was skipped)

@@ -27,7 +27,7 @@ Add this script just before the closing `</body>` tag in your HTML:
     window.helpNINJAConfig = {
       tenantId: "YOUR_TENANT_PUBLIC_KEY",
       siteId: "YOUR_SITE_ID",
-      scriptKey: "YOUR_SITE_SCRIPT_KEY",
+      verificationToken: "YOUR_SITE_VERIFICATION_TOKEN", // Use verification_token, not script_key
       voice: "friendly"
     };
     var script = document.createElement("script");
@@ -60,7 +60,7 @@ export default function Layout({ children }) {
               window.helpNINJAConfig = {
                 tenantId: "YOUR_TENANT_PUBLIC_KEY",
                 siteId: "YOUR_SITE_ID",
-                scriptKey: "YOUR_SITE_SCRIPT_KEY",
+                verificationToken: "YOUR_SITE_VERIFICATION_TOKEN", // Use verification_token, not script_key
                 voice: "friendly"
               };
               var script = document.createElement("script");
@@ -90,7 +90,7 @@ export default function HelpNinjaWidget() {
     window.helpNINJAConfig = {
       tenantId: "YOUR_TENANT_PUBLIC_KEY",
       siteId: "YOUR_SITE_ID",
-      scriptKey: "YOUR_SITE_SCRIPT_KEY",
+      verificationToken: "YOUR_SITE_VERIFICATION_TOKEN", // Use verification_token, not script_key
       voice: "friendly"
     };
 
@@ -139,7 +139,7 @@ function HelpNinjaWidget() {
     window.helpNINJAConfig = {
       tenantId: "YOUR_TENANT_PUBLIC_KEY",
       siteId: "YOUR_SITE_ID",
-      scriptKey: "YOUR_SITE_SCRIPT_KEY",
+      verificationToken: "YOUR_SITE_VERIFICATION_TOKEN", // Use verification_token, not script_key
       voice: "friendly"
     };
 
@@ -183,7 +183,7 @@ export default {
     window.helpNINJAConfig = {
       tenantId: "YOUR_TENANT_PUBLIC_KEY",
       siteId: "YOUR_SITE_ID",
-      scriptKey: "YOUR_SITE_SCRIPT_KEY",
+      verificationToken: "YOUR_SITE_VERIFICATION_TOKEN", // Use verification_token, not script_key
       voice: "friendly"
     };
 
@@ -214,7 +214,7 @@ export class AppComponent implements OnInit {
     (window as any).helpNINJAConfig = {
       tenantId: "YOUR_TENANT_PUBLIC_KEY",
       siteId: "YOUR_SITE_ID",
-      scriptKey: "YOUR_SITE_SCRIPT_KEY",
+      verificationToken: "YOUR_SITE_VERIFICATION_TOKEN", // Use verification_token, not script_key
       voice: "friendly"
     };
 
@@ -243,7 +243,7 @@ function add_helpninja_widget() {
         window.helpNINJAConfig = {
           tenantId: "<?php echo 'YOUR_TENANT_PUBLIC_KEY'; ?>",
           siteId: "<?php echo 'YOUR_SITE_ID'; ?>",
-          scriptKey: "<?php echo 'YOUR_SITE_SCRIPT_KEY'; ?>",
+          verificationToken: "<?php echo 'YOUR_SITE_VERIFICATION_TOKEN'; ?>", // Use verification_token, not script_key
           voice: "<?php echo 'friendly'; ?>"
         };
         var script = document.createElement("script");
@@ -262,8 +262,10 @@ add_action('wp_footer', 'add_helpninja_widget');
 For the simplest integration method, use this direct script tag:
 
 ```html
-<script async src="https://helpninja.app/api/widget?t=YOUR_TENANT_PUBLIC_KEY&s=YOUR_SITE_ID&k=YOUR_SITE_SCRIPT_KEY&voice=friendly"></script>
+<script async src="https://helpninja.app/api/widget?t=YOUR_TENANT_PUBLIC_KEY&s=YOUR_SITE_ID&k=YOUR_SITE_VERIFICATION_TOKEN&voice=friendly"></script>
 ```
+
+> **Important**: The `k` parameter requires your site's **verification token**, not the script key. This is the token generated during site verification.
 
 ## Widget Configuration Options
 
@@ -328,13 +330,25 @@ The site-specific widget configuration includes tabs for:
 
 Changes to the configuration now feature a real-time preview, allowing you to see how your widget will look and behave as you make adjustments. This interactive preview shows both the chat bubble and the expanded chat interface with your chosen settings applied instantly. The configuration is saved when you click the "Save Configuration" button and will be applied to the widget on your site.
 
+## Verification Token vs Script Key
+
+> **Important**: The widget API uses the `verification_token` for site authentication, not the `script_key`.
+
+When integrating the helpNINJA widget, always use:
+- The **verification token** with the `k` parameter in direct script tags
+- The **verification token** as the `verificationToken` property in the configuration object
+
+The `verification_token` is generated during the site verification process and is used to validate that the widget is being loaded from the correct domain. This is different from the `script_key`, which is used for other internal purposes.
+
+You can find your site's verification token in the helpNINJA dashboard under Sites > [Your Site] > Details.
+
 ## Troubleshooting
 
 If you're experiencing issues with the widget:
 
 1. **Check the browser console** for any error messages
 2. **Verify domain verification** in your helpNINJA dashboard
-3. **Ensure parameters are correct** - tenant ID, site ID, and script key should match your dashboard values
+3. **Ensure parameters are correct** - tenant ID, site ID, and verification token should match your dashboard values
 4. **Check referer headers** - make sure the domain matches the registered domain in helpNINJA
 5. **Try the direct link method** if you're having issues with the configuration object
 6. **Verify CORS settings** - If you're using a proxy or CDN, ensure it doesn't block CORS headers

@@ -195,7 +195,7 @@ export default function SiteWizardModal({
     window.helpNINJAConfig = {
       tenantId: "${tenantInfo.public_key}",
       siteId: "${currentSite.id}",
-      scriptKey: "${currentSite.script_key || ''}",
+      verificationToken: "${currentSite.verification_token || ''}", // Use verification_token, not script_key
       voice: "${voice}"
     };
     var script = document.createElement("script");
@@ -204,7 +204,7 @@ export default function SiteWizardModal({
     document.head.appendChild(script);
   })();
 </script>`;
-    }, [currentSite?.domain, currentSite?.id, currentSite?.script_key, tenantInfo?.public_key, voice]);
+    }, [currentSite?.domain, currentSite?.id, currentSite?.verification_token, tenantInfo?.public_key, voice]);
 
     const resetModal = useCallback(() => {
         setStep(1);
