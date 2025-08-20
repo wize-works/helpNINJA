@@ -51,7 +51,10 @@ jobs:
         platforms: linux/amd64
         push: true
         build-args: |
-          NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY=${{ secrets.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY }}
+          NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY=${{ vars.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY }}
+          NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY=${{ vars.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY }}
+          NEXT_PUBLIC_SUPABASE_URL=${{ vars.NEXT_PUBLIC_SUPABASE_URL }}
+          NEXT_PUBLIC_SUPABASE_ANON_KEY=${{ vars.NEXT_PUBLIC_SUPABASE_ANON_KEY }}
         tags: ${{ steps.meta.outputs.tags }}
         labels: ${{ steps.meta.outputs.labels }}
         cache-from: type=gha
@@ -87,7 +90,11 @@ jobs:
         sed "s|IMAGE_PLACEHOLDER|${IMAGE_FULL}|g" ./k8s/deployment.yaml > /tmp/deployment.yaml
 
         # Update configmap with Supabase URL and Clerk URLs from repo variables
-        sed -e "s|SUPABASE_URL_PLACEHOLDER|${{ secrets.SUPABASE_URL }}|g" \
+        sed -e "s|SUPABASE_URL_PLACEHOLDER|${{ vars.NEXT_PUBLIC_SUPABASE_URL }}|g" \
+            -e "s|SUPABASE_ANON_KEY_PLACEHOLDER|${{ vars.NEXT_PUBLIC_SUPABASE_ANON_KEY }}|g" \
+            -e "s|STRIPE_PUBLISHABLE_KEY_PLACEHOLDER|${{ vars.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY }}|g" \
+            -e "s|CLERK_PUBLISHABLE_KEY_PLACEHOLDER|${{ vars.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY }}|g" \
+            -e "s|SITE_URL_PLACEHOLDER|${{ vars.SITE_URL }}|g" \
             -e "s|CLERK_SIGN_IN_URL_PLACEHOLDER|${{ vars.CLERK_SIGN_IN_URL }}|g" \
             -e "s|CLERK_SIGN_UP_URL_PLACEHOLDER|${{ vars.CLERK_SIGN_UP_URL }}|g" \
             -e "s|NEXT_PUBLIC_CLERK_AFTER_SIGN_IN_URL_PLACEHOLDER|${{ vars.NEXT_PUBLIC_CLERK_AFTER_SIGN_IN_URL }}|g" \
@@ -103,21 +110,26 @@ jobs:
         kubectl create secret generic helpninja-secrets \
           --namespace=helpninja \
           --from-literal=OPENAI_API_KEY="${{ secrets.OPENAI_API_KEY }}" \
-          --from-literal=OPENAI_CHAT_MODEL="${{ secrets.OPENAI_CHAT_MODEL }}" \
-          --from-literal=OPENAI_EMBED_MODEL="${{ secrets.OPENAI_EMBED_MODEL }}" \
+          --from-literal=OPENAI_CHAT_MODEL="${{ vars.OPENAI_CHAT_MODEL }}" \
+          --from-literal=OPENAI_EMBED_MODEL="${{ vars.OPENAI_EMBED_MODEL }}" \
           --from-literal=DATABASE_URL="${{ secrets.DATABASE_URL }}" \
           --from-literal=STRIPE_SECRET_KEY="${{ secrets.STRIPE_SECRET_KEY }}" \
-          --from-literal=STRIPE_WEBHOOK_SECRET="${{ secrets.STRIPE_WEBHOOK_SECRET }}" \
           --from-literal=CLERK_WEBHOOK_SECRET="${{ secrets.CLERK_WEBHOOK_SECRET }}" \
           --from-literal=CLERK_SECRET_KEY="${{ secrets.CLERK_SECRET_KEY }}" \
-          --from-literal=CLERK_PUBLISHABLE_KEY="${{ secrets.CLERK_PUBLISHABLE_KEY }}" \
-          --from-literal=NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY="${{ secrets.CLERK_PUBLISHABLE_KEY }}" \
-          --from-literal=STRIPE_PRICE_STARTER="${{ secrets.STRIPE_PRICE_STARTER }}" \
-          --from-literal=STRIPE_PRICE_PRO="${{ secrets.STRIPE_PRICE_PRO }}" \
-          --from-literal=STRIPE_PRICE_AGENCY="${{ secrets.STRIPE_PRICE_AGENCY }}" \
-          --from-literal=SUPABASE_SERVICE_ROLE_KEY="${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}" \
-          --from-literal=SLACK_WEBHOOK_URL="${{ secrets.SLACK_WEBHOOK_URL }}" \
+          --from-literal=NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY="${{ vars.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY }}" \
+          --from-literal=STRIPE_PRICE_STARTER_MONTHLY="${{ vars.STRIPE_PRICE_STARTER_MONTHLY }}" \
+          --from-literal=STRIPE_PRICE_STARTER_YEARLY="${{ vars.STRIPE_PRICE_STARTER_YEARLY }}" \
+          --from-literal=STRIPE_PRICE_PRO_MONTHLY="${{ vars.STRIPE_PRICE_PRO_MONTHLY }}" \
+          --from-literal=STRIPE_PRICE_PRO_YEARLY="${{ vars.STRIPE_PRICE_PRO_YEARLY }}" \
+          --from-literal=STRIPE_PRICE_AGENCY_MONTHLY="${{ vars.STRIPE_PRICE_AGENCY_MONTHLY }}" \
+          --from-literal=STRIPE_PRICE_AGENCY_YEARLY="${{ vars.STRIPE_PRICE_AGENCY_YEARLY }}" \
+          --from-literal=STRIPE_STARTER_PRODUCT_ID="${{ vars.STRIPE_STARTER_PRODUCT_ID }}" \
+          --from-literal=STRIPE_PRO_PRODUCT_ID="${{ vars.STRIPE_PRO_PRODUCT_ID }}" \
+          --from-literal=STRIPE_AGENCY_PRODUCT_ID="${{ vars.STRIPE_AGENCY_PRODUCT_ID }}" \
+          --from-literal=SLACK_WEBHOOK_URL="${{ vars.SLACK_WEBHOOK_URL }}" \
           --from-literal=RESEND_API_KEY="${{ secrets.RESEND_API_KEY }}" \
+          --from-literal=SUPPORT_FROM_EMAIL="${{ vars.SUPPORT_FROM_EMAIL }}" \
+          --from-literal=SUPPORT_FALLBACK_TO_EMAIL="${{ vars.SUPPORT_FALLBACK_TO_EMAIL }}" \
           --dry-run=client -o yaml | kubectl apply -f -
 
         # Apply all Kubernetes resources
