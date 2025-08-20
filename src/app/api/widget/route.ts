@@ -331,11 +331,16 @@ export async function GET(req: NextRequest) {
           ';color:' + styles.assistantBubbleColor + ';border-radius:18px;padding:12px 16px;box-shadow:0 1px 2px rgba(0,0,0,0.1);';
       }
       
-      // Use simple text rendering for now, without markdown
-      // The issue is with template literals and escaping inside them
-      let formattedText = text.replace(/\n/g, '<br>');
+      // Create a text node instead of using innerHTML to avoid XSS issues
+      // Handle line breaks separately
+      const lines = text.split('\n');
       
-      bubble.innerHTML = formattedText;
+      for (let i = 0; i < lines.length; i++) {
+        if (i > 0) {
+          bubble.appendChild(document.createElement('br'));
+        }
+        bubble.appendChild(document.createTextNode(lines[i]));
+      }
       chatDiv.appendChild(bubble);
       wrap.appendChild(chatDiv);
       wrap.scrollTop = wrap.scrollHeight;
