@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import toast from "react-hot-toast";
 import DomainVerification from "./domain-verification";
 import WidgetSetupModal from "./widget-setup-modal";
+import WidgetConfigModal from "./widget-config-modal";
 
 type Site = {
     id: string;
@@ -25,6 +26,8 @@ export default function SiteManager() {
     const [verifyingSite, setVerifyingSite] = useState<Site | null>(null);
     const [setupSite, setSetupSite] = useState<Site | null>(null);
     const [showSetupModal, setShowSetupModal] = useState(false);
+    const [configSite, setConfigSite] = useState<Site | null>(null);
+    const [showConfigModal, setShowConfigModal] = useState(false);
     const router = useRouter();
 
     // Form state
@@ -175,6 +178,16 @@ export default function SiteManager() {
     function handleCloseSetupModal() {
         setShowSetupModal(false);
         setSetupSite(null);
+    }
+
+    function handleConfigureWidget(site: Site) {
+        setConfigSite(site);
+        setShowConfigModal(true);
+    }
+
+    function handleCloseConfigModal() {
+        setShowConfigModal(false);
+        setConfigSite(null);
     }
 
     if (loading) {
@@ -479,20 +492,29 @@ export default function SiteManager() {
                                     </div>
 
                                     {/* Action buttons */}
-                                    <div className="flex items-center gap-2 pt-3 border-t border-base-200/40">
+                                    <div className="grid grid-cols-2 gap-3">
                                         {site.verified && (
-                                            <button
-                                                onClick={() => handleWidgetSetup(site)}
-                                                className="btn btn-outline btn-sm rounded-xl group-hover:btn-success transition-all duration-200"
-                                            >
-                                                <i className="fa-duotone fa-solid fa-code mr-2" aria-hidden />
-                                                Widget Setup
-                                            </button>
+                                            <>
+                                                <button
+                                                    onClick={() => handleWidgetSetup(site)}
+                                                    className="btn btn-outline btn-sm rounded-xl group-hover:btn-primary transition-all duration-200"
+                                                >
+                                                    <i className="fa-duotone fa-solid fa-code mr-2" aria-hidden />
+                                                    Setup
+                                                </button>
+                                                <button
+                                                    onClick={() => handleConfigureWidget(site)}
+                                                    className="btn btn-outline btn-sm rounded-xl group-hover:btn-secondary transition-all duration-200"
+                                                >
+                                                    <i className="fa-duotone fa-solid fa-wand-magic-sparkles mr-2" aria-hidden />
+                                                    Configure
+                                                </button>
+                                            </>
                                         )}
                                         {!site.verified && (
                                             <button
                                                 onClick={() => handleVerifySite(site)}
-                                                className="btn btn-outline btn-sm rounded-xl group-hover:btn-primary transition-all duration-200"
+                                                className="btn btn-outline btn-sm rounded-xl group-hover:btn-secondary transition-all duration-200 col-span-2"
                                             >
                                                 <i className="fa-duotone fa-solid fa-shield-check mr-2" aria-hidden />
                                                 Verify
@@ -500,7 +522,7 @@ export default function SiteManager() {
                                         )}
                                         <button
                                             onClick={() => handleEdit(site)}
-                                            className="btn btn-ghost btn-sm rounded-xl hover:bg-base-200/60 transition-all duration-200 flex-1"
+                                            className="btn btn-outline btn-sm rounded-xl group-hover:btn-info transition-all duration-200"
                                             disabled={showAddForm}
                                         >
                                             <i className="fa-duotone fa-solid fa-pencil mr-2" aria-hidden />
@@ -508,7 +530,7 @@ export default function SiteManager() {
                                         </button>
                                         <button
                                             onClick={() => handleDelete(site)}
-                                            className="btn btn-ghost btn-sm rounded-xl text-error hover:bg-error/10 hover:text-error transition-all duration-200"
+                                            className="btn btn-outline btn-sm rounded-xl group-hover:btn-error transition-all duration-200"
                                             title="Delete site"
                                         >
                                             <i className="fa-duotone fa-solid fa-trash" aria-hidden />
@@ -530,6 +552,17 @@ export default function SiteManager() {
                     siteName={setupSite.name}
                     domain={setupSite.domain}
                     scriptKey={setupSite.verification_token || ''}
+                />
+            )}
+
+            {/* Widget Configuration Modal */}
+            {configSite && (
+                <WidgetConfigModal
+                    isOpen={showConfigModal}
+                    setIsOpen={setShowConfigModal}
+                    siteId={configSite.id}
+                    siteName={configSite.name}
+                    domain={configSite.domain}
                 />
             )}
         </div>

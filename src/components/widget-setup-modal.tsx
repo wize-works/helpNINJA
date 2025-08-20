@@ -31,7 +31,7 @@ export default function WidgetSetupModal({
 
     return (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm">
-            <div className="bg-base-100 rounded-2xl shadow-2xl w-full max-w-2xl max-h-[90vh] overflow-y-auto mx-4">
+            <div className="bg-base-100 rounded-2xl shadow-2xl w-full max-w-5xl max-h-[90vh] overflow-y-auto mx-4">
                 <div className="sticky top-0 bg-base-100 border-b border-base-200 px-6 py-4 rounded-t-2xl">
                     <div className="flex items-center justify-between">
                         <div>
@@ -180,16 +180,28 @@ export default function WidgetSetupModal({
                         </div>
                     </div>
 
-                    {/* Help Link */}
-                    <div className="text-center pt-4">
-                        <a
-                            href="/docs/widget-integration-guide"
-                            target="_blank"
-                            className="text-sm text-primary hover:underline inline-flex items-center"
-                        >
-                            <i className="fa-duotone fa-solid fa-book mr-1" aria-hidden />
-                            View detailed integration guide
-                        </a>
+                    {/* Help Links */}
+                    <div className="text-center pt-4 space-y-2">
+                        <div>
+                            <a
+                                href="https://helpninja.app/help/widget-integration"
+                                target="_blank"
+                                className="text-sm text-primary hover:underline inline-flex items-center"
+                            >
+                                <i className="fa-duotone fa-solid fa-book mr-1" aria-hidden />
+                                View detailed integration guide
+                            </a>
+                        </div>
+                        <div>
+                            <a
+                                href="https://helpninja.app/help/widget-customization"
+                                target="_blank"
+                                className="text-sm text-base-content/70 hover:text-base-content/90 hover:underline inline-flex items-center"
+                            >
+                                <i className="fa-duotone fa-solid fa-paintbrush mr-1" aria-hidden />
+                                Widget customization options
+                            </a>
+                        </div>
                     </div>
                 </div>
 

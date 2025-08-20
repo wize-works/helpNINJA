@@ -127,25 +127,25 @@ export default function InvitationPage() {
             not_found: {
                 title: 'Invitation Not Found',
                 message: 'This invitation link is invalid or has been removed.',
-                icon: 'fa-solid fa-question-circle',
+                icon: 'fa-duotone fa-solid fa-question-circle',
                 color: 'text-error'
             },
             expired: {
                 title: 'Invitation Expired',
                 message: 'This invitation has expired. Please contact the team admin for a new invitation.',
-                icon: 'fa-solid fa-clock',
+                icon: 'fa-duotone fa-solid fa-clock',
                 color: 'text-warning'
             },
             already_accepted: {
                 title: 'Already Accepted',
                 message: 'This invitation has already been accepted. You should already have access to the team.',
-                icon: 'fa-solid fa-check-circle',
+                icon: 'fa-duotone fa-solid fa-check-circle',
                 color: 'text-success'
             },
             error: {
                 title: 'Something Went Wrong',
                 message: 'There was an error loading the invitation. Please try again later.',
-                icon: 'fa-solid fa-exclamation-triangle',
+                icon: 'fa-duotone fa-solid fa-exclamation-triangle',
                 color: 'text-error'
             }
         };

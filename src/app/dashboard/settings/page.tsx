@@ -1,6 +1,5 @@
 import { getTenantIdStrict } from "@/lib/tenant-resolve";
 import { query } from "@/lib/db";
-import ChatWidgetPanel from "@/components/chat-widget-panel";
 import { Breadcrumb } from "@/components/ui/breadcrumb";
 import { AnimatedPage, StaggerContainer, StaggerChild } from "@/components/ui/animated-page";
 
@@ -164,21 +163,24 @@ export default async function SettingsPage() {
                                         )}
                                     </div>
 
-                                    {/* Widget Configuration */}
+                                    {/* Widget Configuration Link */}
                                     {t.public_key && (
-                                        <div>
-                                            <div className="flex items-center justify-between mb-4">
-                                                <div className="flex items-center gap-3">
-                                                    <div className="w-8 h-8 bg-info/10 rounded-xl flex items-center justify-center">
-                                                        <i className="fa-duotone fa-solid fa-comment text-info" aria-hidden />
-                                                    </div>
-                                                    <div>
-                                                        <h3 className="font-semibold text-base-content">Chat Widget</h3>
-                                                        <p className="text-base-content/60 text-sm">Preview and embed code for your website</p>
-                                                    </div>
+                                        <div className="flex items-center justify-between p-4 bg-base-200/20 rounded-xl">
+                                            <div className="flex items-center gap-3">
+                                                <div className="w-10 h-10 bg-info/10 rounded-xl flex items-center justify-center">
+                                                    <i className="fa-duotone fa-solid fa-comment text-info" aria-hidden />
+                                                </div>
+                                                <div>
+                                                    <h3 className="font-semibold text-base-content">Chat Widget</h3>
+                                                    <p className="text-base-content/60 text-sm">
+                                                        Manage chat widget appearance, behavior, and integration
+                                                    </p>
                                                 </div>
                                             </div>
-                                            <ChatWidgetPanel tenantPublicKey={t.public_key} />
+                                            <a href="/dashboard/widget" className="btn btn-primary rounded-xl">
+                                                <i className="fa-duotone fa-solid fa-gear mr-2" aria-hidden />
+                                                Manage Widget
+                                            </a>
                                         </div>
                                     )}
                                 </div>
@@ -186,6 +188,86 @@ export default async function SettingsPage() {
                         </StaggerChild>
                     </StaggerContainer>
                 )}
+
+                {/* Team Management Section */}
+                <StaggerContainer>
+                    <StaggerChild>
+                        <div className="card bg-base-100 rounded-2xl shadow-sm">
+                            <div className="p-6">
+                                <div className="flex items-center justify-between mb-6">
+                                    <div className="flex items-center gap-3">
+                                        <div className="w-12 h-12 bg-secondary/10 rounded-2xl flex items-center justify-center">
+                                            <i className="fa-duotone fa-solid fa-users text-lg text-secondary" aria-hidden />
+                                        </div>
+                                        <div>
+                                            <h2 className="text-lg font-semibold text-base-content">Team Management</h2>
+                                            <p className="text-base-content/60 text-sm">Manage your team members and their access levels</p>
+                                        </div>
+                                    </div>
+                                    <a href="/dashboard/team" className="btn btn-outline btn-sm rounded-lg">
+                                        <i className="fa-duotone fa-solid fa-users-gear mr-2" aria-hidden />
+                                        Manage Team
+                                    </a>
+                                </div>
+
+                                <div className="alert alert-info mb-4">
+                                    <i className="fa-duotone fa-solid fa-info-circle text-xl" aria-hidden />
+                                    <div>
+                                        <div className="font-medium">Team Collaboration</div>
+                                        <div className="text-sm opacity-90">
+                                            Add team members with different access levels to collaborate on your helpNINJA setup.
+                                            Visit the Team page to invite new members and manage existing ones.
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </StaggerChild>
+                </StaggerContainer>
+
+                {/* Billing/Subscription Section */}
+                <StaggerContainer>
+                    <StaggerChild>
+                        <div className="card bg-base-100 rounded-2xl shadow-sm">
+                            <div className="p-6">
+                                <div className="flex items-center justify-between mb-6">
+                                    <div className="flex items-center gap-3">
+                                        <div className="w-12 h-12 bg-success/10 rounded-2xl flex items-center justify-center">
+                                            <i className="fa-duotone fa-solid fa-credit-card text-lg text-success" aria-hidden />
+                                        </div>
+                                        <div>
+                                            <h2 className="text-lg font-semibold text-base-content">Billing & Subscription</h2>
+                                            <p className="text-base-content/60 text-sm">Manage your subscription, payment methods, and usage</p>
+                                        </div>
+                                    </div>
+                                    <a href="/dashboard/billing" className="btn btn-outline btn-sm rounded-lg">
+                                        <i className="fa-duotone fa-solid fa-file-invoice-dollar mr-2" aria-hidden />
+                                        Manage Billing
+                                    </a>
+                                </div>
+
+                                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                                    <div className="p-4 bg-base-200/20 rounded-xl">
+                                        <div className="text-sm text-base-content/60 mb-2">Current Plan</div>
+                                        <div className="text-xl font-bold text-base-content">{t.plan}</div>
+                                        <div className="badge badge-success mt-1">{t.plan_status}</div>
+                                    </div>
+                                    <div className="p-4 bg-base-200/20 rounded-xl">
+                                        <div className="text-sm text-base-content/60 mb-2">Billing Period</div>
+                                        <div className="text-base font-medium">Monthly</div>
+                                        <div className="text-sm text-base-content/60 mt-1">Auto-renews</div>
+                                    </div>
+                                    <div className="p-4 bg-base-200/20 rounded-xl">
+                                        <div className="text-sm text-base-content/60 mb-2">Next Invoice</div>
+                                        <a href="/dashboard/billing" className="btn btn-sm btn-primary rounded-lg mt-1">
+                                            View Billing Details
+                                        </a>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </StaggerChild>
+                </StaggerContainer>
             </div>
         </AnimatedPage>
     )

@@ -1,7 +1,12 @@
 import { NextRequest } from 'next/server';
 import { query } from '@/lib/db';
+import { withCORS } from '@/lib/cors';
 
 export const runtime = 'nodejs';
+
+export async function OPTIONS() {
+    return withCORS(new Response(null, { status: 204 }));
+}
 
 export async function GET(req: NextRequest) {
     const { searchParams } = new URL(req.url);
@@ -218,10 +223,10 @@ export async function GET(req: NextRequest) {
     panel.querySelector('#hn_input').addEventListener('keydown', (e)=>{ if(e.key==='Enter') send(); });
   })();`;
 
-    return new Response(js, {
+    return withCORS(new Response(js, {
         headers: {
             'content-type': 'application/javascript; charset=utf-8',
             'cache-control': 'public, max-age=3600'
         }
-    });
+    }));
 }

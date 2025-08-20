@@ -1,6 +1,6 @@
 # Setting up the helpNINJA Widget in Different Environments
 
-This guide provides instructions for installing the helpNINJA chat widget in various web environments.
+This guide provides instructions for installing and configuring the helpNINJA chat widget in various web environments.
 
 ## Table of Contents
 - [Basic HTML Website](#basic-html-website)
@@ -10,7 +10,10 @@ This guide provides instructions for installing the helpNINJA chat widget in var
 - [Angular Applications](#angular-applications)
 - [WordPress Sites](#wordpress-sites)
 - [Direct Link Integration](#direct-link-integration)
+- [Widget Configuration Options](#widget-configuration-options)
 - [Widget Features](#widget-features)
+- [Cross-Origin Resource Sharing (CORS)](#cross-origin-resource-sharing-cors)
+- [Site-Specific Configuration](#site-specific-configuration)
 - [Troubleshooting](#troubleshooting)
 
 ## Basic HTML Website
@@ -262,6 +265,69 @@ For the simplest integration method, use this direct script tag:
 <script async src="https://helpninja.app/api/widget?t=YOUR_TENANT_PUBLIC_KEY&s=YOUR_SITE_ID&k=YOUR_SITE_SCRIPT_KEY&voice=friendly"></script>
 ```
 
+## Widget Configuration Options
+
+The widget can be customized with the following configuration options:
+
+| Option | Description | Default Value |
+|--------|-------------|---------------|
+| primaryColor | Main color for the widget | "#7C3AED" |
+| position | Position on the screen | "bottom-right" |
+| welcomeMessage | Initial message shown to users | "👋 Hi there! How can I help you today?" |
+| aiName | Name of the AI assistant | "AI Assistant" |
+| showBranding | Whether to show helpNINJA branding | true |
+| autoOpenDelay | Delay in ms before auto-opening (0 = disabled) | 0 |
+| buttonIcon | Icon style for chat button | "default" |
+| theme | Widget color theme | "auto" |
+| voice | AI voice style | "friendly" |
+
+These settings can be managed in the helpNINJA dashboard on a site-by-site basis.
+
+## Cross-Origin Resource Sharing (CORS)
+
+The helpNINJA widget uses CORS-enabled endpoints to support cross-domain API calls. All widget-related API endpoints have been configured with CORS headers to allow the widget to function properly on any domain. The key endpoints with CORS support include:
+
+- `/api/widget` - The main widget script loader
+- `/api/chat` - The API endpoint for sending/receiving chat messages
+- `/api/escalate` - The endpoint for chat escalations
+- `/api/sites/[id]/widget-config` - The endpoint for site-specific widget configuration
+
+This ensures the widget works seamlessly across different domains without security restrictions.
+
+## Site-Specific Configuration
+
+Each site registered in helpNINJA can now have its own unique widget configuration. This allows multi-site tenants to customize the widget appearance and behavior for each of their websites individually.
+
+### How to Configure
+
+1. Navigate to the **Sites** section in your helpNINJA dashboard
+2. Select a site from the list
+3. Click the **Configure Widget** button
+4. Customize the widget settings in the configuration modal
+5. Save your changes
+
+### Available Configuration Options
+
+The site-specific widget configuration includes tabs for:
+
+#### Appearance
+- Primary Color
+- Theme (Light, Dark, Auto)
+- Button Position (Bottom Right, Bottom Left, etc.)
+- Font Family
+- Custom Button Icon
+
+#### Behavior
+- Auto-open Delay
+- Show/Hide Branding
+
+#### Content
+- Welcome Message
+- AI Name
+- Voice Style
+
+Changes to the configuration are saved immediately and will be applied to the widget on your site.
+
 ## Troubleshooting
 
 If you're experiencing issues with the widget:
@@ -271,6 +337,24 @@ If you're experiencing issues with the widget:
 3. **Ensure parameters are correct** - tenant ID, site ID, and script key should match your dashboard values
 4. **Check referer headers** - make sure the domain matches the registered domain in helpNINJA
 5. **Try the direct link method** if you're having issues with the configuration object
+6. **Verify CORS settings** - If you're using a proxy or CDN, ensure it doesn't block CORS headers
+
+### Common Issues
+
+#### Widget Not Loading
+- Check that the domain is properly verified
+- Ensure the script is being loaded from the correct helpNINJA instance
+- Verify that the tenant is active and not suspended
+
+#### Widget Loads But Chat Doesn't Work
+- Check browser console for API errors
+- Verify that your plan has sufficient message credits
+- Ensure the site is properly configured with documents for RAG
+
+#### CORS-Related Issues
+- If you see errors like "Access to fetch at '...' from origin '...' has been blocked by CORS policy", check that your proxy or CDN is not stripping CORS headers
+- For local development, ensure your development server is configured to handle CORS correctly
+- Try using the direct link integration method which might bypass some CORS issues
 
 For further assistance, contact helpNINJA support.
 
