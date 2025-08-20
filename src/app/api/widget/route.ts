@@ -331,16 +331,12 @@ export async function GET(req: NextRequest) {
           ';color:' + styles.assistantBubbleColor + ';border-radius:18px;padding:12px 16px;box-shadow:0 1px 2px rgba(0,0,0,0.1);';
       }
       
-      // Create a text node instead of using innerHTML to avoid XSS issues
-      // Handle line breaks separately
-      const lines = text.split('\n');
+      // Simple solution: just set the text directly and use CSS for line breaks
+      bubble.textContent = text;
       
-      for (let i = 0; i < lines.length; i++) {
-        if (i > 0) {
-          bubble.appendChild(document.createElement('br'));
-        }
-        bubble.appendChild(document.createTextNode(lines[i]));
-      }
+      // Use CSS white-space to respect line breaks
+      // This avoids any need for innerHTML or splitting on \n
+      bubble.style.whiteSpace = 'pre-wrap';
       chatDiv.appendChild(bubble);
       wrap.appendChild(chatDiv);
       wrap.scrollTop = wrap.scrollHeight;
