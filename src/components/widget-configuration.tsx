@@ -5,6 +5,7 @@ import { HoverScale } from "@/components/ui/animated-page";
 import toast from "react-hot-toast";
 import { useTenant } from "./tenant-context";
 import Logo from "./logo";
+import Link from "next/link";
 
 // Define the widget configuration schema
 export interface WidgetConfigSchema {
@@ -461,7 +462,7 @@ export default function WidgetConfiguration({
                                 {/* Branding */}
                                 {config.showBranding && (
                                     <div className="text-center mt-2 text-xs text-base-content/40">
-                                        Powered by helpNINJA
+                                        Powered by <Link href={"https://helpNINJA.ai"}>helpNINJA</Link>
                                     </div>
                                 )}
                             </div>
