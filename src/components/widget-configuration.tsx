@@ -36,27 +36,27 @@ export interface WidgetConfigSchema {
 
 // Default configuration values
 const defaultConfig: WidgetConfigSchema = {
-    primaryColor: "#4DA8DA", // Purple
+    primaryColor: "#4DA8DA", // Sky Blue
     position: "bottom-right",
     welcomeMessage: "👋 Hi there! How can I help you today?",
-    aiName: "AI Assistant",
+    aiName: "helpNINJA AI",
     showBranding: true,
     autoOpenDelay: 0,
     buttonIcon: "default",
     theme: "light",
     voice: "friendly",
     // New styling defaults
-    bubbleBackground: "#111",
-    bubbleColor: "#fff",
-    panelBackground: "#fff",
+    bubbleBackground: "#4DA8DA",
+    bubbleColor: "#ffffff",
+    panelBackground: "#ff0000",
     panelHeaderBackground: "#4DA8DA",
     messagesBackground: "#f8fafc",
-    userBubbleBackground: "#3b82f6",
-    userBubbleColor: "#fff",
-    assistantBubbleBackground: "#e5e7eb",
-    assistantBubbleColor: "#111",
+    userBubbleBackground: "#4DA8DA44",
+    userBubbleColor: "#ff0000",
+    assistantBubbleBackground: "#4DA8DA44",
+    assistantBubbleColor: "#4DA8DA",
     buttonBackground: "#111",
-    buttonColor: "#fff"
+    buttonColor: "#ff0000"
 };
 
 interface WidgetConfigurationProps {
@@ -410,13 +410,13 @@ export default function WidgetConfiguration({
                             </div>
 
                             {/* Chat content */}
-                            <div className="p-4 h-64 overflow-y-auto">
+                            <div className={`p-4 h-64 overflow-y-auto`} style={{ backgroundColor: config.messagesBackground }}>
                                 {/* AI message */}
                                 <div className="flex gap-2 mb-4">
                                     <div className="w-8 h-8 rounded-full bg-primary/20 flex-shrink-0 flex items-center justify-center">
                                         <i className="fa-duotone fa-solid fa-robot text-primary text-sm" />
                                     </div>
-                                    <div className="bg-base-200 p-3 rounded-xl rounded-tl-none max-w-[80%] animate-fadeIn">
+                                    <div className="bg-base-200 p-3 rounded-xl rounded-tl-none max-w-[80%] animate-fadeIn" style={{ backgroundColor: config.assistantBubbleBackground, color: config.assistantBubbleColor }}>
                                         <p className="text-sm">{config.welcomeMessage || '👋 Hi there! How can I help you today?'}</p>
                                     </div>
                                 </div>
@@ -426,7 +426,7 @@ export default function WidgetConfiguration({
                                     <div className="w-8 h-8 rounded-full bg-base-200 flex-shrink-0 flex items-center justify-center">
                                         <i className="fa-duotone fa-solid fa-user text-base-content/60 text-sm" />
                                     </div>
-                                    <div className="bg-primary/10 p-3 rounded-xl rounded-tr-none max-w-[80%] animate-fadeIn" style={{ animationDelay: '0.3s' }}>
+                                    <div className="bg-primary/10 p-3 rounded-xl rounded-tr-none max-w-[80%] animate-fadeIn" style={{ backgroundColor: config.userBubbleBackground, color: config.userBubbleColor, animationDelay: '0.3s' }}>
                                         <p className="text-sm">Hi, I have a question about your services.</p>
                                     </div>
                                 </div>
@@ -436,9 +436,9 @@ export default function WidgetConfiguration({
                                     <div className="w-8 h-8 rounded-full bg-primary/20 flex-shrink-0 flex items-center justify-center">
                                         <i className="fa-duotone fa-solid fa-robot text-primary text-sm" />
                                     </div>
-                                    <div className="bg-base-200 p-3 rounded-xl rounded-tl-none max-w-[80%] animate-fadeIn" style={{ animationDelay: '0.6s' }}>
+                                    <div className="bg-base-200 p-3 rounded-xl rounded-tl-none max-w-[80%] animate-fadeIn" style={{ animationDelay: '0.6s', background: config.assistantBubbleBackground, color: config.assistantBubbleColor }}>
                                         <div className="flex items-center gap-1">
-                                            <div className="w-2 h-2 bg-primary/50 rounded-full animate-bounce" style={{ animationDelay: '0s' }}></div>
+                                            <div className="w-2 h-2 rounded-full animate-bounce" style={{ backgroundColor: config.assistantBubbleBackground, animationDelay: '0s' }}></div>
                                             <div className="w-2 h-2 bg-primary/50 rounded-full animate-bounce" style={{ animationDelay: '0.2s' }}></div>
                                             <div className="w-2 h-2 bg-primary/50 rounded-full animate-bounce" style={{ animationDelay: '0.4s' }}></div>
                                         </div>
