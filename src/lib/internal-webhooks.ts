@@ -81,7 +81,7 @@ async function processIntegrationUrl(
         }
 
         const integrationRow = rows[0];
-        
+
         // Convert query result to IntegrationRecord
         const integration: IntegrationRecord = {
             id: integrationRow.id,
