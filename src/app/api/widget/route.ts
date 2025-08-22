@@ -537,7 +537,7 @@ export async function GET(req: NextRequest) {
     const input = document.createElement('input');
     input.id = 'hn_input';
     input.placeholder = 'Type your message...';
-    input.style.cssText = 'flex:1;padding:12px 16px;border:1px solid ' + styles.inputBorder + ';border-radius:20px;outline:none;background:transparent;margin-right:8px;transition:border-color 0.2s ease;font-size:14px;';
+    input.style.cssText = 'flex:1;padding:12px 16px;border:1px solid ' + styles.inputBorder + ';border-radius:20px;outline:none;background:#ffffff88;margin-right:8px;transition:border-color 0.2s ease;font-size:14px;';
     input.addEventListener('focus', () => {
       input.style.borderColor = styles.primaryColor;
       input.style.boxShadow = '0 0 0 3px ' + styles.focusOutlineColor;
