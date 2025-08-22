@@ -9,6 +9,7 @@ export type EscalationEvent = {
     confidence?: number
     refs?: string[]
     reason: EscalationReason
+    ruleId?: string
     meta?: Record<string, unknown>
     data?: {
         reason?: string;
@@ -19,6 +20,7 @@ export type EscalationEvent = {
         user_message?: string;
         assistant_answer?: string;
     };
+    destinations?: Array<{ integrationId: string }>;
 }
 export type IntegrationRecord = {
     id: string

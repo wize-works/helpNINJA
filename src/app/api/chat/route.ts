@@ -181,9 +181,20 @@ export async function POST(req: NextRequest) {
         }
 
         // Check escalation rules for the user message
-        console.log(`🔍 Checking escalation rules for message: "${message.slice(0, 50)}${message.length > 50 ? '...' : ''}"`)
+        console.log(`🔍 RULE DEBUG [1]: Starting rule evaluation for message: "${message.slice(0, 50)}${message.length > 50 ? '...' : ''}"`)
+        console.log(`🔍 RULE DEBUG [2]: Message content to check against keywords: "${message}"`)
+        console.log(`🔍 RULE DEBUG [3]: TenantId: ${tenantId}, ConversationId: ${conversationId}`)
 
         // Get active rules for this tenant
+        console.log(`🔍 RULE DEBUG [4]: Querying DB for active rules with SQL:
+            SELECT * FROM public.escalation_rules 
+            WHERE tenant_id = '${tenantId}' 
+            AND enabled = true 
+            AND rule_type = 'escalation'
+            AND trigger_event = 'message_received'
+            AND (site_id IS NULL OR site_id = '${siteId || null}')
+            ORDER BY priority DESC`)
+
         const { rows: rules } = await query(
             `SELECT * FROM public.escalation_rules 
              WHERE tenant_id = $1 
@@ -194,6 +205,11 @@ export async function POST(req: NextRequest) {
              ORDER BY priority DESC`,
             [tenantId, siteId || null]
         )
+
+        console.log(`🔍 RULE DEBUG [5]: Query result: Found ${rules.length} active rules`)
+        if (rules.length > 0) {
+            console.log(`🔍 RULE DEBUG [6]: First rule details: id=${rules[0].id}, name=${rules[0].name}, conditions=${JSON.stringify(rules[0].conditions)}`)
+        }
 
         console.log(`📋 Found ${rules.length} active escalation rules to check`)
 
@@ -211,24 +227,32 @@ export async function POST(req: NextRequest) {
 
             // Check each rule
             for (const rule of rules) {
-                console.log(`🔍 Evaluating rule: ${rule.name} (${rule.id})`)
+                console.log(`🔍 RULE DEBUG [7]: Starting evaluation for rule: ${rule.name} (${rule.id})`)
 
                 // Get the conditions from the rule
                 const conditions = rule.conditions || { operator: 'and', conditions: [] }
+                console.log(`🔍 RULE DEBUG [8]: Rule conditions structure: ${JSON.stringify(conditions)}`)
+
+                // Prepare context object used for evaluation
+                console.log(`🔍 RULE DEBUG [9]: Evaluation context: ${JSON.stringify(context)}`)
 
                 // Evaluate rule against context
+                console.log(`🔍 RULE DEBUG [10]: Calling evaluateRuleConditions()`)
                 const result = evaluateRuleConditions(conditions, context)
+                console.log(`🔍 RULE DEBUG [11]: Rule evaluation result: matched=${result.matched}, details=${JSON.stringify(result.details)}`)
 
                 if (result.matched) {
-                    console.log(`✅ Rule matched: ${rule.name}`)
+                    console.log(`✅ RULE DEBUG [12]: Rule matched: ${rule.name}`)
 
                     // Update last evaluated timestamp
+                    console.log(`✅ RULE DEBUG [13]: Updating rule match statistics in DB`)
                     await query(
                         `UPDATE public.escalation_rules SET last_evaluated_at = NOW(), 
                          last_matched_at = NOW(), match_count = match_count + 1 
                          WHERE id = $1`,
                         [rule.id]
                     )
+                    console.log(`✅ RULE DEBUG [14]: Rule statistics updated successfully`)
 
                     // Prepare escalation event
                     const event = {
@@ -243,10 +267,11 @@ export async function POST(req: NextRequest) {
                         ruleId: rule.id
                     }
 
-                    console.log(`🚀 Rule match - dispatching escalation for rule: ${rule.name}`)
+                    console.log(`🚀 RULE DEBUG [15]: Rule match - dispatching escalation for rule: ${rule.name}`)
 
                     // Dispatch the escalation with rule destinations
                     const destinations = rule.destinations || [];
+                    console.log(`🚀 RULE DEBUG [16]: Rule destinations: ${JSON.stringify(destinations)}`)
 
                     // Create escalation payload with proper typing
                     interface EscalationPayload {
@@ -263,6 +288,7 @@ export async function POST(req: NextRequest) {
                     }
 
                     const eventBody: EscalationPayload = { ...event };
+                    console.log(`🚀 RULE DEBUG [17]: Initial event payload: ${JSON.stringify(eventBody)}`)
 
                     if (destinations.length > 0) {
                         // Convert rule destinations to the format expected by dispatchEscalation
@@ -271,45 +297,73 @@ export async function POST(req: NextRequest) {
                             type?: string;
                         }
 
+                        console.log(`🚀 RULE DEBUG [18]: Processing destinations for rule`)
                         const integrationIds = destinations
                             .filter((d: Destination) => d.integration_id)
                             .map((d: Destination) => ({ integrationId: d.integration_id as string }));
 
+                        console.log(`🚀 RULE DEBUG [19]: Converted destinations: ${JSON.stringify(integrationIds)}`)
+
                         if (integrationIds.length > 0) {
                             eventBody.destinations = integrationIds;
+                            console.log(`🚀 RULE DEBUG [20]: Updated event payload with destinations: ${JSON.stringify(eventBody)}`)
+                        } else {
+                            console.log(`🚀 RULE DEBUG [21]: No valid integration IDs found in rule destinations`)
                         }
+                    } else {
+                        console.log(`🚀 RULE DEBUG [22]: No destinations in rule, will use default escalation channels`)
                     }
 
                     // Use the escalate API for consistency with existing implementation
                     const base = process.env.SITE_URL || '';
                     const url = base ? base.replace(/\/$/, '') + '/api/escalate' : 'http://localhost:3001/api/escalate';
+                    console.log(`🚀 RULE DEBUG [23]: Escalation API URL: ${url}`)
 
                     try {
+                        console.log(`🚀 RULE DEBUG [24]: Sending POST request to escalation API`)
+                        const payloadJson = JSON.stringify(eventBody);
+                        console.log(`🚀 RULE DEBUG [25]: Request payload: ${payloadJson}`)
+
                         const response = await fetch(url, {
                             method: 'POST',
                             headers: { 'content-type': 'application/json' },
-                            body: JSON.stringify(eventBody)
+                            body: payloadJson
                         });
 
+                        const responseStatus = response.status;
+                        const responseText = await response.text();
+                        console.log(`🚀 RULE DEBUG [26]: API response status: ${responseStatus}`);
+                        console.log(`🚀 RULE DEBUG [27]: API response body: ${responseText}`);
+
                         if (response.ok) {
-                            console.log(`✅ Rule-based escalation sent successfully for rule: ${rule.name}`);
+                            console.log(`✅ RULE DEBUG [28]: Rule-based escalation sent successfully for rule: ${rule.name}`);
                             ruleTriggered = true;
                         } else {
-                            console.error(`❌ Failed to send rule-based escalation: ${response.status}`);
+                            console.error(`❌ RULE DEBUG [29]: Failed to send rule-based escalation: Status ${responseStatus}, Body: ${responseText}`);
                         }
                     } catch (error) {
+                        console.error(`❌ RULE DEBUG [30]: Exception during API call: ${error instanceof Error ? error.message : 'Unknown error'}`);
                         console.error('❌ Error sending rule-based escalation:', error);
                     }
 
                     break; // Stop after first matching rule
                 } else {
-                    console.log(`❌ Rule did not match: ${rule.name}`);
+                    console.log(`❌ RULE DEBUG [31]: Rule did not match: ${rule.name}`);
+
+                    // Log why the rule didn't match
+                    if (result.details && result.details.length > 0) {
+                        result.details.forEach((detail, i) => {
+                            console.log(`❌ RULE DEBUG [32.${i}]: Condition result: matched=${detail.result}, reason=${detail.reason}`);
+                        });
+                    }
 
                     // Update evaluation timestamp
+                    console.log(`❌ RULE DEBUG [33]: Updating last_evaluated_at timestamp for non-matching rule`);
                     await query(
                         `UPDATE public.escalation_rules SET last_evaluated_at = NOW() WHERE id = $1`,
                         [rule.id]
                     );
+                    console.log(`❌ RULE DEBUG [34]: Timestamp updated for rule ${rule.id}`);
                 }
             }
         }

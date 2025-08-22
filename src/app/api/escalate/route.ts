@@ -14,20 +14,39 @@ export async function OPTIONS() {
 
 export async function POST(req: NextRequest) {
     try {
-        if (req.method !== 'POST') return withCORS(NextResponse.json({ error: 'method not allowed' }, { status: 405 }))
-        const ev = await req.json()
+        console.log(`🚨 ESCALATE DEBUG [1]: Escalation API called`);
+
+        if (req.method !== 'POST') {
+            console.log(`🚨 ESCALATE DEBUG [2]: Invalid method: ${req.method}`);
+            return withCORS(NextResponse.json({ error: 'method not allowed' }, { status: 405 }));
+        }
+
+        // Log raw request body for debugging
+        const rawBody = await req.text();
+        console.log(`🚨 ESCALATE DEBUG [3]: Raw request body: ${rawBody}`);
+
+        // Parse the JSON
+        const ev = JSON.parse(rawBody);
+        console.log(`🚨 ESCALATE DEBUG [4]: Parsed request payload: ${JSON.stringify(ev)}`);
 
         // ensure tenantId present via strict server resolution
         if (!ev?.tenantId) {
-            try { ev.tenantId = await getTenantIdStrict() } catch { }
+            console.log(`🚨 ESCALATE DEBUG [5]: Missing tenantId, attempting strict resolution`);
+            try {
+                ev.tenantId = await getTenantIdStrict();
+                console.log(`🚨 ESCALATE DEBUG [6]: Resolved tenantId: ${ev.tenantId}`);
+            } catch (error) {
+                console.error(`🚨 ESCALATE DEBUG [7]: Failed to resolve tenantId: ${error instanceof Error ? error.message : 'Unknown error'}`);
+            }
         }
 
         if (!ev?.tenantId || !ev?.conversationId || !ev?.userMessage) {
+            console.error(`🚨 ESCALATE DEBUG [8]: Missing required fields: tenantId=${!!ev?.tenantId}, conversationId=${!!ev?.conversationId}, userMessage=${!!ev?.userMessage}`);
             return withCORS(NextResponse.json({ error: 'missing fields' }, { status: 400 }))
         }
 
-        console.log(`🚨 Escalation triggered for tenant ${ev.tenantId}, conversation ${ev.conversationId}`);
-        console.log(`Reason: ${ev.reason}, Confidence: ${ev.confidence}`);
+        console.log(`🚨 ESCALATE DEBUG [9]: Escalation triggered for tenant ${ev.tenantId}, conversation ${ev.conversationId}`);
+        console.log(`🚨 ESCALATE DEBUG [10]: Reason: ${ev.reason}, Confidence: ${ev.confidence}`);
 
         // First trigger the webhook event if it wasn't already triggered
         try {
@@ -109,12 +128,16 @@ export async function POST(req: NextRequest) {
 
         // Even if no rule matched, still dispatch the escalation
         // If no destinations are specified, dispatchEscalation will use environment fallbacks
+        console.log(`🚨 ESCALATE DEBUG [11]: Calling dispatchEscalation with payload: ${JSON.stringify(ev)}`);
+        console.log(`🚨 ESCALATE DEBUG [12]: Payload has destinations: ${!!ev.destinations}, count: ${ev.destinations ? ev.destinations.length : 0}`);
+
         const r = await dispatchEscalation(ev)
+        console.log(`🚨 ESCALATE DEBUG [13]: dispatchEscalation result: ${JSON.stringify(r)}`);
 
         if (r.ok) {
-            console.log('✅ Escalation dispatched successfully');
+            console.log('✅ ESCALATE DEBUG [14]: Escalation dispatched successfully');
         } else {
-            console.error('❌ Failed to dispatch escalation:', r.error || 'Unknown error');
+            console.error(`❌ ESCALATE DEBUG [15]: Failed to dispatch escalation: ${r.error || 'Unknown error'}`);
         }
 
         // Prepare a response that only includes properties we know exist
