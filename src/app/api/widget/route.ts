@@ -355,7 +355,7 @@ export async function GET(req: NextRequest) {
       
       // User message colors
       userBubbleBackground: useAdvancedColors ? (config.userBubbleBackground || '#0077b6') : primaryColor,
-      userBubbleColor: useAdvancedColors ? config.userBubbleColor || '#fff',
+      userBubbleColor: useAdvancedColors ? config.userBubbleColor || '#fff' : '#fff',
       
       // Assistant message colors
       assistantBubbleBackground: useAdvancedColors 
