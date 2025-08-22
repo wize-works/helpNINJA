@@ -219,6 +219,24 @@ export async function GET(req: NextRequest) {
 
     // NOTE: We no longer embed a server-derived origin. We compute it client-side from the *script's own src*.
     const js = `(() => {
+    // Utility function to convert hex color to RGB for use with rgba
+    function hexToRgb(hex) {
+      // Remove the # if present
+      hex = hex.replace('#', '');
+      
+      // Convert 3-digit hex to 6-digit
+      if (hex.length === 3) {
+        hex = hex[0] + hex[0] + hex[1] + hex[1] + hex[2] + hex[2];
+      }
+      
+      // Extract the RGB components
+      const r = parseInt(hex.substring(0, 2), 16);
+      const g = parseInt(hex.substring(2, 4), 16);
+      const b = parseInt(hex.substring(4, 6), 16);
+      
+      return r + ',' + g + ',' + b;
+    }
+    
     // compute base from the script tag that loaded this widget (most robust behind proxies)
     const __script = document.currentScript;
     const __base = (() => {
@@ -275,18 +293,25 @@ export async function GET(req: NextRequest) {
     const voiceStyle = ${VOICE_JSON}; // From URL parameters
     
     // Extract styling from config with defaults
-    const primaryColor = config.primaryColor || '#7C3AED';
+    // Changed default from '#7C3AED' (purple) to '#0077b6' (blue) to match the screenshot
+    const primaryColor = config.primaryColor || '#0077b6';
+    
+    // Use advancedColors flag to determine whether to use primary color or specific colors
+    const useAdvancedColors = config.advancedColors === true;
+    
     const styles = {
-      bubbleBackground: config.bubbleBackground || '#111',
+      // If advancedColors is true, use the specific colors from config; otherwise derive from primaryColor
+      bubbleBackground: useAdvancedColors ? (config.bubbleBackground || '#0077b6') : primaryColor,
       bubbleColor: config.bubbleColor || '#fff',
-      panelBackground: config.panelBackground || '#fff', 
-      panelHeaderBackground: config.panelHeaderBackground || primaryColor,
+      panelBackground: config.panelBackground || '#fff',
+      panelHeaderBackground: useAdvancedColors ? (config.panelHeaderBackground || '#0077b6') : primaryColor,
       messagesBackground: config.messagesBackground || '#f8fafc',
-      userBubbleBackground: config.userBubbleBackground || primaryColor,
+      userBubbleBackground: useAdvancedColors ? (config.userBubbleBackground || '#0077b6') : primaryColor,
       userBubbleColor: config.userBubbleColor || '#fff',
-      assistantBubbleBackground: config.assistantBubbleBackground || '#e5e7eb',
-      assistantBubbleColor: config.assistantBubbleColor || '#111',
-      buttonBackground: config.buttonBackground || primaryColor,
+      // Changed assistant bubble colors to match the screenshot (light blue background with blue text)
+      assistantBubbleBackground: useAdvancedColors ? (config.assistantBubbleBackground || '#e6f2ff') : primaryColor + '22',
+      assistantBubbleColor: useAdvancedColors ? (config.assistantBubbleColor || '#0077b6') : primaryColor,
+      buttonBackground: useAdvancedColors ? (config.buttonBackground || '#0077b6') : primaryColor,
       buttonColor: config.buttonColor || '#fff'
     };
 
@@ -349,6 +374,24 @@ export async function GET(req: NextRequest) {
     document.body.appendChild(bubble);
 
     // Set panel position based on bubble position
+    // Helper function to convert hex color to RGB for use with rgba
+    function hexToRgb(hex) {
+      // Remove the # if present
+      hex = hex.replace('#', '');
+      
+      // Convert 3-digit hex to 6-digit
+      if (hex.length === 3) {
+        hex = hex[0] + hex[0] + hex[1] + hex[1] + hex[2] + hex[2];
+      }
+      
+      // Extract the RGB components
+      const r = parseInt(hex.substring(0, 2), 16);
+      const g = parseInt(hex.substring(2, 4), 16);
+      const b = parseInt(hex.substring(4, 6), 16);
+      
+      return r + ',' + g + ',' + b;
+    }
+    
     const panelPositionStyles = {
       'bottom-right': 'bottom:90px;right:20px;',
       'bottom-left': 'bottom:90px;left:20px;',
@@ -367,14 +410,26 @@ export async function GET(req: NextRequest) {
     headerLeft.style.cssText = 'display:flex;align-items:center;gap:8px;';
     
     const iconContainer = document.createElement('div');
-    iconContainer.style.cssText = 'width:28px;height:28px;background:rgba(255,255,255,0.2);border-radius:50%;display:flex;align-items:center;justify-content:center;';
+    // Using a consistent background color for header icon with better contrast based on panel header color
+    const headerIconBgColor = styles.panelHeaderBackground ? 'rgba(255,255,255,0.2)' : 'rgba(255,255,255,0.2)';
+    iconContainer.style.cssText = 'width:28px;height:28px;background:' + headerIconBgColor + ';border-radius:50%;display:flex;align-items:center;justify-content:center;';
     
-    iconContainer.innerHTML = \`
+    // Use custom SVG based on the configuration
+    if (buttonIcon === "chat") {
+      iconContainer.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path></svg>';
+    } else if (buttonIcon === "help") {
+      iconContainer.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"></path><line x1="12" y1="17" x2="12.01" y2="17"></line></svg>';
+    } else if (buttonIcon === "message") {
+      iconContainer.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"></path></svg>';
+    } else {
+      // Default logo
+      iconContainer.innerHTML = \`
         <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 956.64 755.1" style="width:16px;height:16px;fill:white">
           <path d="M881.79,312.74c39.7-2.7,69.63,32.16,72.85,69.65,2.49,28.99,2.84,71.14,0,99.98-3.32,33.71-25.27,64.29-60.77,68.23-3.79.42-15.01-.53-16.75,1.25-1.57,1.6-3.92,11.56-5.29,14.71-36.91,85.11-121.05,139.58-212.45,148.55-21.08,34.37-64.81,45.83-102.74,37.28-73.64-16.61-62.97-110.41,15.52-118.5,30.57-3.15,53.55-.69,77.04,19.95,4.58,4.03.85,4.59,9.83,3.91,150.57-11.41,192.52-154.99,173.45-284.2-31.77-215.33-222.58-341.22-435.02-298.35C205.65,113.9,108.17,278.52,121.66,467.37c1.64,22.9,8.34,46.43,9.97,68.02,1.48,19.58-12.44,13.97-25.52,14.45-29.32,1.07-49.44,6.57-75.18-11.74-13.35-9.5-21.84-21.17-25.79-37.21-3.43-33.3-6.48-73.04-4.53-106.55,1.9-32.51,14.65-68,48.5-78.5,4.27-1.33,21.8-3.24,23.04-4.96,1.41-1.97,5.57-22.28,7.01-26.99C145.21,69.49,373.1-40.91,587.08,13.95c145.03,37.18,261.97,151.64,294.72,298.79Z"/>
           <path d="M428.45,329.17c42.73-1.25,88.12-1.04,130.7,1.72,66.55,4.31,205.78,20.26,213.38,106.62,8.53,96.89-108.27,127.26-183.69,109.69-28.27-6.59-51.79-21.81-78.66-30.34-68.8-21.84-107.58,30.48-171.03,35.01-65.52,4.67-173.87-28.91-159.04-113.04,17.6-99.83,168.87-107.34,248.34-109.66ZM322.44,399.16c-48.11,6.17-52.08,102.36,2.84,107.6,65.56,6.25,68.28-116.71-2.84-107.6ZM620.45,399.17c-51,5.3-55.76,92.59-5.58,105.99,68.17,18.2,78.14-113.52,5.58-105.99Z"/>
         </svg>
-    \`;
+      \`;
+    }
     
     const headerTitle = document.createElement('span');
     headerTitle.textContent = aiName;
@@ -459,8 +514,10 @@ export async function GET(req: NextRequest) {
         avatar.style.backgroundColor = '#e5e7eb';
         avatar.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>';
       } else {
-        avatar.style.backgroundColor = 'rgba(124, 58, 237, 0.1)'; // Primary color with opacity
-        avatar.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#7C3AED" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="10" rx="2"></rect><circle cx="12" cy="5" r="2"></circle><path d="M12 7v4"></path><line x1="8" y1="16" x2="8" y2="16"></line><line x1="16" y1="16" x2="16" y2="16"></line></svg>';
+        // Calculate the color for the assistant avatar background - use the primaryColor with opacity
+        const avatarColor = styles.assistantBubbleColor || styles.primaryColor || '#0077b6';
+        avatar.style.backgroundColor = 'rgba(' + hexToRgb(avatarColor) + ', 0.15)';
+        avatar.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="' + avatarColor + '" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="10" rx="2"></rect><circle cx="12" cy="5" r="2"></circle><path d="M12 7v4"></path><line x1="8" y1="16" x2="8" y2="16"></line><line x1="16" y1="16" x2="16" y2="16"></line></svg>';
       }
       
       const bubbleContainer = document.createElement('div');
@@ -471,14 +528,17 @@ export async function GET(req: NextRequest) {
       if (role === 'user') {
         bubble.className = 'chat-bubble';
         bubble.style.cssText = 'white-space:pre-wrap;max-width:280px;background:' + styles.userBubbleBackground + 
-          ';color:' + styles.userBubbleColor + ';border-radius:18px;border-top-right-radius:4px;padding:12px 16px;box-shadow:0 1px 2px rgba(0,0,0,0.1);animation:fadeIn 0.3s ease-out;';
+          ';color:' + styles.userBubbleColor + ';border-radius:18px;border-top-right-radius:4px;padding:12px 16px;' + 
+          'box-shadow:0 1px 2px rgba(0,0,0,0.1);animation:fadeIn 0.3s ease-out;font-size:14px;line-height:1.5;';
         bubbleContainer.appendChild(bubble);
         chatDiv.appendChild(bubbleContainer);
         chatDiv.appendChild(avatar);
       } else {
+        // For assistant bubbles, use the assistantBubbleBackground and assistantBubbleColor from styles
         bubble.className = 'chat-bubble';
         bubble.style.cssText = 'white-space:pre-wrap;max-width:280px;background:' + styles.assistantBubbleBackground + 
-          ';color:' + styles.assistantBubbleColor + ';border-radius:18px;border-top-left-radius:4px;padding:12px 16px;box-shadow:0 1px 2px rgba(0,0,0,0.1);animation:fadeIn 0.3s ease-out;';
+          ';color:' + styles.assistantBubbleColor + ';border-radius:18px;border-top-left-radius:4px;padding:12px 16px;' + 
+          'box-shadow:0 1px 2px rgba(0,0,0,0.1);animation:fadeIn 0.3s ease-out;font-size:14px;line-height:1.5;';
         bubbleContainer.appendChild(bubble);
         chatDiv.appendChild(avatar);
         chatDiv.appendChild(bubbleContainer);
@@ -516,7 +576,11 @@ export async function GET(req: NextRequest) {
       loadingBubble.className = 'chat-bubble';
       loadingBubble.style.cssText = 'white-space:pre-wrap;max-width:280px;background:' + styles.assistantBubbleBackground + 
         ';color:' + styles.assistantBubbleColor + ';border-radius:18px;border-top-left-radius:4px;padding:12px 16px;box-shadow:0 1px 2px rgba(0,0,0,0.1);';
-      loadingBubble.innerHTML = '<div class="typing-indicator"><span></span><span></span><span></span></div>';
+      
+      // Create the typing indicator with dynamic color based on the assistant bubble color
+      // Use the same color as the text in the assistant bubble for better visibility
+      const indicatorColor = styles.assistantBubbleColor || styles.primaryColor || '#0077b6';
+      loadingBubble.innerHTML = '<div class="typing-indicator"><span style="background-color: ' + indicatorColor + '"></span><span style="background-color: ' + indicatorColor + '"></span><span style="background-color: ' + indicatorColor + '"></span></div>';
       
       // Add styles for animations
       const style = document.createElement('style');
@@ -553,8 +617,8 @@ export async function GET(req: NextRequest) {
           width: 8px;
           height: 8px;
           border-radius: 50%;
-          background: #888;
-          opacity: 0.5;
+          /* Color is now set inline for each span */
+          opacity: 0.7;
           display: block;
           animation: typing 1.4s infinite ease-in-out;
         }
