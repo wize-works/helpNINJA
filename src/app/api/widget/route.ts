@@ -221,8 +221,19 @@ export async function GET(req: NextRequest) {
 
     // NOTE: We no longer embed a server-derived origin. We compute it client-side from the *script's own src*.
     const js = `(() => {
-    // Utility function to convert hex color to RGB for use with rgba
+    // Enhanced utility function to convert hex color to RGB for use with rgba
     function hexToRgb(hex) {
+      if (!hex) return '0,0,0'; // Default to black if no color provided
+      
+      // Handle colors that are already in rgb/rgba format
+      if (hex.startsWith('rgb')) {
+        const rgbValues = hex.match(/\d+/g);
+        if (rgbValues && rgbValues.length >= 3) {
+          return rgbValues.slice(0, 3).join(',');
+        }
+        return '0,0,0';
+      }
+      
       // Remove the # if present
       hex = hex.replace('#', '');
       
@@ -231,12 +242,32 @@ export async function GET(req: NextRequest) {
         hex = hex[0] + hex[0] + hex[1] + hex[1] + hex[2] + hex[2];
       }
       
-      // Extract the RGB components
-      const r = parseInt(hex.substring(0, 2), 16);
-      const g = parseInt(hex.substring(2, 4), 16);
-      const b = parseInt(hex.substring(4, 6), 16);
+      // Handle 8-digit hex (with alpha) by removing alpha component
+      if (hex.length === 8) {
+        hex = hex.substring(0, 6);
+      }
       
-      return r + ',' + g + ',' + b;
+      // Make sure we have a valid 6-digit hex
+      if (hex.length !== 6) {
+        return '0,0,0'; // Default to black for invalid hex
+      }
+      
+      try {
+        // Extract the RGB components
+        const r = parseInt(hex.substring(0, 2), 16);
+        const g = parseInt(hex.substring(2, 4), 16);
+        const b = parseInt(hex.substring(4, 6), 16);
+        
+        // Check if values are NaN
+        if (isNaN(r) || isNaN(g) || isNaN(b)) {
+          return '0,0,0';
+        }
+        
+        return r + ',' + g + ',' + b;
+      } catch (e) {
+        console.error('Error parsing color:', hex, e);
+        return '0,0,0';
+      }
     }
     
     // compute base from the script tag that loaded this widget (most robust behind proxies)
@@ -295,26 +326,54 @@ export async function GET(req: NextRequest) {
     const voiceStyle = ${VOICE_JSON}; // From URL parameters
     
     // Extract styling from config with defaults
-    // Changed default from '#7C3AED' (purple) to '#0077b6' (blue) to match the screenshot
     const primaryColor = config.primaryColor || '#0077b6';
     
     // Use advancedColors flag to determine whether to use primary color or specific colors
     const useAdvancedColors = config.advancedColors === true;
     
+    // Define all colors once at the top to ensure consistency throughout the widget
     const styles = {
-      // If advancedColors is true, use the specific colors from config; otherwise derive from primaryColor
+      // Base colors - If advancedColors is true, use the specific colors from config; otherwise derive from primaryColor
+      primaryColor: primaryColor,
+      
+      // Button colors
+      buttonBackground: useAdvancedColors ? (config.buttonBackground || '#0077b6') : primaryColor,
+      buttonColor: config.buttonColor || '#fff',
+      buttonHoverBackground: function() {
+        const baseColor = useAdvancedColors ? (config.buttonBackground || '#0077b6') : primaryColor;
+        return 'rgba(' + hexToRgb(baseColor) + ', 0.8)';
+      }(),
+      
+      // Bubble/widget button colors
       bubbleBackground: useAdvancedColors ? (config.bubbleBackground || '#0077b6') : primaryColor,
       bubbleColor: config.bubbleColor || '#fff',
+      
+      // Panel colors
       panelBackground: config.panelBackground || '#fff',
       panelHeaderBackground: useAdvancedColors ? (config.panelHeaderBackground || '#0077b6') : primaryColor,
       messagesBackground: config.messagesBackground || '#f8fafc',
+      
+      // User message colors
       userBubbleBackground: useAdvancedColors ? (config.userBubbleBackground || '#0077b6') : primaryColor,
       userBubbleColor: config.userBubbleColor || '#fff',
-      // Changed assistant bubble colors to match the screenshot (light blue background with blue text)
-      assistantBubbleBackground: useAdvancedColors ? (config.assistantBubbleBackground || '#e6f2ff') : primaryColor + '22',
+      
+      // Assistant message colors
+      assistantBubbleBackground: useAdvancedColors 
+        ? (config.assistantBubbleBackground || '#e6f2ff') 
+        : 'rgba(' + hexToRgb(primaryColor) + ', 0.13)', // Proper transparency using rgba
       assistantBubbleColor: useAdvancedColors ? (config.assistantBubbleColor || '#0077b6') : primaryColor,
-      buttonBackground: useAdvancedColors ? (config.buttonBackground || '#0077b6') : primaryColor,
-      buttonColor: config.buttonColor || '#fff'
+      
+      // UI Element colors
+      focusOutlineColor: 'rgba(' + hexToRgb(useAdvancedColors 
+        ? (config.buttonBackground || '#0077b6') 
+        : primaryColor) + ', 0.5)',
+      headerIconBackground: 'rgba(255,255,255,0.2)',
+      avatarBackground: function() {
+        const avatarColor = useAdvancedColors ? (config.assistantBubbleColor || '#0077b6') : primaryColor;
+        return 'rgba(' + hexToRgb(avatarColor) + ', 0.15)';
+      }(),
+      borderColor: config.theme === 'dark' ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.1)',
+      inputBorder: config.theme === 'dark' ? '#374151' : '#e5e7eb'
     };
 
     // Load DaisyUI CSS if not already present
@@ -339,6 +398,17 @@ export async function GET(req: NextRequest) {
     
     const bubble = document.createElement('div');
     bubble.style.cssText = 'position:fixed;' + positionStyles[position] + 'width:60px;height:60px;border-radius:30px;box-shadow:0 10px 30px rgba(0,0,0,.2);background:' + styles.bubbleBackground + ';color:' + styles.bubbleColor + ';display:flex;align-items:center;justify-content:center;cursor:pointer;z-index:999999;transition:all 0.3s ease;';
+    
+    // Add hover effect for the chat bubble
+    bubble.addEventListener('mouseover', () => {
+      bubble.style.transform = 'scale(1.05)';
+      bubble.style.boxShadow = '0 15px 35px rgba(0,0,0,.25)';
+    });
+    
+    bubble.addEventListener('mouseout', () => {
+      bubble.style.transform = 'scale(1)';
+      bubble.style.boxShadow = '0 10px 30px rgba(0,0,0,.2)';
+    });
     
     // Set the button icon based on the configured option
     let iconSvg = '';
@@ -406,7 +476,12 @@ export async function GET(req: NextRequest) {
     // Create header element with AI name from config
     const aiName = config.aiName || 'helpNINJA';
     const header = document.createElement('div');
-    header.style.cssText = 'padding:14px 16px;border-bottom:1px solid ' + (config.theme === 'dark' ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.1)') + ';font-weight:600;color:#fff;background:' + styles.panelHeaderBackground + ';display:flex;align-items:center;justify-content:space-between;border-radius:16px 16px 0 0;';
+        header.style.cssText = 'padding:14px 16px;border-bottom:1px solid ' + styles.borderColor + ';font-weight:600;color:#fff;background:' + styles.panelHeaderBackground + ';display:flex;align-items:center;justify-content:space-between;border-radius:16px 16px 0 0;';
+    
+    const headerTitle = document.createElement('div');
+    headerTitle.style.cssText = 'display:flex;align-items:center;gap:8px;';
+    
+    const headerIconBgColor = styles.headerIconBackground;
     
     const headerLeft = document.createElement('div');
     headerLeft.style.cssText = 'display:flex;align-items:center;gap:8px;';
@@ -460,7 +535,7 @@ export async function GET(req: NextRequest) {
     
     // Create input area
     const inputArea = document.createElement('div');
-    inputArea.style.cssText = 'display:flex;flex-direction:column;border-top:1px solid ' + (config.theme === 'dark' ? '#374151' : '#e5e7eb') + ';background:' + styles.panelBackground + ';padding:12px 16px 16px;border-radius:0 0 16px 16px;';
+    inputArea.style.cssText = 'display:flex;flex-direction:column;border-top:1px solid ' + styles.inputBorder + ';background:' + styles.panelBackground + ';padding:12px 16px 16px;border-radius:0 0 16px 16px;';
     
     const inputRow = document.createElement('div');
     inputRow.style.cssText = 'display:flex;width:100%;';
@@ -468,18 +543,29 @@ export async function GET(req: NextRequest) {
     const input = document.createElement('input');
     input.id = 'hn_input';
     input.placeholder = 'Type your message...';
-    input.style.cssText = 'flex:1;padding:12px 16px;border:1px solid ' + (config.theme === 'dark' ? '#374151' : '#e5e7eb') + ';border-radius:20px;outline:none;background:transparent;margin-right:8px;transition:border-color 0.2s ease;font-size:14px;';
+    input.style.cssText = 'flex:1;padding:12px 16px;border:1px solid ' + styles.inputBorder + ';border-radius:20px;outline:none;background:transparent;margin-right:8px;transition:border-color 0.2s ease;font-size:14px;';
     input.addEventListener('focus', () => {
-      input.style.borderColor = styles.primaryColor || '#7C3AED';
+      input.style.borderColor = styles.primaryColor;
+      input.style.boxShadow = '0 0 0 3px ' + styles.focusOutlineColor;
     });
     input.addEventListener('blur', () => {
-      input.style.borderColor = '#e5e7eb';
+      input.style.borderColor = styles.inputBorder;
+      input.style.boxShadow = 'none';
     });
     
     const sendButton = document.createElement('button');
     sendButton.id = 'hn_send';
     sendButton.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"></line><polygon points="22 2 15 22 11 13 2 9 22 2"></polygon></svg>';
-    sendButton.style.cssText = 'display:flex;align-items:center;justify-content:center;width:40px;height:40px;border:0;background:' + styles.buttonBackground + ';color:' + styles.buttonColor + ';cursor:pointer;border-radius:20px;';
+    sendButton.style.cssText = 'display:flex;align-items:center;justify-content:center;width:40px;height:40px;border:0;background:' + styles.buttonBackground + ';color:' + styles.buttonColor + ';cursor:pointer;border-radius:20px;transition:background 0.2s ease;';
+    
+    // Add hover effect for the send button
+    sendButton.addEventListener('mouseover', () => {
+      sendButton.style.backgroundColor = styles.buttonHoverBackground;
+    });
+    
+    sendButton.addEventListener('mouseout', () => {
+      sendButton.style.backgroundColor = styles.buttonBackground;
+    });
     
     // Assemble input row
     inputRow.appendChild(input);
@@ -517,8 +603,8 @@ export async function GET(req: NextRequest) {
         avatar.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>';
       } else {
         // Calculate the color for the assistant avatar background - use the primaryColor with opacity
-        const avatarColor = styles.assistantBubbleColor || styles.primaryColor || '#0077b6';
-        avatar.style.backgroundColor = 'rgba(' + hexToRgb(avatarColor) + ', 0.15)';
+        const avatarColor = styles.assistantBubbleColor;
+        avatar.style.backgroundColor = styles.avatarBackground;
         avatar.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="' + avatarColor + '" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="10" rx="2"></rect><circle cx="12" cy="5" r="2"></circle><path d="M12 7v4"></path><line x1="8" y1="16" x2="8" y2="16"></line><line x1="16" y1="16" x2="16" y2="16"></line></svg>';
       }
       
