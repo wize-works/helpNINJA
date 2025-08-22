@@ -80,7 +80,18 @@ async function processIntegrationUrl(
             return false;
         }
 
-        const integration = rows[0];
+        const integrationRow = rows[0];
+        
+        // Convert query result to IntegrationRecord
+        const integration: IntegrationRecord = {
+            id: integrationRow.id,
+            tenant_id: integrationRow.tenant_id,
+            provider: integrationRow.provider,
+            name: integrationRow.name,
+            config: integrationRow.config || {},
+            status: integrationRow.status || 'active',
+            credentials: {}
+        };
 
         // Check if the integration belongs to the tenant in the payload
         if (integration.tenant_id !== payload.tenant_id) {
@@ -105,15 +116,6 @@ async function processIntegrationUrl(
 /**
  * Handle escalation events
  */
-// Local type for DB records
-type DbIntegrationRecord = {
-    id: string;
-    tenant_id: string;
-    provider: string;
-    name: string;
-    config?: Record<string, unknown>;
-    status: string;
-};
 
 /**
  * Handle escalation events
@@ -194,17 +196,9 @@ async function handleEscalationEvent(
 
         console.log(`📤 Dispatching escalation to ${integration.provider} integration: ${integration.id}`);
 
-        // We already have the integration information
+        // We already have the integration information properly typed as IntegrationRecord
         // Just dispatch directly to the integration we already have
-        const destinations = [{
-            id: integration.id,
-            tenant_id: integration.tenant_id,
-            provider: integration.provider,
-            name: integration.name,
-            status: integration.status || 'active',
-            config: integration.config || {},
-            credentials: {}
-        }];
+        const destinations = [integration];
 
         // Dispatch the escalation
         const result = await dispatchEscalation(escalationEvent, destinations);
