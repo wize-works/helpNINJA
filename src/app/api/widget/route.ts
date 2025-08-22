@@ -478,9 +478,6 @@ export async function GET(req: NextRequest) {
     const header = document.createElement('div');
         header.style.cssText = 'padding:14px 16px;border-bottom:1px solid ' + styles.borderColor + ';font-weight:600;color:#fff;background:' + styles.panelHeaderBackground + ';display:flex;align-items:center;justify-content:space-between;border-radius:16px 16px 0 0;';
     
-    const headerTitle = document.createElement('div');
-    headerTitle.style.cssText = 'display:flex;align-items:center;gap:8px;';
-    
     const headerLeft = document.createElement('div');
     headerLeft.style.cssText = 'display:flex;align-items:center;gap:8px;';
     
