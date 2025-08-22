@@ -10,6 +10,7 @@ import Link from "next/link";
 // Define the widget configuration schema
 export interface WidgetConfigSchema {
     primaryColor: string;
+    advancedColors?: boolean;
     position: "bottom-right" | "bottom-left" | "top-right" | "top-left";
     welcomeMessage: string;
     aiName: string;
@@ -37,6 +38,7 @@ export interface WidgetConfigSchema {
 // Default configuration values
 const defaultConfig: WidgetConfigSchema = {
     primaryColor: "#4DA8DA", // Sky Blue
+    advancedColors: false,
     position: "bottom-right",
     welcomeMessage: "👋 Hi there! How can I help you today?",
     aiName: "helpNINJA AI",
@@ -46,13 +48,13 @@ const defaultConfig: WidgetConfigSchema = {
     theme: "light",
     voice: "friendly",
     // New styling defaults
-    bubbleBackground: "#4DA8DA",
+    bubbleBackground: "#ff0000",
     bubbleColor: "#ffffff",
     panelBackground: "#ff0000",
     panelHeaderBackground: "#4DA8DA",
     messagesBackground: "#f8fafc",
-    userBubbleBackground: "#4DA8DA44",
-    userBubbleColor: "#ff0000",
+    userBubbleBackground: "#e5e7eb",
+    userBubbleColor: "#333333",
     assistantBubbleBackground: "#4DA8DA44",
     assistantBubbleColor: "#4DA8DA",
     buttonBackground: "#111",
@@ -154,6 +156,7 @@ export default function WidgetConfiguration({
                 setConfig(prev => ({
                     ...prev,
                     primaryColor: defaultConfig.primaryColor,
+                    advancedColors: false,
                     bubbleBackground: defaultConfig.bubbleBackground,
                     bubbleColor: defaultConfig.bubbleColor,
                     panelBackground: defaultConfig.panelBackground,
@@ -171,6 +174,7 @@ export default function WidgetConfiguration({
                 setConfig(prev => ({
                     ...prev,
                     primaryColor: "#1E293B",
+                    advancedColors: false,
                     bubbleBackground: "#0f172a",
                     bubbleColor: "#fff",
                     panelBackground: "#1E293B",
@@ -188,6 +192,7 @@ export default function WidgetConfiguration({
                 setConfig(prev => ({
                     ...prev,
                     primaryColor: "#64748b",
+                    advancedColors: false,
                     bubbleBackground: "#f1f5f9",
                     bubbleColor: "#334155",
                     panelBackground: "#fff",
@@ -205,6 +210,7 @@ export default function WidgetConfiguration({
                 setConfig(prev => ({
                     ...prev,
                     primaryColor: "#0369a1",
+                    advancedColors: false,
                     bubbleBackground: "#0284c7",
                     bubbleColor: "#fff",
                     panelBackground: "#fff",
@@ -222,6 +228,7 @@ export default function WidgetConfiguration({
                 setConfig(prev => ({
                     ...prev,
                     primaryColor: "#ea580c",
+                    advancedColors: false,
                     bubbleBackground: "#f97316",
                     bubbleColor: "#fff",
                     panelBackground: "#fff",
@@ -395,52 +402,63 @@ export default function WidgetConfiguration({
                             }}
                         >
                             {/* Chat header */}
-                            <div className="p-4 border-b flex items-center justify-between rounded-t-xl"
-                                style={{ backgroundColor: config.panelHeaderBackground, borderColor: 'rgba(255,255,255,0.1)' }}
+                            <div className="p-4 flex items-center justify-between rounded-t-xl"
+                                style={{ backgroundColor: config.advancedColors ? config.panelHeaderBackground : config.primaryColor }}
                             >
                                 <div className="flex items-center gap-2">
-                                    <div className="w-8 h-8 p-1 rounded-full bg-white/20 flex items-center justify-center">
-                                        <Logo className="text-base-100" />
+                                    <div className="w-10 h-10 p-2 rounded-full bg-white/20 flex items-center justify-center">
+                                        {config.buttonIcon === "default" ? (
+                                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 956.64 755.1" style={{ width: "32px", height: "32px", fill: config.advancedColors ? config.bubbleColor : "#fff" }}>
+                                                <path d="M881.79,312.74c39.7-2.7,69.63,32.16,72.85,69.65,2.49,28.99,2.84,71.14,0,99.98-3.32,33.71-25.27,64.29-60.77,68.23-3.79.42-15.01-.53-16.75,1.25-1.57,1.6-3.92,11.56-5.29,14.71-36.91,85.11-121.05,139.58-212.45,148.55-21.08,34.37-64.81,45.83-102.74,37.28-73.64-16.61-62.97-110.41,15.52-118.5,30.57-3.15,53.55-.69,77.04,19.95,4.58,4.03.85,4.59,9.83,3.91,150.57-11.41,192.52-154.99,173.45-284.2-31.77-215.33-222.58-341.22-435.02-298.35C205.65,113.9,108.17,278.52,121.66,467.37c1.64,22.9,8.34,46.43,9.97,68.02,1.48,19.58-12.44,13.97-25.52,14.45-29.32,1.07-49.44,6.57-75.18-11.74-13.35-9.5-21.84-21.17-25.79-37.21-3.43-33.3-6.48-73.04-4.53-106.55,1.9-32.51,14.65-68,48.5-78.5,4.27-1.33,21.8-3.24,23.04-4.96,1.41-1.97,5.57-22.28,7.01-26.99C145.21,69.49,373.1-40.91,587.08,13.95c145.03,37.18,261.97,151.64,294.72,298.79Z" />
+                                                <path d="M428.45,329.17c42.73-1.25,88.12-1.04,130.7,1.72,66.55,4.31,205.78,20.26,213.38,106.62,8.53,96.89-108.27,127.26-183.69,109.69-28.27-6.59-51.79-21.81-78.66-30.34-68.8-21.84-107.58,30.48-171.03,35.01-65.52,4.67-173.87-28.91-159.04-113.04,17.6-99.83,168.87-107.34,248.34-109.66ZM322.44,399.16c-48.11,6.17-52.08,102.36,2.84,107.6,65.56,6.25,68.28-116.71-2.84-107.6ZM620.45,399.17c-51,5.3-55.76,92.59-5.58,105.99,68.17,18.2,78.14-113.52,5.58-105.99Z" />
+                                            </svg>
+                                        ) : config.buttonIcon === "chat" ? (
+                                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 640" style={{ width: "32px", height: "32px", fill: config.advancedColors ? config.bubbleColor : "#fff" }}><path opacity=".4" d="M112 192L112 416C112 442.5 133.5 464 160 464L216 464C226.4 464 235.3 470.6 238.6 479.9C239.5 482.4 240 485.1 240 488L240 537.7C272.7 514.6 303.3 493 331.9 472.8C340 467.1 349.7 464 359.6 464L480 464C506.5 464 528 442.5 528 416L528 192C528 165.5 506.5 144 480 144L160 144C133.5 144 112 165.5 112 192z" /><path d="M267.7 576.9C267.7 576.9 267.7 576.9 267.7 576.9L229.9 603.6C222.6 608.8 213 609.4 205 605.3C197 601.2 192 593 192 584L192 512L160 512C107 512 64 469 64 416L64 192C64 139 107 96 160 96L480 96C533 96 576 139 576 192L576 416C576 469 533 512 480 512L359.6 512L267.7 576.9zM332 472.8C340.1 467.1 349.8 464 359.7 464L480 464C506.5 464 528 442.5 528 416L528 192C528 165.5 506.5 144 480 144L160 144C133.5 144 112 165.5 112 192L112 416C112 442.5 133.5 464 160 464L216 464C226.4 464 235.3 470.6 238.6 479.9C239.5 482.4 240 485.1 240 488L240 537.7C272.7 514.6 303.3 493 331.9 472.8z" /></svg>
+                                        ) : config.buttonIcon === "help" ? (
+                                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 640" style={{ width: "32px", height: "32px", fill: config.advancedColors ? config.bubbleColor : "#fff" }}><path opacity=".4" d="M280 536C280 558.1 297.9 576 320 576C342.1 576 360 558.1 360 536C360 513.9 342.1 496 320 496C297.9 496 280 513.9 280 536z" /><path d="M320 128C267 128 224 171 224 224C224 241.7 209.7 256 192 256C174.3 256 160 241.7 160 224C160 135.6 231.6 64 320 64C408.4 64 480 135.6 480 224C480 295.2 433.5 355.5 369.2 376.3C363.4 378.2 358.5 381.4 355.5 384.7C352.6 387.9 352 390.3 352 392L352 416C352 433.7 337.7 448 320 448C302.3 448 288 433.7 288 416L288 392C288 350.7 321.2 324.5 349.5 315.4C388.1 302.9 416 266.7 416 224C416 171 373 128 320 128z" /></svg>
+                                        ) : (
+                                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 640" style={{ width: "32px", height: "32px", fill: config.advancedColors ? config.bubbleColor : "#fff" }}><path opacity=".4" d="M112 304C112 346.8 127.1 386.4 153.2 418.7C165.4 433.8 167.3 454.8 158 471.9L140 505L198.5 479.9C210.3 474.8 223.7 474.7 235.6 479.6C261.3 490.1 289.8 496 319.9 496C437.7 496 527.9 407.2 527.9 304C527.9 200.8 437.8 112 320 112C202.2 112 112 200.8 112 304z" /><path d="M115.9 448.9C83.3 408.6 64 358.4 64 304C64 171.5 178.6 64 320 64C461.4 64 576 171.5 576 304C576 436.5 461.4 544 320 544C283.5 544 248.8 536.8 217.4 524L101 573.9C97.3 575.5 93.5 576 89.5 576C75.4 576 64 564.6 64 550.5C64 546.2 65.1 542 67.1 538.3L115.9 448.9zM153.2 418.7C165.4 433.8 167.3 454.8 158 471.9L140 505L198.5 479.9C210.3 474.8 223.7 474.7 235.6 479.6C261.3 490.1 289.8 496 319.9 496C437.7 496 527.9 407.2 527.9 304C527.9 200.8 437.8 112 320 112C202.2 112 112 200.8 112 304C112 346.8 127.1 386.4 153.2 418.7z" /></svg>
+                                        )}
                                     </div>
-                                    <span className="text-white font-medium">{config.aiName || 'AI Assistant'}</span>
+                                    <span className=" font-medium" style={{ color: config.advancedColors ? config.bubbleColor : "#fff" }}>{config.aiName || 'AI Assistant'}</span>
                                 </div>
-                                <button onClick={toggleChat} className="text-white/80 hover:text-white transition-colors">
-                                    <i className="fa-duotone fa-solid fa-xmark" />
+                                <button onClick={toggleChat} className="bg-white/10 hover:bg-white/30 transition-colors rounded-full p-2 h-8 w-8" style={{ color: config.advancedColors ? config.bubbleColor : "#fff" }}>
+                                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 640" style={{ width: "16px", height: "16px", fill: config.advancedColors ? config.bubbleColor : "#fff" }}><path opacity=".4" d="" /><path d="M135.5 169C126.1 159.6 126.1 144.4 135.5 135.1C144.9 125.8 160.1 125.7 169.4 135.1L320.4 286.1L471.4 135.1C480.8 125.7 496 125.7 505.3 135.1C514.6 144.5 514.7 159.7 505.3 169L354.3 320L505.3 471C514.7 480.4 514.7 495.6 505.3 504.9C495.9 514.2 480.7 514.3 471.4 504.9L320.4 353.9L169.4 504.9C160 514.3 144.8 514.3 135.5 504.9C126.2 495.5 126.1 480.3 135.5 471L286.5 320L135.5 169z" /></svg>
                                 </button>
                             </div>
 
                             {/* Chat content */}
-                            <div className={`p-4 h-64 overflow-y-auto`} style={{ backgroundColor: config.messagesBackground }}>
+                            <div className={`p-4 h-64 overflow-y-auto`} style={{ backgroundColor: config.advancedColors ? config.messagesBackground : "#eef2f7" }}>
                                 {/* AI message */}
                                 <div className="flex gap-2 mb-4">
-                                    <div className="w-8 h-8 rounded-full bg-primary/20 flex-shrink-0 flex items-center justify-center">
-                                        <i className="fa-duotone fa-solid fa-robot text-primary text-sm" />
+                                    <div className="w-8 h-8 rounded-full flex-shrink-0 flex items-center justify-center" style={{ backgroundColor: config.advancedColors ? config.assistantBubbleBackground : `${config.primaryColor}`, color: config.advancedColors ? config.assistantBubbleColor : '#fff' }}>
+                                        <Logo className="p-2" />
                                     </div>
-                                    <div className="bg-base-200 p-3 rounded-xl rounded-tl-none max-w-[80%] animate-fadeIn" style={{ backgroundColor: config.assistantBubbleBackground, color: config.assistantBubbleColor }}>
+                                    <div className="p-3 rounded-xl rounded-tl-none max-w-[80%] animate-fadeIn" style={{ backgroundColor: config.advancedColors ? config.assistantBubbleBackground : `${config.primaryColor}`, color: config.advancedColors ? config.assistantBubbleColor : '#fff' }}>
                                         <p className="text-sm">{config.welcomeMessage || '👋 Hi there! How can I help you today?'}</p>
                                     </div>
                                 </div>
 
                                 {/* User message */}
                                 <div className="flex flex-row-reverse gap-2 mb-4">
-                                    <div className="w-8 h-8 rounded-full bg-base-200 flex-shrink-0 flex items-center justify-center">
-                                        <i className="fa-duotone fa-solid fa-user text-base-content/60 text-sm" />
+                                    <div className="w-8 h-8 rounded-full flex-shrink-0 flex items-center justify-center" style={{ backgroundColor: config.advancedColors ? config.userBubbleBackground : `${config.primaryColor}`, color: config.advancedColors ? config.userBubbleColor : '#fff' }}>
+                                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 640" style={{ width: "16px", height: "16px", fill: config.advancedColors ? config.userBubbleColor : "#fff" }}><path opacity=".4" d="M200 192C200 258.3 253.7 312 320 312C386.3 312 440 258.3 440 192C440 125.7 386.3 72 320 72C253.7 72 200 125.7 200 192z" /><path d="M112 546.3C112 447.8 191.8 368 290.3 368L349.7 368C448.2 368 528 447.8 528 546.3C528 562.7 514.7 576 498.3 576L141.7 576C125.3 576 112 562.7 112 546.3z" /></svg>
                                     </div>
-                                    <div className="bg-primary/10 p-3 rounded-xl rounded-tr-none max-w-[80%] animate-fadeIn" style={{ backgroundColor: config.userBubbleBackground, color: config.userBubbleColor, animationDelay: '0.3s' }}>
+                                    <div className="p-3 rounded-xl rounded-tr-none max-w-[80%] animate-fadeIn" style={{ backgroundColor: config.advancedColors ? config.userBubbleBackground : `#f9fafb`, color: config.advancedColors ? config.userBubbleColor : '#0b1220', animationDelay: '0.3s' }}>
                                         <p className="text-sm">Hi, I have a question about your services.</p>
                                     </div>
                                 </div>
 
                                 {/* Typing indicator - AI response */}
                                 <div className="flex gap-2 mb-4">
-                                    <div className="w-8 h-8 rounded-full bg-primary/20 flex-shrink-0 flex items-center justify-center">
-                                        <i className="fa-duotone fa-solid fa-robot text-primary text-sm" />
+                                    <div className="w-8 h-8 rounded-full flex-shrink-0 flex items-center justify-center" style={{ backgroundColor: config.advancedColors ? config.assistantBubbleBackground : `${config.primaryColor}`, color: config.advancedColors ? config.assistantBubbleColor : '#fff' }}>
+                                        <Logo className="p-2" />
                                     </div>
-                                    <div className="bg-base-200 p-3 rounded-xl rounded-tl-none max-w-[80%] animate-fadeIn" style={{ animationDelay: '0.6s', background: config.assistantBubbleBackground, color: config.assistantBubbleColor }}>
+                                    <div className="p-3 rounded-xl rounded-tl-none max-w-[80%] animate-fadeIn" style={{ backgroundColor: config.advancedColors ? config.assistantBubbleBackground : `${config.primaryColor}`, color: config.advancedColors ? config.assistantBubbleColor : '#fff' }}>
                                         <div className="flex items-center gap-1">
-                                            <div className="w-2 h-2 rounded-full animate-bounce" style={{ backgroundColor: config.assistantBubbleBackground, animationDelay: '0s' }}></div>
-                                            <div className="w-2 h-2 bg-primary/50 rounded-full animate-bounce" style={{ animationDelay: '0.2s' }}></div>
-                                            <div className="w-2 h-2 bg-primary/50 rounded-full animate-bounce" style={{ animationDelay: '0.4s' }}></div>
+                                            <div className="w-2 h-2 rounded-full animate-bounce" style={{ backgroundColor: config.advancedColors ? config.assistantBubbleBackground : '#fff', animationDelay: '0s' }}></div>
+                                            <div className="w-2 h-2 rounded-full animate-bounce" style={{ backgroundColor: config.advancedColors ? config.assistantBubbleBackground : '#fff', animationDelay: '0.2s' }}></div>
+                                            <div className="w-2 h-2 rounded-full animate-bounce" style={{ backgroundColor: config.advancedColors ? config.assistantBubbleBackground : '#fff', animationDelay: '0.4s' }}></div>
                                         </div>
                                     </div>
                                 </div>
@@ -454,15 +472,15 @@ export default function WidgetConfiguration({
                                         className="input input-sm input-bordered flex-grow rounded-full text-sm"
                                         disabled
                                     />
-                                    <button className="btn btn-sm btn-circle" style={{ backgroundColor: config.primaryColor }}>
-                                        <i className="fa-duotone fa-solid fa-paper-plane text-white" />
+                                    <button className="btn btn-sm btn-circle" style={{ backgroundColor: config.advancedColors ? config.buttonBackground : config.primaryColor, color: config.advancedColors ? config.buttonColor : '#fff' }} disabled>
+                                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 640" style={{ width: "16px", height: "16px", fill: config.advancedColors ? config.bubbleColor : "#fff" }}><path opacity=".4" d="M275.9 364.5L596.3 44C603.6 51.3 606.1 62.2 602.6 72L424.6 568.9C419.6 582.8 406.5 592 391.8 592C377.6 592 364.8 583.4 359.5 570.3L275.9 364.5z" /><path d="M596.3 44L275.9 364.5L70.1 280.8C57 275.5 48.4 262.7 48.4 248.5C48.4 233.8 57.6 220.7 71.5 215.7L568.4 37.7C578.2 34.2 589 36.7 596.4 44L596.4 44z" /></svg>
                                     </button>
                                 </div>
 
                                 {/* Branding */}
                                 {config.showBranding && (
-                                    <div className="text-center mt-2 text-xs text-base-content/40">
-                                        Powered by <Link href={"https://helpNINJA.ai"}>helpNINJA</Link>
+                                    <div className="text-center mt-2 text-xs ">
+                                        Powered by <Link href={"https://helpNINJA.ai"} target="_blank">helpNINJA</Link>
                                     </div>
                                 )}
                             </div>
@@ -472,22 +490,22 @@ export default function WidgetConfiguration({
                     {/* Chat bubble */}
                     <div
                         className={`w-14 h-14 rounded-full shadow-lg flex items-center justify-center cursor-pointer hover:scale-110 transition-all duration-300 ${showChat ? 'scale-110 rotate-180' : ''}`}
-                        style={{ backgroundColor: config.primaryColor }}
+                        style={{ backgroundColor: config.advancedColors ? config.bubbleBackground : config.primaryColor, color: config.advancedColors ? config.bubbleColor : '#fff' }}
                         onClick={toggleChat}
                     >
                         {showChat ? (
-                            <i className="fa-duotone fa-solid fa-xmark text-white text-xl" />
+                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 640" style={{ width: "32px", height: "32px", fill: config.advancedColors ? config.bubbleColor : "#fff" }}><path opacity=".4" d="" /><path d="M135.5 169C126.1 159.6 126.1 144.4 135.5 135.1C144.9 125.8 160.1 125.7 169.4 135.1L320.4 286.1L471.4 135.1C480.8 125.7 496 125.7 505.3 135.1C514.6 144.5 514.7 159.7 505.3 169L354.3 320L505.3 471C514.7 480.4 514.7 495.6 505.3 504.9C495.9 514.2 480.7 514.3 471.4 504.9L320.4 353.9L169.4 504.9C160 514.3 144.8 514.3 135.5 504.9C126.2 495.5 126.1 480.3 135.5 471L286.5 320L135.5 169z" /></svg>
                         ) : config.buttonIcon === "default" ? (
-                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 956.64 755.1" style={{ width: "32px", height: "32px", fill: "white" }}>
+                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 956.64 755.1" style={{ width: "32px", height: "32px", fill: config.advancedColors ? config.bubbleColor : "#fff" }}>
                                 <path d="M881.79,312.74c39.7-2.7,69.63,32.16,72.85,69.65,2.49,28.99,2.84,71.14,0,99.98-3.32,33.71-25.27,64.29-60.77,68.23-3.79.42-15.01-.53-16.75,1.25-1.57,1.6-3.92,11.56-5.29,14.71-36.91,85.11-121.05,139.58-212.45,148.55-21.08,34.37-64.81,45.83-102.74,37.28-73.64-16.61-62.97-110.41,15.52-118.5,30.57-3.15,53.55-.69,77.04,19.95,4.58,4.03.85,4.59,9.83,3.91,150.57-11.41,192.52-154.99,173.45-284.2-31.77-215.33-222.58-341.22-435.02-298.35C205.65,113.9,108.17,278.52,121.66,467.37c1.64,22.9,8.34,46.43,9.97,68.02,1.48,19.58-12.44,13.97-25.52,14.45-29.32,1.07-49.44,6.57-75.18-11.74-13.35-9.5-21.84-21.17-25.79-37.21-3.43-33.3-6.48-73.04-4.53-106.55,1.9-32.51,14.65-68,48.5-78.5,4.27-1.33,21.8-3.24,23.04-4.96,1.41-1.97,5.57-22.28,7.01-26.99C145.21,69.49,373.1-40.91,587.08,13.95c145.03,37.18,261.97,151.64,294.72,298.79Z" />
                                 <path d="M428.45,329.17c42.73-1.25,88.12-1.04,130.7,1.72,66.55,4.31,205.78,20.26,213.38,106.62,8.53,96.89-108.27,127.26-183.69,109.69-28.27-6.59-51.79-21.81-78.66-30.34-68.8-21.84-107.58,30.48-171.03,35.01-65.52,4.67-173.87-28.91-159.04-113.04,17.6-99.83,168.87-107.34,248.34-109.66ZM322.44,399.16c-48.11,6.17-52.08,102.36,2.84,107.6,65.56,6.25,68.28-116.71-2.84-107.6ZM620.45,399.17c-51,5.3-55.76,92.59-5.58,105.99,68.17,18.2,78.14-113.52,5.58-105.99Z" />
                             </svg>
                         ) : config.buttonIcon === "chat" ? (
-                            <i className="fa-duotone fa-solid fa-message text-white text-xl" />
+                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 640" style={{ width: "32px", height: "32px", fill: config.advancedColors ? config.bubbleColor : "#fff" }}><path opacity=".4" d="M112 192L112 416C112 442.5 133.5 464 160 464L216 464C226.4 464 235.3 470.6 238.6 479.9C239.5 482.4 240 485.1 240 488L240 537.7C272.7 514.6 303.3 493 331.9 472.8C340 467.1 349.7 464 359.6 464L480 464C506.5 464 528 442.5 528 416L528 192C528 165.5 506.5 144 480 144L160 144C133.5 144 112 165.5 112 192z" /><path d="M267.7 576.9C267.7 576.9 267.7 576.9 267.7 576.9L229.9 603.6C222.6 608.8 213 609.4 205 605.3C197 601.2 192 593 192 584L192 512L160 512C107 512 64 469 64 416L64 192C64 139 107 96 160 96L480 96C533 96 576 139 576 192L576 416C576 469 533 512 480 512L359.6 512L267.7 576.9zM332 472.8C340.1 467.1 349.8 464 359.7 464L480 464C506.5 464 528 442.5 528 416L528 192C528 165.5 506.5 144 480 144L160 144C133.5 144 112 165.5 112 192L112 416C112 442.5 133.5 464 160 464L216 464C226.4 464 235.3 470.6 238.6 479.9C239.5 482.4 240 485.1 240 488L240 537.7C272.7 514.6 303.3 493 331.9 472.8z" /></svg>
                         ) : config.buttonIcon === "help" ? (
-                            <i className="fa-duotone fa-solid fa-question text-white text-xl" />
+                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 640" style={{ width: "32px", height: "32px", fill: config.advancedColors ? config.bubbleColor : "#fff" }}><path opacity=".4" d="M280 536C280 558.1 297.9 576 320 576C342.1 576 360 558.1 360 536C360 513.9 342.1 496 320 496C297.9 496 280 513.9 280 536z" /><path d="M320 128C267 128 224 171 224 224C224 241.7 209.7 256 192 256C174.3 256 160 241.7 160 224C160 135.6 231.6 64 320 64C408.4 64 480 135.6 480 224C480 295.2 433.5 355.5 369.2 376.3C363.4 378.2 358.5 381.4 355.5 384.7C352.6 387.9 352 390.3 352 392L352 416C352 433.7 337.7 448 320 448C302.3 448 288 433.7 288 416L288 392C288 350.7 321.2 324.5 349.5 315.4C388.1 302.9 416 266.7 416 224C416 171 373 128 320 128z" /></svg>
                         ) : (
-                            <i className="fa-duotone fa-solid fa-comment text-white text-xl" />
+                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 640" style={{ width: "32px", height: "32px", fill: config.advancedColors ? config.bubbleColor : "#fff" }}><path opacity=".4" d="M112 304C112 346.8 127.1 386.4 153.2 418.7C165.4 433.8 167.3 454.8 158 471.9L140 505L198.5 479.9C210.3 474.8 223.7 474.7 235.6 479.6C261.3 490.1 289.8 496 319.9 496C437.7 496 527.9 407.2 527.9 304C527.9 200.8 437.8 112 320 112C202.2 112 112 200.8 112 304z" /><path d="M115.9 448.9C83.3 408.6 64 358.4 64 304C64 171.5 178.6 64 320 64C461.4 64 576 171.5 576 304C576 436.5 461.4 544 320 544C283.5 544 248.8 536.8 217.4 524L101 573.9C97.3 575.5 93.5 576 89.5 576C75.4 576 64 564.6 64 550.5C64 546.2 65.1 542 67.1 538.3L115.9 448.9zM153.2 418.7C165.4 433.8 167.3 454.8 158 471.9L140 505L198.5 479.9C210.3 474.8 223.7 474.7 235.6 479.6C261.3 490.1 289.8 496 319.9 496C437.7 496 527.9 407.2 527.9 304C527.9 200.8 437.8 112 320 112C202.2 112 112 200.8 112 304C112 346.8 127.1 386.4 153.2 418.7z" /></svg>
                         )}
                     </div>
                 </div>
@@ -644,26 +662,283 @@ export default function WidgetConfiguration({
                                     <p className="text-xs text-base-content/60 mt-1">Choose the color theme for your chat widget</p>
                                 </div>
                                 {/* Primary Color */}
-                                <div className="flex flex-col md:flex-row md:justify-between gap-6">
-                                    <div>
+                                <div className="grid grid-cols-2 gap-6">
+                                    <div className="">
                                         <label className="text-sm font-medium text-base-content block mb-2">Primary Color</label>
                                         <div className="flex items-center gap-3">
-                                            <input
-                                                type="color"
-                                                value={config.primaryColor}
-                                                onChange={(e) => handleColorChange(e.target.value)}
-                                                className="w-10 h-10 rounded cursor-pointer border-none"
-                                            />
+                                            <div className="w-8 h-8 rounded-full overflow-hidden relative">
+                                                <input
+                                                    type="color"
+                                                    value={config.primaryColor}
+                                                    onChange={(e) => handleColorChange(e.target.value)}
+                                                    className="w-20 h-20 absolute -mt-5 -ml-5 cursor-pointer "
+                                                />
+                                            </div>
                                             <input
                                                 type="text"
                                                 name="primaryColor"
                                                 value={config.primaryColor}
                                                 onChange={handleInputChange}
-                                                className="input input-bordered w-32 font-mono"
+                                                className="input w-32 font-mono"
                                             />
                                         </div>
                                         <p className="text-xs text-base-content/60 mt-1">Choose the main color for your chat widget</p>
                                     </div>
+                                    {/* Advnaced Colors */}
+                                    <div className="">
+                                        <label className="text-sm font-medium text-base-content block mb-2">Advanced Colors</label>
+                                        <input
+                                            name="advancedColors"
+                                            type="checkbox"
+                                            checked={!!config.advancedColors}
+                                            onChange={handleCheckboxChange}
+                                            className="checkbox checkbox-primary"
+                                        />
+                                        <p className="text-xs text-base-content/60 mt-1">Choose whether to use default or custom colors for the widget</p>
+                                    </div>
+                                    <div className="divider col-span-2 my-1 py-2"> Bubble </div>
+                                    <div>
+                                        <label className="text-sm font-medium text-base-content block mb-2">Bubble Color</label>
+                                        <div className="flex items-center gap-3">
+                                            <div className="w-8 h-8 rounded-full overflow-hidden relative">
+                                                <input
+                                                    type="color"
+                                                    value={config.bubbleColor}
+                                                    onChange={(e) => handleSpecificColorChange('bubbleColor', e.target.value)}
+                                                    className="w-20 h-20 absolute -mt-5 -ml-5 cursor-pointer "
+                                                />
+                                            </div>
+                                            <input
+                                                type="text"
+                                                name="bubbleColor"
+                                                value={config.bubbleColor}
+                                                onChange={handleInputChange}
+                                                className="input w-32 font-mono"
+                                            />
+                                        </div>
+                                        <p className="text-xs text-base-content/60 mt-1">Choose the bubble color for your chat widget</p>
+                                    </div>
+                                    {/* Bubble Background */}
+                                    <div>
+                                        <label className="text-sm font-medium text-base-content block mb-2">Bubble Background</label>
+                                        <div className="flex items-center gap-3">
+                                            <div className="w-8 h-8 rounded-full overflow-hidden relative">
+                                                <input
+                                                    type="color"
+                                                    value={config.bubbleBackground}
+                                                    onChange={(e) => handleSpecificColorChange('bubbleBackground', e.target.value)}
+                                                    className="w-20 h-20 absolute -mt-5 -ml-5 cursor-pointer "
+                                                />
+                                            </div>
+                                            <input
+                                                type="text"
+                                                name="bubbleBackground"
+                                                value={config.bubbleBackground}
+                                                onChange={handleInputChange}
+                                                className="input w-32 font-mono"
+                                            />
+                                        </div>
+                                        <p className="text-xs text-base-content/60 mt-1">Choose the background color for chat bubbles</p>
+                                    </div>
+                                    {/* Panel Background */}
+                                    <div>
+                                        <label className="text-sm font-medium text-base-content block mb-2">Panel Background</label>
+                                        <div className="flex items-center gap-3">
+                                            <div className="w-8 h-8 rounded-full overflow-hidden relative">
+                                                <input
+                                                    type="color"
+                                                    value={config.panelBackground}
+                                                    onChange={(e) => handleSpecificColorChange('panelBackground', e.target.value)}
+                                                    className="w-20 h-20 absolute -mt-5 -ml-5 cursor-pointer "
+                                                />
+                                            </div>
+                                            <input
+                                                type="text"
+                                                name="panelBackground"
+                                                value={config.panelBackground}
+                                                onChange={handleInputChange}
+                                                className="input w-32 font-mono"
+                                            />
+                                        </div>
+                                        <p className="text-xs text-base-content/60 mt-1">Choose the background color for the chat panel</p>
+                                    </div>
+                                    {/* Header Background */}
+                                    <div>
+                                        <label className="text-sm font-medium text-base-content block mb-2">Header Background</label>
+                                        <div className="flex items-center gap-3">
+                                            <div className="w-8 h-8 rounded-full overflow-hidden relative">
+                                                <input
+                                                    type="color"
+                                                    value={config.panelHeaderBackground}
+                                                    onChange={(e) => handleSpecificColorChange('panelHeaderBackground', e.target.value)}
+                                                    className="w-20 h-20 absolute -mt-5 -ml-5 cursor-pointer "
+                                                />
+                                            </div>
+                                            <input
+                                                type="text"
+                                                name="panelHeaderBackground"
+                                                value={config.panelHeaderBackground}
+                                                onChange={handleInputChange}
+                                                className="input w-32 font-mono"
+                                            />
+                                        </div>
+                                        <p className="text-xs text-base-content/60 mt-1">Choose the background color for the chat header</p>
+                                    </div>
+                                    {/* Messages Area Backgrond */}
+                                    <div>
+                                        <label className="text-sm font-medium text-base-content block mb-2">Messages Area Background</label>
+                                        <div className="flex items-center gap-3">
+                                            <div className="w-8 h-8 rounded-full overflow-hidden relative">
+                                                <input
+                                                    type="color"
+                                                    value={config.messagesBackground}
+                                                    onChange={(e) => handleSpecificColorChange('messagesBackground', e.target.value)}
+                                                    className="w-20 h-20 absolute -mt-5 -ml-5 cursor-pointer "
+                                                />
+                                            </div>
+                                            <input
+                                                type="text"
+                                                name="messagesBackground"
+                                                value={config.messagesBackground}
+                                                onChange={handleInputChange}
+                                                className="input w-32 font-mono"
+                                            />
+                                        </div>
+                                        <p className="text-xs text-base-content/60 mt-1">Choose the background color for the messages area</p>
+                                    </div>
+                                    {/* User Bubble Background */}
+                                    <div>
+                                        <label className="text-sm font-medium text-base-content block mb-2">User Bubble Background</label>
+                                        <div className="flex items-center gap-3">
+                                            <div className="w-8 h-8 rounded-full overflow-hidden relative">
+                                                <input
+                                                    type="color"
+                                                    value={config.userBubbleBackground}
+                                                    onChange={(e) => handleSpecificColorChange('userBubbleBackground', e.target.value)}
+                                                    className="w-20 h-20 absolute -mt-5 -ml-5 cursor-pointer "
+                                                />
+                                            </div>
+                                            <input
+                                                type="text"
+                                                name="userBubbleBackground"
+                                                value={config.userBubbleBackground}
+                                                onChange={handleInputChange}
+                                                className="input w-32 font-mono"
+                                            />
+                                        </div>
+                                        <p className="text-xs text-base-content/60 mt-1">Choose the background color for user messages</p>
+                                    </div>
+                                    {/* User Bubble Color */}
+                                    <div>
+                                        <label className="text-sm font-medium text-base-content block mb-2">User Bubble Color</label>
+                                        <div className="flex items-center gap-3">
+                                            <div className="w-8 h-8 rounded-full overflow-hidden relative">
+                                                <input
+                                                    type="color"
+                                                    value={config.userBubbleColor}
+                                                    onChange={(e) => handleSpecificColorChange('userBubbleColor', e.target.value)}
+                                                    className="w-20 h-20 absolute -mt-5 -ml-5 cursor-pointer "
+                                                />
+                                            </div>
+                                            <input
+                                                type="text"
+                                                name="userBubbleColor"
+                                                value={config.userBubbleColor}
+                                                onChange={handleInputChange}
+                                                className="input w-32 font-mono"
+                                            />
+                                        </div>
+                                        <p className="text-xs text-base-content/60 mt-1">Choose the text color for user messages</p>
+                                    </div>
+                                    {/* Assistant Bubble Background */}
+                                    <div>
+                                        <label className="text-sm font-medium text-base-content block mb-2">Assistant Bubble Background</label>
+                                        <div className="flex items-center gap-3">
+                                            <div className="w-8 h-8 rounded-full overflow-hidden relative">
+                                                <input
+                                                    type="color"
+                                                    value={config.assistantBubbleBackground}
+                                                    onChange={(e) => handleSpecificColorChange('assistantBubbleBackground', e.target.value)}
+                                                    className="w-20 h-20 absolute -mt-5 -ml-5 cursor-pointer "
+                                                />
+                                            </div>
+                                            <input
+                                                type="text"
+                                                name="assistantBubbleBackground"
+                                                value={config.assistantBubbleBackground}
+                                                onChange={handleInputChange}
+                                                className="input w-32 font-mono"
+                                            />
+                                        </div>
+                                        <p className="text-xs text-base-content/60 mt-1">Choose the background color for assistant messages</p>
+                                    </div>
+                                    {/* Assistant Bubble Color */}
+                                    <div>
+                                        <label className="text-sm font-medium text-base-content block mb-2">Assistant Bubble Color</label>
+                                        <div className="flex items-center gap-3">
+                                            <div className="w-8 h-8 rounded-full overflow-hidden relative">
+                                                <input
+                                                    type="color"
+                                                    value={config.assistantBubbleColor}
+                                                    onChange={(e) => handleSpecificColorChange('assistantBubbleColor', e.target.value)}
+                                                    className="w-20 h-20 absolute -mt-5 -ml-5 cursor-pointer "
+                                                />
+                                            </div>
+                                            <input
+                                                type="text"
+                                                name="assistantBubbleColor"
+                                                value={config.assistantBubbleColor}
+                                                onChange={handleInputChange}
+                                                className="input w-32 font-mono"
+                                            />
+                                        </div>
+                                        <p className="text-xs text-base-content/60 mt-1">Choose the text color for assistant messages</p>
+                                    </div>
+                                    {/* Send Button Background */}
+                                    <div>
+                                        <label className="text-sm font-medium text-base-content block mb-2">Send Button Background</label>
+                                        <div className="flex items-center gap-3">
+                                            <div className="w-8 h-8 rounded-full overflow-hidden relative">
+                                                <input
+                                                    type="color"
+                                                    value={config.buttonBackground}
+                                                    onChange={(e) => handleSpecificColorChange('buttonBackground', e.target.value)}
+                                                    className="w-20 h-20 absolute -mt-5 -ml-5 cursor-pointer "
+                                                />
+                                            </div>
+                                            <input
+                                                type="text"
+                                                name="sendButtonBackground"
+                                                value={config.buttonBackground}
+                                                onChange={handleInputChange}
+                                                className="input w-32 font-mono"
+                                            />
+                                        </div>
+                                        <p className="text-xs text-base-content/60 mt-1">Choose the background color for the send button</p>
+                                    </div>
+                                    {/* Send Button Color */}
+                                    <div>
+                                        <label className="text-sm font-medium text-base-content block mb-2">Send Button Color</label>
+                                        <div className="flex items-center gap-3">
+                                            <div className="w-8 h-8 rounded-full overflow-hidden relative">
+                                                <input
+                                                    type="color"
+                                                    value={config.buttonColor}
+                                                    onChange={(e) => handleSpecificColorChange('buttonColor', e.target.value)}
+                                                    className="w-20 h-20 absolute -mt-5 -ml-5 cursor-pointer "
+                                                />
+                                            </div>
+                                            <input
+                                                type="text"
+                                                name="sendButtonColor"
+                                                value={config.buttonColor}
+                                                onChange={handleInputChange}
+                                                className="input w-32 font-mono"
+                                            />
+                                        </div>
+                                        <p className="text-xs text-base-content/60 mt-1">Choose the text color for the send button</p>
+                                    </div>
+
                                 </div>
                             </div>
                             {/* Button Icon */}
@@ -767,241 +1042,6 @@ export default function WidgetConfiguration({
                                 </div>
                             </div>
                         </div>
-
-                        {/* Advanced Styling Section */}
-                        <details className="collapse collapse-plus bg-base-200 rounded-lg">
-                            <summary className="collapse-title font-medium">
-                                Advanced Styling Options
-                            </summary>
-                            <div className="collapse-content space-y-6">
-                                {/* Bubble Styling */}
-                                <div className="p-4 border border-base-300 rounded-lg">
-                                    <h3 className="text-lg font-medium mb-3">Bubble Styling</h3>
-                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                        <div>
-                                            <label className="text-sm font-medium text-base-content block mb-2">Bubble Background</label>
-                                            <div className="flex items-center gap-3">
-                                                <input
-                                                    type="color"
-                                                    value={config.bubbleBackground || "#111"}
-                                                    onChange={(e) => handleSpecificColorChange('bubbleBackground', e.target.value)}
-                                                    className="w-10 h-10 rounded cursor-pointer border-none"
-                                                />
-                                                <input
-                                                    type="text"
-                                                    name="bubbleBackground"
-                                                    value={config.bubbleBackground || "#111"}
-                                                    onChange={handleInputChange}
-                                                    className="input input-bordered w-32 font-mono"
-                                                />
-                                            </div>
-                                        </div>
-                                        <div>
-                                            <label className="text-sm font-medium text-base-content block mb-2">Bubble Text Color</label>
-                                            <div className="flex items-center gap-3">
-                                                <input
-                                                    type="color"
-                                                    value={config.bubbleColor || "#fff"}
-                                                    onChange={(e) => handleSpecificColorChange('bubbleColor', e.target.value)}
-                                                    className="w-10 h-10 rounded cursor-pointer border-none"
-                                                />
-                                                <input
-                                                    type="text"
-                                                    name="bubbleColor"
-                                                    value={config.bubbleColor || "#fff"}
-                                                    onChange={handleInputChange}
-                                                    className="input input-bordered w-32 font-mono"
-                                                />
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-
-                                {/* Panel Styling */}
-                                <div className="p-4 border border-base-300 rounded-lg">
-                                    <h3 className="text-lg font-medium mb-3">Panel Styling</h3>
-                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                        <div>
-                                            <label className="text-sm font-medium text-base-content block mb-2">Panel Background</label>
-                                            <div className="flex items-center gap-3">
-                                                <input
-                                                    type="color"
-                                                    value={config.panelBackground || "#fff"}
-                                                    onChange={(e) => handleSpecificColorChange('panelBackground', e.target.value)}
-                                                    className="w-10 h-10 rounded cursor-pointer border-none"
-                                                />
-                                                <input
-                                                    type="text"
-                                                    name="panelBackground"
-                                                    value={config.panelBackground || "#fff"}
-                                                    onChange={handleInputChange}
-                                                    className="input input-bordered w-32 font-mono"
-                                                />
-                                            </div>
-                                        </div>
-                                        <div>
-                                            <label className="text-sm font-medium text-base-content block mb-2">Header Background</label>
-                                            <div className="flex items-center gap-3">
-                                                <input
-                                                    type="color"
-                                                    value={config.panelHeaderBackground || "#f8fafc"}
-                                                    onChange={(e) => handleSpecificColorChange('panelHeaderBackground', e.target.value)}
-                                                    className="w-10 h-10 rounded cursor-pointer border-none"
-                                                />
-                                                <input
-                                                    type="text"
-                                                    name="panelHeaderBackground"
-                                                    value={config.panelHeaderBackground || "#f8fafc"}
-                                                    onChange={handleInputChange}
-                                                    className="input input-bordered w-32 font-mono"
-                                                />
-                                            </div>
-                                        </div>
-                                        <div>
-                                            <label className="text-sm font-medium text-base-content block mb-2">Messages Area Background</label>
-                                            <div className="flex items-center gap-3">
-                                                <input
-                                                    type="color"
-                                                    value={config.messagesBackground || "#f8fafc"}
-                                                    onChange={(e) => handleSpecificColorChange('messagesBackground', e.target.value)}
-                                                    className="w-10 h-10 rounded cursor-pointer border-none"
-                                                />
-                                                <input
-                                                    type="text"
-                                                    name="messagesBackground"
-                                                    value={config.messagesBackground || "#f8fafc"}
-                                                    onChange={handleInputChange}
-                                                    className="input input-bordered w-32 font-mono"
-                                                />
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-
-                                {/* Message Styling */}
-                                <div className="p-4 border border-base-300 rounded-lg">
-                                    <h3 className="text-lg font-medium mb-3">Message Styling</h3>
-                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                        <div>
-                                            <label className="text-sm font-medium text-base-content block mb-2">User Message Background</label>
-                                            <div className="flex items-center gap-3">
-                                                <input
-                                                    type="color"
-                                                    value={config.userBubbleBackground || "#3b82f6"}
-                                                    onChange={(e) => handleSpecificColorChange('userBubbleBackground', e.target.value)}
-                                                    className="w-10 h-10 rounded cursor-pointer border-none"
-                                                />
-                                                <input
-                                                    type="text"
-                                                    name="userBubbleBackground"
-                                                    value={config.userBubbleBackground || "#3b82f6"}
-                                                    onChange={handleInputChange}
-                                                    className="input input-bordered w-32 font-mono"
-                                                />
-                                            </div>
-                                        </div>
-                                        <div>
-                                            <label className="text-sm font-medium text-base-content block mb-2">User Message Text Color</label>
-                                            <div className="flex items-center gap-3">
-                                                <input
-                                                    type="color"
-                                                    value={config.userBubbleColor || "#fff"}
-                                                    onChange={(e) => handleSpecificColorChange('userBubbleColor', e.target.value)}
-                                                    className="w-10 h-10 rounded cursor-pointer border-none"
-                                                />
-                                                <input
-                                                    type="text"
-                                                    name="userBubbleColor"
-                                                    value={config.userBubbleColor || "#fff"}
-                                                    onChange={handleInputChange}
-                                                    className="input input-bordered w-32 font-mono"
-                                                />
-                                            </div>
-                                        </div>
-                                        <div>
-                                            <label className="text-sm font-medium text-base-content block mb-2">Assistant Message Background</label>
-                                            <div className="flex items-center gap-3">
-                                                <input
-                                                    type="color"
-                                                    value={config.assistantBubbleBackground || "#e5e7eb"}
-                                                    onChange={(e) => handleSpecificColorChange('assistantBubbleBackground', e.target.value)}
-                                                    className="w-10 h-10 rounded cursor-pointer border-none"
-                                                />
-                                                <input
-                                                    type="text"
-                                                    name="assistantBubbleBackground"
-                                                    value={config.assistantBubbleBackground || "#e5e7eb"}
-                                                    onChange={handleInputChange}
-                                                    className="input input-bordered w-32 font-mono"
-                                                />
-                                            </div>
-                                        </div>
-                                        <div>
-                                            <label className="text-sm font-medium text-base-content block mb-2">Assistant Message Text Color</label>
-                                            <div className="flex items-center gap-3">
-                                                <input
-                                                    type="color"
-                                                    value={config.assistantBubbleColor || "#111"}
-                                                    onChange={(e) => handleSpecificColorChange('assistantBubbleColor', e.target.value)}
-                                                    className="w-10 h-10 rounded cursor-pointer border-none"
-                                                />
-                                                <input
-                                                    type="text"
-                                                    name="assistantBubbleColor"
-                                                    value={config.assistantBubbleColor || "#111"}
-                                                    onChange={handleInputChange}
-                                                    className="input input-bordered w-32 font-mono"
-                                                />
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-
-                                {/* Button Styling */}
-                                <div className="p-4 border border-base-300 rounded-lg">
-                                    <h3 className="text-lg font-medium mb-3">Button Styling</h3>
-                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                        <div>
-                                            <label className="text-sm font-medium text-base-content block mb-2">Send Button Background</label>
-                                            <div className="flex items-center gap-3">
-                                                <input
-                                                    type="color"
-                                                    value={config.buttonBackground || "#111"}
-                                                    onChange={(e) => handleSpecificColorChange('buttonBackground', e.target.value)}
-                                                    className="w-10 h-10 rounded cursor-pointer border-none"
-                                                />
-                                                <input
-                                                    type="text"
-                                                    name="buttonBackground"
-                                                    value={config.buttonBackground || "#111"}
-                                                    onChange={handleInputChange}
-                                                    className="input input-bordered w-32 font-mono"
-                                                />
-                                            </div>
-                                        </div>
-                                        <div>
-                                            <label className="text-sm font-medium text-base-content block mb-2">Send Button Text Color</label>
-                                            <div className="flex items-center gap-3">
-                                                <input
-                                                    type="color"
-                                                    value={config.buttonColor || "#fff"}
-                                                    onChange={(e) => handleSpecificColorChange('buttonColor', e.target.value)}
-                                                    className="w-10 h-10 rounded cursor-pointer border-none"
-                                                />
-                                                <input
-                                                    type="text"
-                                                    name="buttonColor"
-                                                    value={config.buttonColor || "#fff"}
-                                                    onChange={handleInputChange}
-                                                    className="input input-bordered w-32 font-mono"
-                                                />
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        </details>
-
                     </div>
                 )}
 
@@ -1130,6 +1170,6 @@ export default function WidgetConfiguration({
                     </HoverScale>
                 </div>
             </div>
-        </div>
+        </div >
     );
 }

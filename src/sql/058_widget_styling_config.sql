@@ -99,11 +99,21 @@ BEGIN
         ALTER TABLE public.widget_configurations 
         ADD COLUMN button_color VARCHAR(20) DEFAULT '#fff';
     END IF;
+
+    -- Add advanced_colors if it doesn't exist
+    IF NOT EXISTS (SELECT 1 FROM information_schema.columns 
+                   WHERE table_schema = 'public' 
+                   AND table_name = 'widget_configurations' 
+                   AND column_name = 'advanced_colors') THEN
+        ALTER TABLE public.widget_configurations 
+        ADD COLUMN advanced_colors boolean DEFAULT false;
+    END IF;
 END
 $$;
 
 -- Update the primary_color description to clarify its use
 COMMENT ON COLUMN widget_configurations.primary_color IS 'Legacy primary color (used for branding)';
+COMMENT ON COLUMN widget_configurations.advanced_colors IS 'Enalbe advanced colors for branding';
 
 -- Add comments to new columns
 COMMENT ON COLUMN widget_configurations.bubble_background IS 'Background color of the chat bubble';

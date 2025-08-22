@@ -357,11 +357,11 @@ export async function GET(req: NextRequest) {
     };
     
     const panel = document.createElement('div');
-    panel.style.cssText = 'position:fixed;' + panelPositionStyles[position] + 'width:360px;max-height:70vh;background:' + styles.panelBackground + ';border:none;border-radius:16px;box-shadow:0 10px 40px rgba(0,0,0,.2);display:none;flex-direction:column;overflow:hidden;font-family:ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,Segoe UI,Roboto,Helvetica Neue,Arial,Noto Sans,sans-serif;z-index:999998;transition:all 0.3s ease;transform-origin:bottom right;animation:fadeInUp 0.3s ease-out forwards;';
+    panel.style.cssText = 'position:fixed;' + panelPositionStyles[position] + 'width:360px;max-height:70vh;background:' + styles.panelBackground + ';border:1px solid ' + (config.theme === 'dark' ? '#1e293b' : '#f1f5f9') + ';border-radius:16px;box-shadow:0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1);display:none;flex-direction:column;overflow:hidden;font-family:ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,Segoe UI,Roboto,Helvetica Neue,Arial,Noto Sans,sans-serif;z-index:999998;transition:all 0.3s ease;transform-origin:bottom right;animation:fadeInUp 0.3s ease-out forwards;';
     // Create header element with AI name from config
     const aiName = config.aiName || 'helpNINJA';
     const header = document.createElement('div');
-    header.style.cssText = 'padding:12px 16px;border-bottom:1px solid rgba(0,0,0,0.1);font-weight:600;color:#fff;background:' + styles.panelHeaderBackground + ';display:flex;align-items:center;justify-content:space-between;border-radius:16px 16px 0 0;';
+    header.style.cssText = 'padding:14px 16px;border-bottom:1px solid ' + (config.theme === 'dark' ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.1)') + ';font-weight:600;color:#fff;background:' + styles.panelHeaderBackground + ';display:flex;align-items:center;justify-content:space-between;border-radius:16px 16px 0 0;';
     
     const headerLeft = document.createElement('div');
     headerLeft.style.cssText = 'display:flex;align-items:center;gap:8px;';
@@ -384,7 +384,7 @@ export async function GET(req: NextRequest) {
     
     const closeButton = document.createElement('button');
     closeButton.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>';
-    closeButton.style.cssText = 'background:transparent;border:none;color:rgba(255,255,255,0.8);cursor:pointer;padding:0;display:flex;align-items:center;justify-content:center;';
+    closeButton.style.cssText = 'background:rgba(255,255,255,0.1);border:none;color:rgba(255,255,255,0.8);cursor:pointer;padding:6px;border-radius:50%;display:flex;align-items:center;justify-content:center;';
     closeButton.onmouseover = () => { closeButton.style.color = '#fff'; };
     closeButton.onmouseout = () => { closeButton.style.color = 'rgba(255,255,255,0.8)'; };
     
@@ -403,15 +403,15 @@ export async function GET(req: NextRequest) {
     
     // Create input area
     const inputArea = document.createElement('div');
-    inputArea.style.cssText = 'display:flex;flex-direction:column;border-top:1px solid #e5e7eb;background:' + styles.panelBackground + ';padding:12px;border-radius:0 0 16px 16px;';
+    inputArea.style.cssText = 'display:flex;flex-direction:column;border-top:1px solid ' + (config.theme === 'dark' ? '#374151' : '#e5e7eb') + ';background:' + styles.panelBackground + ';padding:12px 16px 16px;border-radius:0 0 16px 16px;';
     
     const inputRow = document.createElement('div');
     inputRow.style.cssText = 'display:flex;width:100%;';
     
     const input = document.createElement('input');
     input.id = 'hn_input';
-    input.placeholder = 'Ask a question...';
-    input.style.cssText = 'flex:1;padding:12px 16px;border:1px solid #e5e7eb;border-radius:20px;outline:none;background:transparent;margin-right:8px;transition:border-color 0.2s ease;font-size:14px;';
+    input.placeholder = 'Type your message...';
+    input.style.cssText = 'flex:1;padding:12px 16px;border:1px solid ' + (config.theme === 'dark' ? '#374151' : '#e5e7eb') + ';border-radius:20px;outline:none;background:transparent;margin-right:8px;transition:border-color 0.2s ease;font-size:14px;';
     input.addEventListener('focus', () => {
       input.style.borderColor = styles.primaryColor || '#7C3AED';
     });
@@ -434,7 +434,7 @@ export async function GET(req: NextRequest) {
     // Add branding if enabled
     if (config.showBranding !== false) { // Show branding by default unless explicitly disabled
         const brandingDiv = document.createElement('div');
-        brandingDiv.style.cssText = 'text-align:center;margin-top:8px;font-size:0.75rem;color:rgba(107, 114, 128, 0.7);';
+        brandingDiv.style.cssText = 'text-align:center;margin-top:8px;font-size:0.75rem;color:rgba(107, 114, 128, ' + (config.theme === 'dark' ? '0.9' : '0.7') + ');';
         brandingDiv.innerHTML = 'Powered by <a href="https://helpNINJA.ai" target="_blank" style="color:inherit;text-decoration:underline;">helpNINJA</a>';
         inputArea.appendChild(brandingDiv);
     }
@@ -471,14 +471,14 @@ export async function GET(req: NextRequest) {
       if (role === 'user') {
         bubble.className = 'chat-bubble';
         bubble.style.cssText = 'white-space:pre-wrap;max-width:280px;background:' + styles.userBubbleBackground + 
-          ';color:' + styles.userBubbleColor + ';border-radius:18px;padding:12px 16px;box-shadow:0 1px 2px rgba(0,0,0,0.1);animation:fadeIn 0.3s ease-out;';
+          ';color:' + styles.userBubbleColor + ';border-radius:18px;border-top-right-radius:4px;padding:12px 16px;box-shadow:0 1px 2px rgba(0,0,0,0.1);animation:fadeIn 0.3s ease-out;';
         bubbleContainer.appendChild(bubble);
         chatDiv.appendChild(bubbleContainer);
         chatDiv.appendChild(avatar);
       } else {
         bubble.className = 'chat-bubble';
         bubble.style.cssText = 'white-space:pre-wrap;max-width:280px;background:' + styles.assistantBubbleBackground + 
-          ';color:' + styles.assistantBubbleColor + ';border-radius:18px;padding:12px 16px;box-shadow:0 1px 2px rgba(0,0,0,0.1);animation:fadeIn 0.3s ease-out;';
+          ';color:' + styles.assistantBubbleColor + ';border-radius:18px;border-top-left-radius:4px;padding:12px 16px;box-shadow:0 1px 2px rgba(0,0,0,0.1);animation:fadeIn 0.3s ease-out;';
         bubbleContainer.appendChild(bubble);
         chatDiv.appendChild(avatar);
         chatDiv.appendChild(bubbleContainer);
@@ -515,7 +515,7 @@ export async function GET(req: NextRequest) {
       const loadingBubble = document.createElement('div');
       loadingBubble.className = 'chat-bubble';
       loadingBubble.style.cssText = 'white-space:pre-wrap;max-width:280px;background:' + styles.assistantBubbleBackground + 
-        ';color:' + styles.assistantBubbleColor + ';border-radius:18px;padding:12px 16px;box-shadow:0 1px 2px rgba(0,0,0,0.1);';
+        ';color:' + styles.assistantBubbleColor + ';border-radius:18px;border-top-left-radius:4px;padding:12px 16px;box-shadow:0 1px 2px rgba(0,0,0,0.1);';
       loadingBubble.innerHTML = '<div class="typing-indicator"><span></span><span></span><span></span></div>';
       
       // Add styles for animations
@@ -534,6 +534,12 @@ export async function GET(req: NextRequest) {
         @keyframes fadeInUp {
           from { opacity: 0; transform: translateY(20px); }
           to { opacity: 1; transform: translateY(0); }
+        }
+        
+        input:focus {
+          outline: none;
+          border-color: ' + config.primaryColor + ';
+          box-shadow: 0 0 0 2px ' + config.primaryColor + '20;
         }
         
         .typing-indicator {
