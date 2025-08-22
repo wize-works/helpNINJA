@@ -349,13 +349,13 @@ export async function GET(req: NextRequest) {
       bubbleColor: config.bubbleColor || '#fff',
       
       // Panel colors
-      panelBackground: config.panelBackground || '#fff',
+      panelBackground: useAdvancedColors ? config.panelBackground || '#fff' : primaryColor,
       panelHeaderBackground: useAdvancedColors ? (config.panelHeaderBackground || '#0077b6') : primaryColor,
-      messagesBackground: config.messagesBackground || '#f8fafc',
+      messagesBackground: useAdvancedColors ? config.messagesBackground || '#f8fafc' : '#f8fafc',
       
       // User message colors
       userBubbleBackground: useAdvancedColors ? (config.userBubbleBackground || '#0077b6') : primaryColor,
-      userBubbleColor: config.userBubbleColor || '#fff',
+      userBubbleColor: useAdvancedColors ? config.userBubbleColor || '#fff',
       
       // Assistant message colors
       assistantBubbleBackground: useAdvancedColors 

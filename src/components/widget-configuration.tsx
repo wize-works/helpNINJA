@@ -393,10 +393,10 @@ export default function WidgetConfiguration({
                     {/* Chat window (shown when button is clicked) */}
                     {showChat && (
                         <div
-                            className="bg-base-100 rounded-xl shadow-2xl mb-4 w-72 transform transition-all duration-300"
+                            className="rounded-xl shadow-2xl mb-4 w-72 transform transition-all duration-300"
                             style={{
                                 boxShadow: `0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1)`,
-                                borderColor: config.theme === 'dark' ? '#1e293b' : '#f1f5f9',
+                                backgroundColor: config.advancedColors ? config.panelHeaderBackground : config.primaryColor,
                                 borderWidth: '1px',
                                 animation: 'fadeInUp 0.3s ease-out forwards'
                             }}
@@ -465,11 +465,12 @@ export default function WidgetConfiguration({
                             </div>
 
                             {/* Chat input */}
-                            <div className="p-3 border-t">
+                            <div className="p-3">
                                 <div className="flex items-center gap-2">
                                     <input type="text"
                                         placeholder="Type your message..."
-                                        className="input input-sm input-bordered flex-grow rounded-full text-sm"
+                                        className="input input-sm flex-grow rounded-full text-sm"
+                                        style={{ backgroundColor: config.advancedColors ? config.panelHeaderBackground : config.primaryColor, }}
                                         disabled
                                     />
                                     <button className="btn btn-sm btn-circle" style={{ backgroundColor: config.advancedColors ? config.buttonBackground : config.primaryColor, color: config.advancedColors ? config.buttonColor : '#fff' }} disabled>
