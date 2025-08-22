@@ -481,15 +481,12 @@ export async function GET(req: NextRequest) {
     const headerTitle = document.createElement('div');
     headerTitle.style.cssText = 'display:flex;align-items:center;gap:8px;';
     
-    const headerIconBgColor = styles.headerIconBackground;
-    
     const headerLeft = document.createElement('div');
     headerLeft.style.cssText = 'display:flex;align-items:center;gap:8px;';
     
     const iconContainer = document.createElement('div');
-    // Using a consistent background color for header icon with better contrast based on panel header color
-    const headerIconBgColor = styles.panelHeaderBackground ? 'rgba(255,255,255,0.2)' : 'rgba(255,255,255,0.2)';
-    iconContainer.style.cssText = 'width:28px;height:28px;background:' + headerIconBgColor + ';border-radius:50%;display:flex;align-items:center;justify-content:center;';
+    // Using our predefined headerIconBackground style
+    iconContainer.style.cssText = 'width:28px;height:28px;background:' + styles.headerIconBackground + ';border-radius:50%;display:flex;align-items:center;justify-content:center;';
     
     // Use custom SVG based on the configuration
     if (buttonIcon === "chat") {
