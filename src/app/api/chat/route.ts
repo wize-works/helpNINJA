@@ -5,6 +5,9 @@ import { query } from '@/lib/db';
 import { canSendMessage, incMessages } from '@/lib/usage';
 // Note: Admin/dashboard no longer use header-based tenant resolution. The widget passes a public identifier in body.
 import { webhookEvents } from '@/lib/webhooks';
+import { evaluateRuleConditions } from '@/lib/rule-engine';
+import { dispatchEscalation } from '@/lib/integrations/dispatch';
+import { v4 as uuidv4 } from 'uuid';
 
 export const runtime = 'nodejs';
 
@@ -177,9 +180,143 @@ export async function POST(req: NextRequest) {
             console.error('💥 Chat API: Failed to trigger message.sent webhook for assistant:', error);
         }
 
-        // Auto-escalate on low confidence or explicit handoff
+        // Check escalation rules for the user message
+        console.log(`🔍 Checking escalation rules for message: "${message.slice(0, 50)}${message.length > 50 ? '...' : ''}"`)
+
+        // Get active rules for this tenant
+        const { rows: rules } = await query(
+            `SELECT * FROM public.escalation_rules 
+             WHERE tenant_id = $1 
+             AND enabled = true 
+             AND rule_type = 'escalation'
+             AND trigger_event = 'message_received'
+             AND (site_id IS NULL OR site_id = $2)
+             ORDER BY priority DESC`,
+            [tenantId, siteId || null]
+        )
+
+        console.log(`📋 Found ${rules.length} active escalation rules to check`)
+
+        let ruleTriggered = false;
+
+        if (rules.length > 0) {
+            // Prepare evaluation context with message content
+            const context = {
+                message: message,
+                confidence: confidence || 0.7,
+                keywords: [], // Extract keywords if available
+                timestamp: new Date(),
+                siteId: siteId
+            }
+
+            // Check each rule
+            for (const rule of rules) {
+                console.log(`🔍 Evaluating rule: ${rule.name} (${rule.id})`)
+
+                // Get the conditions from the rule
+                const conditions = rule.conditions || { operator: 'and', conditions: [] }
+
+                // Evaluate rule against context
+                const result = evaluateRuleConditions(conditions, context)
+
+                if (result.matched) {
+                    console.log(`✅ Rule matched: ${rule.name}`)
+
+                    // Update last evaluated timestamp
+                    await query(
+                        `UPDATE public.escalation_rules SET last_evaluated_at = NOW(), 
+                         last_matched_at = NOW(), match_count = match_count + 1 
+                         WHERE id = $1`,
+                        [rule.id]
+                    )
+
+                    // Prepare escalation event
+                    const event = {
+                        tenantId,
+                        sessionId,
+                        conversationId,
+                        userMessage: message,
+                        assistantAnswer: text,
+                        confidence: confidence || 0.7,
+                        reason: 'rule_match',
+                        refs,
+                        ruleId: rule.id
+                    }
+
+                    console.log(`🚀 Rule match - dispatching escalation for rule: ${rule.name}`)
+
+                    // Dispatch the escalation with rule destinations
+                    const destinations = rule.destinations || [];
+
+                    // Create escalation payload with proper typing
+                    interface EscalationPayload {
+                        tenantId: string;
+                        sessionId: string;
+                        conversationId: string;
+                        userMessage: string;
+                        assistantAnswer: string;
+                        confidence: number;
+                        reason: string;
+                        refs: string[];
+                        ruleId: string;
+                        destinations?: Array<{ integrationId: string }>;
+                    }
+
+                    const eventBody: EscalationPayload = { ...event };
+
+                    if (destinations.length > 0) {
+                        // Convert rule destinations to the format expected by dispatchEscalation
+                        interface Destination {
+                            integration_id?: string;
+                            type?: string;
+                        }
+
+                        const integrationIds = destinations
+                            .filter((d: Destination) => d.integration_id)
+                            .map((d: Destination) => ({ integrationId: d.integration_id as string }));
+
+                        if (integrationIds.length > 0) {
+                            eventBody.destinations = integrationIds;
+                        }
+                    }
+
+                    // Use the escalate API for consistency with existing implementation
+                    const base = process.env.SITE_URL || '';
+                    const url = base ? base.replace(/\/$/, '') + '/api/escalate' : 'http://localhost:3001/api/escalate';
+
+                    try {
+                        const response = await fetch(url, {
+                            method: 'POST',
+                            headers: { 'content-type': 'application/json' },
+                            body: JSON.stringify(eventBody)
+                        });
+
+                        if (response.ok) {
+                            console.log(`✅ Rule-based escalation sent successfully for rule: ${rule.name}`);
+                            ruleTriggered = true;
+                        } else {
+                            console.error(`❌ Failed to send rule-based escalation: ${response.status}`);
+                        }
+                    } catch (error) {
+                        console.error('❌ Error sending rule-based escalation:', error);
+                    }
+
+                    break; // Stop after first matching rule
+                } else {
+                    console.log(`❌ Rule did not match: ${rule.name}`);
+
+                    // Update evaluation timestamp
+                    await query(
+                        `UPDATE public.escalation_rules SET last_evaluated_at = NOW() WHERE id = $1`,
+                        [rule.id]
+                    );
+                }
+            }
+        }
+
+        // Auto-escalate on low confidence or explicit handoff only if a rule didn't already trigger
         const threshold = 0.55;
-        if ((confidence ?? 0) < threshold || /connect you with support/i.test(text)) {
+        if (!ruleTriggered && ((confidence ?? 0) < threshold || /connect you with support/i.test(text))) {
             try {
                 // Trigger escalation webhook
                 await webhookEvents.escalationTriggered(
