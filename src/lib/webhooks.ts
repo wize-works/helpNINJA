@@ -131,6 +131,110 @@ async function updateWebhookStats(webhookEndpointId: string, success: boolean) {
 }
 
 /**
+ * Handle internal webhook URL processing
+ * Format: internal://service/action/id
+ */
+async function processInternalWebhook(
+    url: string,
+    event: WebhookEvent,
+    deliveryId: string
+): Promise<boolean> {
+    try {
+        console.log(`🔄 Processing internal webhook ${url}`);
+
+        // Parse URL: internal://service/action/id
+        const urlWithoutProtocol = url.replace('internal://', '');
+        const parts = urlWithoutProtocol.split('/');
+
+        if (parts.length < 2) {
+            console.error(`❌ Invalid internal webhook URL format: ${url}`);
+            return false;
+        }
+
+        // Log the event data for debugging
+        console.log(`📦 Internal webhook payload:`, {
+            type: event.type,
+            dataKeys: Object.keys(event.data),
+            timestamp: event.timestamp || new Date().toISOString(),
+            tenant_id: event.tenantId
+        });
+
+        // Handle integration URLs - internal://integration/provider/id
+        if (parts[0] === 'integration' && parts.length >= 3) {
+            const provider = parts[1];
+            const integrationId = parts[2];
+
+            console.log(`🔄 Processing ${provider} integration webhook for ID: ${integrationId}`);
+
+            // Get the integration details
+            const { rows } = await query(`
+                SELECT id, tenant_id, provider, name, config, status 
+                FROM public.integrations
+                WHERE id = $1 AND provider = $2
+            `, [integrationId, provider]);
+
+            if (rows.length === 0) {
+                console.error(`❌ Integration not found: ${provider}/${integrationId}`);
+                await updateWebhookDelivery(deliveryId, 'failed', undefined, undefined, 'Integration not found');
+                return false;
+            }
+
+            const integration = rows[0];
+
+            // Handle specific event types
+            if (event.type === 'escalation.triggered' && event.data.conversation_id) {
+                // Call escalate API directly - this is the simplest approach to ensure it works
+                console.log(`📤 Forwarding escalation to ${provider} provider for conversation ${event.data.conversation_id}`);
+
+                // Make an HTTP request to the escalate endpoint
+                const escalateUrl = process.env.SITE_URL ?
+                    `${process.env.SITE_URL.replace(/\/$/, '')}/api/escalate` :
+                    'http://localhost:3001/api/escalate';
+
+                const response = await fetch(escalateUrl, {
+                    method: 'POST',
+                    headers: { 'content-type': 'application/json' },
+                    body: JSON.stringify({
+                        tenantId: event.tenantId,
+                        conversationId: event.data.conversation_id,
+                        reason: event.data.reason || 'webhook',
+                        confidence: event.data.confidence,
+                        integrationId: integrationId
+                    })
+                });
+
+                const responseText = await response.text().catch(() => '');
+
+                if (response.ok) {
+                    console.log('✅ Successfully forwarded escalation');
+                    await updateWebhookDelivery(deliveryId, 'delivered', response.status, responseText);
+                    await updateWebhookStats(integration.id, true);
+                    return true;
+                } else {
+                    console.error('❌ Failed to forward escalation:', responseText);
+                    await updateWebhookDelivery(deliveryId, 'failed', response.status, undefined, `HTTP ${response.status}: ${responseText}`);
+                    await updateWebhookStats(integration.id, false);
+                    return false;
+                }
+            }
+
+            // Other event types not yet supported for internal webhooks
+            await updateWebhookDelivery(deliveryId, 'failed', undefined, undefined, `Event type ${event.type} not supported for internal webhooks`);
+            return false;
+        }
+
+        console.error(`❌ Unsupported internal webhook service: ${parts[0]}`);
+        await updateWebhookDelivery(deliveryId, 'failed', undefined, undefined, `Unsupported internal webhook service: ${parts[0]}`);
+        return false;
+    } catch (error) {
+        console.error('❌ Error processing internal webhook:', error);
+        const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+        await updateWebhookDelivery(deliveryId, 'failed', undefined, undefined, errorMessage);
+        return false;
+    }
+}
+
+/**
  * Send webhook to a single endpoint
  */
 async function sendWebhook(endpoint: WebhookEndpoint, event: WebhookEvent): Promise<boolean> {
@@ -140,6 +244,13 @@ async function sendWebhook(endpoint: WebhookEndpoint, event: WebhookEvent): Prom
     console.log(`📝 Created delivery record: ${deliveryId}`);
 
     try {
+        // Special handling for internal webhooks
+        if (endpoint.url.startsWith('internal://')) {
+            console.log(`🔄 Detected internal webhook URL: ${endpoint.url}`);
+            return processInternalWebhook(endpoint.url, event, deliveryId);
+        }
+
+        // Regular HTTP webhook processing below
         const payload = JSON.stringify({
             type: event.type,
             data: event.data,
