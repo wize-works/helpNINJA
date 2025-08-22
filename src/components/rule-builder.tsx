@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from 'react';
-import { RuleCondition, RulePredicate, getAvailableConditionTypes } from '@/lib/rule-engine';
+import { RuleCondition, RuleConditions, getAvailableConditionTypes } from '@/lib/rule-engine';
 import ConditionEditor from './condition-editor';
 import ActionSelector from './action-selector';
 import { HoverScale } from './ui/animated-page';
@@ -16,14 +16,16 @@ type Destination = {
 };
 
 interface RuleBuilderProps {
-    predicate?: RulePredicate;
+    tenantId: string;
+    predicate?: RuleConditions;
     destinations?: Destination[];
-    onPredicateChange: (predicate: RulePredicate) => void;
+    onPredicateChange: (predicate: RuleConditions) => void;
     onDestinationsChange: (destinations: Destination[]) => void;
     disabled?: boolean;
 }
 
 export default function RuleBuilder({
+    tenantId,
     predicate,
     destinations = [],
     onPredicateChange,
@@ -148,6 +150,7 @@ export default function RuleBuilder({
                                         <ConditionEditor
                                             condition={condition as RuleCondition}
                                             availableTypes={availableConditions}
+                                            tenantId={tenantId}
                                             onChange={(updatedCondition) => updateCondition(index, updatedCondition)}
                                             onRemove={() => removeCondition(index)}
                                             disabled={disabled}
@@ -174,6 +177,7 @@ export default function RuleBuilder({
                     </div>
 
                     <ActionSelector
+                        tenantId={tenantId}
                         destinations={destinations}
                         onChange={onDestinationsChange}
                         disabled={disabled}

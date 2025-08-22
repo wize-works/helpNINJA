@@ -10,10 +10,14 @@ export type RuleCondition = {
     field?: string; // For custom field conditions
 };
 
-export type RulePredicate = {
+// The type should reflect the database column name 'conditions'
+export type RuleConditions = {
     operator: 'and' | 'or';
-    conditions: (RuleCondition | RulePredicate)[];
+    conditions: (RuleCondition | RuleConditions)[];
 };
+
+// For backward compatibility
+export type RulePredicate = RuleConditions;
 
 export type EvaluationContext = {
     message: string;
@@ -42,18 +46,18 @@ export type EvaluationResult = {
  */
 function evaluateCondition(condition: RuleCondition, context: EvaluationContext): { result: boolean; reason: string } {
     const { type, operator, value } = condition;
-    
+
     try {
         switch (type) {
             case 'confidence':
                 const confidence = context.confidence;
                 return evaluateNumericCondition(confidence, operator, value as number, 'confidence');
-                
+
             case 'keyword':
                 const keywords = context.keywords || [];
                 const message = context.message.toLowerCase();
                 const keywordValue = String(value).toLowerCase();
-                
+
                 switch (operator) {
                     case 'contains':
                         const found = keywords.some(k => k.includes(keywordValue)) || message.includes(keywordValue);
@@ -68,12 +72,12 @@ function evaluateCondition(condition: RuleCondition, context: EvaluationContext)
                     default:
                         return { result: false, reason: `Unsupported keyword operator: ${operator}` };
                 }
-                
+
             case 'email_domain':
                 const email = context.userEmail || '';
                 const emailDomain = email.split('@')[1] || '';
                 const targetDomain = String(value).toLowerCase();
-                
+
                 switch (operator) {
                     case 'eq':
                         const matches = emailDomain.toLowerCase() === targetDomain;
@@ -88,11 +92,11 @@ function evaluateCondition(condition: RuleCondition, context: EvaluationContext)
                     default:
                         return { result: false, reason: `Unsupported email domain operator: ${operator}` };
                 }
-                
+
             case 'time':
                 const currentHour = context.timestamp.getHours();
                 const isOffHours = context.isOffHours ?? (currentHour < 9 || currentHour >= 17); // Default business hours: 9-17
-                
+
                 switch (operator) {
                     case 'eq':
                         if (value === 'business_hours') {
@@ -111,19 +115,19 @@ function evaluateCondition(condition: RuleCondition, context: EvaluationContext)
                     default:
                         return evaluateNumericCondition(currentHour, operator, value as number, 'hour');
                 }
-                
+
             case 'session_duration':
                 const duration = context.sessionDuration || 0;
                 return evaluateNumericCondition(duration, operator, value as number, 'session duration (seconds)');
-                
+
             case 'conversation_length':
                 const length = context.conversationLength || 1;
                 return evaluateNumericCondition(length, operator, value as number, 'conversation length');
-                
+
             case 'site':
                 const siteId = context.siteId;
                 const targetSiteId = String(value);
-                
+
                 switch (operator) {
                     case 'eq':
                         const siteMatches = siteId === targetSiteId;
@@ -135,7 +139,7 @@ function evaluateCondition(condition: RuleCondition, context: EvaluationContext)
                     default:
                         return { result: false, reason: `Unsupported site operator: ${operator}` };
                 }
-                
+
             default:
                 return { result: false, reason: `Unknown condition type: ${type}` };
         }
@@ -167,13 +171,13 @@ function evaluateNumericCondition(actual: number, operator: string, expected: nu
 }
 
 /**
- * Evaluate a predicate (which can contain nested conditions and predicates)
+ * Private helper function to evaluate nested conditions
  */
-function evaluatePredicate(predicate: RulePredicate, context: EvaluationContext): EvaluationResult {
+function _evaluateConditionsRecursive(conditions: RuleConditions, context: EvaluationContext): EvaluationResult {
     const details: EvaluationResult['details'] = [];
     const results: boolean[] = [];
-    
-    for (const item of predicate.conditions) {
+
+    for (const item of conditions.conditions) {
         if ('type' in item) {
             // It's a condition
             const result = evaluateCondition(item, context);
@@ -185,7 +189,7 @@ function evaluatePredicate(predicate: RulePredicate, context: EvaluationContext)
             results.push(result.result);
         } else {
             // It's a nested predicate
-            const nestedResult = evaluatePredicate(item, context);
+            const nestedResult = _evaluateConditionsRecursive(item, context);
             details.push({
                 condition: item,
                 result: nestedResult.matched,
@@ -195,30 +199,38 @@ function evaluatePredicate(predicate: RulePredicate, context: EvaluationContext)
             results.push(nestedResult.matched);
         }
     }
-    
-    const matched = predicate.operator === 'and' 
+
+    const matched = conditions.operator === 'and'
         ? results.every(r => r)
         : results.some(r => r);
-    
+
     return { matched, details };
 }
 
 /**
  * Main function to evaluate rule conditions
  */
-export function evaluateRuleConditions(predicate: RulePredicate, context: EvaluationContext): EvaluationResult {
-    if (!predicate || !predicate.conditions || predicate.conditions.length === 0) {
+export function evaluateRuleConditions(conditions: RuleConditions, context: EvaluationContext): EvaluationResult {
+    if (!conditions || !conditions.conditions || conditions.conditions.length === 0) {
         return {
             matched: false,
             details: [{
-                condition: predicate,
+                condition: conditions,
                 result: false,
                 reason: 'No conditions defined'
             }]
         };
     }
-    
-    return evaluatePredicate(predicate, context);
+
+    return _evaluateConditionsRecursive(conditions, context);
+}
+
+/**
+ * Backwards compatibility function
+ * @deprecated Use evaluateRuleConditions with RuleConditions type instead
+ */
+export function evaluatePredicate(predicate: RulePredicate, context: EvaluationContext): EvaluationResult {
+    return evaluateRuleConditions(predicate, context);
 }
 
 /**

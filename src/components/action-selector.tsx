@@ -21,12 +21,14 @@ type Destination = {
 };
 
 interface ActionSelectorProps {
+    tenantId: string;
     destinations: Destination[];
     onChange: (destinations: Destination[]) => void;
     disabled?: boolean;
 }
 
 export default function ActionSelector({
+    tenantId, // Currently not used but kept for future implementation/consistency
     destinations,
     onChange,
     disabled = false

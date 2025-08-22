@@ -19,7 +19,7 @@ export async function POST(req: NextRequest, ctx: Context) {
 
         // Get the rule
         const { rows: ruleRows } = await query(
-            'SELECT predicate FROM public.escalation_rules WHERE id = $1 AND tenant_id = $2',
+            'SELECT conditions FROM public.escalation_rules WHERE id = $1 AND tenant_id = $2',
             [id, tenantId]
         );
 
@@ -28,6 +28,8 @@ export async function POST(req: NextRequest, ctx: Context) {
         }
 
         const rule = ruleRows[0];
+        // For compatibility with frontend that still uses predicate
+        const rulePredicate = rule.conditions;
 
         // Extract test context from request body
         const testContext = {
@@ -43,7 +45,7 @@ export async function POST(req: NextRequest, ctx: Context) {
         };
 
         // Evaluate the rule conditions
-        const result = evaluateRuleConditions(rule.predicate, testContext);
+        const result = evaluateRuleConditions(rulePredicate, testContext);
 
         return NextResponse.json({
             matched: result.matched,

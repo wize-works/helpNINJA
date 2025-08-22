@@ -15,6 +15,7 @@ type ConditionType = {
 interface ConditionEditorProps {
     condition: RuleCondition;
     availableTypes: ConditionType[];
+    tenantId: string;
     onChange: (condition: RuleCondition) => void;
     onRemove: () => void;
     disabled?: boolean;

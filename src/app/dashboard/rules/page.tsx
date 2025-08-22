@@ -6,7 +6,7 @@ import RuleBuilder from "@/components/rule-builder";
 import SiteSelector from "@/components/site-selector";
 import { Breadcrumb } from "@/components/ui/breadcrumb";
 import { AnimatedPage, StaggerContainer, StaggerChild, HoverScale } from "@/components/ui/animated-page";
-import { RulePredicate } from "@/lib/rule-engine";
+import { RuleConditions } from "@/lib/rule-engine";
 import { toastUtils } from '@/lib/toast';
 
 type Destination = {
@@ -27,7 +27,8 @@ type EscalationRule = {
     id: string;
     name: string;
     description?: string;
-    predicate: RulePredicate;
+    predicate?: RuleConditions; // Frontend might still be using predicate
+    conditions?: RuleConditions; // Database uses conditions
     destinations: Destination[];
     priority: number;
     enabled: boolean;
@@ -48,6 +49,7 @@ export default function RulesPage() {
     const [showEditor, setShowEditor] = useState(false);
     const [editingRule, setEditingRule] = useState<EscalationRule | undefined>();
     const [testingRule, setTestingRule] = useState<string | null>(null);
+    const [currentRuleId, setCurrentRuleId] = useState<string>('');
     const [showTestInterface, setShowTestInterface] = useState(false);
     const [testData, setTestData] = useState({
         message: 'How do I reset my password?',
@@ -67,7 +69,7 @@ export default function RulesPage() {
     const [formData, setFormData] = useState<{
         name: string;
         description: string;
-        predicate: RulePredicate;
+        predicate: RuleConditions;
         destinations: Destination[];
         priority: number;
         enabled: boolean;
@@ -176,7 +178,7 @@ export default function RulesPage() {
         setFormData({
             name: rule.name,
             description: rule.description || '',
-            predicate: rule.predicate,
+            predicate: rule.predicate || rule.conditions || { operator: 'and', conditions: [] },
             destinations: rule.destinations,
             priority: rule.priority,
             enabled: rule.enabled,
@@ -236,14 +238,18 @@ export default function RulesPage() {
         }
     };
 
-    const openTestInterface = () => {
+    const openTestInterface = (ruleId: string) => {
         setShowTestInterface(true);
+        setCurrentRuleId(ruleId); // Store the rule ID for later use
+        setTestingRule(null); // Reset in case it was previously set
         setTestResult(null);
     };
 
     const closeTestInterface = () => {
         setShowTestInterface(false);
         setTestResult(null);
+        setTestingRule(null);
+        setCurrentRuleId(''); // Clear the current rule ID
     };
 
     const resetForm = () => {
@@ -461,6 +467,7 @@ export default function RulesPage() {
                                     <fieldset className="space-y-4 mb-6">
                                         <legend className="text-base font-semibold text-base-content mb-4">Rule Logic & Actions</legend>
                                         <RuleBuilder
+                                            tenantId={tenantId}
                                             predicate={formData.predicate}
                                             destinations={formData.destinations}
                                             onPredicateChange={(predicate) => setFormData(prev => ({ ...prev, predicate }))}
@@ -548,8 +555,8 @@ export default function RulesPage() {
                                                 onChange={(e) => setFilters(prev => ({ ...prev, enabled: e.target.value }))}
                                             >
                                                 <option value="">All rules</option>
-                                                <option value="true">🟢 Enabled only</option>
-                                                <option value="false">🔴 Disabled only</option>
+                                                <option value="true">Enabled only</option>
+                                                <option value="false">Disabled only</option>
                                             </select>
                                         </label>
 
@@ -561,9 +568,9 @@ export default function RulesPage() {
                                                 onChange={(e) => setFilters(prev => ({ ...prev, type: e.target.value }))}
                                             >
                                                 <option value="">All types</option>
-                                                <option value="escalation">🚨 Escalation</option>
-                                                <option value="routing">🔄 Routing</option>
-                                                <option value="notification">🔔 Notification</option>
+                                                <option value="escalation">Escalation</option>
+                                                <option value="routing">Routing</option>
+                                                <option value="notification">Notification</option>
                                             </select>
                                         </label>
                                     </div>
@@ -645,7 +652,7 @@ export default function RulesPage() {
                                                                 )}
                                                                 <div className="flex items-center gap-1">
                                                                     <i className="fa-duotone fa-solid fa-filter" aria-hidden />
-                                                                    <span>{rule.predicate.conditions.length} condition{rule.predicate.conditions.length > 1 ? 's' : ''}</span>
+                                                                    <span>{(rule.predicate?.conditions || rule.conditions?.conditions || []).length} condition{(rule.predicate?.conditions || rule.conditions?.conditions || []).length > 1 ? 's' : ''}</span>
                                                                 </div>
                                                                 <div className="flex items-center gap-1">
                                                                     <i className="fa-duotone fa-solid fa-paper-plane" aria-hidden />
@@ -668,7 +675,7 @@ export default function RulesPage() {
                                                             <HoverScale scale={1.05}>
                                                                 <button
                                                                     className="btn btn-sm btn-outline rounded-lg"
-                                                                    onClick={() => openTestInterface()}
+                                                                    onClick={() => openTestInterface(rule.id)}
                                                                     title="Test rule"
                                                                 >
                                                                     <i className="fa-duotone fa-solid fa-flask" aria-hidden />
@@ -820,12 +827,12 @@ export default function RulesPage() {
                                                 <HoverScale scale={1.02}>
                                                     <button
                                                         className={`btn btn-secondary rounded-xl w-full ${testingRule ? 'loading' : ''}`}
-                                                        onClick={() => testRule(rules[0]?.id || '')}
-                                                        disabled={!!testingRule || !testData.message.trim()}
+                                                        onClick={() => testRule(currentRuleId)}
+                                                        disabled={!currentRuleId || !testData.message.trim()}
                                                     >
                                                         {testingRule ? (
                                                             <>
-                                                                <i className="fa-duotone fa-solid fa-spinner fa-spin mr-2" aria-hidden />
+                                                                <i className="fa-duotone fa-solid fa-spinner fa-spin fa-sm mr-2" aria-hidden />
                                                                 Testing Rule...
                                                             </>
                                                         ) : (

@@ -62,7 +62,7 @@ export async function POST(req: NextRequest) {
         const {
             name,
             description,
-            predicate,
+            conditions,
             destinations,
             priority,
             enabled,
@@ -74,8 +74,8 @@ export async function POST(req: NextRequest) {
             return NextResponse.json({ error: 'Rule name is required' }, { status: 400 });
         }
 
-        if (!predicate || typeof predicate !== 'object') {
-            return NextResponse.json({ error: 'Valid predicate is required' }, { status: 400 });
+        if (!conditions || typeof conditions !== 'object') {
+            return NextResponse.json({ error: 'Valid conditions is required' }, { status: 400 });
         }
 
         if (!destinations || !Array.isArray(destinations) || destinations.length === 0) {
@@ -117,7 +117,7 @@ export async function POST(req: NextRequest) {
         // Insert rule
         const { rows } = await query(
             `INSERT INTO public.escalation_rules (
-                tenant_id, name, description, predicate, destinations, 
+                tenant_id, name, description, conditions, destinations, 
                 priority, enabled, rule_type, site_id
             ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9) 
             RETURNING id`,
@@ -125,7 +125,7 @@ export async function POST(req: NextRequest) {
                 tenantId,
                 name.trim(),
                 description?.trim() || null,
-                JSON.stringify(predicate),
+                JSON.stringify(conditions),
                 JSON.stringify(destinations),
                 priority || 0,
                 enabled !== false, // default to true

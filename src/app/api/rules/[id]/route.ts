@@ -54,6 +54,7 @@ export async function PUT(req: NextRequest, ctx: Context) {
             name,
             description,
             predicate,
+            conditions,
             destinations,
             priority,
             enabled,
@@ -79,12 +80,14 @@ export async function PUT(req: NextRequest, ctx: Context) {
             params.push(description?.trim() || null);
         }
 
-        if (predicate !== undefined) {
-            if (!predicate || typeof predicate !== 'object') {
-                return NextResponse.json({ error: 'Valid predicate is required' }, { status: 400 });
+        // Accept either predicate (legacy) or conditions (new standard)
+        const ruleConditions = conditions || predicate;
+        if (ruleConditions !== undefined) {
+            if (!ruleConditions || typeof ruleConditions !== 'object') {
+                return NextResponse.json({ error: 'Valid rule conditions are required' }, { status: 400 });
             }
-            updates.push(`predicate = $${paramIndex++}`);
-            params.push(JSON.stringify(predicate));
+            updates.push(`conditions = $${paramIndex++}`);
+            params.push(JSON.stringify(ruleConditions));
         }
 
         if (destinations !== undefined) {
