@@ -909,7 +909,7 @@ export default function WidgetConfiguration({
                                             </div>
                                             <input
                                                 type="text"
-                                                name="sendButtonBackground"
+                                                name="buttonBackground"
                                                 value={config.buttonBackground}
                                                 onChange={handleInputChange}
                                                 className="input w-32 font-mono"
@@ -931,7 +931,7 @@ export default function WidgetConfiguration({
                                             </div>
                                             <input
                                                 type="text"
-                                                name="sendButtonColor"
+                                                name="buttonColor"
                                                 value={config.buttonColor}
                                                 onChange={handleInputChange}
                                                 className="input w-32 font-mono"
