@@ -148,6 +148,7 @@ export async function GET(req: NextRequest) {
     // Fetch widget configuration from the database if site is provided
     interface WidgetConfig {
         primaryColor?: string;
+        advancedColors?: boolean;
         position?: string;
         welcomeMessage?: string;
         aiName?: string;
@@ -184,6 +185,7 @@ export async function GET(req: NextRequest) {
                 // Map database fields to client configuration
                 widgetConfig = {
                     primaryColor: dbConfig.primary_color,
+                    advancedColors: dbConfig.advanced_colors || false,
                     position: dbConfig.position,
                     welcomeMessage: dbConfig.welcome_message,
                     aiName: dbConfig.ai_name,

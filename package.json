@@ -7,7 +7,8 @@
         "build": "next build",
         "start": "next start",
         "lint": "next lint",
-        "seed": "node ./scripts/seed.mjs"
+        "seed": "node ./scripts/seed.mjs",
+        "generate-favicon": "node ./scripts/generate-favicon.mjs"
     },
     "dependencies": {
         "@clerk/elements": "^0.23.54",
@@ -49,6 +50,7 @@
         "eslint": "^9",
         "eslint-config-next": "15.4.6",
         "jsdom": "^26.1.0",
+        "sharp": "^0.34.3",
         "tailwindcss": "^4.1.11",
         "typescript": "^5"
     }

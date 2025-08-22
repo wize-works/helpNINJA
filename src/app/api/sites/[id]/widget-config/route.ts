@@ -55,6 +55,7 @@ export async function GET(
             // Transform snake_case to camelCase
             const clientConfig = {
                 primaryColor: dbConfig.primary_color,
+                advancedColors: dbConfig.advanced_colors || false,
                 position: dbConfig.position,
                 welcomeMessage: dbConfig.welcome_message,
                 aiName: dbConfig.ai_name,
@@ -84,6 +85,7 @@ export async function GET(
         // Otherwise, return default configuration
         return NextResponse.json({
             primaryColor: "#7C3AED", // Purple
+            advancedColors: false,
             position: "bottom-right",
             welcomeMessage: "👋 Hi there! How can I help you today?",
             aiName: "AI Assistant",
@@ -185,6 +187,7 @@ export async function POST(
         // Extract the fields we want to store
         const {
             primaryColor,
+            advancedColors,
             position,
             welcomeMessage,
             aiName,
@@ -215,32 +218,34 @@ export async function POST(
                 `UPDATE widget_configurations 
          SET 
            primary_color = $1,
-           position = $2,
-           welcome_message = $3,
-           ai_name = $4,
-           show_branding = $5,
-           auto_open_delay = $6,
-           button_icon = $7,
-           custom_icon_url = $8,
-           theme = $9,
-           font_family = $10,
-           voice = $11,
-           bubble_background = $12,
-           bubble_color = $13,
-           panel_background = $14,
-           panel_header_background = $15,
-           messages_background = $16,
-           user_bubble_background = $17,
-           user_bubble_color = $18,
-           assistant_bubble_background = $19,
-           assistant_bubble_color = $20,
-           button_background = $21,
-           button_color = $22,
+           advanced_colors = $2,
+           position = $3,
+           welcome_message = $4,
+           ai_name = $5,
+           show_branding = $6,
+           auto_open_delay = $7,
+           button_icon = $8,
+           custom_icon_url = $9,
+           theme = $10,
+           font_family = $11,
+           voice = $12,
+           bubble_background = $13,
+           bubble_color = $14,
+           panel_background = $15,
+           panel_header_background = $16,
+           messages_background = $17,
+           user_bubble_background = $18,
+           user_bubble_color = $19,
+           assistant_bubble_background = $20,
+           assistant_bubble_color = $21,
+           button_background = $22,
+           button_color = $23,
            updated_at = NOW()
-         WHERE site_id = $23
+         WHERE site_id = $24
          RETURNING *`,
                 [
                     primaryColor,
+                    advancedColors === true, // Convert to boolean to ensure proper type
                     position,
                     welcomeMessage,
                     aiName,
@@ -271,6 +276,7 @@ export async function POST(
                 `INSERT INTO widget_configurations (
            site_id,
            primary_color,
+           advanced_colors,
            position,
            welcome_message,
            ai_name,
@@ -292,11 +298,12 @@ export async function POST(
            assistant_bubble_color,
            button_background,
            button_color
-         ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20, $21, $22, $23)
+         ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20, $21, $22, $23, $24)
          RETURNING *`,
                 [
                     siteId,
                     primaryColor,
+                    advancedColors === true, // Convert to boolean to ensure proper type
                     position,
                     welcomeMessage,
                     aiName,

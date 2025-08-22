@@ -6,6 +6,8 @@ import { ClerkProvider } from "@clerk/nextjs";
 import { Toaster } from "react-hot-toast";
 import Clarity from "@/components/clarity";
 
+export { metadata } from "./metadata";
+
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
     return (
