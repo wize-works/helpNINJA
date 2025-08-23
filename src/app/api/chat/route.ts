@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import OpenAI from 'openai';
+import type { ChatCompletionMessageParam } from 'openai/resources/chat/completions';
 import { searchWithCuratedAnswers } from '@/lib/rag';
 import { query } from '@/lib/db';
 import { canSendMessage, incMessages } from '@/lib/usage';
@@ -85,7 +86,7 @@ const SYSTEM = (voice = 'friendly') => `
 You are helpNINJA, a concise, helpful site assistant.
 
 Rules:
-- Use only the provided Context. If the answer isn’t in Context, say “I don’t know” and offer to connect support.
+- Use only the provided Context. If the answer isn’t in Context, politely respond that you don't have the answer to that and offer to connect support.
 - Voice: ${voice}.
 - Keep answers under 120 words.
 - If useful, include ONE relevant link (markdown: [text](url)).
@@ -117,54 +118,112 @@ export async function POST(req: NextRequest) {
 
         const conversationId = await ensureConversation(tenantId, sessionId);
 
-        // Search for curated answers first, then RAG results
+        // Search for curated answers first, then RAG results (we may skip if we short‑circuit on follow-up intent)
         const { curatedAnswers, ragResults } = await searchWithCuratedAnswers(tenantId, message, 6, siteId);
 
-        let text: string;
-        let confidence: number;
+        // Fetch recent prior messages for lightweight context understanding (last 6 turns, newest first)
+        const recent = await query<{ role: string; content: string }>(
+            `select role, content from public.messages where conversation_id=$1 and tenant_id=$2 order by created_at desc limit 6`,
+            [conversationId, tenantId]
+        );
+        const recentMessages = recent.rows.reverse(); // oldest first now
+        const lastAssistant = [...recentMessages].reverse().find(m => m.role === 'assistant');
+
+        // Detect simple follow-up intents (affirm / decline) responding to an offer to connect support
+        const trimmed = (message || '').trim().toLowerCase();
+        const isAffirm = /^(y|yes|yeah|yep|sure|please|ok|okay|connect|do it|please do)$/i.test(trimmed);
+        const isDecline = /^(n|no|nah|nope|not now|later|maybe later)$/i.test(trimmed);
+        const priorOfferedSupport = lastAssistant && /connect (you )?with support|connect you to support|handoff/i.test(lastAssistant.content);
+
+        let forcedEscalation = false;
+        let forcedHandled = false;
+        let text: string | undefined;
+        let confidence: number | undefined;
         let refs: string[] = [];
+        let userLogged = false; // track if we've already persisted the user message this turn
 
-        if (curatedAnswers.length > 0) {
-            // Use the highest-priority curated answer
-            const bestAnswer = curatedAnswers[0];
-            text = bestAnswer.answer;
-            confidence = 0.95; // High confidence for curated answers
-            refs = []; // Curated answers don't have URL refs
+        if (priorOfferedSupport && (isAffirm || isDecline)) {
+            if (isAffirm) {
+                // Short‑circuit: user accepted offer → escalate immediately
+                text = 'Absolutely — I\'ll loop in a human support member now. You can keep typing while I connect you.';
+                confidence = 0.9; // High confidence in intent understanding
+                forcedEscalation = true;
+            } else if (isDecline) {
+                text = 'No problem. Feel free to ask another question or tell me what you\'d like to do next.';
+                confidence = 0.85;
+                forcedHandled = true; // We handled without escalation
+            }
+        }
 
-            // Log that we used a curated answer
-            await query(`insert into public.messages (conversation_id, tenant_id, role, content, confidence)
+        // Only run answer generation if we did not short-circuit above
+        if (!text) {
+            if (curatedAnswers.length > 0) {
+                // Use the highest-priority curated answer
+                const bestAnswer = curatedAnswers[0];
+                text = bestAnswer.answer;
+                confidence = 0.95; // High confidence for curated answers
+                refs = []; // Curated answers don't have URL refs
+
+                // Log that we used a curated answer
+                await query(`insert into public.messages (conversation_id, tenant_id, role, content, confidence)
                          values ($1, $2, 'user', $3, 1.0)`,
-                [conversationId, tenantId, message]);
-        } else {
-            // Fall back to RAG + OpenAI
-            const contextText = ragResults.map((c, i) => `[[${i + 1}]] ${c.url}\n${c.content}`).join('\n\n');
-            refs = ragResults.map(c => c.url);
+                    [conversationId, tenantId, message]);
+                userLogged = true;
+            } else {
+                // Fall back to RAG + OpenAI with lightweight conversation memory
+                const contextText = ragResults.map((c, i) => `[[${i + 1}]] ${c.url}\n${c.content}`).join('\n\n');
+                refs = ragResults.map(c => c.url);
 
-            // Initialize OpenAI only when needed at runtime
-            const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
-            const chat = await openai.chat.completions.create({
-                model: process.env.OPENAI_CHAT_MODEL || 'gpt-4o-mini',
-                messages: [
-                    { role: 'system', content: SYSTEM(voice) },
-                    { role: 'user', content: `Question: ${message}\n\nContext:\n${contextText}` }
-                ]
-            });
+                // Prepare a concise recent history (exclude any system-level constraints; keep only last 3 turns before current)
+                const history = recentMessages.slice(-6).filter(m => m.content && m.content.length < 1200); // simple guard
+                const historyForModel = history
+                    .filter(m => m.role === 'assistant' || m.role === 'user')
+                    .map(m => ({ role: m.role as 'assistant' | 'user', content: m.content }));
 
-            text = chat.choices[0]?.message?.content?.trim() || "I'm not sure. Want me to connect you with support?";
-            confidence = chat.choices[0]?.finish_reason === 'stop' ? 0.7 : 0.4;
+                // If the user message is very short, provide inline clarification context
+                const isShortFollow = !forcedEscalation && trimmed.length <= 5 && /^(y|n|yes|no|ok|okay|sure)$/i.test(trimmed) && lastAssistant;
+                const userContent = isShortFollow && lastAssistant
+                    ? `Follow-up reply: "${message}"\nPrior assistant message (for context): ${lastAssistant.content}\n\nPlease interpret the follow-up relative to that prior assistant message. If it is an affirmative to connect support, acknowledge and offer escalation; if negative, invite a more specific question.\nUser original input (current turn): ${message}\n\nContext:\n${contextText}`
+                    : `Question: ${message}\n\nContext:\n${contextText}`;
 
-            // Log user message
-            const userMessage = await query<{ id: string }>(`insert into public.messages (conversation_id, tenant_id, role, content, confidence)
+                const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
+                const chat = await openai.chat.completions.create({
+                    model: process.env.OPENAI_CHAT_MODEL || 'gpt-4o-mini',
+                    messages: [
+                        { role: 'system', content: SYSTEM(voice) },
+                        // Provide context separately to reduce confusion
+                        ...historyForModel,
+                        { role: 'user', content: userContent }
+                    ] as ChatCompletionMessageParam[]
+                });
+
+                text = chat.choices[0]?.message?.content?.trim() || "I'm not sure. Want me to connect you with support?";
+                confidence = chat.choices[0]?.finish_reason === 'stop' ? 0.7 : 0.4;
+
+                // Log user message
+                const userMessage = await query<{ id: string }>(`insert into public.messages (conversation_id, tenant_id, role, content, confidence)
                          values ($1, $2, 'user', $3, 1.0) returning id`,
-                [conversationId, tenantId, message]);
+                    [conversationId, tenantId, message]);
+                userLogged = true;
 
-            // Trigger message sent webhook for user message
+                // Trigger message sent webhook for user message
+                try {
+                    console.log(`🔔 Chat API: Triggering message.sent webhook for user message ${userMessage.rows[0].id}`);
+                    await webhookEvents.messageSent(tenantId, conversationId, userMessage.rows[0].id, 'user');
+                    console.log(`✅ Chat API: message.sent webhook triggered successfully`);
+                } catch (error) {
+                    console.error('💥 Chat API: Failed to trigger message.sent webhook for user:', error);
+                }
+            }
+        }
+
+        // Ensure user message stored even for short-circuit intent branches
+        if (!userLogged) {
             try {
-                console.log(`🔔 Chat API: Triggering message.sent webhook for user message ${userMessage.rows[0].id}`);
-                await webhookEvents.messageSent(tenantId, conversationId, userMessage.rows[0].id, 'user');
-                console.log(`✅ Chat API: message.sent webhook triggered successfully`);
-            } catch (error) {
-                console.error('💥 Chat API: Failed to trigger message.sent webhook for user:', error);
+                await query(`insert into public.messages (conversation_id, tenant_id, role, content, confidence)
+                             values ($1, $2, 'user', $3, 1.0)`, [conversationId, tenantId, message]);
+            } catch (e) {
+                console.error('⚠️ Failed to log user message (short-circuit)', e);
             }
         }
 
@@ -184,8 +243,8 @@ export async function POST(req: NextRequest) {
         // Check if we should escalate the conversation
         const threshold = 0.55;
 
-        // 1. Check for standard escalation triggers (low confidence or explicit handoff)
-        const shouldEscalateForConfidence = (confidence ?? 0) < threshold || /connect you with support/i.test(text);
+        // 1. Check for standard escalation triggers (low confidence or explicit handoff), or forced acceptance
+        const shouldEscalateForConfidence = forcedEscalation || ((confidence ?? 0) < threshold || /connect you with support/i.test(text));
 
         // 2. Check if any escalation rules match regardless of confidence
         let shouldEscalateForRules = false;
@@ -339,7 +398,7 @@ export async function POST(req: NextRequest) {
         }
 
         // Combine both escalation conditions
-        if (shouldEscalateForConfidence || shouldEscalateForRules) {
+        if ((shouldEscalateForConfidence || shouldEscalateForRules) && !forcedHandled) {
             try {
                 // Store the rule destinations if a rule matched
                 let matchedRuleDestinations = null;
@@ -390,10 +449,12 @@ export async function POST(req: NextRequest) {
                     assistantAnswer: text,
                     confidence,
                     refs,
-                    reason: escalationReason === 'low_confidence' ? 'low_confidence' :
-                        escalationReason === 'handoff' ? 'handoff' :
-                            escalationReason === 'rule_match' ? 'user_request' :
-                                escalationReason === 'routing_rule' ? 'user_request' : 'user_request',
+                    reason: forcedEscalation ? 'user_request' : (
+                        escalationReason === 'low_confidence' ? 'low_confidence' :
+                            escalationReason === 'handoff' ? 'handoff' :
+                                escalationReason === 'rule_match' ? 'user_request' :
+                                    escalationReason === 'routing_rule' ? 'user_request' : 'user_request'
+                    ),
                     siteId: siteId || null,
                     ruleId: matchedRuleId,
                     matchedRuleDestinations,
@@ -401,7 +462,8 @@ export async function POST(req: NextRequest) {
                     triggerWebhooks,
                     meta: {
                         fromChat: true,
-                        usedCuratedAnswer: curatedAnswers.length > 0
+                        usedCuratedAnswer: curatedAnswers.length > 0,
+                        forcedEscalation
                     }
                 });
 
