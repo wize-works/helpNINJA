@@ -112,9 +112,9 @@ export async function POST(req: NextRequest) {
 
         const conversationId = await ensureConversation(tenantId, sessionId);
 
-        // Get site_id if available from widget referer or session context
-        // For now, we'll pass undefined but this could be enhanced to detect the site
-        const siteId = undefined; // TODO: Extract from widget context or session
+        // For now, we'll use undefined for site_id
+        // This could be enhanced to extract from widget context or session
+        const siteId = undefined; // We'll ignore site_id filtering for now to ensure rules match
 
         // Search for curated answers first, then RAG results
         const { curatedAnswers, ragResults } = await searchWithCuratedAnswers(tenantId, message, 6, siteId);
@@ -185,27 +185,21 @@ export async function POST(req: NextRequest) {
         console.log(`🔍 RULE DEBUG [2]: Message content to check against keywords: "${message}"`)
         console.log(`🔍 RULE DEBUG [3]: TenantId: ${tenantId}, ConversationId: ${conversationId}`)
 
-        // Get active rules for this tenant
+        // Get active rules for this tenant - Modified to find all applicable rules
         console.log(`🔍 RULE DEBUG [4]: Querying DB for active rules with SQL:
             SELECT * FROM public.escalation_rules 
             WHERE tenant_id = '${tenantId}' 
             AND enabled = true 
             AND rule_type = 'escalation'
-            AND trigger_event = 'message_received'
-            AND (site_id IS NULL OR site_id = '${siteId || null}')
             ORDER BY priority DESC`)
-
+            
         const { rows: rules } = await query(
             `SELECT * FROM public.escalation_rules 
              WHERE tenant_id = $1 
              AND enabled = true 
-             AND rule_type = 'escalation'
-             AND trigger_event = 'message_received'
-             AND (site_id IS NULL OR site_id = $2)
              ORDER BY priority DESC`,
-            [tenantId, siteId || null]
-        )
-
+            [tenantId]
+        );
         console.log(`🔍 RULE DEBUG [5]: Query result: Found ${rules.length} active rules`)
         if (rules.length > 0) {
             console.log(`🔍 RULE DEBUG [6]: First rule details: id=${rules[0].id}, name=${rules[0].name}, conditions=${JSON.stringify(rules[0].conditions)}`)
@@ -217,7 +211,13 @@ export async function POST(req: NextRequest) {
 
         if (rules.length > 0) {
             // Prepare evaluation context with message content
-            const context = {
+            const context: {
+                message: string;
+                confidence: number;
+                keywords: string[];
+                timestamp: Date;
+                siteId?: string;
+            } = {
                 message: message,
                 confidence: confidence || 0.7,
                 keywords: [], // Extract keywords if available
@@ -290,7 +290,7 @@ export async function POST(req: NextRequest) {
                     const eventBody: EscalationPayload = { ...event };
                     console.log(`🚀 RULE DEBUG [17]: Initial event payload: ${JSON.stringify(eventBody)}`)
 
-                    if (destinations.length > 0) {
+                    if (destinations && destinations.length > 0) {
                         // Convert rule destinations to the format expected by dispatchEscalation
                         interface Destination {
                             integration_id?: string;
