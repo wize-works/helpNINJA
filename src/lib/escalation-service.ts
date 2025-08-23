@@ -2,6 +2,7 @@ import { dispatchEscalation } from './integrations/dispatch';
 import { EscalationEvent, EscalationReason } from './integrations/types';
 import { query } from './db';
 import { webhookEvents } from './webhooks';
+import crypto from 'crypto';
 
 // Define types for the escalation service
 export interface EscalationDestination {
@@ -10,6 +11,81 @@ export interface EscalationDestination {
     integrationId?: string;
     email?: string;
     [key: string]: unknown; // For other properties we might not know about
+}
+
+/**
+ * Records an escalation delivery in the webhook_deliveries table for dashboard visibility
+ * We'll use a built-in webhook endpoint that we know exists for displaying escalations
+ */
+async function recordEscalationDelivery(
+    tenantId: string,
+    integrationId: string,
+    event: EscalationEvent,
+    result: { ok: boolean; error?: string; id?: string; provider: string }
+): Promise<void> {
+    try {
+        // Find appropriate webhook endpoint
+        const { rows } = await query(
+            `SELECT id FROM public.webhook_endpoints 
+             WHERE tenant_id = $1 
+             ORDER BY created_at DESC
+             LIMIT 1`,
+            [tenantId]
+        );
+
+        // If no webhook endpoint exists, we can't record the delivery
+        if (!rows.length) {
+            console.log(`⚠️ ESCALATION SERVICE: No webhook endpoints found for tenant ${tenantId}, skipping delivery recording`);
+            return;
+        }
+
+        const webhookEndpointId = rows[0].id;
+        console.log(`📝 ESCALATION SERVICE: Using existing webhook endpoint ${webhookEndpointId} for integration ${integrationId}`);
+
+        // Generate a webhook-like payload
+        const payload = {
+            type: 'escalation.delivered',
+            tenant_id: tenantId,
+            data: {
+                conversation_id: event.conversationId,
+                integration_id: integrationId,
+                reason: event.reason,
+                confidence: event.confidence,
+                status: result.ok ? 'delivered' : 'failed',
+                triggered_at: new Date().toISOString()
+            },
+            timestamp: new Date().toISOString(),
+            idempotency_key: crypto.randomUUID()
+        };
+
+        // Current timestamp
+        const now = new Date();
+
+        // Insert into webhook_deliveries table matching schema exactly
+        await query(`
+      INSERT INTO webhook_deliveries (
+        id, webhook_endpoint_id, event_type, payload,
+        response_status, response_body, delivery_attempts,
+        delivered_at, failed_at, created_at
+      ) VALUES (
+        gen_random_uuid(), $1, $2, $3,
+        $4, $5, 1,
+        $6, $7, $8
+      )
+    `, [
+            webhookEndpointId, // Using proper webhook endpoint ID
+            'escalation.delivered', // event_type
+            payload, // payload as jsonb
+            result.ok ? 200 : 500, // response_status
+            result.ok ? JSON.stringify(result) : result.error || 'Unknown error', // response_body
+            result.ok ? now : null, // delivered_at
+            !result.ok ? now : null, // failed_at
+            now // created_at
+        ]); console.log(`📝 ESCALATION SERVICE: Recorded delivery for integration ${integrationId}`);
+    } catch (error) {
+        console.error('❌ ESCALATION SERVICE: Failed to record escalation delivery:', error);
+        // Non-critical, so continue execution
+    }
 }
 
 export interface IntegrationConfig {
@@ -25,6 +101,7 @@ export interface EscalationResult {
         id?: string;
         url?: string;
         error?: string;
+        integrationId?: string; // Added for dashboard visibility
     }>;
     error?: string;
 }
@@ -239,6 +316,27 @@ export async function handleEscalation({
     try {
         const dispatchResult = await dispatchEscalation(event);
         console.log(`✅ ESCALATION SERVICE: Dispatch complete: ${JSON.stringify(dispatchResult)}`);
+
+        // Record each integration dispatch in webhook_deliveries for dashboard visibility
+        if (dispatchResult.ok && dispatchResult.results) {
+            for (const result of dispatchResult.results) {
+                // Only record if we have an integration ID
+                if (result.integrationId) {
+                    await recordEscalationDelivery(
+                        tenantId,
+                        result.integrationId,
+                        event,
+                        {
+                            ok: result.ok,
+                            error: result.error,
+                            id: result.id,
+                            provider: result.provider
+                        }
+                    );
+                }
+            }
+        }
+
         return dispatchResult;
     } catch (error) {
         console.error('❌ ESCALATION SERVICE: Dispatch failed:', error);

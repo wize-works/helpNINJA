@@ -179,7 +179,7 @@ export async function dispatchEscalation(ev: EscalationEvent, destinations?: Int
 
         if (!p) {
             console.error(`📧 DISPATCH DEBUG [19.${idx}]: Provider not registered: ${t.provider}`);
-            return { provider: t.provider, ok: false, error: 'provider_not_registered' };
+            return { provider: t.provider, ok: false, error: 'provider_not_registered', integrationId: t.id };
         }
 
         console.log(`📧 DISPATCH DEBUG [20.${idx}]: Provider found, sending escalation`);
@@ -197,7 +197,8 @@ export async function dispatchEscalation(ev: EscalationEvent, destinations?: Int
             console.log(`📧 DISPATCH DEBUG [23.${idx}]: Provider ${t.provider} succeeded`);
         }
 
-        return { provider: t.provider, ...r };
+        // Include the integration ID in the result for dashboard visibility
+        return { provider: t.provider, integrationId: t.id, ...r };
     }));
 
     const successful = results.filter(r => r.ok).length;
