@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { query } from '@/lib/db';
 import { getTenantIdStrict } from '@/lib/tenant-resolve';
-import { dispatchEscalation } from '@/lib/integrations/dispatch';
+import { handleEscalation } from '@/lib/escalation-service';
 
 export const runtime = 'nodejs';
 
@@ -68,17 +68,28 @@ export async function POST(req: NextRequest) {
                     [item.id]
                 );
 
-                // Try to dispatch the escalation
-                const escalationEvent = {
-                    tenantId,
-                    provider: item.provider,
-                    integrationId: item.integration_id,
-                    ...item.payload,
-                    ruleId: item.rule_id,
-                    conversationId: item.conversation_id
-                };
+                // Try to dispatch the escalation using our centralized service
+                const payload = item.payload || {};
 
-                await dispatchEscalation(escalationEvent);
+                await handleEscalation({
+                    tenantId,
+                    conversationId: item.conversation_id,
+                    userMessage: payload.userMessage || "No message available",
+                    reason: typeof payload.reason === 'string' ?
+                        (payload.reason === 'low_confidence' ? 'low_confidence' :
+                            payload.reason === 'restricted' ? 'restricted' :
+                                payload.reason === 'handoff' ? 'handoff' :
+                                    payload.reason === 'fallback_error' ? 'fallback_error' :
+                                        'user_request') : 'user_request',
+                    ruleId: item.rule_id,
+                    integrationId: item.integration_id,
+                    meta: {
+                        provider: item.provider,
+                        fromOutbox: true,
+                        outboxId: item.id,
+                        ...payload
+                    }
+                });
 
                 // Mark as sent if successful
                 await query(

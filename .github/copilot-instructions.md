@@ -19,17 +19,18 @@ Key env (set before running)
 
 Architecture & flows
 - Widget script (Edge) served by `src/app/api/widget/route.ts`. Embeds a floating chat bubble and posts to `/api/chat` with `{ tenantId, sessionId, message, voice }`
-- Chat answer flow: `api/chat` (Node runtime) → usage gate (`lib/usage.ts`) → RAG search (`lib/rag.ts` → lexical tsvector + vector merge) → OpenAI chat → persist message (`public.messages`) → auto-escalate under threshold via `api/escalate`
+- Chat answer flow: `api/chat` (Node runtime) → usage gate (`lib/usage.ts`) → RAG search (`lib/rag.ts` → lexical tsvector + vector merge) → OpenAI chat → persist message (`public.messages`) → auto-escalate under threshold via `lib/escalation-service.ts`
 - Ingestion flow: `api/ingest` crawls page/sitemap (`lib/crawler.ts`), chunks (`lib/chunk.ts`), embeds (`lib/embeddings.ts`), stores docs/chunks
 - Billing: checkout/portal in `src/app/api/billing/**`; webhook in `api/stripe/webhook` updates `public.tenants` plan/status and ensures `usage_counters`
 - Integrations: Provider interface in `lib/integrations/types.ts`; registry in `registry.ts`; dispatch in `dispatch.ts` (DB-backed integrations with env fallbacks). On failure, writes to `integration_outbox`
+- Escalation: Centralized through `lib/escalation-service.ts` which handles all escalation flows (chat, webhooks, outbox retries)
 
 Conventions & patterns
 - API routes: export `runtime` (`'nodejs'` for OpenAI/DB; `'edge'` for pure JS). Validate required fields and return `NextResponse.json`
 - DB: use `lib/db.ts` `query(text, params)` with parameterized SQL; avoid string interpolation for user input
 - Limits: Always check `canSendMessage` before OpenAI calls; call `incMessages` after. `PLAN_LIMITS` in `lib/limits.ts`
 - RAG: Prefer `searchHybrid(tenantId, q, k)` to combine vector + lexical; dedupe by URL and slice to `k`
-- Escalation: Use `dispatchEscalation(ev)` with `EscalationEvent`; low-confidence threshold is in `api/chat` (0.55) – keep answers concise per the system prompt there
+- Escalation: Use `escalationService.handleEscalation(ev)` with `EscalationEvent`; low-confidence threshold is in `api/chat` (0.55) – keep answers concise per the system prompt there
 
 Adding features (follow these)
 - New API route: create `src/app/api/<name>/route.ts`; set `runtime`, parse JSON, validate, gate usage if applicable, interact via `query`, return JSON
@@ -48,6 +49,7 @@ Reference entry points
 - Ingestion: `src/app/api/ingest/route.ts`, `src/lib/crawler.ts`, `src/lib/chunk.ts`
 - Billing: `src/app/api/billing/**`, `src/app/api/stripe/webhook/route.ts`, `src/lib/stripe.ts`, `src/lib/usage.ts`
 - Integrations: `src/lib/integrations/**`
+- Escalation: `src/lib/escalation-service.ts`, `src/app/api/escalate/route.ts`, `src/app/api/outbox/retry/route.ts`
 
 When in doubt, mirror existing route/provider patterns and keep changes tenant-scoped and parameterized.
 

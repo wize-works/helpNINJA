@@ -3,8 +3,8 @@
  */
 
 import { query } from '@/lib/db';
-import { dispatchEscalation } from './integrations/dispatch';
-import { EscalationEvent, EscalationReason, IntegrationRecord } from './integrations/types';
+import { handleEscalation } from './escalation-service';
+import { EscalationReason, IntegrationRecord } from './integrations/types';
 
 type WebhookPayload = {
     type: string;
@@ -57,6 +57,7 @@ export async function processInternalWebhook(
 async function processIntegrationUrl(
     urlParts: string[],
     payload: WebhookPayload,
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     _deliveryId: string // Not used but kept for consistent API
 ): Promise<boolean> {
     try {
@@ -180,28 +181,25 @@ async function handleEscalationEvent(
             }
         }
 
-        // Prepare the escalation event
-        // Create escalation event with properties that match the type definition
-        const escalationEvent: EscalationEvent = {
+        // Prepare the escalation parameters
+
+        console.log(`📤 Dispatching escalation to ${integration.provider} integration: ${integration.id}`);
+
+        // Use our centralized escalation service
+        const result = await handleEscalation({
             tenantId: payload.tenant_id,
             conversationId: conversationId,
             sessionId: conversation.session_id,
             userMessage: conversation.user_message || '',
             assistantAnswer: conversation.assistant_answer,
             confidence: confidenceValue,
-            reason: reasonValue
-        };
-
-        // Add integration ID as a destination to tell dispatchEscalation which integration to use
-
-        console.log(`📤 Dispatching escalation to ${integration.provider} integration: ${integration.id}`);
-
-        // We already have the integration information properly typed as IntegrationRecord
-        // Just dispatch directly to the integration we already have
-        const destinations = [integration];
-
-        // Dispatch the escalation
-        const result = await dispatchEscalation(escalationEvent, destinations);
+            reason: reasonValue,
+            integrationId: integration.id,
+            meta: {
+                fromWebhook: true,
+                provider: integration.provider
+            }
+        });
 
         if (result.ok) {
             console.log(`✅ Successfully dispatched escalation`);

@@ -17,6 +17,10 @@ Core tables (public schema)
 	- id uuid pk, tenant_id uuid fk tenants, provider text ('slack'|'email'|...), name text, status text ('active'|'disabled'), credentials jsonb, config jsonb, created_at timestamptz default now()
 - integration_outbox
 	- id uuid pk, tenant_id uuid fk tenants, provider text, integration_id uuid null, payload jsonb, status text ('pending'|'sent'|'failed'), attempts int, next_attempt_at timestamptz, last_error text, created_at timestamptz default now()
+- escalation_rules
+	- id uuid pk, tenant_id uuid fk tenants, site_id uuid fk tenant_sites, name text, rule_type text ('escalation'|'notification'|'routing'), condition_type text, condition_value jsonb, destination_id uuid fk integrations, active boolean, created_at timestamptz default now()
+- webhook_endpoints
+	- id uuid pk, tenant_id uuid fk tenants, url text, events text[], secret text, active boolean, created_at timestamptz default now()
 
 Extensions & indexes
 - pgvector for `chunks.embedding`
@@ -28,4 +32,7 @@ Notable fields/metrics
 - usage_counters.messages_count gates AI calls based on plan (see `lib/limits.ts`)
 
 RLS
-- Enforce tenant isolation across all multi-tenant tables (tenants, conversations, messages, documents, chunks, usage_counters, integrations, integration_outbox)
+- Enforce tenant isolation across all multi-tenant tables (tenants, conversations, messages, documents, chunks, usage_counters, integrations, integration_outbox, escalation_rules, webhook_endpoints)
+
+See also:
+- [Escalation Flow Documentation](./escalation-flow.md) for details on the escalation system architecture

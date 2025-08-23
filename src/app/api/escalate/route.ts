@@ -1,10 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { dispatchEscalation } from '@/lib/integrations/dispatch'
+import { handleEscalation } from '@/lib/escalation-service'
 import { getTenantIdStrict } from '@/lib/tenant-resolve'
 import { withCORS } from '@/lib/cors'
 import { query } from '@/lib/db'
 import { evaluateRuleConditions } from '@/lib/rule-engine'
-import { webhookEvents } from '@/lib/webhooks'
 
 export const runtime = 'nodejs'
 
@@ -26,151 +25,88 @@ export async function POST(req: NextRequest) {
         console.log(`🚨 ESCALATE DEBUG [3]: Raw request body: ${rawBody}`);
 
         // Parse the JSON
-        const ev = JSON.parse(rawBody);
+        const payload = JSON.parse(rawBody);
 
         // Check for webhook loop prevention flags
-        const isWebhookOrigin = !!ev.fromWebhook;
-        const hasIntegrationId = !!ev.integrationId;
-        const isFromChat = !!ev.fromChat;
-        const shouldSkipWebhooks = !!ev.skipWebhooks;
+        const isWebhookOrigin = !!payload.fromWebhook;
+        const hasIntegrationId = !!payload.integrationId;
+        const isFromChat = !!payload.fromChat;
+        const shouldSkipWebhooks = !!payload.skipWebhooks;
 
-        console.log(`🚨 ESCALATE DEBUG [4]: Parsed request payload: ${JSON.stringify(ev)}`);
+        console.log(`🚨 ESCALATE DEBUG [4]: Parsed request payload: ${JSON.stringify(payload)}`);
         console.log(`🚨 ESCALATE DEBUG [4.1]: Request origin flags - fromWebhook: ${isWebhookOrigin}, integrationId: ${hasIntegrationId}, fromChat: ${isFromChat}, skipWebhooks: ${shouldSkipWebhooks}`);
 
         // ensure tenantId present via strict server resolution
-        if (!ev?.tenantId) {
+        if (!payload?.tenantId) {
             console.log(`🚨 ESCALATE DEBUG [5]: Missing tenantId, attempting strict resolution`);
             try {
-                ev.tenantId = await getTenantIdStrict();
-                console.log(`🚨 ESCALATE DEBUG [6]: Resolved tenantId: ${ev.tenantId}`);
+                payload.tenantId = await getTenantIdStrict();
+                console.log(`🚨 ESCALATE DEBUG [6]: Resolved tenantId: ${payload.tenantId}`);
             } catch (error) {
                 console.error(`🚨 ESCALATE DEBUG [7]: Failed to resolve tenantId: ${error instanceof Error ? error.message : 'Unknown error'}`);
             }
         }
 
-        if (!ev?.tenantId || !ev?.conversationId || !ev?.userMessage) {
-            console.error(`🚨 ESCALATE DEBUG [8]: Missing required fields: tenantId=${!!ev?.tenantId}, conversationId=${!!ev?.conversationId}, userMessage=${!!ev?.userMessage}`);
+        if (!payload?.tenantId || !payload?.conversationId || !payload?.userMessage) {
+            console.error(`🚨 ESCALATE DEBUG [8]: Missing required fields: tenantId=${!!payload?.tenantId}, conversationId=${!!payload?.conversationId}, userMessage=${!!payload?.userMessage}`);
             return withCORS(NextResponse.json({ error: 'missing fields' }, { status: 400 }))
         }
 
-        console.log(`🚨 ESCALATE DEBUG [9]: Escalation triggered for tenant ${ev.tenantId}, conversation ${ev.conversationId}`);
-        console.log(`🚨 ESCALATE DEBUG [10]: Reason: ${ev.reason}, Confidence: ${ev.confidence}`);
-
-        // Only trigger the webhook if this is not a webhook-originated or chat-originated request with skip flag
-        // This prevents infinite loops between escalate API, chat API, and webhooks
-        if (!ev.fromWebhook && !ev.integrationId && (!ev.fromChat || !ev.skipWebhooks)) {
-            try {
-                console.log('🔔 Triggering escalation webhook (origin request)');
-                await webhookEvents.escalationTriggered(
-                    ev.tenantId,
-                    ev.conversationId,
-                    ev.reason || 'manual',
-                    ev.confidence,
-                    ev.userMessage // Include the user message if available
-                );
-                console.log('✅ Escalation webhook triggered successfully');
-            } catch (error) {
-                console.error('❌ Failed to trigger escalation webhook:', error);
-            }
-        } else {
-            console.log(`🔄 Skipping webhook trigger for non-origin request (fromWebhook: ${ev.fromWebhook}, integrationId: ${ev.integrationId}, fromChat: ${ev.fromChat}, skipWebhooks: ${ev.skipWebhooks})`);
-        }
+        console.log(`🚨 ESCALATE DEBUG [9]: Escalation triggered for tenant ${payload.tenantId}, conversation ${payload.conversationId}`);
 
         // Check if a rule was already matched in the chat route
-        let matchedRule = null;
+        let matchedRuleDestinations = null;
+        let ruleId = payload.matchedRuleId || payload.ruleId || null;
 
-        if (ev.matchedRuleId) {
-            console.log(`🔍 Using pre-matched rule: ${ev.matchedRuleId}`);
+        if (ruleId) {
+            console.log(`🔍 Using rule ID: ${ruleId}`);
 
-            // Get the rule details if we need them
+            // Get the rule details if needed
             const { rows } = await query(
                 `SELECT * FROM public.escalation_rules WHERE id = $1 AND tenant_id = $2`,
-                [ev.matchedRuleId, ev.tenantId]
+                [ruleId, payload.tenantId]
             );
 
             if (rows.length > 0) {
-                matchedRule = rows[0];
-                console.log(`✅ Found pre-matched rule: "${matchedRule.name}"`);
+                const matchedRule = rows[0];
+                console.log(`✅ Found rule: "${matchedRule.name}"`);
 
-                // Use destinations passed from chat route or from the rule
+                // Use destinations from the rule
                 if (matchedRule.destinations && matchedRule.destinations.length > 0) {
-                    console.log(`📤 Using destinations from matched rule: ${matchedRule.name}`);
-
-                    // Convert rule destinations to the format expected by dispatchEscalation
-                    type Destination = { type: string; integration_id?: string; email?: string };
-                    const typedDestinations = matchedRule.destinations as Destination[];
+                    console.log(`📤 Using destinations from rule: ${matchedRule.name}`);
+                    matchedRuleDestinations = matchedRule.destinations;
 
                     // Log detailed information about destinations for debugging
-                    console.log(`🔎 DEBUG: Destination details: ${JSON.stringify(typedDestinations)}`);
-
-                    // Different handling based on rule type
-                    if (matchedRule.rule_type === 'routing') {
-                        console.log(`🔀 Processing routing rule destinations`);
-                        // For routing rules, we need to be more flexible with destination formats
-                        ev.destinations = typedDestinations.map(d => {
-                            // If it has an integration_id, use that
-                            if (d.integration_id) {
-                                console.log(`✓ Found integration_id: ${d.integration_id}`);
-                                return { integrationId: d.integration_id };
-                            }
-                            // For direct email destinations
-                            else if (d.type === 'email' && d.email) {
-                                console.log(`✓ Found direct email: ${d.email}`);
-                                // Create a temporary integration record
-                                return {
-                                    directEmail: d.email,
-                                    // Include other properties needed for dispatch
-                                    provider: 'email'
-                                };
-                            }
-                            // For other destination types
-                            else {
-                                console.log(`⚠️ Unrecognized destination format: ${JSON.stringify(d)}`);
-                                return { destination: d };
-                            }
-                        });
-                    } else {
-                        // Original code path for escalation rules
-                        ev.destinations = typedDestinations
-                            .filter(d => (d.type === 'email' || d.type === 'slack') && d.integration_id)
-                            .map(d => ({ integrationId: d.integration_id }));
-                    } console.log(`📨 Dispatching to ${ev.destinations.length} destinations`);
+                    console.log(`🔎 DEBUG: Destination details: ${JSON.stringify(matchedRuleDestinations)}`);
                 }
             }
         }
 
-        // If no pre-matched rule, get active rules for this tenant and evaluate them
-        if (!matchedRule) {
+        // If no pre-matched rule, check active rules for this tenant and evaluate them
+        if (!ruleId) {
             const { rows: rules } = await query(
                 `SELECT * FROM public.escalation_rules 
                  WHERE tenant_id = $1 AND enabled = true 
                  AND (site_id IS NULL OR site_id = $2)
                  ORDER BY priority DESC, created_at DESC`,
-                [ev.tenantId, ev.siteId || null]
+                [payload.tenantId, payload.siteId || null]
             );
 
-            console.log(`📋 Found ${rules.length} active escalation rules for tenant ${ev.tenantId}`);
+            console.log(`📋 Found ${rules.length} active escalation rules for tenant ${payload.tenantId}`);
 
             if (rules.length > 0) {
-                // Log if we have a user message in the payload
-                if (ev.userMessage) {
-                    console.log(`📝 Found userMessage in escalation request: ${ev.userMessage.substring(0, 50)}${ev.userMessage.length > 50 ? '...' : ''}`);
-                } else {
-                    console.log(`⚠️ No userMessage in escalation request`);
-                }
-
                 // Prepare evaluation context
                 const context = {
-                    message: ev.userMessage || '', // Ensure this is defined even if empty
-                    confidence: ev.confidence || 0.7,
-                    keywords: ev.keywords || [],
-                    userEmail: ev.userEmail,
+                    message: payload.userMessage || '',
+                    confidence: payload.confidence || 0.7,
+                    keywords: payload.keywords || [],
+                    userEmail: payload.userEmail,
                     timestamp: new Date(),
-                    siteId: ev.siteId,
-                    sessionDuration: ev.sessionDuration,
-                    isOffHours: ev.isOffHours,
-                    conversationLength: ev.conversationLength,
-                    customFields: ev.customFields
+                    siteId: payload.siteId,
+                    sessionDuration: payload.sessionDuration,
+                    isOffHours: payload.isOffHours,
+                    conversationLength: payload.conversationLength,
+                    customFields: payload.customFields
                 };
 
                 // Check each rule
@@ -183,72 +119,60 @@ export async function POST(req: NextRequest) {
 
                     if (result.matched) {
                         console.log(`✅ Rule matched: ${rule.name} (${rule.id})`);
-                        matchedRule = rule;
-
-                        // Trigger rule.matched webhook event
-                        try {
-                            await webhookEvents.ruleMatched(
-                                ev.tenantId,
-                                rule.id,
-                                ev.userMessage,
-                                ev.assistantAnswer || ''
-                            );
-                            console.log(`✅ Rule matched webhook triggered for rule: ${rule.id}`);
-                        } catch (error) {
-                            console.error(`❌ Failed to trigger rule matched webhook:`, error);
-                        }
-
+                        ruleId = rule.id;
+                        matchedRuleDestinations = rule.destinations || [];
                         break;
                     }
                 }
 
-                if (matchedRule) {
-                    // Add rule's destinations to the event
-                    const destinations = matchedRule.destinations || [];
-
-                    if (destinations.length > 0) {
-                        console.log(`📤 Using destinations from matched rule: ${matchedRule.name}`);
-
-                        // Convert rule destinations to the format expected by dispatchEscalation
-                        type Destination = { type: string; integration_id?: string; email?: string };
-                        const typedDestinations = destinations as Destination[];
-
-                        ev.destinations = typedDestinations
-                            .filter(d => (d.type === 'email' || d.type === 'slack') && d.integration_id)
-                            .map(d => ({ integrationId: d.integration_id }));
-
-                        console.log(`📨 Dispatching to ${ev.destinations.length} destinations`);
-                    }
-                } else {
+                if (!ruleId) {
                     console.log('⚠️ No matching rule found, will use default integrations');
                 }
             }
         }
 
-        // Even if no rule matched, still dispatch the escalation
-        // If no destinations are specified, dispatchEscalation will use environment fallbacks
-        console.log(`🚨 ESCALATE DEBUG [11]: Calling dispatchEscalation with payload: ${JSON.stringify(ev)}`);
-        console.log(`🚨 ESCALATE DEBUG [12]: Payload has destinations: ${!!ev.destinations}, count: ${ev.destinations ? ev.destinations.length : 0}`);
+        // Use our centralized escalation service
+        console.log(`🚀 Calling handleEscalation service`);
 
-        const r = await dispatchEscalation(ev)
-        console.log(`🚨 ESCALATE DEBUG [13]: dispatchEscalation result: ${JSON.stringify(r)}`);
+        const result = await handleEscalation({
+            tenantId: payload.tenantId,
+            conversationId: payload.conversationId,
+            sessionId: payload.sessionId,
+            userMessage: payload.userMessage,
+            assistantAnswer: payload.assistantAnswer,
+            confidence: payload.confidence,
+            refs: payload.refs || [],
+            reason: payload.reason || 'manual',
+            siteId: payload.siteId,
+            ruleId: ruleId,
+            matchedRuleDestinations: matchedRuleDestinations,
+            keywords: payload.keywords || [],
+            triggerWebhooks: !payload.skipWebhooks,
+            integrationId: payload.integrationId,
+            meta: {
+                fromWebhook: payload.fromWebhook,
+                fromChat: payload.fromChat,
+                userEmail: payload.userEmail,
+                sessionDuration: payload.sessionDuration,
+                isOffHours: payload.isOffHours,
+                conversationLength: payload.conversationLength,
+                customFields: payload.customFields || {}
+            }
+        });
 
-        if (r.ok) {
-            console.log('✅ ESCALATE DEBUG [14]: Escalation dispatched successfully');
+        console.log(`🚨 ESCALATE DEBUG [13]: Escalation service result: ${JSON.stringify(result)}`);
+
+        if (result.ok) {
+            console.log('✅ ESCALATE DEBUG [14]: Escalation handled successfully');
         } else {
-            console.error(`❌ ESCALATE DEBUG [15]: Failed to dispatch escalation: ${r.error || 'Unknown error'}`);
+            console.error(`❌ ESCALATE DEBUG [15]: Failed to handle escalation: ${result.error || 'Unknown error'}`);
         }
 
-        // Prepare a response that only includes properties we know exist
-        const response = {
-            ok: r.ok,
-            results: 'results' in r ? r.results : []
-        };
-
-        return withCORS(NextResponse.json(response, { status: r.ok ? 200 : 500 }));
+        return withCORS(NextResponse.json(result, { status: result.ok ? 200 : 500 }));
     } catch (error) {
         console.error('❌ Error in escalate API:', error);
         return withCORS(NextResponse.json({
+            ok: false,
             error: 'Internal server error',
             message: error instanceof Error ? error.message : 'Unknown error'
         }, { status: 500 }));

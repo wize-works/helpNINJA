@@ -39,8 +39,8 @@ Core features (present)
   - Interactive preview simulates chat interactions and displays configuration changes in real-time
   - Files: src/app/api/widget/route.ts, src/components/chat-preview.tsx, src/components/chat-widget-panel.tsx, src/components/widget-configuration.tsx, src/app/dashboard/widget/page.tsx
 - Chat + RAG + escalation
-  - /api/chat (CORS enabled) resolves tenant, gates usage, performs searchHybrid, calls OpenAI, persists messages, enqueues escalation under a confidence threshold.
-  - Files: src/app/api/chat/route.ts, src/lib/rag.ts, src/lib/usage.ts
+  - /api/chat (CORS enabled) resolves tenant, gates usage, performs searchHybrid, calls OpenAI, persists messages, enqueues escalation under a confidence threshold using the centralized escalation service.
+  - Files: src/app/api/chat/route.ts, src/lib/rag.ts, src/lib/usage.ts, src/lib/escalation-service.ts
 - Hybrid RAG search
   - Vector: pgvector similarity on chunks.embedding; Lexical: tsvector rank; merged and deduped.
   - Files: src/lib/rag.ts; relies on public.chunks(url, content, embedding vector, tsv tsvector, tenant_id)
@@ -51,8 +51,8 @@ Core features (present)
   - Monthly counters per tenant; auto-init + monthly reset; enforce PLAN_LIMITS before AI calls; increment after.
   - Files: src/lib/usage.ts, src/lib/limits.ts
 - Integrations + outbox
-  - Provider interface (email/slack supported); registry + dispatch; failed sends go to integration_outbox; retry via API.
-  - Files: src/lib/integrations/types.ts, src/lib/integrations/registry.ts, src/lib/integrations/dispatch.ts, src/app/api/integrations/outbox/**
+  - Provider interface (email/slack supported); registry + dispatch through centralized escalation service; failed sends go to integration_outbox; retry via API.
+  - Files: src/lib/integrations/types.ts, src/lib/integrations/registry.ts, src/lib/escalation-service.ts, src/app/api/outbox/retry/route.ts
 - Billing
   - Checkout/portal endpoints; Stripe webhook updates tenant plan/status and ensures usage counters.
   - Files: src/app/api/billing/**, src/app/api/stripe/webhook/route.ts, src/lib/stripe.ts

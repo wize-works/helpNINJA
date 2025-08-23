@@ -3,10 +3,11 @@ import OpenAI from 'openai';
 import { searchWithCuratedAnswers } from '@/lib/rag';
 import { query } from '@/lib/db';
 import { canSendMessage, incMessages } from '@/lib/usage';
-import { evaluateRuleConditions, RuleConditions } from '@/lib/rule-engine';
+import { evaluateRuleConditions } from '@/lib/rule-engine';
 // Note: Admin/dashboard no longer use header-based tenant resolution. The widget passes a public identifier in body.
 import { webhookEvents } from '@/lib/webhooks';
 import { extractKeywords } from '@/lib/extract-keywords';
+import { handleEscalation } from '@/lib/escalation-service';
 
 export const runtime = 'nodejs';
 
@@ -311,26 +312,21 @@ export async function POST(req: NextRequest) {
 
                         // Send notification without interrupting conversation
                         try {
-                            // Use the same escalation infrastructure but with a special flag
-                            const base = process.env.SITE_URL || '';
-                            const url = base ? base.replace(/\/$/, '') + '/api/escalate' : 'http://localhost:3001/api/escalate';
-
-                            await fetch(url, {
-                                method: 'POST',
-                                headers: { 'content-type': 'application/json' },
-                                body: JSON.stringify({
-                                    tenantId,
-                                    sessionId,
-                                    conversationId,
-                                    userMessage: message,
-                                    assistantAnswer: text,
-                                    confidence,
-                                    reason: 'notification_rule',
-                                    matchedRuleId: rule.id,
-                                    ruleAlreadyMatched: true,
+                            // Use our escalation service with a notification flag
+                            await handleEscalation({
+                                tenantId,
+                                conversationId,
+                                sessionId,
+                                userMessage: message,
+                                assistantAnswer: text,
+                                confidence,
+                                reason: 'user_request', // Use a valid reason
+                                ruleId: rule.id,
+                                keywords: extractedKeywords,
+                                meta: {
                                     isNotification: true, // Special flag for notifications
-                                    keywords: extractedKeywords
-                                })
+                                    fromChat: true
+                                }
                             });
                         } catch (error) {
                             console.error('❌ Failed to trigger notification:', error);
@@ -345,9 +341,6 @@ export async function POST(req: NextRequest) {
         // Combine both escalation conditions
         if (shouldEscalateForConfidence || shouldEscalateForRules) {
             try {
-                const base = process.env.SITE_URL || '';
-                const url = base ? base.replace(/\/$/, '') + '/api/escalate' : 'http://localhost:3001/api/escalate';
-
                 // Store the rule destinations if a rule matched
                 let matchedRuleDestinations = null;
                 if (matchedRuleId) {
@@ -367,7 +360,7 @@ export async function POST(req: NextRequest) {
                     }
                 }
 
-                // SOLUTION FOR DUPLICATE EMAILS: Choose whether to use webhook directly or call escalate API
+                // SOLUTION FOR DUPLICATE EMAILS: Choose whether to trigger webhooks based on destination types
                 // Define the destination type locally to avoid TypeScript errors
                 interface Destination {
                     type: string;
@@ -375,76 +368,52 @@ export async function POST(req: NextRequest) {
                     email?: string;
                 }
 
-                if (shouldEscalateForRules && matchedRuleDestinations &&
+                const hasIntegrationDestinations = matchedRuleDestinations &&
                     Array.isArray(matchedRuleDestinations) &&
-                    matchedRuleDestinations.some((d: Destination) => d.type === 'integration')) {
-                    // For rules with integration destinations, call the escalate API directly and skip webhook trigger
-                    console.log(`🔀 Using escalate API directly for rule-based escalation with integration destinations`);
+                    matchedRuleDestinations.some((d: Destination) => d.type === 'integration');
 
-                    const result = await fetch(url, {
-                        method: 'POST',
-                        headers: { 'content-type': 'application/json' },
-                        body: JSON.stringify({
-                            tenantId,
-                            sessionId,
-                            conversationId,
-                            userMessage: message,
-                            assistantAnswer: text,
-                            confidence,
-                            refs,
-                            reason: escalationReason,
-                            usedCuratedAnswer: curatedAnswers.length > 0,
-                            siteId: siteId || null,
-                            matchedRuleId,
-                            ruleAlreadyMatched: !!matchedRuleId,
-                            matchedRuleDestinations,
-                            keywords: extractedKeywords,
-                            fromChat: true, // Signal this is from the chat API
-                            skipWebhooks: true // Signal to skip additional webhook triggering
-                        })
-                    });
-                    console.log(`🚨 Chat API: Escalation POST (skipped webhooks) to ${url} returned status ${await result.text()}`);
-                } else {
-                    // For confidence-based escalations or non-integration destinations, use webhooks first
-                    console.log(`🔀 Using webhook system for ${shouldEscalateForConfidence ? 'confidence-based' : 'rule-based'} escalation`);
+                // Use our centralized escalation service
+                console.log(`🔀 Using escalation service for ${shouldEscalateForConfidence ? 'confidence-based' : 'rule-based'} escalation`);
 
-                    // Trigger escalation webhook
-                    await webhookEvents.escalationTriggered(
-                        tenantId,
-                        conversationId,
-                        escalationReason,
-                        confidence,
-                        message // Pass the user's message directly
-                    );
-
-                    // Then call escalate API with flag to prevent it from triggering webhooks again
-                    const result = await fetch(url, {
-                        method: 'POST',
-                        headers: { 'content-type': 'application/json' },
-                        body: JSON.stringify({
-                            tenantId,
-                            sessionId,
-                            conversationId,
-                            userMessage: message,
-                            assistantAnswer: text,
-                            confidence,
-                            refs,
-                            reason: escalationReason,
-                            usedCuratedAnswer: curatedAnswers.length > 0,
-                            siteId: siteId || null,
-                            matchedRuleId,
-                            ruleAlreadyMatched: !!matchedRuleId,
-                            matchedRuleDestinations,
-                            keywords: extractedKeywords,
-                            fromChat: true, // Signal this is from the chat API
-                            skipWebhooks: true // Signal to skip additional webhook triggering
-                        })
-                    });
-                    console.log(`🚨 Chat API: Escalation POST (after webhook) to ${url} returned status ${await result.text()}`);
+                // Determine if we should trigger webhooks
+                const triggerWebhooks = !(shouldEscalateForRules && hasIntegrationDestinations);
+                if (!triggerWebhooks) {
+                    console.log('� Skipping webhooks for rule-based escalation with integration destinations');
                 }
+
+                // Call escalation service directly
+                const result = await handleEscalation({
+                    tenantId,
+                    conversationId,
+                    sessionId,
+                    userMessage: message,
+                    assistantAnswer: text,
+                    confidence,
+                    refs,
+                    reason: escalationReason === 'low_confidence' ? 'low_confidence' :
+                        escalationReason === 'handoff' ? 'handoff' :
+                            escalationReason === 'rule_match' ? 'user_request' :
+                                escalationReason === 'routing_rule' ? 'user_request' : 'user_request',
+                    siteId: siteId || null,
+                    ruleId: matchedRuleId,
+                    matchedRuleDestinations,
+                    keywords: extractedKeywords,
+                    triggerWebhooks,
+                    meta: {
+                        fromChat: true,
+                        usedCuratedAnswer: curatedAnswers.length > 0
+                    }
+                });
+
+                if (result.ok) {
+                    console.log(`✅ Chat API: Escalation handled successfully`);
+                } else {
+                    console.error(`❌ Chat API: Escalation failed: ${result.error || 'Unknown error'}`);
+                }
+
                 console.log(`🚨 Chat API: Escalation triggered - reason: ${escalationReason}${matchedRuleId ? `, rule: ${matchedRuleId}` : ''}`);
             } catch (error) {
-                console.error('❌ Failed to trigger escalation webhook or call escalate API:', error);
+                console.error('❌ Failed to handle escalation:', error);
             }
         }
 

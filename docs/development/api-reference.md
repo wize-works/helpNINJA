@@ -27,12 +27,27 @@ Notes:
 - Auto-escalation threshold: 0.55.
 
 ## POST /api/escalate (Node)
-Dispatches an escalation to configured integrations; falls back to env-based Slack/Email if none.
+Dispatches an escalation to configured integrations using the centralized escalation service; falls back to env-based Slack/Email if none.
 Request:
 ```json
 { "tenantId":"abc", "conversationId":"...", "sessionId":"...", "reason":"low_confidence", "userMessage":"...", "assistantAnswer":"...", "confidence":0.42, "refs":["https://..."] }
 ```
 Response: `{ ok: true, results: [...] }` or `{ ok:false, error:"..." }`
+
+Notes:
+- Uses `lib/escalation-service.ts` which handles all escalation flows
+- Supports multiple destinations per escalation
+- Writes failed deliveries to `integration_outbox` for retry
+
+## Escalation Service (Internal)
+Located at `src/lib/escalation-service.ts`, this service centralizes all escalation operations.
+
+Main functions:
+- `handleEscalation(event: EscalationEvent)` - Primary entry point for all escalations
+- `loadEscalationDestinations(tenantId: string, destination?: string)` - Loads destination configurations
+- `tryDeliverEscalation(event: EscalationEvent, integration: IntegrationRecord)` - Attempts delivery
+
+See [Escalation Flow Documentation](./escalation-flow.md) for detailed usage.
 
 ## GET /api/integrations (Node)
 List integrations for a tenant.

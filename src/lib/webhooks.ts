@@ -1,4 +1,5 @@
 import { query } from '@/lib/db';
+import { EscalationReason } from '@/lib/integrations/types';
 import crypto from 'crypto';
 
 export type WebhookEvent = {
@@ -190,6 +191,9 @@ async function processInternalWebhook(
                 let response;
 
                 try {
+                    // Import the escalation service (at runtime to avoid circular dependencies)
+                    const { handleEscalation } = await import('./escalation-service');
+
                     // If we don't already have a user message from the event, try to fetch it
                     if (!event.data.user_message) {
                         // Get the latest user message from this conversation
@@ -207,24 +211,27 @@ async function processInternalWebhook(
                         console.log(`📝 Using provided user message for escalation`);
                     }
 
-                    // Make an HTTP request to the escalate endpoint with the complete information
-                    const escalateUrl = process.env.SITE_URL ?
-                        `${process.env.SITE_URL.replace(/\/$/, '')}/api/escalate` :
-                        'http://localhost:3001/api/escalate';
-
-                    response = await fetch(escalateUrl, {
-                        method: 'POST',
-                        headers: { 'content-type': 'application/json' },
-                        body: JSON.stringify({
-                            tenantId: event.tenantId,
-                            conversationId: event.data.conversation_id,
-                            userMessage: userMessage, // Include user message
-                            reason: event.data.reason || 'webhook',
-                            confidence: event.data.confidence,
-                            integrationId: integrationId,
-                            fromWebhook: true // Add flag to prevent webhook loop
-                        })
+                    // Use our centralized escalation service directly instead of making an HTTP call
+                    const result = await handleEscalation({
+                        tenantId: event.tenantId,
+                        conversationId: String(event.data.conversation_id || ''),
+                        userMessage: String(userMessage || 'No message available'),
+                        reason: (String(event.data.reason || 'webhook') as EscalationReason),
+                        confidence: typeof event.data.confidence === 'number' ? event.data.confidence : undefined,
+                        integrationId: integrationId,
+                        meta: {
+                            fromWebhook: true,
+                            webhookDeliveryId: deliveryId
+                        },
+                        triggerWebhooks: false // Don't trigger additional webhooks to prevent loops
                     });
+
+                    // Simulate an HTTP response for compatibility with existing code
+                    response = {
+                        ok: result.ok,
+                        status: result.ok ? 200 : 500,
+                        text: async () => JSON.stringify(result)
+                    } as Response;
                 } catch (error) {
                     console.error('❌ Failed to fetch user message for escalation:', error);
 
