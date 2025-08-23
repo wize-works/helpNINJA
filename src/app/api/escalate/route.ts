@@ -100,6 +100,20 @@ export async function POST(req: NextRequest) {
                 if (result.matched) {
                     console.log(`✅ Rule matched: ${rule.name} (${rule.id})`);
                     matchedRule = rule;
+
+                    // Trigger rule.matched webhook event
+                    try {
+                        await webhookEvents.ruleMatched(
+                            ev.tenantId,
+                            rule.id,
+                            ev.userMessage,
+                            ev.assistantAnswer || ''
+                        );
+                        console.log(`✅ Rule matched webhook triggered for rule: ${rule.id}`);
+                    } catch (error) {
+                        console.error(`❌ Failed to trigger rule matched webhook:`, error);
+                    }
+
                     break;
                 }
             }
