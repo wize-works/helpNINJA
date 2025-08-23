@@ -70,6 +70,7 @@ export default function RulesPage() {
         name: string;
         description: string;
         predicate: RuleConditions;
+        conditions: RuleConditions;
         destinations: Destination[];
         priority: number;
         enabled: boolean;
@@ -79,6 +80,7 @@ export default function RulesPage() {
         name: '',
         description: '',
         predicate: { operator: 'and', conditions: [] },
+        conditions: { operator: 'and', conditions: [] },
         destinations: [],
         priority: 0,
         enabled: true,
@@ -122,8 +124,10 @@ export default function RulesPage() {
             const url = editingRule ? `/api/rules/${editingRule.id}` : '/api/rules';
             const method = editingRule ? 'PUT' : 'POST';
 
+            // Copy predicate to conditions for API compatibility
             const payload = {
                 ...formData,
+                conditions: formData.predicate, // Ensure we're sending the conditions field that the API expects
                 siteId: formData.siteId || undefined
             };
 
@@ -175,10 +179,12 @@ export default function RulesPage() {
 
     const handleEdit = (rule: EscalationRule) => {
         setEditingRule(rule);
+        const ruleConditions = rule.predicate || rule.conditions || { operator: 'and', conditions: [] };
         setFormData({
             name: rule.name,
             description: rule.description || '',
-            predicate: rule.predicate || rule.conditions || { operator: 'and', conditions: [] },
+            predicate: ruleConditions,
+            conditions: ruleConditions, // Add conditions with the same value as predicate
             destinations: rule.destinations,
             priority: rule.priority,
             enabled: rule.enabled,
@@ -253,10 +259,12 @@ export default function RulesPage() {
     };
 
     const resetForm = () => {
+        const emptyConditions: RuleConditions = { operator: 'and' as const, conditions: [] };
         setFormData({
             name: '',
             description: '',
-            predicate: { operator: 'and', conditions: [] },
+            predicate: emptyConditions,
+            conditions: emptyConditions, // Add conditions with the same value as predicate
             destinations: [],
             priority: 0,
             enabled: true,
@@ -470,7 +478,11 @@ export default function RulesPage() {
                                             tenantId={tenantId}
                                             predicate={formData.predicate}
                                             destinations={formData.destinations}
-                                            onPredicateChange={(predicate) => setFormData(prev => ({ ...prev, predicate }))}
+                                            onPredicateChange={(predicate) => setFormData(prev => ({
+                                                ...prev,
+                                                predicate,
+                                                conditions: predicate // Keep both predicate and conditions in sync
+                                            }))}
                                             onDestinationsChange={(destinations) => setFormData(prev => ({ ...prev, destinations }))}
                                         />
                                     </fieldset>

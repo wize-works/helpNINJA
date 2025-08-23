@@ -42,7 +42,7 @@ export default function PaymentSuccessPage() {
                 }
 
                 // Payment successful, redirect to onboarding
-                router.replace('/onboarding/step-1');
+                router.replace('/dashboard');
             } catch (err) {
                 console.error('Payment verification error:', err);
                 setError(err instanceof Error ? err.message : 'Payment verification failed');

@@ -95,7 +95,6 @@ const navigationSections: NavSection[] = [
         items: [
             { href: "/dashboard/playground", label: "Playground", badge: null },
             { href: "/dashboard/team", label: "Team", badge: null },
-            { href: "/onboarding", label: "Setup Guide", badge: null },
         ]
     },
     {

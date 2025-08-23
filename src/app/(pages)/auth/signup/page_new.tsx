@@ -17,7 +17,7 @@ export default function SignUpPage() {
 
     useEffect(() => {
         if (isSignedIn && orgLoaded && organization) {
-            router.replace("/onboarding/step-1");
+            router.replace("/dashboard");
         }
     }, [isSignedIn, orgLoaded, organization, router]);
 
@@ -31,7 +31,7 @@ export default function SignUpPage() {
             const org = await createOrganization?.({ name: orgName });
             if (org && setActive) {
                 await setActive({ organization: org.id });
-                router.replace("/onboarding/step-1");
+                router.replace("/dashboard");
             }
         } catch (err: unknown) {
             const anyErr = err as { errors?: Array<{ message?: string }>; message?: string } | undefined;
