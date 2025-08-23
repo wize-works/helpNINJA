@@ -207,7 +207,8 @@ export async function POST(req: NextRequest) {
                         confidence,
                         refs,
                         reason: (confidence ?? 0) < threshold ? 'low_confidence' : 'handoff',
-                        usedCuratedAnswer: curatedAnswers.length > 0
+                        usedCuratedAnswer: curatedAnswers.length > 0,
+                        siteId: siteId || site_id || null
                     })
                 })
             } catch (error) {

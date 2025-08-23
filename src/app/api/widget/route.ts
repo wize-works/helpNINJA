@@ -147,6 +147,7 @@ export async function GET(req: NextRequest) {
 
     // Fetch widget configuration from the database if site is provided
     interface WidgetConfig {
+        siteId?: string;        // Added siteId to pass through to the chat API
         primaryColor?: string;
         advancedColors?: boolean;
         position?: string;
@@ -184,6 +185,7 @@ export async function GET(req: NextRequest) {
                 const dbConfig = rows[0];
                 // Map database fields to client configuration
                 widgetConfig = {
+                    siteId: siteId, // Include siteId in widget config
                     primaryColor: dbConfig.primary_color,
                     advancedColors: dbConfig.advanced_colors || false,
                     position: dbConfig.position,
@@ -731,7 +733,8 @@ export async function GET(req: NextRequest) {
             tenantId: config.tenantId || tenantId, 
             sessionId: sessionId, 
             message: text, 
-            voice: config.voice || voiceStyle 
+            voice: config.voice || voiceStyle,
+            siteId: config.siteId || serverConfig.siteId || '' 
           })
         });
         
