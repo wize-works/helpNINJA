@@ -192,7 +192,7 @@ export async function POST(req: NextRequest) {
             AND enabled = true 
             AND rule_type = 'escalation'
             ORDER BY priority DESC`)
-            
+
         const { rows: rules } = await query(
             `SELECT * FROM public.escalation_rules 
              WHERE tenant_id = $1 
