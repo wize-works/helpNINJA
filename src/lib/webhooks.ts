@@ -186,22 +186,67 @@ async function processInternalWebhook(
                 // Call escalate API directly - this is the simplest approach to ensure it works
                 console.log(`📤 Forwarding escalation to ${provider} provider for conversation ${event.data.conversation_id}`);
 
-                // Make an HTTP request to the escalate endpoint
-                const escalateUrl = process.env.SITE_URL ?
-                    `${process.env.SITE_URL.replace(/\/$/, '')}/api/escalate` :
-                    'http://localhost:3001/api/escalate';
+                let userMessage = event.data.user_message || "No message available";
+                let response;
 
-                const response = await fetch(escalateUrl, {
-                    method: 'POST',
-                    headers: { 'content-type': 'application/json' },
-                    body: JSON.stringify({
-                        tenantId: event.tenantId,
-                        conversationId: event.data.conversation_id,
-                        reason: event.data.reason || 'webhook',
-                        confidence: event.data.confidence,
-                        integrationId: integrationId
-                    })
-                });
+                try {
+                    // If we don't already have a user message from the event, try to fetch it
+                    if (!event.data.user_message) {
+                        // Get the latest user message from this conversation
+                        const { rows: messages } = await query(
+                            `SELECT content FROM public.messages 
+                            WHERE conversation_id = $1 
+                            AND role = 'user' 
+                            ORDER BY created_at DESC LIMIT 1`,
+                            [event.data.conversation_id]
+                        );
+
+                        userMessage = messages.length > 0 ? messages[0].content : "No message available";
+                        console.log(`📝 Found user message for escalation: ${userMessage !== "No message available" ? 'Yes' : 'No'}`);
+                    } else {
+                        console.log(`📝 Using provided user message for escalation`);
+                    }
+
+                    // Make an HTTP request to the escalate endpoint with the complete information
+                    const escalateUrl = process.env.SITE_URL ?
+                        `${process.env.SITE_URL.replace(/\/$/, '')}/api/escalate` :
+                        'http://localhost:3001/api/escalate';
+
+                    response = await fetch(escalateUrl, {
+                        method: 'POST',
+                        headers: { 'content-type': 'application/json' },
+                        body: JSON.stringify({
+                            tenantId: event.tenantId,
+                            conversationId: event.data.conversation_id,
+                            userMessage: userMessage, // Include user message
+                            reason: event.data.reason || 'webhook',
+                            confidence: event.data.confidence,
+                            integrationId: integrationId,
+                            fromWebhook: true // Add flag to prevent webhook loop
+                        })
+                    });
+                } catch (error) {
+                    console.error('❌ Failed to fetch user message for escalation:', error);
+
+                    // Fall back to original behavior without the message
+                    const escalateUrl = process.env.SITE_URL ?
+                        `${process.env.SITE_URL.replace(/\/$/, '')}/api/escalate` :
+                        'http://localhost:3001/api/escalate';
+
+                    response = await fetch(escalateUrl, {
+                        method: 'POST',
+                        headers: { 'content-type': 'application/json' },
+                        body: JSON.stringify({
+                            tenantId: event.tenantId,
+                            conversationId: event.data.conversation_id,
+                            reason: event.data.reason || 'webhook',
+                            confidence: event.data.confidence,
+                            integrationId: integrationId,
+                            userMessage: "Error retrieving message", // Fallback message
+                            fromWebhook: true // Add flag to prevent webhook loop
+                        })
+                    });
+                }
 
                 const responseText = await response.text().catch(() => '');
 
@@ -387,17 +432,44 @@ export const webhookEvents = {
             }
         }),
 
-    escalationTriggered: (tenantId: string, conversationId: string, reason: string, confidence?: number) =>
-        dispatchWebhooks({
+    escalationTriggered: async (tenantId: string, conversationId: string, reason: string, confidence?: number, userMessage?: string) => {
+        console.log(`🔔 escalationTriggered webhook called for conversation: ${conversationId}`);
+
+        // If we don't have the user message and we have a conversation ID, try to fetch it
+        if (!userMessage && conversationId) {
+            try {
+                console.log(`🔍 No user message provided, fetching from database for conversation ${conversationId}`);
+                // Get the latest user message from this conversation
+                const { rows: messages } = await query(
+                    `SELECT content FROM public.messages 
+                     WHERE conversation_id = $1 
+                     AND role = 'user' 
+                     ORDER BY created_at DESC LIMIT 1`,
+                    [conversationId]
+                );
+
+                userMessage = messages.length > 0 ? messages[0].content : undefined;
+                console.log(`📝 Found user message for escalation webhook: ${userMessage ? 'Yes' : 'No'}`);
+            } catch (error) {
+                console.error('❌ Failed to fetch user message for escalation webhook:', error);
+            }
+        } else if (userMessage) {
+            console.log(`📄 Using provided user message for webhook: ${userMessage.substring(0, 30)}${userMessage.length > 30 ? '...' : ''}`);
+        }
+
+        console.log(`📤 Dispatching escalation.triggered webhook for conversation: ${conversationId}`);
+        return dispatchWebhooks({
             type: 'escalation.triggered',
             tenantId,
             data: {
                 conversation_id: conversationId,
+                user_message: userMessage, // Include the user message if available
                 reason,
                 confidence,
                 triggered_at: new Date().toISOString()
             }
-        }),
+        });
+    },
 
     ruleMatched: (tenantId: string, ruleId: string, query: string, matchedAnswer: string) =>
         dispatchWebhooks({

@@ -13,11 +13,83 @@ export async function dispatchEscalation(ev: EscalationEvent, destinations?: Int
     // Check if the event has pre-configured destinations
     if (ev.destinations) {
         console.log(`📧 DISPATCH DEBUG [2]: Event contains destinations property with ${ev.destinations.length} entries`);
+        console.log(`📧 DISPATCH DEBUG [2.1]: Destinations detail: ${JSON.stringify(ev.destinations)}`);
+
+        const directDestinations: IntegrationRecord[] = [];
+        const integrationIds: string[] = [];
+
+        type DestinationItem =
+            { integrationId: string } |
+            { directEmail: string; provider: string } |
+            { destination: { type: string; email?: string; integration_id?: string } };
+
+        // Type guards for destination types
+        function hasIntegrationId(d: DestinationItem): d is { integrationId: string } {
+            return 'integrationId' in d && typeof d.integrationId === 'string';
+        }
+
+        function hasDirectEmail(d: DestinationItem): d is { directEmail: string; provider: string } {
+            return 'directEmail' in d && typeof d.directEmail === 'string';
+        }
+
+        function hasDestination(d: DestinationItem): d is { destination: { type: string; email?: string; integration_id?: string } } {
+            return 'destination' in d;
+        }
+
+        // Process all destination types
+        ev.destinations.forEach((d) => {
+            if (hasIntegrationId(d)) {
+                // Standard integration reference
+                integrationIds.push(d.integrationId);
+                console.log(`📧 DISPATCH DEBUG [2.2]: Found integration ID: ${d.integrationId}`);
+            }
+            else if (hasDirectEmail(d)) {
+                // Direct email for routing rules
+                console.log(`📧 DISPATCH DEBUG [2.3]: Found direct email destination: ${d.directEmail}`);
+                directDestinations.push({
+                    id: `direct-email-${Math.random().toString(36).substring(2, 15)}`,
+                    tenant_id: ev.tenantId,
+                    provider: 'email',
+                    name: 'Direct Email',
+                    status: 'active',
+                    credentials: {},
+                    config: {
+                        to: d.directEmail,
+                        from: process.env.SUPPORT_FROM_EMAIL || 'support@helpninja.com'
+                    }
+                } as IntegrationRecord);
+            }
+            else if (hasDestination(d)) {
+                // Handle other custom destination formats
+                console.log(`📧 DISPATCH DEBUG [2.4]: Found custom destination: ${JSON.stringify(d.destination)}`);
+
+                if (d.destination.type === 'email' && d.destination.email) {
+                    directDestinations.push({
+                        id: `direct-email-${Math.random().toString(36).substring(2, 15)}`,
+                        tenant_id: ev.tenantId,
+                        provider: 'email',
+                        name: 'Direct Email',
+                        status: 'active',
+                        credentials: {},
+                        config: {
+                            to: d.destination.email,
+                            from: process.env.SUPPORT_FROM_EMAIL || 'support@helpninja.com'
+                        }
+                    } as IntegrationRecord);
+                }
+            }
+        });
+
+        // Add any direct destinations we found
+        if (directDestinations.length > 0) {
+            console.log(`📧 DISPATCH DEBUG [2.4]: Adding ${directDestinations.length} direct destinations`);
+            destinations = destinations || [];
+            destinations.push(...directDestinations);
+        }
 
         // Convert from shorthand format to full IntegrationRecord format
         try {
             console.log(`📧 DISPATCH DEBUG [3]: Converting destination shorthand to full records`);
-            const integrationIds = ev.destinations.map((d: { integrationId: string }) => d.integrationId);
             console.log(`📧 DISPATCH DEBUG [4]: Integration IDs: ${JSON.stringify(integrationIds)}`);
 
             if (integrationIds.length > 0) {
@@ -33,7 +105,11 @@ export async function dispatchEscalation(ev: EscalationEvent, destinations?: Int
                 console.log(`📧 DISPATCH DEBUG [5]: Found ${rows.length} matching integrations in DB`);
 
                 if (rows.length > 0) {
-                    destinations = rows as IntegrationRecord[];
+                    if (destinations) {
+                        destinations.push(...rows as IntegrationRecord[]);
+                    } else {
+                        destinations = rows as IntegrationRecord[];
+                    }
                     console.log(`📧 DISPATCH DEBUG [6]: Using ${destinations.length} integrations from event destinations`);
                 }
             }

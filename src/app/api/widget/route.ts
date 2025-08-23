@@ -26,7 +26,7 @@ export async function GET(req: NextRequest) {
 
     // Get referer to validate domain
     const referer = req.headers.get('referer');
-    console.log('Referer:', referer);
+
     let refererDomain = '';
     let skipDomainValidation = false;
 
@@ -37,7 +37,7 @@ export async function GET(req: NextRequest) {
 
             // If the widget script is being loaded from the same host as this API (dashboard preview),
             // skip domain checks. Compare HOST headers, not req.url origin (which can be internal).
-            if (refUrl.host === host) {
+            if (refUrl.host === host || referer.includes("localhost")) {
                 skipDomainValidation = true;
             }
         } catch {
