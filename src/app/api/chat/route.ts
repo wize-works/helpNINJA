@@ -103,8 +103,8 @@ export async function POST(req: NextRequest) {
             return NextResponse.json({ error: 'server_not_configured', message: 'OpenAI API key is not configured.' }, { status: 500, headers: headersOut });
         }
 
-        const { tenantId: bodyTid, sessionId, message, voice, site_id, siteId } = await req.json();
-        console.log(`💬 Chat API: Received message for session ${sessionId}, tenant identifier: ${bodyTid}, ${site_id}, ${siteId}`);
+        const { tenantId: bodyTid, sessionId, message, voice, siteId } = await req.json();
+        console.log(`💬 Chat API: Received message for session ${sessionId}, tenant identifier: ${bodyTid}, ${siteId}`);
         const tenantId = await resolveTenantInternalId(bodyTid);
         if (!tenantId) return NextResponse.json({ error: 'tenant_not_found', message: 'Unknown tenant identifier.' }, { status: 400, headers: headersOut });
         if (!sessionId || !message) return NextResponse.json({ error: 'missing fields' }, { status: 400, headers: headersOut });
@@ -113,10 +113,6 @@ export async function POST(req: NextRequest) {
         if (!gate.ok) return NextResponse.json({ error: gate.reason }, { status: 402, headers: headersOut });
 
         const conversationId = await ensureConversation(tenantId, sessionId);
-
-        // Get site_id if available from widget referer or session context
-        // For now, we'll pass undefined but this could be enhanced to detect the site
-        //const siteId = site_id; // TODO: Extract from widget context or session
 
         // Search for curated answers first, then RAG results
         const { curatedAnswers, ragResults } = await searchWithCuratedAnswers(tenantId, message, 6, siteId);
@@ -208,7 +204,7 @@ export async function POST(req: NextRequest) {
                         refs,
                         reason: (confidence ?? 0) < threshold ? 'low_confidence' : 'handoff',
                         usedCuratedAnswer: curatedAnswers.length > 0,
-                        siteId: siteId || site_id || null
+                        siteId: siteId || null
                     })
                 })
             } catch (error) {
