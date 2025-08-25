@@ -28,11 +28,12 @@ interface ActionSelectorProps {
 }
 
 export default function ActionSelector({
-    tenantId, // Currently not used but kept for future implementation/consistency
+    tenantId: _tenantId, // Currently not used but kept for future implementation/consistency
     destinations,
     onChange,
     disabled = false
 }: ActionSelectorProps) {
+    void _tenantId; // suppress unused variable lint; reserved for future use
     const [integrations, setIntegrations] = useState<Integration[]>([]);
     const [loading, setLoading] = useState(true);
     const [showAddForm, setShowAddForm] = useState(false);

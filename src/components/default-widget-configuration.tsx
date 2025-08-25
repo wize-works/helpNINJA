@@ -41,7 +41,7 @@ export default function DefaultWidgetConfiguration() {
                 } else {
                     toast.error("Failed to load sites");
                 }
-            } catch (err) {
+            } catch {
                 toast.error("Error loading sites");
             } finally {
                 setLoading(false);

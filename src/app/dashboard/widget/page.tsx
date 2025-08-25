@@ -1,6 +1,5 @@
 import { getTenantIdStrict } from "@/lib/tenant-resolve";
 import { query } from "@/lib/db";
-import ChatWidgetPanel from "@/components/chat-widget-panel";
 import { Breadcrumb } from "@/components/ui/breadcrumb";
 import { AnimatedPage, StaggerContainer, StaggerChild } from "@/components/ui/animated-page";
 import DefaultWidgetConfigurationWrapper from "@/components/default-widget-configuration-wrapper";
@@ -8,7 +7,6 @@ import StatCard from "@/components/ui/stat-card";
 
 export const runtime = 'nodejs';
 
-type Row = { id: string; name: string; plan: string; plan_status: string; public_key?: string | null; secret_key?: string | null };
 
 type WidgetStats = {
     total_interactions: number;
@@ -20,15 +18,8 @@ type WidgetStats = {
     total_messages: number;
     total_conversations: number;
 };
+// Removed unused Row type alias
 
-async function getTenant(tenantId: string) {
-    const { rows } = await query<Row>(
-        `select id, name, plan, plan_status, public_key, secret_key
-        from public.tenants where id=$1`,
-        [tenantId]
-    );
-    return rows[0];
-}
 
 async function getWidgetStats(tenantId: string): Promise<WidgetStats> {
     // Get active deployments (sites with the widget installed)
@@ -106,7 +97,6 @@ async function getWidgetStats(tenantId: string): Promise<WidgetStats> {
 
 export default async function WidgetPage() {
     const tenantId = await getTenantIdStrict();
-    const t = await getTenant(tenantId);
     const stats = await getWidgetStats(tenantId);
 
     const breadcrumbItems = [

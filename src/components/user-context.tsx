@@ -1,6 +1,6 @@
 "use client";
 
-import { createContext, useContext, useState, useEffect, ReactNode } from 'react';
+import { createContext, useContext, useState, useEffect, useCallback, ReactNode } from 'react';
 import { type Role } from '@/lib/permissions';
 
 type User = {
@@ -39,14 +39,8 @@ interface UserProviderProps {
 export function UserProvider({ children, tenantId }: UserProviderProps) {
     const [user, setUser] = useState<User | null>(null);
     const [loading, setLoading] = useState(true);
-    
-    useEffect(() => {
-        if (tenantId) {
-            loadCurrentUser();
-        }
-    }, [tenantId]);
-    
-    const loadCurrentUser = async () => {
+
+    const loadCurrentUser = useCallback(async () => {
         try {
             // In a real implementation, this would get the current authenticated user
             // For demo purposes, we'll create a mock admin user
@@ -58,26 +52,30 @@ export function UserProvider({ children, tenantId }: UserProviderProps) {
                 role: 'admin',
                 tenant_id: tenantId
             };
-            
+
             setUser(mockUser);
         } catch (error) {
             console.error('Error loading user:', error);
         } finally {
             setLoading(false);
         }
-    };
-    
+    }, [tenantId]);
+
+    useEffect(() => {
+        if (tenantId) void loadCurrentUser();
+    }, [tenantId, loadCurrentUser]);
+
     const updateUser = (updates: Partial<User>) => {
         setUser(prev => prev ? { ...prev, ...updates } : null);
     };
-    
+
     const hasRole = (role: Role): boolean => {
         return user?.role === role;
     };
-    
+
     const isAtLeastRole = (role: Role): boolean => {
         if (!user) return false;
-        
+
         const roleHierarchy: Record<Role, number> = {
             owner: 5,
             admin: 4,
@@ -85,13 +83,13 @@ export function UserProvider({ children, tenantId }: UserProviderProps) {
             support: 2,
             viewer: 1
         };
-        
+
         const userLevel = roleHierarchy[user.role] || 0;
         const requiredLevel = roleHierarchy[role] || 0;
-        
+
         return userLevel >= requiredLevel;
     };
-    
+
     return (
         <UserContext.Provider value={{
             user,

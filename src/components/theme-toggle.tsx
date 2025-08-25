@@ -96,13 +96,6 @@ export default function ThemeToggle() {
         setIsOpen(false);
     }
 
-    function setExplicitTheme(t: ThemeName) {
-        // choosing an explicit DaisyUI theme overrides light/dark mapping
-        setCustomTheme(t);
-        localStorage.setItem(STORAGE_THEME, t);
-        // keep current mode (so user can still switch back to system later)
-        applyTheme(mode, t);
-    }
 
     const currentOption = themeOptions.find(option => option.mode === mode);
 

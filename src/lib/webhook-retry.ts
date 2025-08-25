@@ -25,9 +25,7 @@ type WebhookEvent = {
  */
 export async function retryFailedWebhooks(): Promise<void> {
     try {
-        // Get failed deliveries that should be retried
-        // Retry strategy: 1min, 5min, 30min, 2hrs, 12hrs (max 5 attempts)
-        const retryDelays = [1, 5, 30, 120, 720]; // minutes
+        // Retry strategy hard-coded in SQL intervals: 1min,5min,30min,2hrs,12hrs (max 5 attempts)
 
         const { rows: failedDeliveries } = await query(`
       SELECT 

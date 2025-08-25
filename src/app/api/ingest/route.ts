@@ -50,6 +50,10 @@ export async function POST(req: NextRequest) {
     // Normalize and dedupe by URL per tenant
     const seen = new Set<string>();
     for (const d of docs) {
+        if (!d.content || d.content.trim().length === 0 || /No content extracted from this page$/i.test(d.content)) {
+            console.warn(`Skipping empty/sparse document: ${d.url}`);
+            continue;
+        }
         const normUrl = (() => { try { const u = new URL(d.url); u.hash = ''; return u.toString(); } catch { return d.url; } })();
         if (seen.has(normUrl)) continue; seen.add(normUrl);
         // Skip if already ingested for this tenant (and site if specified)

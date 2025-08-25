@@ -185,10 +185,6 @@ export default function SiteManager() {
         setShowConfigModal(true);
     }
 
-    function handleCloseConfigModal() {
-        setShowConfigModal(false);
-        setConfigSite(null);
-    }
 
     if (loading) {
         return (

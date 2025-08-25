@@ -2,8 +2,7 @@
 
 import DefaultWidgetConfiguration from "./default-widget-configuration";
 
-export default function DefaultWidgetConfigurationWrapper({ tenantId }: { tenantId: string }) {
-    // The wrapper simply passes the component directly
-    // This is needed to handle the "client-only" usage in a server component
+export default function DefaultWidgetConfigurationWrapper({ tenantId: _tenantId }: { tenantId: string }) {
+    void _tenantId; // reserved for future; suppress unused var lint
     return <DefaultWidgetConfiguration />;
 }
