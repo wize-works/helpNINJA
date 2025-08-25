@@ -26,10 +26,18 @@ export async function GET(req: NextRequest) {
         let queryText = `
             SELECT d.id, d.url, d.title, d.created_at, d.site_id,
                    ts.name as site_name, ts.domain as site_domain,
-                   s.kind as source_kind, s.title as source_title
+                   s.kind as source_kind, s.title as source_title,
+                   COALESCE(c.chunk_count, 0)::int as chunk_count,
+                   COALESCE(c.total_tokens, 0)::int as total_tokens,
+                   char_length(d.content)::int as content_length
             FROM public.documents d
             LEFT JOIN public.tenant_sites ts ON ts.id = d.site_id
             LEFT JOIN public.sources s ON s.id = d.source_id
+            LEFT JOIN (
+                SELECT document_id, COUNT(*) as chunk_count, SUM(token_count) as total_tokens
+                FROM public.chunks
+                GROUP BY document_id
+            ) c ON c.document_id = d.id
             WHERE d.tenant_id = $1
         `;
 
@@ -62,6 +70,18 @@ export async function GET(req: NextRequest) {
                 break;
             case 'title_desc':
                 queryText += ' ORDER BY d.title DESC';
+                break;
+            case 'chunks_desc':
+                queryText += ' ORDER BY COALESCE(c.chunk_count,0) DESC NULLS LAST';
+                break;
+            case 'chunks_asc':
+                queryText += ' ORDER BY COALESCE(c.chunk_count,0) ASC NULLS FIRST';
+                break;
+            case 'tokens_desc':
+                queryText += ' ORDER BY COALESCE(c.total_tokens,0) DESC NULLS LAST';
+                break;
+            case 'tokens_asc':
+                queryText += ' ORDER BY COALESCE(c.total_tokens,0) ASC NULLS FIRST';
                 break;
             case 'created_desc':
             default:

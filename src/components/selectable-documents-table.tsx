@@ -5,6 +5,18 @@ import { HoverScale, FadeIn } from "@/components/ui/animated-page";
 import DeleteDocumentButton from "@/components/delete-document-button";
 import BulkDeleteButton from "@/components/bulk-delete-button";
 
+function formatTokens(n: number): string {
+    if (n >= 1000000) return (n / 1000000).toFixed(1).replace(/\.0$/, '') + 'M';
+    if (n >= 1000) return (n / 1000).toFixed(1).replace(/\.0$/, '') + 'k';
+    return String(n);
+}
+
+function formatChars(n: number): string {
+    if (n >= 1000000) return (n / 1000000).toFixed(1).replace(/\.0$/, '') + 'M';
+    if (n >= 1000) return (n / 1000).toFixed(1).replace(/\.0$/, '') + 'k';
+    return String(n);
+}
+
 type DocRow = {
     id: string;
     url: string;
@@ -15,6 +27,9 @@ type DocRow = {
     site_domain?: string;
     source_kind?: string;
     source_title?: string;
+    chunk_count: number;
+    total_tokens: number;
+    content_length: number;
 }
 
 interface SelectableDocumentsTableProps {
@@ -149,6 +164,8 @@ export default function SelectableDocumentsTable({ docs, onRefresh }: Selectable
                                     <th className="text-left p-4 text-sm font-semibold text-base-content/80">Document</th>
                                     <th className="text-left p-4 text-sm font-semibold text-base-content/80">Site & Source</th>
                                     <th className="text-left p-4 text-sm font-semibold text-base-content/80">URL</th>
+                                    <th className="text-left p-4 text-sm font-semibold text-base-content/80 w-32">Chunks</th>
+                                    <th className="text-left p-4 text-sm font-semibold text-base-content/80 w-40">Tokens</th>
                                     <th className="text-left p-4 text-sm font-semibold text-base-content/80 w-32">Added</th>
                                     <th className="text-right p-4 text-sm font-semibold text-base-content/80 w-20">Actions</th>
                                 </tr>
@@ -219,6 +236,25 @@ export default function SelectableDocumentsTable({ docs, onRefresh }: Selectable
                                                 <span className="truncate">{d.url}</span>
                                                 <i className="fa-duotone fa-solid fa-external-link text-xs opacity-60 group-hover/link:opacity-100 transition-opacity flex-shrink-0" aria-hidden />
                                             </a>
+                                        </td>
+                                        <td className="p-4">
+                                            <div className="text-sm font-medium flex items-center gap-2">
+                                                {d.chunk_count}
+                                                {d.chunk_count === 0 && (
+                                                    <span className="badge badge-warning badge-sm" title="Document has no chunks; ingestion may have failed or content was empty">0</span>
+                                                )}
+                                            </div>
+                                            <div className="text-[10px] text-base-content/50 mt-1">
+                                                {d.chunk_count > 0 ? `${Math.round(d.content_length / d.chunk_count)} avg chars` : '—'}
+                                            </div>
+                                        </td>
+                                        <td className="p-4">
+                                            <div className="text-sm font-medium" title={`${d.total_tokens} tokens total`}>
+                                                {formatTokens(d.total_tokens)}
+                                            </div>
+                                            <div className="text-[10px] text-base-content/50 mt-1" title={`${d.content_length} characters`}>
+                                                {formatChars(d.content_length)} chars
+                                            </div>
                                         </td>
                                         <td className="p-4">
                                             <div className="text-sm text-base-content/70">

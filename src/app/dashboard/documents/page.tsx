@@ -20,16 +20,27 @@ type DocRow = {
     site_domain?: string;
     source_kind?: string;
     source_title?: string;
+    chunk_count: number;
+    total_tokens: number;
+    content_length: number;
 }
 
 async function getDocs(tenantId: string, siteId?: string) {
     let queryText = `
         SELECT d.id, d.url, d.title, d.created_at, d.site_id,
                ts.name as site_name, ts.domain as site_domain,
-               s.kind as source_kind, s.title as source_title
+               s.kind as source_kind, s.title as source_title,
+               COALESCE(c.chunk_count, 0)::int as chunk_count,
+               COALESCE(c.total_tokens, 0)::int as total_tokens,
+               char_length(d.content)::int as content_length
         FROM public.documents d
         LEFT JOIN public.tenant_sites ts ON ts.id = d.site_id
         LEFT JOIN public.sources s ON s.id = d.source_id
+        LEFT JOIN (
+            SELECT document_id, COUNT(*) as chunk_count, SUM(token_count) as total_tokens
+            FROM public.chunks
+            GROUP BY document_id
+        ) c ON c.document_id = d.id
         WHERE d.tenant_id = $1
     `;
 

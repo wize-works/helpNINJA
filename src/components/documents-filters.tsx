@@ -111,6 +111,10 @@ export default function DocumentsFilters({ onFiltersChange, initialFilters }: Do
                                 <option value="created_asc">Oldest</option>
                                 <option value="title_asc">Title A-Z</option>
                                 <option value="title_desc">Title Z-A</option>
+                                <option value="chunks_desc">Chunks ↓</option>
+                                <option value="chunks_asc">Chunks ↑</option>
+                                <option value="tokens_desc">Tokens ↓</option>
+                                <option value="tokens_asc">Tokens ↑</option>
                             </select>
                         </div>
                     </div>

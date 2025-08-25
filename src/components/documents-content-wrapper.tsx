@@ -17,6 +17,9 @@ type DocRow = {
     site_domain?: string;
     source_kind?: string;
     source_title?: string;
+    chunk_count: number;
+    total_tokens: number;
+    content_length: number;
 }
 
 interface DocumentsContentWrapperProps {
