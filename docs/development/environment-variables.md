@@ -46,6 +46,7 @@ SUPPORT_FROM_EMAIL
 ENABLE_HEADLESS_CRAWL
 DYNAMIC_RENDER_MODE
 HEADLESS_TIMEOUT_MS
+HEADLESS_MIN_STATIC_LEN
 ```
 
 ### GitHub Actions Secrets (Sensitive)
@@ -92,7 +93,7 @@ To add a new environment variable:
 3. Update the deployment workflow to include the new variable
    - For non-sensitive values: Add to ConfigMap and the `sed` replacements
    - For sensitive values: Add to the `kubectl create secret` command
-  - Headless crawl variables (currently non-sensitive toggles): `ENABLE_HEADLESS_CRAWL`, `DYNAMIC_RENDER_MODE`, `HEADLESS_TIMEOUT_MS`
+  - Headless crawl variables (currently non-sensitive toggles): `ENABLE_HEADLESS_CRAWL`, `DYNAMIC_RENDER_MODE`, `HEADLESS_TIMEOUT_MS`, `HEADLESS_MIN_STATIC_LEN`
 
 ## Debugging Environment Variables
 
