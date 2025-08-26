@@ -11,6 +11,7 @@ import { extractKeywords } from '@/lib/extract-keywords';
 import { handleEscalation } from '@/lib/escalation-service';
 import { classifyIntent } from '@/lib/intents';
 import type { EscalationDestination } from '@/lib/escalation-service';
+import { renderMarkdownLiteToHtml } from '@/lib/markdown-lite-server';
 
 export const runtime = 'nodejs';
 
@@ -537,9 +538,12 @@ ${contextText}`;
         }
 
         await incMessages(tenantId);
+        // Server-side lightweight formatting (widget can directly inject this HTML)
+        const formattedHtml = renderMarkdownLiteToHtml(text);
         return NextResponse.json(
             {
                 answer: text,
+                html: formattedHtml,
                 refs,
                 confidence,
                 source: (Array.isArray(curatedAnswers) && curatedAnswers.length > 0) ? 'curated' : 'ai',

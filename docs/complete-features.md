@@ -63,6 +63,7 @@ Core features (present)
   - Notes: "Messages (this month)" derives from `public.messages` for the current calendar month, counting `role='user'` messages (aligned with the Chat Volume chart). Low-confidence counts use assistant messages with confidence < 0.55 in the same period.
 - Admin pages
   - Documents: src/app/dashboard/documents/page.tsx and DELETE API src/app/api/documents/[id]/route.ts
+    - Document statistics: chunk count, total tokens, content length surfaced in dashboard table (new columns + sorting by chunks/tokens). Derived live via LEFT JOIN aggregate on public.chunks (no duplicate storage). Sort keys: chunks_desc/asc, tokens_desc/asc. Zero-chunk docs highlighted with warning badge.
   - Integrations: src/app/dashboard/integrations/page.tsx plus src/app/api/integrations/[id]/route.ts and /status/route.ts
   - Conversations: src/app/dashboard/conversations/page.tsx
   - Settings + Keys: src/app/dashboard/settings/page.tsx and scaffolded src/app/api/tenants/[id]/rotate-keys/route.ts

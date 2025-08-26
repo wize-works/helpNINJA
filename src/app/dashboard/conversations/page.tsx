@@ -4,6 +4,7 @@ import { TableSkeleton } from "@/components/ui/skeleton";
 import { Breadcrumb } from "@/components/ui/breadcrumb";
 import { AnimatedPage, StaggerContainer, StaggerChild, HoverScale, FadeIn } from "@/components/ui/animated-page";
 import { Suspense } from "react";
+import Link from "next/link";
 
 export const runtime = 'nodejs'
 
@@ -82,16 +83,16 @@ function ConversationsTable({ conversations }: { conversations: Row[] }) {
                                 </thead>
                                 <tbody className="divide-y divide-base-200/60">
                                     {conversations.map((r, index) => (
-                                        <tr key={r.id} className="hover:bg-base-200/30 hover:scale-[1.002] transition-all duration-200 cursor-pointer">
+                                        <tr key={r.id} className="hover:bg-base-200/30 hover:scale-[1.002] transition-all duration-200">
                                             <td className="p-4">
                                                 <div className="flex items-center gap-3">
                                                     <div className="w-8 h-8 bg-secondary/10 rounded-lg flex items-center justify-center flex-shrink-0">
                                                         <i className="fa-duotone fa-solid fa-user text-sm text-secondary" aria-hidden />
                                                     </div>
                                                     <div className="min-w-0 flex-1">
-                                                        <div className="font-mono text-sm text-base-content truncate" title={r.session_id}>
+                                                        <Link href={`/dashboard/conversations/${r.id}`} className="font-mono text-sm text-primary hover:text-primary/80 truncate transition-colors" title={r.session_id} prefetch>
                                                             {r.session_id}
-                                                        </div>
+                                                        </Link>
                                                         <div className="text-xs text-base-content/60 mt-0.5">
                                                             Session #{index + 1}
                                                         </div>
@@ -122,11 +123,14 @@ function ConversationsTable({ conversations }: { conversations: Row[] }) {
                                                     })}
                                                 </div>
                                             </td>
-                                            <td className="p-4 text-right">
-                                                <div className="inline-flex items-center gap-2 px-2 py-1 bg-success/10 text-success rounded-md text-xs font-medium">
+                                            <td className="p-4 text-right space-x-2 whitespace-nowrap">
+                                                <Link href={`/dashboard/conversations/${r.id}`} className="inline-flex items-center gap-1 px-2 py-1 bg-base-200/60 hover:bg-base-200 rounded-md text-xs font-medium text-base-content/80 transition-colors">
+                                                    <i className="fa-duotone fa-solid fa-eye text-[10px]" aria-hidden /> View
+                                                </Link>
+                                                <span className="inline-flex items-center gap-2 px-2 py-1 bg-success/10 text-success rounded-md text-xs font-medium">
                                                     <div className="w-1.5 h-1.5 bg-success rounded-full"></div>
                                                     Completed
-                                                </div>
+                                                </span>
                                             </td>
                                         </tr>
                                     ))}
@@ -182,17 +186,19 @@ function ConversationsTable({ conversations }: { conversations: Row[] }) {
                                         </div>
 
                                         <div className="flex items-center justify-between">
-                                            <div className="flex items-center gap-2 px-3 py-2 bg-info/10 text-info rounded-lg">
-                                                <i className="fa-duotone fa-solid fa-messages text-xs" aria-hidden />
-                                                <span className="text-sm font-semibold">{r.messages}</span>
-                                                <span className="text-xs opacity-80">messages</span>
+                                            <div className="flex items-center gap-3">
+                                                <div className="flex items-center gap-2 px-3 py-2 bg-info/10 text-info rounded-lg">
+                                                    <i className="fa-duotone fa-solid fa-messages text-xs" aria-hidden />
+                                                    <span className="text-sm font-semibold">{r.messages}</span>
+                                                    <span className="text-xs opacity-80">messages</span>
+                                                </div>
+                                                <HoverScale scale={1.05}>
+                                                    <Link href={`/dashboard/conversations/${r.id}`} className="flex items-center gap-2 px-3 py-2 bg-primary/10 hover:bg-primary/20 text-primary rounded-lg text-sm font-medium transition-colors">
+                                                        <i className="fa-duotone fa-solid fa-eye text-xs" aria-hidden />
+                                                        View
+                                                    </Link>
+                                                </HoverScale>
                                             </div>
-                                            <HoverScale scale={1.05}>
-                                                <button className="flex items-center gap-2 px-3 py-2 bg-primary/10 hover:bg-primary/20 text-primary rounded-lg text-sm font-medium transition-colors">
-                                                    <i className="fa-duotone fa-solid fa-eye text-xs" aria-hidden />
-                                                    View Details
-                                                </button>
-                                            </HoverScale>
                                         </div>
                                     </div>
                                 </div>

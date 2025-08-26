@@ -43,6 +43,12 @@ export async function GET(req: NextRequest) {
         } catch {
             // Invalid referer URL, continue without domain validation
         }
+    } else {
+        // No referer header provided (some browsers / CSP setups). Allow preview (skip validation)
+        // ONLY if siteId or verification token were not supplied – signals likely dashboard or local test usage.
+        if (!siteId || !verificationToken) {
+            skipDomainValidation = true;
+        }
     }
 
     console.log('Widget script request:', {
@@ -221,57 +227,73 @@ export async function GET(req: NextRequest) {
     const VOICE_JSON = JSON.stringify(voice);
     const SERVER_CONFIG_JSON = JSON.stringify(widgetConfig);
 
+    // --- Server-side color derivation to keep client script minimal ---
+    function hexToRgbServer(hex?: string): [number, number, number] {
+        if (!hex) return [0, 0, 0];
+        if (hex.startsWith('rgb')) {
+            const m = hex.match(/\d+/g); if (m && m.length >= 3) return [parseInt(m[0]), parseInt(m[1]), parseInt(m[2])];
+            return [0, 0, 0];
+        }
+        hex = hex.replace('#', '');
+        if (hex.length === 3) hex = hex.split('').map(c => c + c).join('');
+        if (hex.length < 6) return [0, 0, 0];
+        return [parseInt(hex.slice(0, 2), 16) || 0, parseInt(hex.slice(2, 4), 16) || 0, parseInt(hex.slice(4, 6), 16) || 0];
+    }
+
+    function rgbaFrom(hex: string | undefined, alpha: number) {
+        const [r, g, b] = hexToRgbServer(hex); return `rgba(${r},${g},${b},${alpha})`;
+    }
+
+    function derivePalette(baseConfig: any, dark: boolean) { // eslint-disable-line @typescript-eslint/no-explicit-any
+        const primary: string = (baseConfig.primaryColor as string) || '#0077b6';
+        const advanced = baseConfig.advancedColors === true;
+        // Light / dark contextual overrides (mirrors prior client logic)
+        const themed: Record<string, unknown> = { ...baseConfig };
+        if (dark) {
+            if (!themed.bubbleBackground) themed.bubbleBackground = '#1E293B';
+            if (!themed.bubbleColor) themed.bubbleColor = '#fff';
+            if (!themed.panelBackground) themed.panelBackground = '#1E293B';
+            if (!themed.panelHeaderBackground) themed.panelHeaderBackground = '#0f172a';
+            if (!themed.messagesBackground) themed.messagesBackground = '#334155';
+            if (!themed.assistantBubbleBackground) themed.assistantBubbleBackground = '#475569';
+            if (!themed.assistantBubbleColor) themed.assistantBubbleColor = '#f8fafc';
+        }
+        const buttonBackground: string = advanced ? (themed.buttonBackground as string || primary) : primary;
+        const userBubbleBackground: string = advanced ? (themed.userBubbleBackground as string || primary) : primary;
+        const assistantBubbleBackground: string = advanced
+            ? (themed.assistantBubbleBackground as string || (dark ? '#475569' : '#e6f2ff'))
+            : rgbaFrom(primary, 0.13);
+        const assistantBubbleColor: string = advanced ? (themed.assistantBubbleColor as string || '#0077b6') : primary;
+        const avatarBaseColor: string = advanced ? (themed.assistantBubbleColor as string || primary) : primary;
+        return {
+            primaryColor: primary,
+            buttonBackground,
+            buttonColor: themed.buttonColor || '#fff',
+            buttonHoverBackground: rgbaFrom(buttonBackground, 0.8),
+            bubbleBackground: advanced ? (themed.bubbleBackground || primary) : primary,
+            bubbleColor: themed.bubbleColor || '#fff',
+            panelBackground: advanced ? (themed.panelBackground || '#fff') : primary,
+            panelHeaderBackground: advanced ? (themed.panelHeaderBackground || primary) : primary,
+            messagesBackground: advanced ? (themed.messagesBackground || '#f8fafc') : '#f8fafc',
+            userBubbleBackground,
+            userBubbleColor: advanced ? (themed.userBubbleColor || '#fff') : '#fff',
+            assistantBubbleBackground,
+            assistantBubbleColor,
+            focusOutlineColor: rgbaFrom(buttonBackground, 0.5),
+            headerIconBackground: 'rgba(255,255,255,0.2)',
+            avatarBackground: rgbaFrom(avatarBaseColor, 0.15),
+            borderColor: baseConfig.theme === 'dark' || (baseConfig.theme === 'auto' && dark) ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.1)',
+            inputBorder: baseConfig.theme === 'dark' || (baseConfig.theme === 'auto' && dark) ? '#374151' : '#e5e7eb'
+        };
+    }
+
+    const paletteLight = derivePalette(widgetConfig, false);
+    const paletteDark = derivePalette(widgetConfig, true);
+    const PALETTE_LIGHT_JSON = JSON.stringify(paletteLight);
+    const PALETTE_DARK_JSON = JSON.stringify(paletteDark);
+
     // NOTE: We no longer embed a server-derived origin. We compute it client-side from the *script's own src*.
     const js = `(() => {
-    // Enhanced utility function to convert hex color to RGB for use with rgba
-    function hexToRgb(hex) {
-      if (!hex) return '0,0,0'; // Default to black if no color provided
-      
-      // Handle colors that are already in rgb/rgba format
-      if (hex.startsWith('rgb')) {
-        const rgbValues = hex.match(/\d+/g);
-        if (rgbValues && rgbValues.length >= 3) {
-          return rgbValues.slice(0, 3).join(',');
-        }
-        return '0,0,0';
-      }
-      
-      // Remove the # if present
-      hex = hex.replace('#', '');
-      
-      // Convert 3-digit hex to 6-digit
-      if (hex.length === 3) {
-        hex = hex[0] + hex[0] + hex[1] + hex[1] + hex[2] + hex[2];
-      }
-      
-      // Handle 8-digit hex (with alpha) by removing alpha component
-      if (hex.length === 8) {
-        hex = hex.substring(0, 6);
-      }
-      
-      // Make sure we have a valid 6-digit hex
-      if (hex.length !== 6) {
-        return '0,0,0'; // Default to black for invalid hex
-      }
-      
-      try {
-        // Extract the RGB components
-        const r = parseInt(hex.substring(0, 2), 16);
-        const g = parseInt(hex.substring(2, 4), 16);
-        const b = parseInt(hex.substring(4, 6), 16);
-        
-        // Check if values are NaN
-        if (isNaN(r) || isNaN(g) || isNaN(b)) {
-          return '0,0,0';
-        }
-        
-        return r + ',' + g + ',' + b;
-      } catch (e) {
-        console.error('Error parsing color:', hex, e);
-        return '0,0,0';
-      }
-    }
-    
     // compute base from the script tag that loaded this widget (most robust behind proxies)
     const __script = document.currentScript;
     const __base = (() => {
@@ -294,24 +316,7 @@ export async function GET(req: NextRequest) {
     // Client-side config takes precedence over server config for backward compatibility
     const config = Object.assign({}, serverConfig, window.helpNINJAConfig || {});
     
-    // Detect system theme preference for 'auto' theme setting
-    const prefersDarkTheme = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
-    const theme = config.theme || 'auto';
-    const isDarkMode = theme === 'dark' || (theme === 'auto' && prefersDarkTheme);
-    
-    // Update config with theme-aware colors if needed
-    if (isDarkMode && theme === 'auto') {
-        // Apply dark mode colors for auto theme
-        if (!config.bubbleBackground) config.bubbleBackground = '#1E293B';
-        if (!config.bubbleColor) config.bubbleColor = '#fff';
-        if (!config.panelBackground) config.panelBackground = '#1E293B';
-        if (!config.panelHeaderBackground) config.panelHeaderBackground = '#0f172a';
-        if (!config.messagesBackground) config.messagesBackground = '#334155';
-        if (!config.assistantBubbleBackground) config.assistantBubbleBackground = '#475569';
-        if (!config.assistantBubbleColor) config.assistantBubbleColor = '#f8fafc';
-    }
-    
-    const tenantId = ${TENANT_JSON}; // From URL parameters
+  const tenantId = ${TENANT_JSON}; // From URL parameters
     const sessionId = (() => {
       try {
         const existing = localStorage.getItem('hn_sid');
@@ -327,56 +332,11 @@ export async function GET(req: NextRequest) {
     })();
     const voiceStyle = ${VOICE_JSON}; // From URL parameters
     
-    // Extract styling from config with defaults
-    const primaryColor = config.primaryColor || '#0077b6';
-    
-    // Use advancedColors flag to determine whether to use primary color or specific colors
-    const useAdvancedColors = config.advancedColors === true;
-    
-    // Define all colors once at the top to ensure consistency throughout the widget
-    const styles = {
-      // Base colors - If advancedColors is true, use the specific colors from config; otherwise derive from primaryColor
-      primaryColor: primaryColor,
-      
-      // Button colors
-      buttonBackground: useAdvancedColors ? (config.buttonBackground || '#0077b6') : primaryColor,
-      buttonColor: config.buttonColor || '#fff',
-      buttonHoverBackground: function() {
-        const baseColor = useAdvancedColors ? (config.buttonBackground || '#0077b6') : primaryColor;
-        return 'rgba(' + hexToRgb(baseColor) + ', 0.8)';
-      }(),
-      
-      // Bubble/widget button colors
-      bubbleBackground: useAdvancedColors ? (config.bubbleBackground || '#0077b6') : primaryColor,
-      bubbleColor: config.bubbleColor || '#fff',
-      
-      // Panel colors
-      panelBackground: useAdvancedColors ? config.panelBackground || '#fff' : primaryColor,
-      panelHeaderBackground: useAdvancedColors ? (config.panelHeaderBackground || '#0077b6') : primaryColor,
-      messagesBackground: useAdvancedColors ? config.messagesBackground || '#f8fafc' : '#f8fafc',
-      
-      // User message colors
-      userBubbleBackground: useAdvancedColors ? (config.userBubbleBackground || '#0077b6') : primaryColor,
-      userBubbleColor: useAdvancedColors ? config.userBubbleColor || '#fff' : '#fff',
-      
-      // Assistant message colors
-      assistantBubbleBackground: useAdvancedColors 
-        ? (config.assistantBubbleBackground || '#e6f2ff') 
-        : 'rgba(' + hexToRgb(primaryColor) + ', 0.13)', // Proper transparency using rgba
-      assistantBubbleColor: useAdvancedColors ? (config.assistantBubbleColor || '#0077b6') : primaryColor,
-      
-      // UI Element colors
-      focusOutlineColor: 'rgba(' + hexToRgb(useAdvancedColors 
-        ? (config.buttonBackground || '#0077b6') 
-        : primaryColor) + ', 0.5)',
-      headerIconBackground: 'rgba(255,255,255,0.2)',
-      avatarBackground: function() {
-        const avatarColor = useAdvancedColors ? (config.assistantBubbleColor || '#0077b6') : primaryColor;
-        return 'rgba(' + hexToRgb(avatarColor) + ', 0.15)';
-      }(),
-      borderColor: config.theme === 'dark' ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.1)',
-      inputBorder: config.theme === 'dark' ? '#374151' : '#e5e7eb'
-    };
+  const STYLES_LIGHT = ${PALETTE_LIGHT_JSON};
+  const STYLES_DARK = ${PALETTE_DARK_JSON};
+  const prefersDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+  const theme = config.theme || 'auto';
+  const styles = (theme === 'dark' || (theme === 'auto' && prefersDark)) ? STYLES_DARK : STYLES_LIGHT;
 
     // Load DaisyUI CSS if not already present
     if (!document.querySelector('link[href*="daisyui"]') && !document.querySelector('link[data-hn-styles]')) {
@@ -583,6 +543,8 @@ export async function GET(req: NextRequest) {
     panel.appendChild(inputArea);
     document.body.appendChild(panel);
 
+  // (Client markdown renderer removed; server now supplies formatted HTML)
+
     function add(role, text){
       const wrap = document.getElementById('hn_msgs');
       const chatDiv = document.createElement('div');
@@ -628,8 +590,12 @@ export async function GET(req: NextRequest) {
         chatDiv.appendChild(bubbleContainer);
       }
       
-      // Simple solution: just set the text directly and use CSS for line breaks
-      bubble.textContent = text;
+      // Set content
+      if (role === 'assistant') {
+        bubble.innerHTML = text; // text expected to be safe subset HTML from server
+      } else {
+        bubble.textContent = text;
+      }
       
       // Use CSS white-space to respect line breaks
       // This avoids any need for innerHTML or splitting on \n
@@ -748,7 +714,13 @@ export async function GET(req: NextRequest) {
         if(!r.ok) { 
           add('assistant', (j && (j.message || j.error)) || 'Sorry, something went wrong.'); 
         } else {
-          add('assistant', (j && j.answer) || 'I didn&apos;t understand that. Could you try asking in a different way?');
+          // Prefer server-formatted html if present; fallback to plain answer string
+          if (j && j.html) {
+            // Inject already-sanitized subset HTML directly
+            add('assistant', j.html);
+          } else {
+            add('assistant', (j && j.answer) || 'I didn\u2019t understand that. Could you try asking in a different way?');
+          }
         }
       } catch (error) {
         // Remove loading indicator
@@ -764,57 +736,22 @@ export async function GET(req: NextRequest) {
       }
     }
 
-    // Function to open the chat panel
-    function openChatPanel() {
-        const chatMessages = document.getElementById('hn_msgs');
-        panel.style.display = 'flex';
-        bubble.style.display = 'none';
-        
-        // When showing panel for first time, display welcome message
-        if (chatMessages && chatMessages.children.length === 0) {
-            // Show welcome message on first open
-            add('assistant', config.welcomeMessage || 'Hi there! How can I help you today?');
-            
-            // Focus the input field
-            setTimeout(() => {
-                const inputField = document.getElementById('hn_input');
-                if (inputField) inputField.focus();
-            }, 100);
-        }
+    // Panel open/close helpers (placed after send definition)
+    function openChatPanel(){
+      const chatMessages = document.getElementById('hn_msgs');
+      panel.style.display = 'flex';
+      bubble.style.display = 'none';
+      if (chatMessages && chatMessages.children.length === 0) {
+        add('assistant', config.welcomeMessage || 'Hi there! How can I help you today?');
+        setTimeout(()=>{ const inputField = document.getElementById('hn_input'); if (inputField) inputField.focus(); }, 100);
+      }
     }
-    
-    // Function to close the chat panel
-    function closeChatPanel() {
-        panel.style.display = 'none';
-        bubble.style.display = 'flex';
-    }
-    
-    // Set up click handler for bubble
-    bubble.onclick = () => {
-        // Toggle panel visibility
-        const isHidden = panel.style.display === 'none' || !panel.style.display;
-        if (isHidden) {
-            openChatPanel();
-        } else {
-            closeChatPanel();
-        }
-    };
-    
-    // Auto-open chat after delay if configured
-    const autoOpenDelay = parseInt(config.autoOpenDelay) || 0;
-    if (autoOpenDelay > 0) {
-        setTimeout(() => {
-            openChatPanel();
-        }, autoOpenDelay);
-    }
+    function closeChatPanel(){ panel.style.display = 'none'; bubble.style.display = 'flex'; }
+    bubble.onclick = () => { const isHidden = panel.style.display === 'none' || !panel.style.display; if (isHidden) openChatPanel(); else closeChatPanel(); };
+    const autoOpenDelay = parseInt(config.autoOpenDelay) || 0; if (autoOpenDelay>0) setTimeout(()=>openChatPanel(), autoOpenDelay);
     panel.querySelector('#hn_send').addEventListener('click', send);
     panel.querySelector('#hn_input').addEventListener('keydown', (e)=>{ if(e.key==='Enter') send(); });
   })();`;
 
-    return withCORS(new Response(js, {
-        headers: {
-            'content-type': 'application/javascript; charset=utf-8',
-            'cache-control': 'public, max-age=3600'
-        }
-    }));
+    return withCORS(new Response(js, { headers: { 'content-type': 'application/javascript; charset=utf-8', 'cache-control': 'public, max-age=3600' } }));
 }

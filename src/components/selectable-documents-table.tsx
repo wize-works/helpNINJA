@@ -162,8 +162,7 @@ export default function SelectableDocumentsTable({ docs, onRefresh }: Selectable
                                         </label>
                                     </th>
                                     <th className="text-left p-4 text-sm font-semibold text-base-content/80">Document</th>
-                                    <th className="text-left p-4 text-sm font-semibold text-base-content/80">Site & Source</th>
-                                    <th className="text-left p-4 text-sm font-semibold text-base-content/80">URL</th>
+                                    <th className="text-left p-4 text-sm font-semibold text-base-content/80">Site / Source / URL</th>
                                     <th className="text-left p-4 text-sm font-semibold text-base-content/80 w-32">Chunks</th>
                                     <th className="text-left p-4 text-sm font-semibold text-base-content/80 w-40">Tokens</th>
                                     <th className="text-left p-4 text-sm font-semibold text-base-content/80 w-32">Added</th>
@@ -198,44 +197,46 @@ export default function SelectableDocumentsTable({ docs, onRefresh }: Selectable
                                                 </div>
                                             </div>
                                         </td>
-                                        <td className="p-4">
-                                            <div className="space-y-1">
-                                                {d.site_name ? (
-                                                    <div className="flex items-center gap-2">
-                                                        <div className="w-6 h-6 bg-success/10 rounded-lg flex items-center justify-center">
-                                                            <i className="fa-duotone fa-solid fa-globe text-xs text-success" aria-hidden />
+                                        <td className="p-4 align-top">
+                                            <div className="flex flex-col gap-1 min-w-[240px] max-w-[420px]">
+                                                <div>
+                                                    {d.site_name ? (
+                                                        <div className="flex items-start gap-2">
+                                                            <div className="w-6 h-6 bg-success/10 rounded-lg flex items-center justify-center mt-0.5">
+                                                                <i className="fa-duotone fa-solid fa-globe text-xs text-success" aria-hidden />
+                                                            </div>
+                                                            <div className="leading-tight">
+                                                                <div className="font-medium text-sm text-base-content">{d.site_name}</div>
+                                                                <div className="text-xs text-base-content/60">{d.site_domain}</div>
+                                                            </div>
                                                         </div>
-                                                        <div>
-                                                            <div className="font-medium text-sm text-base-content">{d.site_name}</div>
-                                                            <div className="text-xs text-base-content/60">{d.site_domain}</div>
+                                                    ) : (
+                                                        <div className="flex items-center gap-2">
+                                                            <div className="w-6 h-6 bg-base-300/60 rounded-lg flex items-center justify-center">
+                                                                <i className="fa-duotone fa-solid fa-question text-xs text-base-content/40" aria-hidden />
+                                                            </div>
+                                                            <span className="text-base-content/40 text-sm">No site assigned</span>
                                                         </div>
-                                                    </div>
-                                                ) : (
-                                                    <div className="flex items-center gap-2">
-                                                        <div className="w-6 h-6 bg-base-300/60 rounded-lg flex items-center justify-center">
-                                                            <i className="fa-duotone fa-solid fa-question text-xs text-base-content/40" aria-hidden />
-                                                        </div>
-                                                        <span className="text-base-content/40 text-sm">No site assigned</span>
-                                                    </div>
-                                                )}
+                                                    )}
+                                                </div>
                                                 {(d.source_title || d.source_kind) && (
                                                     <div className="text-xs text-base-content/60 pl-8">
                                                         Source: {d.source_title || `${d.source_kind} import`}
                                                     </div>
                                                 )}
+                                                <div className="pl-8">
+                                                    <a
+                                                        className="text-primary hover:text-primary/80 text-xs font-medium transition-colors flex items-center gap-1 max-w-full group/link"
+                                                        href={d.url}
+                                                        target="_blank"
+                                                        rel="noreferrer"
+                                                        title={d.url}
+                                                    >
+                                                        <span className="truncate inline-block">{d.url}</span>
+                                                        <i className="fa-duotone fa-solid fa-external-link text-[10px] opacity-60 group-hover/link:opacity-100 transition-opacity flex-shrink-0" aria-hidden />
+                                                    </a>
+                                                </div>
                                             </div>
-                                        </td>
-                                        <td className="p-4">
-                                            <a
-                                                className="text-primary hover:text-primary/80 text-sm font-medium transition-colors flex items-center gap-2 max-w-xs group/link"
-                                                href={d.url}
-                                                target="_blank"
-                                                rel="noreferrer"
-                                                title={d.url}
-                                            >
-                                                <span className="truncate">{d.url}</span>
-                                                <i className="fa-duotone fa-solid fa-external-link text-xs opacity-60 group-hover/link:opacity-100 transition-opacity flex-shrink-0" aria-hidden />
-                                            </a>
                                         </td>
                                         <td className="p-4">
                                             <div className="text-sm font-medium flex items-center gap-2">
