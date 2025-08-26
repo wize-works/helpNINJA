@@ -43,7 +43,6 @@ export async function POST(req: NextRequest) {
             }
 
             // Tenant doesn't exist, create it synchronously
-            console.log('Creating tenant for organization:', orgId);
 
             // Get organization details from Clerk
             const clerk = await clerkClient();
@@ -68,8 +67,6 @@ export async function POST(req: NextRequest) {
             ) as QueryResult<{ id: string }>;
 
             const newTenantId = createResult.rows[0].id;
-            console.log('Created tenant:', newTenantId, 'for organization:', organization.name);
-
             return newTenantId;
         });
 

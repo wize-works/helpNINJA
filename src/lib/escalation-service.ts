@@ -1,4 +1,5 @@
 import { dispatchEscalation } from './integrations/dispatch';
+import { createNotification } from '@/lib/notifications';
 import { EscalationEvent, EscalationReason } from './integrations/types';
 import { query } from './db';
 import { webhookEvents } from './webhooks';
@@ -35,12 +36,10 @@ async function recordEscalationDelivery(
 
         // If no webhook endpoint exists, we can't record the delivery
         if (!rows.length) {
-            console.log(`⚠️ ESCALATION SERVICE: No webhook endpoints found for tenant ${tenantId}, skipping delivery recording`);
             return;
         }
 
         const webhookEndpointId = rows[0].id;
-        console.log(`📝 ESCALATION SERVICE: Using existing webhook endpoint ${webhookEndpointId} for integration ${integrationId}`);
 
         // Generate a webhook-like payload
         const payload = {
@@ -81,7 +80,7 @@ async function recordEscalationDelivery(
             result.ok ? now : null, // delivered_at
             !result.ok ? now : null, // failed_at
             now // created_at
-        ]); console.log(`📝 ESCALATION SERVICE: Recorded delivery for integration ${integrationId}`);
+        ]);
     } catch (error) {
         console.error('❌ ESCALATION SERVICE: Failed to record escalation delivery:', error);
         // Non-critical, so continue execution
@@ -206,7 +205,7 @@ export async function handleEscalation({
     integrationId?: string | null;
     meta?: Record<string, unknown>;
 }): Promise<EscalationResult> {
-    console.log(`🚀 ESCALATION SERVICE: Starting for conversation ${conversationId}, reason: ${reason}`);
+    // Escalation initiated (removed verbose console.log)
 
     // 1. Record the escalation event in the database
     try {
@@ -216,7 +215,31 @@ export async function handleEscalation({
       VALUES ($1, $2, $3, $4, $5, NOW())`,
             [tenantId, conversationId, reason, confidence || null, ruleId || null]
         );
-        console.log(`📝 ESCALATION SERVICE: Recorded escalation event in database`);
+        // Escalation event recorded
+        // Fire a notification (MVP) - map reason to notification type
+        try {
+            const reasonTypeMap: Record<string, { type: string; severity: string; title: string; body?: string }> = {
+                low_confidence: { type: 'escalation.low_confidence', severity: 'warning', title: 'Low-confidence escalation', body: 'A conversation was escalated due to low AI confidence.' },
+                handoff: { type: 'escalation.handoff', severity: 'info', title: 'User requested human help', body: 'The user explicitly requested a human handoff.' },
+                user_request: { type: 'escalation.request', severity: 'info', title: 'Conversation escalated', body: 'A conversation was escalated to the team.' },
+                rule_match: { type: 'escalation.rule_match', severity: 'info', title: 'Rule-based escalation', body: 'An escalation rule matched and triggered a handoff.' },
+                routing_rule: { type: 'routing.rule_match', severity: 'info', title: 'Routing rule matched', body: 'A routing rule directed this conversation.' }
+            };
+            const mapped = reasonTypeMap[reason] || reasonTypeMap['user_request'];
+            // Creating notification for escalation
+            await createNotification({
+                tenantId,
+                type: mapped.type,
+                severity: mapped.severity as 'info' | 'success' | 'warning' | 'error' | 'critical',
+                title: mapped.title,
+                body: mapped.body,
+                source: 'escalation',
+                meta: { conversationId, ruleId, confidence, reason, isNotification: (meta && (meta as Record<string, unknown>)['isNotification']) }
+            });
+            // Notification creation result ignored in non-debug mode
+        } catch (notifyErr) {
+            console.error('⚠️ Failed to create escalation notification', notifyErr);
+        }
     } catch (error) {
         console.error('❌ ESCALATION SERVICE: Failed to record escalation:', error);
         // Continue anyway - recording is helpful but not critical
@@ -228,7 +251,6 @@ export async function handleEscalation({
     // If direct integration ID is provided, use that
     if (integrationId) {
         escalationDestinations = [{ integrationId }];
-        console.log(`🔎 ESCALATION SERVICE: Using provided integration ID: ${integrationId}`);
     }
     // Otherwise, if no destinations provided, look them up
     else if (!escalationDestinations) {
@@ -241,7 +263,7 @@ export async function handleEscalation({
                 );
                 if (rows.length > 0 && rows[0].destinations) {
                     escalationDestinations = rows[0].destinations as EscalationDestination[];
-                    console.log(`🔎 ESCALATION SERVICE: Using destinations from rule ${ruleId}: ${escalationDestinations?.length || 0} destinations`);
+                    // Destinations loaded from rule
                 }
             }
         } catch (error) {
@@ -252,7 +274,7 @@ export async function handleEscalation({
     // 3. If webhooks are requested, dispatch them before integration handling
     if (triggerWebhooks) {
         try {
-            console.log(`📨 ESCALATION SERVICE: Triggering webhooks for escalation`);
+            // Triggering webhooks for escalation
             await webhookEvents.escalationTriggered(
                 tenantId,
                 conversationId,
@@ -260,12 +282,12 @@ export async function handleEscalation({
                 confidence,
                 userMessage
             );
-            console.log(`✅ ESCALATION SERVICE: Webhooks triggered successfully`);
+            // Webhooks triggered successfully
         } catch (error) {
             console.error('❌ ESCALATION SERVICE: Failed to trigger webhooks:', error);
         }
     } else {
-        console.log(`ℹ️ ESCALATION SERVICE: Skipping webhooks as requested`);
+        // Webhooks skipped as requested
     }
 
     // 4. Prepare the escalation event
@@ -311,11 +333,11 @@ export async function handleEscalation({
     }
 
     // 5. Dispatch to all destinations
-    console.log(`📨 ESCALATION SERVICE: Dispatching to integrations (${event.destinations?.length || 0} destinations)`);
+    // Dispatching to integrations
 
     try {
         const dispatchResult = await dispatchEscalation(event);
-        console.log(`✅ ESCALATION SERVICE: Dispatch complete: ${JSON.stringify(dispatchResult)}`);
+        // Dispatch complete
 
         // Record each integration dispatch in webhook_deliveries for dashboard visibility
         if (dispatchResult.ok && dispatchResult.results) {

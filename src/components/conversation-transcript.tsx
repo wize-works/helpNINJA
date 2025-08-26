@@ -4,10 +4,11 @@ import { renderMarkdown } from '@/lib/render-markdown';
 import { HoverScale } from '@/components/ui/animated-page';
 
 interface Message { id: string; role: string; content: string; created_at: string; confidence: number | null }
+interface Escalation { id: string; reason: string; confidence: number | null; rule_id: string | null; created_at: string }
 
-interface Props { conversationId: string; initialMessages: Message[]; total: number; }
+interface Props { conversationId: string; initialMessages: Message[]; total: number; escalations?: Escalation[] }
 
-export default function ConversationTranscript({ conversationId, initialMessages, total }: Props) {
+export default function ConversationTranscript({ conversationId, initialMessages, total, escalations = [] }: Props) {
     const [messages, setMessages] = useState<Message[]>(initialMessages);
     const [loaded, setLoaded] = useState(initialMessages.length);
     const [hasMore, setHasMore] = useState(initialMessages.length < total);
@@ -87,19 +88,32 @@ export default function ConversationTranscript({ conversationId, initialMessages
                 </div>
             </div>
             <div className="space-y-6">
-                {filteredMessages.map(m => (
-                    <div key={m.id} className={`chat ${m.role === 'user' ? 'chat-start' : 'chat-end'}`}>
-                        <div className={`chat-bubble whitespace-pre-wrap break-words max-w-[640px] ${m.role === 'user' ? 'bg-base-200 text-base-content' : 'bg-primary text-primary-content'}`}>
-                            {m.role === 'assistant' ? renderMarkdown(m.content) : highlight(m.content)}
+                {filteredMessages.map(m => {
+                    const escForMessage = escalations.filter(e => Math.abs(new Date(e.created_at).getTime() - new Date(m.created_at).getTime()) < 1500);
+                    return (
+                        <div key={m.id} className="space-y-1">
+                            <div className={`chat ${m.role === 'user' ? 'chat-start' : 'chat-end'}`}>
+                                <div className={`chat-bubble whitespace-pre-wrap break-words max-w-[640px] ${m.role === 'user' ? 'bg-base-200 text-base-content' : 'bg-primary text-primary-content'}`}>
+                                    {m.role === 'assistant' ? renderMarkdown(m.content) : highlight(m.content)}
+                                </div>
+                                <div className="text-[10px] opacity-60 mt-1 flex items-center gap-1">
+                                    {new Date(m.created_at).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' })}
+                                    {m.role !== 'user' && typeof m.confidence === 'number' && isFinite(m.confidence) && (
+                                        <span className={`badge badge-xs ${m.confidence < 0.55 ? 'badge-warning' : 'badge-ghost'}`} title="Model confidence score">{m.confidence.toFixed(2)}</span>
+                                    )}
+                                </div>
+                            </div>
+                            {escForMessage.map(e => (
+                                <div key={e.id} className="flex items-center gap-2 text-[10px] font-medium pl-6">
+                                    <span className="inline-flex items-center gap-1 px-2 py-1 rounded-full bg-warning/15 text-warning border border-warning/30" title={`Escalation: ${e.reason}`}>
+                                        <i className="fa-duotone fa-solid fa-arrow-up-right-from-square" /> Escalated {e.reason.replace(/_/g, ' ')}{typeof e.confidence === 'number' ? ` · conf ${e.confidence.toFixed(2)}` : ''}
+                                    </span>
+                                    {e.rule_id && <span className="badge badge-ghost badge-xs" title={e.rule_id}>Rule</span>}
+                                </div>
+                            ))}
                         </div>
-                        <div className="text-[10px] opacity-60 mt-1 flex items-center gap-1">
-                            {new Date(m.created_at).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' })}
-                            {m.role !== 'user' && typeof m.confidence === 'number' && isFinite(m.confidence) && (
-                                <span className={`badge badge-xs ${m.confidence < 0.55 ? 'badge-warning' : 'badge-ghost'}`} title="Model confidence score">{m.confidence.toFixed(2)}</span>
-                            )}
-                        </div>
-                    </div>
-                ))}
+                    );
+                })}
                 {hasMore && (
                     <div ref={loadRef} className="flex items-center justify-center py-4 text-xs opacity-60">
                         {loading ? 'Loading…' : 'Scroll to load more'}

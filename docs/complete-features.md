@@ -93,6 +93,12 @@ Core features (present)
 - Chat preview
   - Component renders the real widget in an iframe for admins.
   - Files: src/components/chat-preview.tsx
+ - Notifications (MVP In Progress)
+  - Schema + service for in-app notifications (notifications, notification_recipients, notification_preferences)
+  - API: /api/notifications, /api/notifications/unread-count, /api/notifications/mark-all-read, /api/notifications/[id]/read, /api/notification-preferences (GET/PATCH), /api/internal/notifications (POST)
+  - Escalation events automatically generate notifications (low confidence, handoff, rule matches)
+  - Pending UI: bell, feed panel, preferences management, rule direct notification creation
+  - Files: src/sql/063_notifications.sql, src/lib/notifications.ts, src/app/api/notifications/**, src/app/api/notification-preferences/route.ts, src/app/api/internal/notifications/route.ts, src/lib/escalation-service.ts (integration)
 - Site management (NEW - Phase 1 completed)
   - Multi-site registration and domain verification system for tenants
   - API routes: src/app/api/sites/route.ts, src/app/api/sites/[id]/route.ts, src/app/api/sites/[id]/verify/route.ts

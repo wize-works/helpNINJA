@@ -51,14 +51,7 @@ export async function GET(req: NextRequest) {
         }
     }
 
-    console.log('Widget script request:', {
-        tenantPublicKey,
-        siteId,
-        verificationToken,
-        voice,
-        host,
-        refererDomain,
-    });
+    // Widget script request parameters captured (debug logging removed)
 
     // Validate domain + site + key if referer is provided
     const previewMode = skipDomainValidation === true;
@@ -104,7 +97,7 @@ export async function GET(req: NextRequest) {
                     status: m.status,
                     verified: m.verified
                 };
-                console.log('m.domain:', m.domain, 'refererDomain:', refererDomain, 'key_match:', m.key_match, 'status:', m.status, 'verified:', m.verified);
+                // Domain validation debug details removed
                 if (m.domain !== refererDomain) {
                     // Normalize domains by removing www. prefix and any protocol for comparison
                     const normalizedDomain = m.domain.replace(/^www\./, '').replace(/^https?:\/\//, '').replace(/\/$/, '');

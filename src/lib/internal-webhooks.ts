@@ -24,7 +24,7 @@ export async function processInternalWebhook(
     deliveryId: string
 ): Promise<boolean> {
     try {
-        console.log(`🔄 Processing internal webhook ${url}`);
+        // Processing internal webhook (debug log removed)
 
         // Parse URL: internal://service/action/id
         const urlWithoutProtocol = url.replace('internal://', '');
@@ -67,7 +67,7 @@ async function processIntegrationUrl(
         }
 
         const [provider, integrationId] = urlParts;
-        console.log(`🔄 Processing ${provider} integration webhook for ID: ${integrationId}`);
+        // Processing integration webhook (debug log removed)
 
         // Get the integration details
         const { rows } = await query(`
@@ -126,11 +126,10 @@ async function handleEscalationEvent(
     payload: WebhookPayload
 ): Promise<boolean> {
     try {
-        console.log(`🚨 Handling escalation event for integration: ${integration.name} (${integration.id})`);
+        // Handling escalation event (debug log removed)
 
         // Extract relevant data from the webhook payload
-        const { conversation_id, reason, confidence } = payload.data;
-        console.log(`📊 Event data: conversation=${conversation_id}, reason=${reason}, confidence=${confidence}`);
+        // Event data fields removed from destructuring (debug logging removed)
 
         // Extract conversation_id as string (we know this should be a string from the schema)
         const conversationId = typeof payload.data.conversation_id === 'string'
@@ -183,7 +182,7 @@ async function handleEscalationEvent(
 
         // Prepare the escalation parameters
 
-        console.log(`📤 Dispatching escalation to ${integration.provider} integration: ${integration.id}`);
+        // Dispatching escalation (debug log removed)
 
         // Use our centralized escalation service
         const result = await handleEscalation({
@@ -202,7 +201,7 @@ async function handleEscalationEvent(
         });
 
         if (result.ok) {
-            console.log(`✅ Successfully dispatched escalation`);
+            // Successfully dispatched escalation
             return true;
         } else {
             console.error(`❌ Failed to dispatch escalation:`, result.error || 'Unknown error');

@@ -65,9 +65,9 @@ export default function TeamPage() {
         loadTeamMembers();
     };
 
-    const handleEdit = (member: UserMember) => {
+    const handleEdit = () => {
         // TODO: Show edit modal
-        console.log('Edit member:', member);
+        // Edit member action (implementation pending)
     };
 
     const handleRemove = async (member: UserMember) => {

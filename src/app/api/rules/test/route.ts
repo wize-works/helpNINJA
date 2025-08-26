@@ -37,8 +37,6 @@ export async function POST(req: NextRequest) {
             }, { status: 404 });
         }
 
-        console.log(`🔍 Testing ${rules.length} rules against message: "${message.slice(0, 50)}${message.length > 50 ? '...' : ''}"`);
-
         // Prepare evaluation context
         const context = {
             message,

@@ -5,17 +5,17 @@ export const runtime = 'nodejs';
 
 export async function POST() {
     try {
-        console.log('🧪 Test webhook: Starting direct webhook dispatch test');
+        // Starting direct webhook dispatch test
 
         const tenantId = 'd5e3d78f-d52d-4d60-9849-47371f46f205';
         const conversationId = 'test-conversation-123';
         const messageId = 'test-message-456';
 
-        console.log(`🧪 Test webhook: Calling webhookEvents.messageSent with tenantId=${tenantId}`);
+        // Calling webhookEvents.messageSent
 
         await webhookEvents.messageSent(tenantId, conversationId, messageId, 'user');
 
-        console.log('🧪 Test webhook: Webhook dispatch completed');
+        // Webhook dispatch completed
 
         return NextResponse.json({
             success: true,

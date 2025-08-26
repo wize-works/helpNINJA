@@ -63,7 +63,7 @@ export async function POST(req: NextRequest) {
 
                 if (tenantResult.rows.length === 0) {
                     // Tenant doesn't exist, create it synchronously
-                    console.log('Creating tenant for organization during checkout:', orgId);
+                    // Creating tenant for organization during checkout
 
                     const clerk = await clerkClient();
                     const organization = await clerk.organizations.getOrganization({ organizationId: orgId });
@@ -103,7 +103,7 @@ export async function POST(req: NextRequest) {
                         };
                     }
 
-                    console.log('Created tenant:', tenant.id, 'for organization:', organization.name);
+                    // Tenant created
                 } else {
                     tenant = tenantResult.rows[0];
                 }
@@ -119,7 +119,7 @@ export async function POST(req: NextRequest) {
                     customerId = refreshedTenant.rows[0]?.stripe_customer_id;
 
                     if (!customerId) {
-                        console.log('Creating Stripe customer for tenant:', tenant.id);
+                        // Creating Stripe customer for tenant
 
                         const clerk = await clerkClient();
                         const user = await clerk.users.getUser(userId);
@@ -140,9 +140,9 @@ export async function POST(req: NextRequest) {
                             [customerId, tenant.id]
                         );
 
-                        console.log('Created and stored Stripe customer:', customerId, 'for tenant:', tenant.id);
+                        // Created and stored Stripe customer
                     } else {
-                        console.log('Found existing Stripe customer:', customerId, 'for tenant:', tenant.id);
+                        // Found existing Stripe customer
                     }
                 }
 

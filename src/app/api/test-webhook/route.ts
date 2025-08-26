@@ -11,19 +11,9 @@ export async function POST(req: NextRequest) {
     try {
         const body = await req.text();
         const signature = req.headers.get('x-webhook-signature');
-        const event = req.headers.get('x-webhook-event');
         const delivery = req.headers.get('x-webhook-delivery');
-        const timestamp = req.headers.get('x-webhook-timestamp');
-        const isRetry = req.headers.get('x-webhook-retry') === 'true';
 
-        console.log('🎯 Webhook received:', {
-            event,
-            delivery,
-            timestamp,
-            isRetry,
-            hasSignature: !!signature,
-            bodyLength: body.length
-        });
+        // Webhook received (debug log removed)
 
         // Parse the webhook payload
         let payload;
@@ -53,43 +43,37 @@ export async function POST(req: NextRequest) {
                 );
             }
 
-            console.log('✅ Webhook signature validated');
+            // Webhook signature validated
         }
 
         // Log the event details
-        console.log('📦 Webhook payload:', {
-            type: payload.type,
-            tenant_id: payload.tenant_id,
-            timestamp: payload.timestamp,
-            idempotency_key: payload.idempotency_key,
-            data: payload.data
-        });
+        // Webhook payload details removed
 
         // Simulate processing based on event type
         switch (payload.type) {
             case 'conversation.started':
-                console.log(`🟢 New conversation started: ${payload.data.conversation_id}`);
+                // conversation.started
                 break;
             case 'conversation.ended':
-                console.log(`🔴 Conversation ended: ${payload.data.conversation_id} (${payload.data.message_count} messages)`);
+                // conversation.ended
                 break;
             case 'message.sent':
-                console.log(`💬 Message sent: ${payload.data.role} message in ${payload.data.conversation_id}`);
+                // message.sent
                 break;
             case 'escalation.triggered':
-                console.log(`🚨 Escalation triggered: ${payload.data.reason} (confidence: ${payload.data.confidence})`);
+                // escalation.triggered
                 break;
             case 'document.ingested':
-                console.log(`📄 Document ingested: ${payload.data.url} (${payload.data.chunk_count} chunks)`);
+                // document.ingested
                 break;
             case 'rule.matched':
-                console.log(`🎯 Rule matched: ${payload.data.rule_id}`);
+                // rule.matched
                 break;
             case 'site.verified':
-                console.log(`✅ Site verified: ${payload.data.domain}`);
+                // site.verified
                 break;
             default:
-                console.log(`❓ Unknown event type: ${payload.type}`);
+            // unknown event type
         }
 
         // Return success response

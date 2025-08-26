@@ -54,12 +54,8 @@ function evaluateCondition(condition: RuleCondition, context: EvaluationContext)
                 return evaluateNumericCondition(confidence, operator, value as number, 'confidence');
 
             case 'keyword':
-                console.log(`🔤 Evaluating keyword condition: ${operator} "${value}"`);
                 const keywords = context.keywords || [];
-                console.log(`📚 Keywords in context: ${JSON.stringify(keywords)}`);
-
                 const message = context.message.toLowerCase();
-                console.log(`📄 Message text: "${message}"`);
 
                 const keywordValue = String(value).toLowerCase();
 
@@ -69,16 +65,12 @@ function evaluateCondition(condition: RuleCondition, context: EvaluationContext)
                         const foundInMessage = message.includes(keywordValue);
                         const found = foundInKeywords || foundInMessage;
 
-                        console.log(`${found ? '✅' : '❌'} Keyword "${keywordValue}" ${found ? 'FOUND' : 'NOT FOUND'} in ${foundInMessage ? 'message text' : (foundInKeywords ? 'keywords array' : 'message or keywords')}`);
-
                         return { result: found, reason: `Message ${found ? 'contains' : 'does not contain'} keyword "${keywordValue}"` };
 
                     case 'not_contains':
                         const notFoundInKeywords = !keywords.some(k => k.includes(keywordValue));
                         const notFoundInMessage = !message.includes(keywordValue);
                         const notFound = notFoundInKeywords && notFoundInMessage;
-
-                        console.log(`${notFound ? '✅' : '❌'} Keyword "${keywordValue}" ${notFound ? 'NOT FOUND' : 'FOUND'} in message or keywords`);
 
                         return { result: notFound, reason: `Message ${notFound ? 'does not contain' : 'contains'} keyword "${keywordValue}"` };
 
@@ -89,12 +81,9 @@ function evaluateCondition(condition: RuleCondition, context: EvaluationContext)
                             return keywords.includes(val) || message.includes(val);
                         });
 
-                        console.log(`${hasAny ? '✅' : '❌'} Message ${hasAny ? 'contains' : 'does not contain'} at least one of: ${valueArray.join(', ')}`);
-
                         return { result: hasAny, reason: `Message ${hasAny ? 'contains' : 'does not contain'} any of: ${valueArray.join(', ')}` };
 
                     default:
-                        console.log(`❌ Unsupported keyword operator: ${operator}`);
                         return { result: false, reason: `Unsupported keyword operator: ${operator}` };
                 }
 

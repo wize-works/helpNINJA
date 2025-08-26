@@ -30,7 +30,7 @@ export function generateWebhookSignature(payload: string, secret: string): strin
  * Get all active webhook endpoints for a tenant that are subscribed to an event type
  */
 async function getWebhookEndpoints(tenantId: string, eventType: string): Promise<WebhookEndpoint[]> {
-    console.log(`🔍 Getting webhook endpoints for tenant ${tenantId} and event type ${eventType}`);
+    // Fetching webhook endpoints
 
     const { rows } = await query(`
     SELECT id, url, events, secret, is_active, tenant_id
@@ -41,10 +41,7 @@ async function getWebhookEndpoints(tenantId: string, eventType: string): Promise
     ORDER BY created_at ASC
   `, [tenantId, eventType]);
 
-    console.log(`🔍 Found ${rows.length} webhook endpoints for event ${eventType}`);
-    rows.forEach((row, index) => {
-        console.log(`  Endpoint ${index + 1}: ${row.url}, events: ${JSON.stringify(row.events)}`);
-    });
+    // Found webhook endpoints
 
     return rows as WebhookEndpoint[];
 }
@@ -141,7 +138,7 @@ async function processInternalWebhook(
     deliveryId: string
 ): Promise<boolean> {
     try {
-        console.log(`🔄 Processing internal webhook ${url}`);
+        // Processing internal webhook
 
         // Parse URL: internal://service/action/id
         const urlWithoutProtocol = url.replace('internal://', '');
@@ -153,19 +150,14 @@ async function processInternalWebhook(
         }
 
         // Log the event data for debugging
-        console.log(`📦 Internal webhook payload:`, {
-            type: event.type,
-            dataKeys: Object.keys(event.data),
-            timestamp: event.timestamp || new Date().toISOString(),
-            tenant_id: event.tenantId
-        });
+        // Internal webhook payload (debug details removed)
 
         // Handle integration URLs - internal://integration/provider/id
         if (parts[0] === 'integration' && parts.length >= 3) {
             const provider = parts[1];
             const integrationId = parts[2];
 
-            console.log(`🔄 Processing ${provider} integration webhook for ID: ${integrationId}`);
+            // Processing integration webhook
 
             // Get the integration details
             const { rows } = await query(`
@@ -185,7 +177,7 @@ async function processInternalWebhook(
             // Handle specific event types
             if (event.type === 'escalation.triggered' && event.data.conversation_id) {
                 // Call escalate API directly - this is the simplest approach to ensure it works
-                console.log(`📤 Forwarding escalation to ${provider} provider for conversation ${event.data.conversation_id}`);
+                // Forwarding escalation to provider
 
                 let userMessage = event.data.user_message || "No message available";
                 let response;
@@ -206,9 +198,9 @@ async function processInternalWebhook(
                         );
 
                         userMessage = messages.length > 0 ? messages[0].content : "No message available";
-                        console.log(`📝 Found user message for escalation: ${userMessage !== "No message available" ? 'Yes' : 'No'}`);
+                        // User message presence logged (removed)
                     } else {
-                        console.log(`📝 Using provided user message for escalation`);
+                        // Using provided user message
                     }
 
                     // Use our centralized escalation service directly instead of making an HTTP call
@@ -258,7 +250,7 @@ async function processInternalWebhook(
                 const responseText = await response.text().catch(() => '');
 
                 if (response.ok) {
-                    console.log('✅ Successfully forwarded escalation');
+                    // Successfully forwarded escalation
                     await updateWebhookDelivery(deliveryId, 'delivered', response.status, responseText);
                     await updateWebhookStats(integration.id, true);
                     return true;
@@ -290,15 +282,15 @@ async function processInternalWebhook(
  * Send webhook to a single endpoint
  */
 async function sendWebhook(endpoint: WebhookEndpoint, event: WebhookEvent): Promise<boolean> {
-    console.log(`🚀 Starting webhook delivery to ${endpoint.url} for event ${event.type}`);
+    // Starting webhook delivery
 
     const deliveryId = await createWebhookDelivery(endpoint.id, event);
-    console.log(`📝 Created delivery record: ${deliveryId}`);
+    // Created delivery record
 
     try {
         // Special handling for internal webhooks
         if (endpoint.url.startsWith('internal://')) {
-            console.log(`🔄 Detected internal webhook URL: ${endpoint.url}`);
+            // Detected internal webhook URL
             return processInternalWebhook(endpoint.url, event, deliveryId);
         }
 
@@ -311,7 +303,7 @@ async function sendWebhook(endpoint: WebhookEndpoint, event: WebhookEvent): Prom
             idempotency_key: event.idempotencyKey || crypto.randomUUID()
         });
 
-        console.log(`📦 Webhook payload prepared:`, { type: event.type, dataKeys: Object.keys(event.data) });
+        // Webhook payload prepared
 
         const headers: Record<string, string> = {
             'Content-Type': 'application/json',
@@ -325,10 +317,10 @@ async function sendWebhook(endpoint: WebhookEndpoint, event: WebhookEvent): Prom
         if (endpoint.secret) {
             const signature = generateWebhookSignature(payload, endpoint.secret);
             headers['X-Webhook-Signature'] = `sha256=${signature}`;
-            console.log(`🔐 Added signature header`);
+            // Added signature header
         }
 
-        console.log(`🌐 Making HTTP request to: ${endpoint.url}`);
+        // Making HTTP request
 
         const response = await fetch(endpoint.url, {
             method: 'POST',
@@ -337,17 +329,17 @@ async function sendWebhook(endpoint: WebhookEndpoint, event: WebhookEvent): Prom
             signal: AbortSignal.timeout(30000) // 30 second timeout
         });
 
-        console.log(`📡 Response received: ${response.status} ${response.statusText}`);
+        // Webhook response received
 
         const responseText = await response.text().catch(() => '');
 
         if (response.ok) {
-            console.log(`✅ Webhook delivered successfully`);
+            // Webhook delivered successfully
             await updateWebhookDelivery(deliveryId, 'delivered', response.status, responseText);
             await updateWebhookStats(endpoint.id, true);
             return true;
         } else {
-            console.log(`❌ Webhook delivery failed: HTTP ${response.status}`);
+            // Webhook delivery failed
             await updateWebhookDelivery(deliveryId, 'failed', response.status, undefined, `HTTP ${response.status}: ${responseText}`);
             await updateWebhookStats(endpoint.id, false);
             return false;
@@ -363,36 +355,27 @@ async function sendWebhook(endpoint: WebhookEndpoint, event: WebhookEvent): Prom
  * Main function to dispatch webhooks for an event
  */
 export async function dispatchWebhooks(event: WebhookEvent): Promise<void> {
-    console.log(`🎯 Dispatching webhook event: ${event.type} for tenant ${event.tenantId}`);
+    // Dispatching webhook event
 
     try {
         const endpoints = await getWebhookEndpoints(event.tenantId, event.type);
 
-        console.log(`📋 Found ${endpoints.length} webhook endpoints for event ${event.type}`);
+        // Found webhook endpoints for event
 
         if (endpoints.length === 0) {
-            console.log(`⚠️ No active webhook endpoints found for event ${event.type} in tenant ${event.tenantId}`);
+            // No active webhook endpoints found
             return;
         }
 
-        endpoints.forEach((endpoint, index) => {
-            console.log(`🔗 Endpoint ${index + 1}: ${endpoint.id} (${endpoint.url}) - Active: ${endpoint.is_active}`);
-        });
+        // Endpoint details omitted
 
-        console.log(`🚀 Sending webhooks to ${endpoints.length} endpoint(s)...`);
+        // Sending webhooks
 
         // Send webhooks in parallel
-        const promises = endpoints.map((endpoint, index) => {
-            console.log(`📤 Starting webhook ${index + 1}/${endpoints.length} to ${endpoint.id}`);
-            return sendWebhook(endpoint, event);
-        });
+        const promises = endpoints.map((endpoint) => sendWebhook(endpoint, event));
 
-        const results = await Promise.allSettled(promises);
-
-        const successful = results.filter(r => r.status === 'fulfilled' && r.value === true).length;
-        const failed = results.length - successful;
-
-        console.log(`✅ Webhook dispatch complete: ${successful} successful, ${failed} failed`);
+        await Promise.allSettled(promises);
+        // Webhook dispatch complete
 
     } catch (error) {
         console.error('💥 Error dispatching webhooks:', error);
@@ -440,12 +423,12 @@ export const webhookEvents = {
         }),
 
     escalationTriggered: async (tenantId: string, conversationId: string, reason: string, confidence?: number, userMessage?: string) => {
-        console.log(`🔔 escalationTriggered webhook called for conversation: ${conversationId}`);
+        // escalationTriggered webhook called
 
         // If we don't have the user message and we have a conversation ID, try to fetch it
         if (!userMessage && conversationId) {
             try {
-                console.log(`🔍 No user message provided, fetching from database for conversation ${conversationId}`);
+                // Fetching user message from database
                 // Get the latest user message from this conversation
                 const { rows: messages } = await query(
                     `SELECT content FROM public.messages 
@@ -456,15 +439,15 @@ export const webhookEvents = {
                 );
 
                 userMessage = messages.length > 0 ? messages[0].content : undefined;
-                console.log(`📝 Found user message for escalation webhook: ${userMessage ? 'Yes' : 'No'}`);
+                // User message for escalation fetched
             } catch (error) {
                 console.error('❌ Failed to fetch user message for escalation webhook:', error);
             }
         } else if (userMessage) {
-            console.log(`📄 Using provided user message for webhook: ${userMessage.substring(0, 30)}${userMessage.length > 30 ? '...' : ''}`);
+            // Using provided user message
         }
 
-        console.log(`📤 Dispatching escalation.triggered webhook for conversation: ${conversationId}`);
+        // Dispatching escalation.triggered webhook
         return dispatchWebhooks({
             type: 'escalation.triggered',
             tenantId,

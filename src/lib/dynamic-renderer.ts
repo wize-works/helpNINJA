@@ -30,7 +30,7 @@ class PlaywrightRenderer implements DynamicRenderer {
         const chromium = (mod && typeof mod === 'object' && (mod as Record<string, unknown>).chromium) as unknown as ChromiumLike | undefined;
         if (!chromium) throw new Error('playwright not installed');
         const browser = await chromium.launch({ headless: true });
-        const start = Date.now();
+        // Timing removed
         try {
             const context = await browser.newContext({
                 userAgent: 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) helpNINJA-bot/1.0 (+https://helpninja.ai)'
@@ -51,8 +51,7 @@ class PlaywrightRenderer implements DynamicRenderer {
             return { html, mode: 'headless' };
         } finally {
             await browser.close();
-            const dur = Date.now() - start;
-            if (dur > 4000) console.log(`[dynamic-render] headless render took ${dur}ms ${url}`);
+            // headless render duration tracking removed
         }
     }
 }

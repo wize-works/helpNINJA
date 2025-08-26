@@ -48,7 +48,7 @@ async function loadSchemaVectorDims() {
                     );
                 }
             } else {
-                console.log(`✅ Embedding dimensions aligned at ${SCHEMA_EMBEDDING_DIMENSIONS}`);
+                // Embedding dimensions aligned (debug log removed)
             }
         } else {
             console.warn('Could not determine embedding column dimension; proceeding without check.');
@@ -83,7 +83,7 @@ async function ensureDimsOk() {
     }
 }
 
-console.log(`📊 Using embedding model: ${EMBEDDING_MODEL} (expected ${EMBEDDING_DIMENSIONS} dims)`);
+// Using embedding model: ${EMBEDDING_MODEL} (log removed)
 
 // Function to determine which embedding model to use
 async function determineEmbeddingModel(): Promise<{ model: string, dimensions: number }> {
@@ -108,7 +108,7 @@ export async function embedBatch(texts: string[]) {
 
     // Initialize OpenAI only when needed at runtime
     const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
-    console.log(`🔢 Embedding batch (${validTexts.length}) with model ${model}`);
+    // Embedding batch (${validTexts.length}) with model ${model} (debug log removed)
 
     const { data } = await openai.embeddings.create({
         model,
@@ -124,7 +124,7 @@ export async function embedQuery(text: string) {
 
     // Initialize OpenAI only when needed at runtime
     const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
-    console.log(`🔍 Embedding query with model ${model}`);
+    // Embedding query with model ${model} (debug log removed)
 
     const { data } = await openai.embeddings.create({
         model,

@@ -9,15 +9,15 @@ import { query } from "@/lib/db";
 export const runtime = 'nodejs';
 
 async function getSitesStats(tenantId: string) {
-    console.log('getSitesStats called with tenantId:', tenantId);
+    // getSitesStats invoked
 
     try {
         // First, let's check if we have any tenant_sites at all
-        const siteCheck = await query(
+        await query(
             'SELECT COUNT(*) as count FROM public.tenant_sites WHERE tenant_id = $1',
             [tenantId]
         );
-        console.log('Site check result:', siteCheck.rows);
+        // Site check performed
 
         const statsQuery = await query<{
             total_sites: number;
@@ -41,7 +41,7 @@ async function getSitesStats(tenantId: string) {
             [tenantId]
         );
 
-        console.log('Stats query result:', statsQuery.rows[0]);
+        // Stats query retrieved
 
         return statsQuery.rows[0] || {
             total_sites: 0,
@@ -66,7 +66,7 @@ async function getSitesStats(tenantId: string) {
 
 export default async function SitesPage() {
     const tenantId = await getTenantIdStrict();
-    console.log('SitesPage tenantId resolved:', tenantId);
+    // SitesPage tenantId resolved
     const stats = await getSitesStats(tenantId);
 
     const breadcrumbItems = [

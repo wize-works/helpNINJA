@@ -13,35 +13,19 @@ export async function OPTIONS() {
 
 export async function POST(req: NextRequest) {
     try {
-        console.log(`🚨 ESCALATE DEBUG [1]: Escalation API called`);
-
         if (req.method !== 'POST') {
-            console.log(`🚨 ESCALATE DEBUG [2]: Invalid method: ${req.method}`);
             return withCORS(NextResponse.json({ error: 'method not allowed' }, { status: 405 }));
         }
 
-        // Log raw request body for debugging
-        const rawBody = await req.text();
-        console.log(`🚨 ESCALATE DEBUG [3]: Raw request body: ${rawBody}`);
+        // Parse request JSON
+        const payload = JSON.parse(await req.text());
 
-        // Parse the JSON
-        const payload = JSON.parse(rawBody);
-
-        // Check for webhook loop prevention flags
-        const isWebhookOrigin = !!payload.fromWebhook;
-        const hasIntegrationId = !!payload.integrationId;
-        const isFromChat = !!payload.fromChat;
-        const shouldSkipWebhooks = !!payload.skipWebhooks;
-
-        console.log(`🚨 ESCALATE DEBUG [4]: Parsed request payload: ${JSON.stringify(payload)}`);
-        console.log(`🚨 ESCALATE DEBUG [4.1]: Request origin flags - fromWebhook: ${isWebhookOrigin}, integrationId: ${hasIntegrationId}, fromChat: ${isFromChat}, skipWebhooks: ${shouldSkipWebhooks}`);
+        // Note: origin flags (fromWebhook, integrationId, fromChat, skipWebhooks) are kept in payload for handleEscalation meta usage.
 
         // ensure tenantId present via strict server resolution
         if (!payload?.tenantId) {
-            console.log(`🚨 ESCALATE DEBUG [5]: Missing tenantId, attempting strict resolution`);
             try {
                 payload.tenantId = await getTenantIdStrict();
-                console.log(`🚨 ESCALATE DEBUG [6]: Resolved tenantId: ${payload.tenantId}`);
             } catch (error) {
                 console.error(`🚨 ESCALATE DEBUG [7]: Failed to resolve tenantId: ${error instanceof Error ? error.message : 'Unknown error'}`);
             }
@@ -52,15 +36,11 @@ export async function POST(req: NextRequest) {
             return withCORS(NextResponse.json({ error: 'missing fields' }, { status: 400 }))
         }
 
-        console.log(`🚨 ESCALATE DEBUG [9]: Escalation triggered for tenant ${payload.tenantId}, conversation ${payload.conversationId}`);
-
         // Check if a rule was already matched in the chat route
         let matchedRuleDestinations = null;
         let ruleId = payload.matchedRuleId || payload.ruleId || null;
 
         if (ruleId) {
-            console.log(`🔍 Using rule ID: ${ruleId}`);
-
             // Get the rule details if needed
             const { rows } = await query(
                 `SELECT * FROM public.escalation_rules WHERE id = $1 AND tenant_id = $2`,
@@ -69,15 +49,10 @@ export async function POST(req: NextRequest) {
 
             if (rows.length > 0) {
                 const matchedRule = rows[0];
-                console.log(`✅ Found rule: "${matchedRule.name}"`);
 
                 // Use destinations from the rule
                 if (matchedRule.destinations && matchedRule.destinations.length > 0) {
-                    console.log(`📤 Using destinations from rule: ${matchedRule.name}`);
                     matchedRuleDestinations = matchedRule.destinations;
-
-                    // Log detailed information about destinations for debugging
-                    console.log(`🔎 DEBUG: Destination details: ${JSON.stringify(matchedRuleDestinations)}`);
                 }
             }
         }
@@ -91,8 +66,6 @@ export async function POST(req: NextRequest) {
                  ORDER BY priority DESC, created_at DESC`,
                 [payload.tenantId, payload.siteId || null]
             );
-
-            console.log(`📋 Found ${rules.length} active escalation rules for tenant ${payload.tenantId}`);
 
             if (rules.length > 0) {
                 // Prepare evaluation context
@@ -118,21 +91,13 @@ export async function POST(req: NextRequest) {
                     const result = evaluateRuleConditions(conditions, context);
 
                     if (result.matched) {
-                        console.log(`✅ Rule matched: ${rule.name} (${rule.id})`);
                         ruleId = rule.id;
                         matchedRuleDestinations = rule.destinations || [];
                         break;
                     }
                 }
-
-                if (!ruleId) {
-                    console.log('⚠️ No matching rule found, will use default integrations');
-                }
             }
         }
-
-        // Use our centralized escalation service
-        console.log(`🚀 Calling handleEscalation service`);
 
         const result = await handleEscalation({
             tenantId: payload.tenantId,
@@ -160,11 +125,7 @@ export async function POST(req: NextRequest) {
             }
         });
 
-        console.log(`🚨 ESCALATE DEBUG [13]: Escalation service result: ${JSON.stringify(result)}`);
-
-        if (result.ok) {
-            console.log('✅ ESCALATE DEBUG [14]: Escalation handled successfully');
-        } else {
+        if (!result.ok) {
             console.error(`❌ ESCALATE DEBUG [15]: Failed to handle escalation: ${result.error || 'Unknown error'}`);
         }
 

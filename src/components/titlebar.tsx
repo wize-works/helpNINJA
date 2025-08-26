@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import ThemeToggle from "./theme-toggle";
+import NotificationsBell from "./notifications-bell";
 import Logo from "./logo";
 import { HoverScale, SlideIn } from "./ui/animated-page";
 import { SignOutButton, useUser } from "@clerk/nextjs";
@@ -119,17 +120,7 @@ export default function Titlebar() {
                                 </HoverScale>
 
                                 {/* Notifications */}
-                                <HoverScale scale={1.05}>
-                                    <button
-                                        className="relative w-9 h-9 rounded-lg bg-base-200/60 hover:bg-base-200 border border-base-300/40 flex items-center justify-center transition-all duration-200 group"
-                                        aria-label="Notifications"
-                                        title="Notifications"
-                                    >
-                                        <i className="fa-duotone fa-solid fa-bell text-sm text-base-content/70 group-hover:text-base-content" aria-hidden />
-                                        {/* Notification indicator */}
-                                        <div className="absolute -top-1 -right-1 w-2.5 h-2.5 bg-error rounded-full border border-base-100"></div>
-                                    </button>
-                                </HoverScale>
+                                <NotificationsBell />
 
                                 {/* Help */}
                                 <HoverScale scale={1.05}>

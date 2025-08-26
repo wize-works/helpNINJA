@@ -32,37 +32,32 @@ type NavSectionCollapsible = NavSectionBase & {
 
 type NavSection = NavSectionLink | NavSectionCollapsible;
 
-// Main navigation sections with collapsible functionality
+// Main navigation sections with improved information architecture
+// Order reflects onboarding -> operations -> optimization -> admin
 const navigationSections: NavSection[] = [
+    { id: "dashboard", label: "Dashboard", icon: "fa-gauge-high", href: "/dashboard", collapsible: false },
     {
-        id: "dashboard",
-        label: "Dashboard",
-        icon: "fa-gauge-high",
-        href: "/dashboard",
-        collapsible: false
-    },
-    {
-        id: "sites",
-        label: "Sites",
-        icon: "fa-globe",
+        id: "knowledge",
+        label: "Knowledge",
+        icon: "fa-book",
         collapsible: true,
         defaultOpen: true,
         items: [
-            { href: "/dashboard/sites", label: "Manage Sites", badge: null },
+            { href: "/dashboard/sites", label: "Sites", badge: null },
             { href: "/dashboard/sources", label: "Sources", badge: null },
             { href: "/dashboard/documents", label: "Documents", badge: null },
             { href: "/dashboard/answers", label: "Answers", badge: null },
             { href: "/dashboard/widget", label: "Widget Settings", badge: null },
         ]
     },
+    { id: "conversations", label: "Conversations", icon: "fa-comments", href: "/dashboard/conversations", collapsible: false },
     {
-        id: "conversations",
-        label: "Conversations",
-        icon: "fa-comments",
+        id: "automation",
+        label: "Automation",
+        icon: "fa-gears",
         collapsible: true,
         defaultOpen: false,
         items: [
-            { href: "/dashboard/conversations", label: "All Conversations", badge: null },
             { href: "/dashboard/rules", label: "Escalation Rules", badge: null },
             { href: "/dashboard/outbox", label: "Delivery Status", badge: null },
         ]
@@ -74,46 +69,16 @@ const navigationSections: NavSection[] = [
         collapsible: true,
         defaultOpen: false,
         items: [
-            { href: "/dashboard/integrations", label: "Dashboard", badge: 2 },
+            { href: "/dashboard/integrations", label: "Installed", badge: 2 },
             { href: "/dashboard/integrations/marketplace", label: "Marketplace", badge: null },
-            { href: "/dashboard/settings/api", label: "API Keys", badge: null },
         ]
     },
-    {
-        id: "analytics",
-        label: "Analytics",
-        icon: "fa-chart-line",
-        href: "/dashboard/analytics",
-        collapsible: false
-    },
-    {
-        id: "tools",
-        label: "Tools",
-        icon: "fa-wrench",
-        collapsible: true,
-        defaultOpen: false,
-        items: [
-            { href: "/dashboard/playground", label: "Playground", badge: null },
-            { href: "/dashboard/team", label: "Team", badge: null },
-        ]
-    },
-    {
-        id: "settings",
-        label: "Settings",
-        icon: "fa-sliders",
-        collapsible: true,
-        defaultOpen: false,
-        items: [
-            { href: "/dashboard/settings", label: "General", badge: null },
-        ]
-    },
-    {
-        id: "billing",
-        label: "Billing",
-        icon: "fa-credit-card",
-        href: "/dashboard/billing",
-        collapsible: false
-    }
+    { id: "analytics", label: "Analytics", icon: "fa-chart-line", href: "/dashboard/analytics", collapsible: false },
+    { id: "playground", label: "Playground", icon: "fa-flask", href: "/dashboard/playground", collapsible: false },
+    { id: "team", label: "Team & Access", icon: "fa-users", href: "/dashboard/team", collapsible: false },
+    { id: "developers", label: "Developers", icon: "fa-code", href: "/dashboard/settings/api", collapsible: false },
+    { id: "settings", label: "Settings", icon: "fa-sliders", href: "/dashboard/settings", collapsible: false },
+    { id: "billing", label: "Billing", icon: "fa-credit-card", href: "/dashboard/billing", collapsible: false }
 ];
 
 type Usage = { used: number; limit: number; plan: string } | null;
@@ -124,16 +89,31 @@ export default function Sidebar() {
     const [usage, setUsage] = useState<Usage>(null);
     const [offline, setOffline] = useState(false);
     const [collapsedSections, setCollapsedSections] = useState<Record<string, boolean>>({});
+    const [loadingUsage, setLoadingUsage] = useState(true);
+
+    const LS_KEY = 'sidebarCollapsedSections';
 
     useEffect(() => {
-        // Initialize collapsed state based on default settings
-        const initialCollapsed: Record<string, boolean> = {};
-        navigationSections.forEach(section => {
-            if (section.collapsible) {
-                initialCollapsed[section.id] = !section.defaultOpen;
+        // Initialize collapsed state from localStorage or default settings
+        try {
+            const stored = typeof window !== 'undefined' ? localStorage.getItem(LS_KEY) : null;
+            if (stored) {
+                const parsed = JSON.parse(stored) as Record<string, boolean>;
+                // Ensure any newly added sections get defaults
+                navigationSections.forEach(section => {
+                    if (section.collapsible && !(section.id in parsed)) {
+                        parsed[section.id] = !section.defaultOpen;
+                    }
+                });
+                setCollapsedSections(parsed);
+                return;
             }
+        } catch { /* ignore */ }
+        const initial: Record<string, boolean> = {};
+        navigationSections.forEach(section => {
+            if (section.collapsible) initial[section.id] = !section.defaultOpen;
         });
-        setCollapsedSections(initialCollapsed);
+        setCollapsedSections(initial);
     }, []);
 
     useEffect(() => {
@@ -150,6 +130,8 @@ export default function Sidebar() {
                 }
             } catch {
                 if (!cancelled) { setOffline(true); }
+            } finally {
+                if (!cancelled) setLoadingUsage(false);
             }
         }
         load();
@@ -157,10 +139,11 @@ export default function Sidebar() {
     }, [tenantId]);
 
     const toggleSection = (sectionId: string) => {
-        setCollapsedSections(prev => ({
-            ...prev,
-            [sectionId]: !prev[sectionId]
-        }));
+        setCollapsedSections(prev => {
+            const next = { ...prev, [sectionId]: !prev[sectionId] };
+            try { localStorage.setItem(LS_KEY, JSON.stringify(next)); } catch { /* ignore */ }
+            return next;
+        });
     };
 
     const isActive = (href: string) => {
@@ -175,76 +158,79 @@ export default function Sidebar() {
             <div className="h-full flex flex-col">
                 {/* Main Navigation */}
                 <nav className="flex-1 px-3 py-6 space-y-1">
-                    {navigationSections.map((section, index) => (
-                        <SlideIn key={section.id} delay={index * 0.05} className="space-y-1">
-                            {/* Section Header / Main Item */}
-                            {section.collapsible ? (
-                                <button
-                                    onClick={() => toggleSection(section.id)}
-                                    className="w-full flex items-center justify-between px-3 py-2.5 rounded-lg text-sm font-medium text-base-content/80 hover:text-base-content hover:bg-base-200/60 transition-all duration-200 group"
-                                >
-                                    <div className="flex items-center gap-3">
-                                        <i className={`fa-duotone fa-solid ${section.icon} text-base opacity-70 group-hover:opacity-100`} aria-hidden />
-                                        <span>{section.label}</span>
-                                    </div>
-                                    <i
-                                        className={`fa-duotone fa-solid fa-chevron-down text-xs opacity-50 transition-transform duration-200 ${collapsedSections[section.id] ? '-rotate-90' : ''
-                                            }`}
-                                        aria-hidden
-                                    />
-                                </button>
-                            ) : (
-                                <HoverScale scale={1.01}>
-                                    <Link
-                                        href={section.href}
-                                        className={`flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all duration-200 ${isActive(section.href)
-                                            ? "bg-base-200 text-base-content shadow-sm border border-base-300/60"
-                                            : "text-base-content/80 hover:text-base-content hover:bg-base-200/60"
-                                            }`}
+                    {navigationSections.map((section, index) => {
+                        // Add visual dividers between conceptual tiers
+                        return (
+                            <SlideIn key={section.id} delay={index * 0.05}>
+                                {/* Section Header / Main Item */}
+                                {section.collapsible ? (
+                                    <button
+                                        onClick={() => toggleSection(section.id)}
+                                        className="w-full flex items-center justify-between px-3 py-2 rounded-md text-sm font-medium text-base-content/80 hover:text-base-content hover:bg-base-200/60 transition-colors duration-150 group"
                                     >
-                                        <i className={`fa-duotone fa-solid ${section.icon} text-base ${isActive(section.href) ? "opacity-100" : "opacity-70"
-                                            }`} aria-hidden />
-                                        <span>{section.label}</span>
-                                    </Link>
-                                </HoverScale>
-                            )}
+                                        <div className="flex items-center gap-3">
+                                            <i className={`fa-duotone fa-solid ${section.icon} text-base opacity-70 group-hover:opacity-100`} aria-hidden />
+                                            <span>{section.label}</span>
+                                        </div>
+                                        <i
+                                            className={`fa-duotone fa-solid fa-chevron-down text-xs opacity-50 transition-transform duration-200 ${collapsedSections[section.id] ? '-rotate-90' : ''
+                                                }`}
+                                            aria-hidden
+                                        />
+                                    </button>
+                                ) : (
+                                    <HoverScale scale={1.01}>
+                                        <Link
+                                            href={section.href}
+                                            className={`flex items-center gap-3 px-3 py-2 rounded-md text-sm font-medium transition-colors duration-150 ${isActive(section.href)
+                                                ? "bg-base-200 text-base-content border border-base-300/60"
+                                                : "text-base-content/80 hover:text-base-content hover:bg-base-200/60"
+                                                }`}
+                                        >
+                                            <i className={`fa-duotone fa-solid ${section.icon} text-base ${isActive(section.href) ? "opacity-100" : "opacity-70"
+                                                }`} aria-hidden />
+                                            <span>{section.label}</span>
+                                        </Link>
+                                    </HoverScale>
+                                )}
 
-                            {/* Collapsible Items */}
-                            {section.collapsible && section.items && !collapsedSections[section.id] && (
-                                <div className="ml-6 space-y-1">
-                                    {section.items.map((item, itemIndex) => (
-                                        <SlideIn key={item.href} delay={(index * 0.05) + (itemIndex * 0.02)}>
-                                            <HoverScale scale={item.disabled ? 1 : 1.01}>
-                                                {item.disabled ? (
-                                                    <div className="flex items-center justify-between px-3 py-2 rounded-lg text-sm text-base-content/40 cursor-not-allowed">
-                                                        <span>{item.label}</span>
-                                                        <span className="text-xs bg-base-300/50 text-base-content/50 px-2 py-0.5 rounded">
-                                                            Coming Soon
-                                                        </span>
-                                                    </div>
-                                                ) : (
-                                                    <Link
-                                                        href={item.href}
-                                                        className={`flex items-center justify-between px-3 py-2 rounded-lg text-sm transition-all duration-200 ${isActive(item.href)
-                                                            ? "bg-primary/10 text-primary font-medium shadow-sm"
-                                                            : "text-base-content/70 hover:text-base-content hover:bg-base-200/60"
-                                                            }`}
-                                                    >
-                                                        <span>{item.label}</span>
-                                                        {item.badge && (
-                                                            <span className="inline-flex items-center justify-center w-5 h-5 text-xs font-medium bg-accent text-accent-content rounded-full">
-                                                                {item.badge}
+                                {/* Collapsible Items */}
+                                {section.collapsible && section.items && !collapsedSections[section.id] && (
+                                    <div className="ml-5 mt-1 mb-2 space-y-0.5">
+                                        {section.items.map((item, itemIndex) => (
+                                            <SlideIn key={item.href} delay={(index * 0.05) + (itemIndex * 0.02)}>
+                                                <HoverScale scale={item.disabled ? 1 : 1.01}>
+                                                    {item.disabled ? (
+                                                        <div className="flex items-center justify-between px-3 py-2 rounded-lg text-sm text-base-content/40 cursor-not-allowed">
+                                                            <span>{item.label}</span>
+                                                            <span className="text-xs bg-base-300/50 text-base-content/50 px-2 py-0.5 rounded">
+                                                                Coming Soon
                                                             </span>
-                                                        )}
-                                                    </Link>
-                                                )}
-                                            </HoverScale>
-                                        </SlideIn>
-                                    ))}
-                                </div>
-                            )}
-                        </SlideIn>
-                    ))}
+                                                        </div>
+                                                    ) : (
+                                                        <Link
+                                                            href={item.href}
+                                                            className={`flex items-center justify-between px-3 py-2 rounded-lg text-sm transition-all duration-200 ${isActive(item.href)
+                                                                ? "bg-primary/10 text-primary font-medium shadow-sm"
+                                                                : "text-base-content/70 hover:text-base-content hover:bg-base-200/60"
+                                                                }`}
+                                                        >
+                                                            <span>{item.label}</span>
+                                                            {item.badge && (
+                                                                <span className="inline-flex items-center justify-center w-5 h-5 text-xs font-medium bg-accent text-accent-content rounded-full">
+                                                                    {item.badge}
+                                                                </span>
+                                                            )}
+                                                        </Link>
+                                                    )}
+                                                </HoverScale>
+                                            </SlideIn>
+                                        ))}
+                                    </div>
+                                )}
+                            </SlideIn>
+                        )
+                    })}
                 </nav>
 
                 {/* Usage Statistics Card */}
@@ -271,26 +257,44 @@ export default function Sidebar() {
                             </div>
 
                             <div className="space-y-2">
-                                <div className="flex items-center justify-between text-sm">
-                                    <span className="text-base-content/70">User messages<br /><span className="text-xs">(UTC month)</span></span>
-                                    <span className="font-medium">
-                                        {usage ? usage.used : 45} / {usage ? usage.limit : 100}
-                                    </span>
-                                </div>
-                                <div className="w-full bg-base-300/60 rounded-full h-2">
-                                    <div
-                                        className="bg-gradient-to-r from-primary to-secondary h-2 rounded-full transition-all duration-500"
-                                        style={{
-                                            width: `${usage ? Math.min(100, (usage.used / usage.limit) * 100) : 45}%`
-                                        }}
-                                    />
-                                </div>
-                                <div className="flex items-center justify-between text-xs text-base-content/60">
-                                    <span>This month</span>
-                                    <span>
-                                        {usage ? `${Math.round(Math.min(100, (usage.used / usage.limit) * 100))}%` : '45%'} used
-                                    </span>
-                                </div>
+                                {loadingUsage ? (
+                                    <div className="space-y-2 animate-pulse" aria-label="Loading usage metrics">
+                                        <div className="flex items-center justify-between text-sm">
+                                            <span className="text-base-content/40">User messages<br /><span className="text-xs">(UTC month)</span></span>
+                                            <span className="h-4 w-14 rounded bg-base-300/60" />
+                                        </div>
+                                        <div className="w-full bg-base-300/40 rounded-full h-2 overflow-hidden">
+                                            <div className="h-2 w-1/3 bg-gradient-to-r from-base-300 via-base-100 to-base-300 animate-[pulse_1.2s_ease-in-out_infinite]" />
+                                        </div>
+                                        <div className="flex items-center justify-between text-xs text-base-content/40">
+                                            <span>This month</span>
+                                            <span className="h-3 w-10 rounded bg-base-300/60" />
+                                        </div>
+                                    </div>
+                                ) : (
+                                    <>
+                                        <div className="flex items-center justify-between text-sm">
+                                            <span className="text-base-content/70">User messages<br /><span className="text-xs">(UTC month)</span></span>
+                                            <span className="font-medium">
+                                                {usage ? `${usage.used} / ${usage.limit}` : offline ? '—' : '0 / 0'}
+                                            </span>
+                                        </div>
+                                        <div className="w-full bg-base-300/60 rounded-full h-2" title={`Resets ${new Date(Date.UTC(new Date().getUTCFullYear(), new Date().getUTCMonth() + 1, 1)).toISOString().slice(0, 10)}`}>
+                                            <div
+                                                className="bg-gradient-to-r from-primary to-secondary h-2 rounded-full transition-all duration-500"
+                                                style={{
+                                                    width: usage ? `${Math.min(100, (usage.used / usage.limit) * 100)}%` : '0%'
+                                                }}
+                                            />
+                                        </div>
+                                        <div className="flex items-center justify-between text-xs text-base-content/60">
+                                            <span>This month</span>
+                                            <span>
+                                                {usage ? `${Math.round(Math.min(100, (usage.used / usage.limit) * 100))}%` : offline ? '—' : '0%'} used
+                                            </span>
+                                        </div>
+                                    </>
+                                )}
                             </div>
 
                             <HoverScale scale={1.02}>

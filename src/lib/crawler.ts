@@ -21,7 +21,7 @@ async function fetchHtml(url: string): Promise<string> {
 const dynamicRenderer = buildDynamicRenderer();
 const MIN_STATIC_LEN = parseInt(process.env.HEADLESS_MIN_STATIC_LEN || '120', 10);
 if (dynamicRenderer) {
-    console.log(`[crawler] dynamic renderer enabled (min_static_len=${MIN_STATIC_LEN})`);
+    // dynamic renderer enabled
 } else {
     if (process.env.ENABLE_HEADLESS_CRAWL === '1') {
         console.warn('[crawler] ENABLE_HEADLESS_CRAWL=1 but dynamic renderer failed to initialize (playwright missing?)');
@@ -41,7 +41,7 @@ export async function crawl(input: string, maxPages = 40): Promise<CrawledDoc[]>
                     const rdoc = extractFromHtml(input, rendered.html);
                     if (rdoc.content.length > doc.content.length) {
                         doc = rdoc;
-                        console.log(`[crawler] headless improved content for ${input} (${doc.content.length} chars)`);
+                        // headless improved content
                     }
                 }
             } catch (err) {
@@ -72,7 +72,7 @@ async function crawlSitemap(url: string, maxPages: number): Promise<CrawledDoc[]
                             const rdoc = extractFromHtml(u, rendered.html);
                             if (rdoc.content.length > doc.content.length) {
                                 doc = rdoc;
-                                console.log(`[crawler] headless improved content for ${u} (${doc.content.length} chars)`);
+                                // headless improved content
                             }
                         }
                     } catch (err) { console.warn('[crawler] dynamic render failed', err); }

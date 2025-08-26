@@ -111,7 +111,7 @@ export async function POST(req: NextRequest) {
         }
 
         const { tenantId: bodyTid, sessionId, message, voice, siteId } = await req.json();
-        console.log(`💬 Chat API: Received message for session ${sessionId}, tenant identifier: ${bodyTid}, ${siteId}`);
+        // Chat API request received (debug log removed)
         const tenantId = await resolveTenantInternalId(bodyTid);
         if (!tenantId)
             return NextResponse.json({ error: 'tenant_not_found', message: 'Unknown tenant identifier.' }, { status: 400, headers: headersOut });
@@ -258,9 +258,9 @@ ${contextText}`;
 
                 // Trigger message sent webhook for user message
                 try {
-                    console.log(`🔔 Chat API: Triggering message.sent webhook for user message ${userMessage.rows[0].id}`);
+                    // Triggering message.sent webhook for user message
                     await webhookEvents.messageSent(tenantId, conversationId, userMessage.rows[0].id, 'user');
-                    console.log(`✅ Chat API: message.sent webhook triggered successfully`);
+                    // message.sent webhook triggered successfully
                 } catch (error) {
                     console.error('💥 Chat API: Failed to trigger message.sent webhook for user:', error);
                 }
@@ -288,9 +288,9 @@ ${contextText}`;
 
         // Trigger message sent webhook for assistant response
         try {
-            console.log(`🔔 Chat API: Triggering message.sent webhook for assistant message ${assistantMessage.rows[0].id}`);
+            // Triggering message.sent webhook for assistant message
             await webhookEvents.messageSent(tenantId, conversationId, assistantMessage.rows[0].id, 'assistant', confidence);
-            console.log(`✅ Chat API: assistant message.sent webhook triggered successfully`);
+            // assistant message.sent webhook triggered successfully
         } catch (error) {
             console.error('💥 Chat API: Failed to trigger message.sent webhook for assistant:', error);
         }
@@ -324,8 +324,7 @@ ${contextText}`;
             );
 
             if (rules.length > 0) {
-                console.log(`🔍 Chat API: Evaluating ${rules.length} escalation/routing rules`);
-                console.log(`🔍 Chat API: Extracted keywords: ${JSON.stringify(extractedKeywords)}`);
+                // Evaluating escalation/routing rules (debug logs removed)
 
                 // Set up context for rule evaluation
                 const context = {
@@ -343,23 +342,21 @@ ${contextText}`;
                 // Check each rule
                 interface EscalationRule { id: string; name: string; rule_type: string; conditions?: { operator: string; conditions: unknown[] }; predicate?: { operator: string; conditions: unknown[] }; destinations?: unknown; }
                 for (const rule of rules as EscalationRule[]) {
-                    console.log(`📝 Testing rule: "${rule.name}" (ID: ${rule.id})`);
+                    // Testing rule (debug log removed)
 
                     const conditions = (rule.conditions || rule.predicate || { operator: 'and', conditions: [] }) as import('@/lib/rule-engine').RuleConditions;
 
                     // Skip rules with no conditions
                     if (!conditions.conditions || conditions.conditions.length === 0) {
-                        console.log(`⚠️ Skipping rule with no conditions: ${rule.name}`);
+                        // Skipping rule with no conditions
                         continue;
                     }
 
-                    console.log(`🔍 Rule structure: ${JSON.stringify(conditions)}`);
-                    console.log(`⚙️ Rule operator: ${conditions.operator}`);
+                    // Rule structure/operator details removed
 
                     const result = evaluateRuleConditions(conditions, context);
 
-                    console.log(`${result.matched ? '✅' : '❌'} Rule "${rule.name}" ${result.matched ? 'MATCHED' : 'DID NOT MATCH'}`);
-                    console.log(`📊 Evaluation details: ${JSON.stringify(result.details)}`);
+                    // Rule match evaluation summary removed
 
                     if (result.matched) {
                         // Handle different rule types
@@ -368,14 +365,14 @@ ${contextText}`;
                             shouldEscalateForRules = true;
                             matchedRuleId = rule.id;
                             escalationReason = 'rule_match';
-                            console.log(`🚨 RULE MATCH: "${rule.name}" matched for message. Escalating via rule destinations.`);
+                            // Escalation rule matched
                             break; // Exit after first match for escalation
                         } else if (rule.rule_type === 'routing') {
                             // Routing - route to specific handler with context
                             shouldEscalateForRules = true; // Still use escalation system for routing
                             matchedRuleId = rule.id;
                             escalationReason = 'routing_rule';
-                            console.log(`🔀 ROUTING RULE: "${rule.name}" matched for message. Routing to specific handler.`);
+                            // Routing rule matched
                             break; // Exit after first match for routing
                         }
                     }
@@ -397,7 +394,7 @@ ${contextText}`;
             );
 
             if (notificationRules.length > 0) {
-                console.log(`🔔 Chat API: Evaluating ${notificationRules.length} notification rules`);
+                // Evaluating notification rules (debug log removed)
 
                 // Reuse the same context from earlier
                 const notificationContext = {
@@ -424,7 +421,7 @@ ${contextText}`;
                     const result = evaluateRuleConditions(conditions, notificationContext);
 
                     if (result.matched) {
-                        console.log(`📢 NOTIFICATION RULE: "${rule.name}" matched for message.`);
+                        // Notification rule matched
 
                         // Send notification without interrupting conversation
                         try {
@@ -469,7 +466,7 @@ ${contextText}`;
 
                         if (rows.length > 0 && rows[0].destinations) {
                             matchedRuleDestinations = rows[0].destinations as EscalationDestination[];
-                            console.log(`📨 Found ${matchedRuleDestinations ? matchedRuleDestinations.length : 0} destinations for matched rule`);
+                            // Found destinations for matched rule
                         }
                     } catch (error) {
                         console.error('❌ Error fetching rule destinations:', error);
@@ -480,13 +477,11 @@ ${contextText}`;
                 const hasIntegrationDestinations = Array.isArray(matchedRuleDestinations) && matchedRuleDestinations.some(d => d.type === 'integration');
 
                 // Use our centralized escalation service
-                console.log(`🔀 Using escalation service for ${shouldEscalateForConfidence ? 'confidence-based' : 'rule-based'} escalation`);
+                // Using escalation service
 
                 // Determine if we should trigger webhooks
                 const triggerWebhooks = !(shouldEscalateForRules && hasIntegrationDestinations);
-                if (!triggerWebhooks) {
-                    console.log('� Skipping webhooks for rule-based escalation with integration destinations');
-                }
+                // Webhooks may be skipped for rule-based escalation with integration destinations
 
                 // Call escalation service directly
                 const result = await handleEscalation({
@@ -523,15 +518,10 @@ ${contextText}`;
                     }
                 });
 
-                if (result.ok) {
-                    console.log(`✅ Chat API: Escalation handled successfully`);
-                } else {
+                if (!result.ok) {
                     console.error(`❌ Chat API: Escalation failed: ${result.error || 'Unknown error'}`);
                 }
-
-                console.log(
-                    `🚨 Chat API: Escalation triggered - reason: ${escalationReason}${matchedRuleId ? `, rule: ${matchedRuleId}` : ''}`
-                );
+                // Escalation triggered summary removed
             } catch (error) {
                 console.error('❌ Failed to handle escalation:', error);
             }

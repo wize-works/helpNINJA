@@ -55,7 +55,7 @@ export async function retryFailedWebhooks(): Promise<void> {
       LIMIT 50
     `);
 
-        console.log(`Found ${failedDeliveries.length} webhook deliveries to retry`);
+        // Found webhook deliveries to retry
 
         for (const delivery of failedDeliveries) {
             try {
@@ -81,7 +81,7 @@ export async function retryFailedWebhooks(): Promise<void> {
                     idempotencyKey: eventData.idempotency_key
                 };
 
-                console.log(`Retrying webhook delivery ${delivery.id} (attempt ${delivery.delivery_attempts + 1})`);
+                // Retrying webhook delivery
 
                 // Update attempt count before trying
                 await query(`
@@ -92,13 +92,8 @@ export async function retryFailedWebhooks(): Promise<void> {
         `, [delivery.id]);
 
                 // Try to send the webhook
-                const success = await sendWebhookRetry(endpoint, event, delivery.id);
-
-                if (success) {
-                    console.log(`Webhook delivery ${delivery.id} succeeded on retry`);
-                } else {
-                    console.log(`Webhook delivery ${delivery.id} failed again`);
-                }
+                await sendWebhookRetry(endpoint, event, delivery.id);
+                // Retry result handled silently
 
             } catch (error) {
                 console.error(`Error retrying webhook delivery ${delivery.id}:`, error);
@@ -220,12 +215,11 @@ async function sendWebhookRetry(endpoint: WebhookEndpoint, event: WebhookEvent, 
  */
 export async function cleanupOldWebhookDeliveries(): Promise<void> {
     try {
-        const { rowCount } = await query(`
+        await query(`
       DELETE FROM public.webhook_deliveries 
       WHERE created_at < NOW() - INTERVAL '30 days'
     `);
-
-        console.log(`Cleaned up ${rowCount} old webhook deliveries`);
+        // Old webhook deliveries cleaned up
     } catch (error) {
         console.error('Error cleaning up old webhook deliveries:', error);
     }

@@ -15,6 +15,7 @@ create table if not exists public.tenants (
 create table if not exists public.users (
   id uuid primary key,
   email text unique not null,
+  clerk_user_id text unique,
   first_name text,
   last_name text,
   avatar_url text,
