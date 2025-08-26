@@ -228,7 +228,7 @@ export default function SourcesTable() {
 
                 <HoverScale scale={1.02}>
                     <button
-                        className="btn btn-primary rounded-lg"
+                        className="btn btn-primary rounded-xl"
                         onClick={() => {
                             setEditingSource(null);
                             setFormData({ kind: 'url', url: '', title: '', siteId: selectedSite });
@@ -367,7 +367,7 @@ export default function SourcesTable() {
                                 <div className="flex items-center gap-3">
                                     <button
                                         type="button"
-                                        className="btn btn-ghost rounded-lg"
+                                        className="btn btn-ghost rounded-xl"
                                         onClick={() => {
                                             setShowAddForm(false);
                                             setEditingSource(null);
@@ -379,7 +379,7 @@ export default function SourcesTable() {
                                     <HoverScale scale={1.02}>
                                         <button
                                             type="submit"
-                                            className={`btn btn-primary rounded-lg ${submitting ? 'loading' : ''} min-w-32`}
+                                            className={`btn btn-primary rounded-xl ${submitting ? 'loading' : ''} min-w-32`}
                                             disabled={submitting}
                                         >
                                             {submitting ? (
@@ -423,7 +423,7 @@ export default function SourcesTable() {
                             </div>
                             <HoverScale scale={1.02}>
                                 <button
-                                    className="btn btn-primary rounded-lg"
+                                    className="btn btn-primary rounded-xl"
                                     onClick={() => {
                                         setEditingSource(null);
                                         setFormData({ kind: 'url', url: '', title: '', siteId: selectedSite });

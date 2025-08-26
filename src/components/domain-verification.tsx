@@ -343,7 +343,7 @@ export default function DomainVerification({
             <div className="flex justify-center">
                 <button
                     onClick={handleVerify}
-                    className={`btn btn-primary btn-lg ${verifying ? 'loading' : ''}`}
+                    className={`btn btn-primary btn-lg rounded-xl ${verifying ? 'loading' : ''}`}
                     disabled={verifying}
                 >
                     {verifying ? (

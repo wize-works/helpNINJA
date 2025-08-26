@@ -266,7 +266,7 @@ export default function ActionSelector({
                                                 <i className="fa-duotone fa-solid fa-puzzle-piece text-xl text-base-content/40" aria-hidden />
                                             </div>
                                             <p className="text-base-content/60 mb-3">No active integrations found</p>
-                                            <a href="/dashboard/integrations" className="btn btn-sm btn-outline">
+                                            <a href="/dashboard/integrations" className="btn btn-sm btn-outline rounded-lg">
                                                 <i className="fa-duotone fa-solid fa-plus mr-2" aria-hidden />
                                                 Set Up Integrations
                                             </a>

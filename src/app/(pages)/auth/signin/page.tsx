@@ -39,14 +39,14 @@ export default function SignInPage() {
                                     <Clerk.Input className="input w-full" placeholder="Ninja Password!" />
                                     <Clerk.FieldError />
                                 </Clerk.Field>
-                                <SignIn.Action submit className="btn btn-primary w-full">Login</SignIn.Action>
+                                <SignIn.Action submit className="btn btn-primary w-full rounded-xl">Login</SignIn.Action>
 
                                 <div className="divider">or</div>
 
                                 <div className="grid grid-cols-3 gap-3">
-                                    <Clerk.Connection name="google" className="btn btn-outline"><Clerk.Icon />Google</Clerk.Connection>
-                                    <Clerk.Connection name="facebook" className="btn btn-outline"><Clerk.Icon />Facebook</Clerk.Connection>
-                                    <Clerk.Connection name="microsoft" className="btn btn-outline"><Clerk.Icon />Microsoft</Clerk.Connection>
+                                    <Clerk.Connection name="google" className="btn btn-outline rounded-xl"><Clerk.Icon />Google</Clerk.Connection>
+                                    <Clerk.Connection name="facebook" className="btn btn-outline rounded-xl"><Clerk.Icon />Facebook</Clerk.Connection>
+                                    <Clerk.Connection name="microsoft" className="btn btn-outline rounded-xl"><Clerk.Icon />Microsoft</Clerk.Connection>
                                 </div>
                                 <div className="text-sm text-base-content/60 text-center">
                                     New here? <a className="link link-primary" href="/auth/signup">Create an account</a>
@@ -81,7 +81,7 @@ export default function SignInPage() {
                                     <Clerk.Input className="input w-full" placeholder="Confirm Password" type="password" />
                                     <Clerk.FieldError />
                                 </Clerk.Field>
-                                <SignIn.Action submit className="btn btn-primary w-full">Reset Password</SignIn.Action>
+                                <SignIn.Action submit className="btn btn-primary w-full rounded-xl">Reset Password</SignIn.Action>
                             </SignIn.Step>
                         </SignIn.Root>
                     </div>

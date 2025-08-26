@@ -286,7 +286,7 @@ export default function OutboxTable() {
                             {failedCount > 0 && (
                                 <HoverScale scale={1.02}>
                                     <button
-                                        className={`btn btn-outline ${retrying.has('all') ? 'loading' : ''}`}
+                                        className={`btn btn-outline rounded-xl ${retrying.has('all') ? 'loading' : ''}`}
                                         onClick={retryAll}
                                         disabled={retrying.size > 0}
                                     >
@@ -388,7 +388,7 @@ export default function OutboxTable() {
                                                 {item.status === 'failed' && (
                                                     <div className="flex gap-2 mt-3">
                                                         <button
-                                                            className={`btn btn-xs btn-primary ${retrying.has(item.id) ? 'loading' : ''}`}
+                                                            className={`btn btn-xs btn-primary rounded-lg ${retrying.has(item.id) ? 'loading' : ''}`}
                                                             onClick={() => retryItems([item.id])}
                                                             disabled={retrying.has(item.id)}
                                                         >

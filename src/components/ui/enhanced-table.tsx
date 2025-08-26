@@ -313,7 +313,7 @@ export function EnhancedTable<T extends Record<string, unknown>>({
                                 return (
                                     <button
                                         key={pageNumber}
-                                        className={`join-item btn btn-sm ${currentPage === pageNumber ? 'btn-active' : ''}`}
+                                        className={`join-item btn btn-sm rounded-lg ${currentPage === pageNumber ? 'btn-active' : ''}`}
                                         onClick={() => setCurrentPage(pageNumber)}
                                         aria-label={`Go to page ${pageNumber}`}
                                         aria-current={currentPage === pageNumber ? 'page' : undefined}

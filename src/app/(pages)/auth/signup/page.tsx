@@ -153,14 +153,14 @@ export default function SignUpPage() {
                                         <Clerk.FieldError />
                                     </Clerk.Field>
 
-                                    <SignUp.Action submit className="btn btn-primary w-full">Create Account</SignUp.Action>
+                                    <SignUp.Action submit className="btn btn-primary w-full rounded-xl">Create Account</SignUp.Action>
 
                                     <div className="divider">or</div>
 
                                     <div className="grid grid-cols-3 gap-3">
-                                        <Clerk.Connection name="google" className="btn btn-outline"><Clerk.Icon />Google</Clerk.Connection>
-                                        <Clerk.Connection name="facebook" className="btn btn-outline"><Clerk.Icon />Facebook</Clerk.Connection>
-                                        <Clerk.Connection name="microsoft" className="btn btn-outline"><Clerk.Icon />Microsoft</Clerk.Connection>
+                                        <Clerk.Connection name="google" className="btn btn-outline rounded-xl"><Clerk.Icon />Google</Clerk.Connection>
+                                        <Clerk.Connection name="facebook" className="btn btn-outline rounded-xl"><Clerk.Icon />Facebook</Clerk.Connection>
+                                        <Clerk.Connection name="microsoft" className="btn btn-outline rounded-xl"><Clerk.Icon />Microsoft</Clerk.Connection>
                                     </div>
 
                                     <SignUp.Captcha className="w-full" />
@@ -183,7 +183,7 @@ export default function SignUpPage() {
                                             <Clerk.FieldError />
                                         </Clerk.Field>
 
-                                        <SignUp.Action submit className="btn btn-primary w-full">Verify</SignUp.Action>
+                                        <SignUp.Action submit className="btn btn-primary w-full rounded-xl">Verify</SignUp.Action>
                                     </SignUp.Strategy>
                                 </div>
                             </SignUp.Step>

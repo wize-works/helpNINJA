@@ -224,13 +224,13 @@ export default async function SitesPage() {
 
                                         <div className="mt-6 flex gap-3">
                                             <HoverScale scale={1.02}>
-                                                <a href="/onboarding" className="btn btn-outline btn-sm">
+                                                <a href="/onboarding" className="btn btn-outline btn-sm rounded-lg">
                                                     <i className="fa-duotone fa-solid fa-graduation-cap mr-2" aria-hidden />
                                                     Setup Guide
                                                 </a>
                                             </HoverScale>
                                             <HoverScale scale={1.02}>
-                                                <a href="/dashboard/settings" className="btn btn-outline btn-sm">
+                                                <a href="/dashboard/settings" className="btn btn-outline btn-sm rounded-lg">
                                                     <i className="fa-duotone fa-solid fa-eye mr-2" aria-hidden />
                                                     Widget Preview
                                                 </a>

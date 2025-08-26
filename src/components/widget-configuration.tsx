@@ -342,7 +342,7 @@ export default function WidgetConfiguration({
                             </div>
                             <div className="flex gap-2 mt-3">
                                 <button
-                                    className="btn btn-sm btn-outline"
+                                    className="btn btn-sm btn-outline rounded-lg"
                                     onClick={() => setIframeError(false)}
                                 >
                                     <i className="fa-duotone fa-solid fa-rotate-right mr-2" aria-hidden />
@@ -352,7 +352,7 @@ export default function WidgetConfiguration({
                                     href={domain.includes('://') ? domain : `https://${domain}`}
                                     target="_blank"
                                     rel="noopener noreferrer"
-                                    className="btn btn-sm"
+                                    className="btn btn-sm rounded-lg"
                                 >
                                     <i className="fa-duotone fa-solid fa-external-link mr-2" aria-hidden />
                                     Open site
@@ -374,7 +374,7 @@ export default function WidgetConfiguration({
                 {/* Info about preview limitations */}
                 {!iframeError && !iframeLoading && (
                     <div className="absolute top-2 right-2 tooltip tooltip-left" data-tip="Some sites may restrict embedding in iframes">
-                        <button className="btn btn-circle btn-xs btn-ghost text-base-content/50">
+                        <button className="btn btn-circle btn-xs btn-ghost rounded-lg text-base-content/50">
                             <i className="fa-duotone fa-solid fa-circle-info" />
                         </button>
                     </div>

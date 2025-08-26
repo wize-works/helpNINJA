@@ -56,7 +56,7 @@ export default function SiteDocumentStats({ selectedSite, onSiteSelect }: SiteDo
                     <i className="fa-duotone fa-solid fa-globe text-xl text-base-content/40" aria-hidden />
                 </div>
                 <p className="text-sm text-base-content/60">No sites with content yet</p>
-                <a href="/dashboard/sites" className="btn btn-primary btn-sm mt-3">
+                <a href="/dashboard/sites" className="btn btn-primary btn-sm rounded-lg mt-3">
                     <i className="fa-duotone fa-solid fa-plus mr-2" aria-hidden />
                     Add Sites
                 </a>
@@ -69,7 +69,7 @@ export default function SiteDocumentStats({ selectedSite, onSiteSelect }: SiteDo
             <div className="flex items-center justify-between">
                 <h3 className="font-semibold text-base-content">Content by Site</h3>
                 <button
-                    className={`btn btn-sm ${!selectedSite ? 'btn-primary' : 'btn-outline'}`}
+                    className={`btn btn-sm rounded-lg ${!selectedSite ? 'btn-primary' : 'btn-outline'}`}
                     onClick={() => onSiteSelect?.('')}
                 >
                     All Sites
@@ -81,8 +81,8 @@ export default function SiteDocumentStats({ selectedSite, onSiteSelect }: SiteDo
                     <HoverScale key={site.id} scale={1.02}>
                         <div
                             className={`p-4 rounded-xl border cursor-pointer transition-all duration-200 ${selectedSite === site.id
-                                    ? 'bg-primary/10 border-primary/20 text-primary'
-                                    : 'bg-base-100 border-base-300 hover:border-base-400'
+                                ? 'bg-primary/10 border-primary/20 text-primary'
+                                : 'bg-base-100 border-base-300 hover:border-base-400'
                                 }`}
                             onClick={() => onSiteSelect?.(site.id)}
                         >

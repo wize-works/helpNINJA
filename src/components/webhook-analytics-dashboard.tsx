@@ -118,7 +118,7 @@ export function WebhookAnalyticsDashboard() {
                     {['1d', '7d', '30d', '90d'].map((period) => (
                         <button
                             key={period}
-                            className={`btn btn-sm rounded-xl ${timeframe === period ? 'btn-primary' : 'btn-outline'}`}
+                            className={`btn btn-sm rounded-lg ${timeframe === period ? 'btn-primary' : 'btn-outline'}`}
                             onClick={() => setTimeframe(period)}
                         >
                             {period === '1d' ? '24h' : period === '7d' ? '7 days' : period === '30d' ? '30 days' : '90 days'}

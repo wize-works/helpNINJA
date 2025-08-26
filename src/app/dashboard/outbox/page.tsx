@@ -128,11 +128,11 @@ export default async function OutboxPage() {
                                 </div>
 
                                 <div className="mt-6 flex gap-3">
-                                    <a href="/dashboard/integrations" className="btn btn-outline btn-sm">
+                                    <a href="/dashboard/integrations" className="btn btn-outline btn-sm rounded-lg">
                                         <i className="fa-duotone fa-solid fa-puzzle-piece mr-2" aria-hidden />
                                         Manage Integrations
                                     </a>
-                                    <a href="/dashboard/rules" className="btn btn-outline btn-sm">
+                                    <a href="/dashboard/rules" className="btn btn-outline btn-sm rounded-lg">
                                         <i className="fa-duotone fa-solid fa-route mr-2" aria-hidden />
                                         View Rules
                                     </a>

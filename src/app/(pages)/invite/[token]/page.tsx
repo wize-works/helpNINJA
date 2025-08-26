@@ -257,7 +257,7 @@ export default function InvitationPage() {
                         <HoverScale scale={1.02}>
                             <button
                                 type="submit"
-                                className={`btn btn-primary w-full ${accepting ? 'loading' : ''}`}
+                                className={`btn btn-primary w-full rounded-xl ${accepting ? 'loading' : ''}`}
                                 disabled={accepting}
                             >
                                 {accepting ? (

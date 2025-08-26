@@ -329,7 +329,7 @@ function IntegrationSetupModal({
                         <button type="button" className="btn btn-ghost rounded-xl" onClick={onClose} disabled={loading}>
                             Cancel
                         </button>
-                        <button type="submit" className={`btn btn-${integration.color}`} disabled={loading}>
+                        <button type="submit" className={`btn btn-${integration.color} rounded-xl`} disabled={loading}>
                             {loading && <span className="loading loading-spinner loading-sm mr-2" />}
                             Install Integration
                         </button>

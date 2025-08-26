@@ -31,7 +31,7 @@ export default function WidgetConfigModal({
                         </h2>
                         <button
                             onClick={() => setIsOpen(false)}
-                            className="btn btn-sm btn-ghost btn-circle"
+                            className="btn btn-sm btn-ghost btn-circle rounded-lg"
                         >
                             <i className="fa-duotone fa-solid fa-xmark" aria-hidden />
                         </button>

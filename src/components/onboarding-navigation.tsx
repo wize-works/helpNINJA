@@ -84,7 +84,7 @@ export default function OnboardingNavigation({
                 {isLastStep ? (
                     <button
                         onClick={handleNext}
-                        className={`btn btn-primary ${isLoading ? 'loading' : ''}`}
+                        className={`btn btn-primary rounded-xl ${isLoading ? 'loading' : ''}`}
                         disabled={nextDisabled || isLoading}
                     >
                         {isLoading ? (
@@ -102,7 +102,7 @@ export default function OnboardingNavigation({
                 ) : (
                     <button
                         onClick={handleNext}
-                        className={`btn btn-primary ${isLoading ? 'loading' : ''}`}
+                        className={`btn btn-primary rounded-xl ${isLoading ? 'loading' : ''}`}
                         disabled={nextDisabled || isLoading}
                     >
                         {isLoading ? (
@@ -158,7 +158,7 @@ export function SimpleOnboardingNavigation({
 
             <button
                 onClick={onNext}
-                className={`btn btn-primary ${isLoading ? 'loading' : ''}`}
+                className={`btn btn-primary rounded-xl ${isLoading ? 'loading' : ''}`}
                 disabled={nextDisabled || isLoading}
             >
                 {isLoading ? (

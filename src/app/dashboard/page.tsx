@@ -819,7 +819,7 @@ async function QuickStartBanner({ tenantId }: { tenantId: string }) {
 
                     <div className="flex-shrink-0 flex gap-3">
                         {needsSites ? <SiteWizardLauncher /> : (
-                            <a href="/dashboard/documents" className="btn btn-primary">
+                            <a href="/dashboard/documents" className="btn btn-primary rounded-xl">
                                 <i className="fa-duotone fa-solid fa-plus mr-2" aria-hidden />
                                 Add Content
                             </a>

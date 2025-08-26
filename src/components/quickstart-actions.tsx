@@ -18,14 +18,14 @@ export default function QuickStartActions({ needsSites, needsDocs }: { needsSite
                 </HoverScale>
             ) : needsDocs ? (
                 <HoverScale scale={1.02}>
-                    <a href="/dashboard/documents" className="btn btn-primary">
+                    <a href="/dashboard/documents" className="btn btn-primary rounded-xl">
                         <i className="fa-duotone fa-solid fa-plus mr-2" aria-hidden />
                         Add Content
                     </a>
                 </HoverScale>
             ) : (
                 <HoverScale scale={1.02}>
-                    <a href="/dashboard/settings" className="btn btn-primary">
+                    <a href="/dashboard/settings" className="btn btn-primary rounded-xl">
                         <i className="fa-duotone fa-solid fa-code mr-2" aria-hidden />
                         Get Widget Code
                     </a>
