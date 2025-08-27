@@ -162,7 +162,7 @@ export default async function ConversationDetailPage({ params }: { params: Promi
                 {convo && kpis && (
                     <StaggerContainer>
                         <StaggerChild>
-                            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-6">
+                            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 xl:grid-cols-4 gap-6">
                                 <HoverScale scale={1.01}>
                                     <div className="stats shadow hover:shadow-md transition-all duration-300 w-full rounded-2xl overflow-hidden">
                                         <div className="stat bg-base-100 rounded-2xl">
@@ -250,6 +250,34 @@ export default async function ConversationDetailPage({ params }: { params: Promi
                                             {kpis.escalations > 0 && (
                                                 <div className="stat-desc">Human intervention needed</div>
                                             )}
+                                        </div>
+                                    </div>
+                                </HoverScale>
+                                <HoverScale scale={1.01}>
+                                    <div className="stats shadow hover:shadow-md transition-all duration-300 w-full rounded-2xl overflow-hidden">
+                                        <div className="stat bg-base-100 rounded-2xl">
+                                            <div className="stat-title">Duration</div>
+                                            <div className="stat-figure">
+                                                <div className="bg-base-200/60 rounded-2xl h-12 w-12 flex items-center justify-center group-hover:scale-105 transition-transform duration-200 flex-shrink-0">
+                                                    <i className="fa-duotone fa-solid fa-hourglass-half text-lg text-base-content/70" aria-hidden />
+                                                </div>
+                                            </div>
+                                            <div className="stat-value text-base-content">{kpis.first_ts && kpis.last_ts ? humanDuration(kpis.first_ts, kpis.last_ts) : '—'}</div>
+                                            {kpis.first_ts && kpis.last_ts && <div className="stat-desc">active window</div>}
+                                        </div>
+                                    </div>
+                                </HoverScale>
+                                <HoverScale scale={1.01}>
+                                    <div className="stats shadow hover:shadow-md transition-all duration-300 w-full rounded-2xl overflow-hidden">
+                                        <div className="stat bg-base-100 rounded-2xl">
+                                            <div className="stat-title">Sources</div>
+                                            <div className="stat-figure">
+                                                <div className={`${sources.length ? 'bg-accent/20' : 'bg-base-200/60'} rounded-2xl h-12 w-12 flex items-center justify-center group-hover:scale-105 transition-transform duration-200 flex-shrink-0`}>
+                                                    <i className={`fa-duotone fa-solid fa-link text-lg ${sources.length ? 'text-accent' : 'text-base-content/70'}`} aria-hidden />
+                                                </div>
+                                            </div>
+                                            <div className={`${sources.length ? 'text-accent' : 'text-base-content'} stat-value`}>{sources.length}</div>
+                                            {sources.length > 0 && <div className="stat-desc">referenced</div>}
                                         </div>
                                     </div>
                                 </HoverScale>
