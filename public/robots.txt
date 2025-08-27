@@ -15,4 +15,4 @@ Disallow: /auth/reset-password
 Disallow: /auth/verify-email
 
 # Sitemap location
-Sitemap: https://helpninja.com/sitemap.xml
+Sitemap: https://helpninja.app/sitemap.xml

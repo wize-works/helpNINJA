@@ -30,7 +30,7 @@ export default function SignInPage() {
                                 <Clerk.GlobalError />
                                 <Clerk.Field name="identifier" className="fieldset">
                                     <Clerk.Label>What is your email?</Clerk.Label>
-                                    <Clerk.Input className="input w-full" placeholder="you@helpninja.com" />
+                                    <Clerk.Input className="input w-full" placeholder="you@helpninja.ai" />
                                     <Clerk.FieldError />
                                 </Clerk.Field>
 
@@ -59,7 +59,7 @@ export default function SignInPage() {
                                 <Clerk.GlobalError />
                                 <Clerk.Field name="emailAddress" className="fieldset">
                                     <Clerk.Label>Enter your email to reset password</Clerk.Label>
-                                    <Clerk.Input className="input w-full" placeholder="hanzo@helpninja.com" />
+                                    <Clerk.Input className="input w-full" placeholder="hanzo@helpninja.ai" />
                                     <Clerk.FieldError />
                                 </Clerk.Field>
                                 <SignIn.SupportedStrategy name="reset_password_email_code">

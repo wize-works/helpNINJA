@@ -198,7 +198,7 @@ export default function Titlebar() {
                                             Account
                                         </li>
                                         <li>
-                                            <Link href="/account" className="flex items-center gap-3 py-2.5 px-3 rounded-xl hover:bg-base-200/60 transition-colors">
+                                            <Link href="/dashboard/account" className="flex items-center gap-3 py-2.5 px-3 rounded-xl hover:bg-base-200/60 transition-colors">
                                                 <i className="fa-duotone fa-solid fa-user text-base text-base-content/60" aria-hidden />
                                                 <div>
                                                     <div className="font-medium">Profile Settings</div>

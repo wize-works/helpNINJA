@@ -56,7 +56,7 @@ export default function SignUpPage() {
                                     <Clerk.GlobalError />
                                     <Clerk.Field name="emailAddress" className="fieldset">
                                         <Clerk.Label>What is your email?</Clerk.Label>
-                                        <Clerk.Input type="email" className="input w-full" placeholder="you@helpninja.com" />
+                                        <Clerk.Input type="email" className="input w-full" placeholder="you@helpninja.ai" />
                                         <Clerk.FieldError />
                                     </Clerk.Field>
 

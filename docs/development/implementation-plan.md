@@ -217,7 +217,7 @@ This document tracks the implementation of missing critical features identified 
 ## 📊 Success Metrics
 
 ### **Phase 1-2 Success Criteria**
-- [ ] Tenants can register multiple sites (jobsight.co, kanninja.com)
+- [ ] Tenants can register multiple sites (jobsight.co, kanninja.ai)
 - [ ] Widget only loads on registered domains
 - [ ] Onboarding flow completes successfully
 - [ ] Site-specific previews work correctly

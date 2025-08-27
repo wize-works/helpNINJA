@@ -180,7 +180,7 @@ export default async function SitesPage() {
                                             <div>
                                                 <h3 className="font-semibold mb-2">1. Add Your Website</h3>
                                                 <p className="text-sm text-base-content/70 mb-3">
-                                                    Register each domain where you want to use the chat widget. Examples: jobsight.co, kanninja.com, microsoft.com
+                                                    Register each domain where you want to use the chat widget. Examples: jobsight.co, kanninja.ai, microsoft.com
                                                 </p>
                                                 <div className="flex items-center gap-2 text-xs text-success">
                                                     <i className="fa-duotone fa-solid fa-check" aria-hidden />

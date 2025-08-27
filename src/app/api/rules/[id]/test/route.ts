@@ -36,7 +36,7 @@ export async function POST(req: NextRequest, ctx: Context) {
             message: body.message || 'Test message',
             confidence: body.confidence || 0.5,
             keywords: body.keywords || [],
-            userEmail: body.userEmail || 'test@example.com',
+            userEmail: body.userEmail || 'test@helpninja.ai',
             timestamp: new Date(),
             siteId: body.siteId || null,
             sessionDuration: body.sessionDuration || 300, // 5 minutes
