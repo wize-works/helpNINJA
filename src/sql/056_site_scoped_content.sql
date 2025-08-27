@@ -1,56 +1,56 @@
 -- Site-Scoped Content Migration
--- Adds tenant_site_id foreign keys to enable per-site knowledge bases and conversations
+-- Adds site_id foreign keys to enable per-site knowledge bases and conversations
 -- Run this against your PostgreSQL database to enable site-scoped content
 
--- Add tenant_site_id to documents table
+-- Add site_id to documents table
 DO $$
 BEGIN
     IF NOT EXISTS (SELECT 1 FROM information_schema.columns 
                    WHERE table_schema = 'public' 
                    AND table_name = 'documents' 
-                   AND column_name = 'tenant_site_id') THEN
+                   AND column_name = 'site_id') THEN
         ALTER TABLE public.documents 
-        ADD COLUMN tenant_site_id uuid REFERENCES public.tenant_sites(id) ON DELETE SET NULL;
+        ADD COLUMN site_id uuid REFERENCES public.tenant_sites(id) ON DELETE SET NULL;
     END IF;
 END $$;
 
--- Add tenant_site_id to chunks table
+-- Add site_id to chunks table
 DO $$
 BEGIN
     IF NOT EXISTS (SELECT 1 FROM information_schema.columns 
                    WHERE table_schema = 'public' 
                    AND table_name = 'chunks' 
-                   AND column_name = 'tenant_site_id') THEN
+                   AND column_name = 'site_id') THEN
         ALTER TABLE public.chunks 
-        ADD COLUMN tenant_site_id uuid REFERENCES public.tenant_sites(id) ON DELETE SET NULL;
+        ADD COLUMN site_id uuid REFERENCES public.tenant_sites(id) ON DELETE SET NULL;
     END IF;
 END $$;
 
--- Add tenant_site_id to conversations table
+-- Add site_id to conversations table
 DO $$
 BEGIN
     IF NOT EXISTS (SELECT 1 FROM information_schema.columns 
                    WHERE table_schema = 'public' 
                    AND table_name = 'conversations' 
-                   AND column_name = 'tenant_site_id') THEN
+                   AND column_name = 'site_id') THEN
         ALTER TABLE public.conversations 
-        ADD COLUMN tenant_site_id uuid REFERENCES public.tenant_sites(id) ON DELETE SET NULL;
+        ADD COLUMN site_id uuid REFERENCES public.tenant_sites(id) ON DELETE SET NULL;
     END IF;
 END $$;
 
--- Add tenant_site_id to messages table
+-- Add site_id to messages table
 DO $$
 BEGIN
     IF NOT EXISTS (SELECT 1 FROM information_schema.columns 
                    WHERE table_schema = 'public' 
                    AND table_name = 'messages' 
-                   AND column_name = 'tenant_site_id') THEN
+                   AND column_name = 'site_id') THEN
         ALTER TABLE public.messages 
-        ADD COLUMN tenant_site_id uuid REFERENCES public.tenant_sites(id) ON DELETE SET NULL;
+        ADD COLUMN site_id uuid REFERENCES public.tenant_sites(id) ON DELETE SET NULL;
     END IF;
 END $$;
 
--- Add tenant_site_id to sources table if it exists
+-- Add site_id to sources table if it exists
 DO $$
 BEGIN
     IF EXISTS (SELECT 1 FROM information_schema.tables 
@@ -59,18 +59,18 @@ BEGIN
         IF NOT EXISTS (SELECT 1 FROM information_schema.columns 
                        WHERE table_schema = 'public' 
                        AND table_name = 'sources' 
-                       AND column_name = 'tenant_site_id') THEN
+                       AND column_name = 'site_id') THEN
             ALTER TABLE public.sources 
-            ADD COLUMN tenant_site_id uuid REFERENCES public.tenant_sites(id) ON DELETE SET NULL;
+            ADD COLUMN site_id uuid REFERENCES public.tenant_sites(id) ON DELETE SET NULL;
         END IF;
     END IF;
 END $$;
 
 -- Add indexes for performance
-CREATE INDEX IF NOT EXISTS documents_tenant_site_id_idx ON public.documents(tenant_site_id);
-CREATE INDEX IF NOT EXISTS chunks_tenant_site_id_idx ON public.chunks(tenant_site_id);
-CREATE INDEX IF NOT EXISTS conversations_tenant_site_id_idx ON public.conversations(tenant_site_id);
-CREATE INDEX IF NOT EXISTS messages_tenant_site_id_idx ON public.messages(tenant_site_id);
+CREATE INDEX IF NOT EXISTS documents_site_id_idx ON public.documents(site_id);
+CREATE INDEX IF NOT EXISTS chunks_site_id_idx ON public.chunks(site_id);
+CREATE INDEX IF NOT EXISTS conversations_site_id_idx ON public.conversations(site_id);
+CREATE INDEX IF NOT EXISTS messages_site_id_idx ON public.messages(site_id);
 
 -- Add index for sources if it exists
 DO $$
@@ -78,15 +78,15 @@ BEGIN
     IF EXISTS (SELECT 1 FROM information_schema.tables 
                WHERE table_schema = 'public' 
                AND table_name = 'sources') THEN
-        CREATE INDEX IF NOT EXISTS sources_tenant_site_id_idx ON public.sources(tenant_site_id);
+        CREATE INDEX IF NOT EXISTS sources_site_id_idx ON public.sources(site_id);
     END IF;
 END $$;
 
 -- Add composite indexes for common queries
-CREATE INDEX IF NOT EXISTS documents_tenant_site_composite_idx ON public.documents(tenant_id, tenant_site_id);
-CREATE INDEX IF NOT EXISTS chunks_tenant_site_composite_idx ON public.chunks(tenant_id, tenant_site_id);
-CREATE INDEX IF NOT EXISTS conversations_tenant_site_composite_idx ON public.conversations(tenant_id, tenant_site_id);
-CREATE INDEX IF NOT EXISTS messages_tenant_site_composite_idx ON public.messages(tenant_id, tenant_site_id);
+CREATE INDEX IF NOT EXISTS documents_tenant_site_composite_idx ON public.documents(tenant_id, site_id);
+CREATE INDEX IF NOT EXISTS chunks_tenant_site_composite_idx ON public.chunks(tenant_id, site_id);
+CREATE INDEX IF NOT EXISTS conversations_tenant_site_composite_idx ON public.conversations(tenant_id, site_id);
+CREATE INDEX IF NOT EXISTS messages_tenant_site_composite_idx ON public.messages(tenant_id, site_id);
 
 -- Update any existing widget-related fields in tenant_sites table if needed
 DO $$

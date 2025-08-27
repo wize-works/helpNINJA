@@ -4,6 +4,7 @@ import { TableSkeleton } from "@/components/ui/skeleton";
 import { Breadcrumb } from "@/components/ui/breadcrumb";
 import { AnimatedPage, StaggerContainer, StaggerChild, HoverScale, FadeIn } from "@/components/ui/animated-page";
 import { Suspense } from "react";
+import FilterControls from "./filter-controls";
 import Link from "next/link";
 
 export const runtime = 'nodejs'
@@ -16,6 +17,9 @@ type Row = {
     escalations: number;
     last_escalation_reason: string | null;
     last_escalation_status: string | null;
+    site_id: string | null;
+    site_domain: string | null;
+    site_name: string | null;
 }
 
 type KPI = {
@@ -27,33 +31,87 @@ type KPI = {
     low_confidence_messages: number;
 }
 
-async function list(tenantId: string) {
+interface Filters {
+    escalated?: string; // '1' (only escalated) | '0' (no escalations)
+    range?: string; // '24h' | '7d' | '30d'
+    search?: string; // session id contains
+    site?: string; // site_id filter
+}
+
+function buildConditions(tenantId: string, filters: Filters) {
+    const conditions: string[] = ['c.tenant_id = $1'];
+    const params: unknown[] = [tenantId];
+    let idx = 2;
+
+    if (filters.escalated === '1') {
+        conditions.push('(select count(*) from public.escalations e where e.conversation_id = c.id) > 0');
+    } else if (filters.escalated === '0') {
+        conditions.push('(select count(*) from public.escalations e where e.conversation_id = c.id) = 0');
+    }
+    if (filters.search) {
+        conditions.push(`c.session_id ILIKE $${idx}`);
+        params.push(`%${filters.search}%`);
+        idx++;
+    }
+    if (filters.site) {
+        conditions.push(`c.site_id = $${idx}`);
+        params.push(filters.site);
+        idx++;
+    }
+    if (filters.range) {
+        const map: Record<string, string> = {
+            '24h': "NOW() - INTERVAL '24 hours'",
+            '7d': "NOW() - INTERVAL '7 days'",
+            '30d': "NOW() - INTERVAL '30 days'"
+        };
+        if (map[filters.range]) {
+            conditions.push(`c.created_at >= ${map[filters.range]}`);
+        }
+    }
+    return { where: conditions.join(' AND '), params };
+}
+
+async function list(tenantId: string, filters: Filters) {
+    const { where, params } = buildConditions(tenantId, filters);
     const { rows } = await query<Row>(
         `select c.id, c.session_id, c.created_at,
             (select count(*) from public.messages m where m.conversation_id=c.id)::int as messages,
             (select count(*) from public.escalations e where e.conversation_id=c.id)::int as escalations,
             (select e.reason from public.escalations e where e.conversation_id=c.id order by e.created_at desc limit 1) as last_escalation_reason,
-            (select e.status from public.escalations e where e.conversation_id=c.id order by e.created_at desc limit 1) as last_escalation_status
+            (select e.status from public.escalations e where e.conversation_id=c.id order by e.created_at desc limit 1) as last_escalation_status,
+            c.site_id,
+            ts.domain as site_domain,
+            ts.name as site_name
          from public.conversations c
-         where c.tenant_id=$1
+         left join public.tenant_sites ts on ts.id = c.site_id
+         where ${where}
          order by c.created_at desc
          limit 100`,
-        [tenantId]
-    )
-    return rows
+        params
+    );
+    return rows;
 }
 
-async function getKpis(tenantId: string): Promise<KPI> {
+async function getKpis(tenantId: string, filters: Filters): Promise<KPI> {
+    const { where, params } = buildConditions(tenantId, filters);
+    // Build KPI aggregates based on filtered conversation set using CTE
     const { rows } = await query<KPI>(
-        `select 
-            (select count(*) from public.conversations c where c.tenant_id=$1)::int as conversations,
-            (select count(*) from public.messages m where m.tenant_id=$1)::int as messages,
-            (select count(*) from public.escalations e where e.tenant_id=$1)::int as escalations,
-            (select count(distinct e.conversation_id) from public.escalations e where e.tenant_id=$1)::int as escalated_conversations,
-            (select COALESCE(round(avg(mc)::numeric,2),0)::float from (select count(*) as mc from public.messages mm where mm.tenant_id=$1 group by mm.conversation_id) s) as avg_messages,
-            (select count(*) from public.messages m2 where m2.tenant_id=$1 and m2.role='assistant' and m2.confidence < 0.55)::int as low_confidence_messages
+        `WITH filtered_convos AS (
+            SELECT c.id FROM public.conversations c WHERE ${where}
+        ), convo_message_counts AS (
+            SELECT conversation_id, COUNT(*)::int as mc FROM public.messages m
+            WHERE m.tenant_id = $1 AND m.conversation_id IN (SELECT id FROM filtered_convos)
+            GROUP BY conversation_id
+        )
+        SELECT 
+            (SELECT COUNT(*) FROM filtered_convos)::int AS conversations,
+            (SELECT COALESCE(SUM(mc),0) FROM convo_message_counts)::int AS messages,
+            (SELECT COUNT(*) FROM public.escalations e WHERE e.tenant_id=$1 AND e.conversation_id IN (SELECT id FROM filtered_convos))::int AS escalations,
+            (SELECT COUNT(DISTINCT e.conversation_id) FROM public.escalations e WHERE e.tenant_id=$1 AND e.conversation_id IN (SELECT id FROM filtered_convos))::int AS escalated_conversations,
+            (SELECT COALESCE(ROUND(AVG(mc)::numeric,2),0)::float FROM convo_message_counts) AS avg_messages,
+            (SELECT COUNT(*) FROM public.messages m2 WHERE m2.tenant_id=$1 AND m2.role='assistant' AND m2.confidence < 0.55 AND m2.conversation_id IN (SELECT id FROM filtered_convos))::int AS low_confidence_messages
         `,
-        [tenantId]
+        params
     );
     return rows[0] || { conversations: 0, messages: 0, escalations: 0, escalated_conversations: 0, avg_messages: 0, low_confidence_messages: 0 };
 }
@@ -111,6 +169,7 @@ function ConversationsTable({ conversations }: { conversations: Row[] }) {
                                 <thead className="bg-base-200/40">
                                     <tr>
                                         <th className="text-left p-4 text-sm font-semibold text-base-content/80">Session</th>
+                                        <th className="text-left p-4 text-sm font-semibold text-base-content/80">Site</th>
                                         <th className="text-left p-4 text-sm font-semibold text-base-content/80">Activity</th>
                                         <th className="text-left p-4 text-sm font-semibold text-base-content/80">Started</th>
                                         <th className="text-left p-4 text-sm font-semibold text-base-content/80">Escalations</th>
@@ -134,6 +193,16 @@ function ConversationsTable({ conversations }: { conversations: Row[] }) {
                                                         </div>
                                                     </div>
                                                 </div>
+                                            </td>
+                                            <td className="p-4">
+                                                {r.site_id ? (
+                                                    <span className="inline-flex items-center gap-1.5 px-2 py-1 rounded-md bg-base-200/60 text-xs font-medium text-base-content/80">
+                                                        <i className="fa-duotone fa-solid fa-globe text-[10px] opacity-70" aria-hidden />
+                                                        {r.site_domain || r.site_name || 'Site'}
+                                                    </span>
+                                                ) : (
+                                                    <span className="text-xs text-base-content/40">—</span>
+                                                )}
                                             </td>
                                             <td className="p-4">
                                                 <div className="flex items-center gap-2">
@@ -250,6 +319,14 @@ function ConversationsTable({ conversations }: { conversations: Row[] }) {
                                                     <span className="text-sm font-semibold">{r.messages}</span>
                                                     <span className="text-xs opacity-80">messages</span>
                                                 </div>
+                                                {r.site_id && (
+                                                    <div className="flex items-center gap-1 px-3 py-2 bg-base-200/60 text-base-content/70 rounded-lg">
+                                                        <i className="fa-duotone fa-solid fa-globe text-xs" aria-hidden />
+                                                        <span className="text-xs font-medium truncate max-w-[100px]">
+                                                            {r.site_domain || r.site_name || 'Site'}
+                                                        </span>
+                                                    </div>
+                                                )}
                                                 {r.escalations > 0 && (
                                                     <div className="flex items-center gap-2 px-3 py-2 bg-warning/10 text-warning rounded-lg" title={r.last_escalation_reason || undefined}>
                                                         <i className="fa-duotone fa-solid fa-fire text-xs" aria-hidden />
@@ -276,8 +353,24 @@ function ConversationsTable({ conversations }: { conversations: Row[] }) {
     );
 }
 
-export default async function ConversationsPage() {
+async function listSites(tenantId: string) {
+    const { rows } = await query<{ id: string; domain: string; name: string }>(
+        `select id, domain, name from public.tenant_sites where tenant_id=$1 order by created_at desc limit 50`,
+        [tenantId]
+    );
+    return rows;
+}
+
+export default async function ConversationsPage({ searchParams }: { searchParams: Promise<Record<string, string | string[] | undefined>> }) {
+    const resolved = await searchParams;
+    const filters: Filters = {
+        escalated: typeof resolved.escalated === 'string' ? resolved.escalated : undefined,
+        range: typeof resolved.range === 'string' ? resolved.range : undefined,
+        search: typeof resolved.search === 'string' ? resolved.search : undefined,
+        site: typeof resolved.site === 'string' ? resolved.site : undefined
+    };
     const tenantId = await getTenantIdStrict()
+    const sites = await listSites(tenantId);
 
     const breadcrumbItems = [
         { label: "Dashboard", href: "/dashboard", icon: "fa-gauge-high" },
@@ -305,12 +398,7 @@ export default async function ConversationsPage() {
                                 </p>
                             </div>
                             <div className="flex items-center gap-3">
-                                <HoverScale scale={1.02}>
-                                    <button className="flex items-center gap-2 px-4 py-2 bg-base-200/60 hover:bg-base-200 border border-base-300/40 rounded-lg text-sm font-medium transition-all duration-200">
-                                        <i className="fa-duotone fa-solid fa-filter text-xs" aria-hidden />
-                                        Filter
-                                    </button>
-                                </HoverScale>
+                                <FilterControls filters={filters} sites={sites} />
                                 <HoverScale scale={1.02}>
                                     <button className="flex items-center gap-2 px-4 py-2 bg-base-200/60 hover:bg-base-200 border border-base-300/40 rounded-lg text-sm font-medium transition-all duration-200">
                                         <i className="fa-duotone fa-solid fa-download text-xs" aria-hidden />
@@ -328,17 +416,17 @@ export default async function ConversationsPage() {
                         <TableSkeleton rows={5} columns={4} />
                     </div>
                 }>
-                    <ConversationsContent tenantId={tenantId} />
+                    <ConversationsContent tenantId={tenantId} filters={filters} />
                 </Suspense>
             </div>
         </AnimatedPage>
     )
 }
 
-async function ConversationsContent({ tenantId }: { tenantId: string }) {
+async function ConversationsContent({ tenantId, filters }: { tenantId: string; filters: Filters }) {
     const [conversations, kpis] = await Promise.all([
-        list(tenantId),
-        getKpis(tenantId)
+        list(tenantId, filters),
+        getKpis(tenantId, filters)
     ]);
 
     const escalationRate = kpis.conversations ? (kpis.escalated_conversations / kpis.conversations) * 100 : 0;

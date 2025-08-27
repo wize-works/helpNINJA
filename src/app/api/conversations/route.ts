@@ -12,7 +12,7 @@ async function handleCreateConversation(req: AuthenticatedRequest) {
         const { tenantId } = req;
         const body = await req.json();
 
-        const { session_id, metadata } = body;
+        const { session_id, metadata, site_id } = body;
 
         if (!session_id) {
             return NextResponse.json(
@@ -37,10 +37,12 @@ async function handleCreateConversation(req: AuthenticatedRequest) {
 
         // Create new conversation
         const { rows } = await query(`
-      INSERT INTO public.conversations (tenant_id, session_id, metadata)
-      VALUES ($1, $2, $3)
-      RETURNING id, created_at
-    `, [tenantId, session_id, metadata ? JSON.stringify(metadata) : null]);
+            INSERT INTO public.conversations (tenant_id, session_id, metadata${site_id ? ', site_id' : ''})
+            VALUES ($1, $2, $3${site_id ? ', $4' : ''})
+            RETURNING id, created_at
+        `, site_id
+            ? [tenantId, session_id, metadata ? JSON.stringify(metadata) : null, site_id]
+            : [tenantId, session_id, metadata ? JSON.stringify(metadata) : null]);
 
         const conversation = rows[0];
 

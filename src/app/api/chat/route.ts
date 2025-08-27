@@ -48,17 +48,19 @@ export async function OPTIONS(req: NextRequest) {
     return new NextResponse(null, { status: 204, headers: corsHeaders(req) });
 }
 
-async function ensureConversation(tenantId: string, sessionId: string) {
+async function ensureConversation(tenantId: string, sessionId: string, siteId?: string | null) {
     const existing = await query<{ id: string }>(
-        'select id from public.conversations where tenant_id=$1 and session_id=$2 limit 1',
-        [tenantId, sessionId]
+        'select id from public.conversations where tenant_id=$1 and session_id=$2 and site_id=$3 limit 1',
+        [tenantId, sessionId, siteId]
     );
     if (existing.rows[0]?.id) return existing.rows[0].id;
 
     // Create new conversation
     const ins = await query<{ id: string }>(
-        'insert into public.conversations (tenant_id, session_id) values ($1,$2) returning id',
-        [tenantId, sessionId]
+        siteId
+            ? 'insert into public.conversations (tenant_id, session_id, site_id) values ($1,$2,$3) returning id'
+            : 'insert into public.conversations (tenant_id, session_id) values ($1,$2) returning id',
+        siteId ? [tenantId, sessionId, siteId] : [tenantId, sessionId]
     );
     const conversationId = ins.rows[0].id;
 
@@ -111,6 +113,7 @@ export async function POST(req: NextRequest) {
         }
 
         const { tenantId: bodyTid, sessionId, message, voice, siteId } = await req.json();
+        console.log("siteId", siteId);
         // Chat API request received (debug log removed)
         const tenantId = await resolveTenantInternalId(bodyTid);
         if (!tenantId)
@@ -121,7 +124,7 @@ export async function POST(req: NextRequest) {
         const gate = await canSendMessage(tenantId);
         if (!gate.ok) return NextResponse.json({ error: gate.reason }, { status: 402, headers: headersOut });
 
-        const conversationId = await ensureConversation(tenantId, sessionId);
+        const conversationId = await ensureConversation(tenantId, sessionId, siteId || null);
 
         // 🔎 Intent classification (before retrieval so we can tune it)
         const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
@@ -136,8 +139,8 @@ export async function POST(req: NextRequest) {
 
         // Fetch recent prior messages for lightweight context understanding (last 6 turns, newest first)
         const recent = await query<{ role: string; content: string }>(
-            `select role, content from public.messages where conversation_id=$1 and tenant_id=$2 order by created_at desc limit 6`,
-            [conversationId, tenantId]
+            `select role, content from public.messages where conversation_id=$1 and tenant_id=$2 and site_id=$3 order by created_at desc limit 6`,
+            [conversationId, tenantId, siteId]
         );
         const recentMessages = recent.rows.reverse(); // oldest first now
         const lastAssistant = [...recentMessages].reverse().find(m => m.role === 'assistant');
@@ -180,9 +183,9 @@ export async function POST(req: NextRequest) {
 
                 // Log that we used a curated answer
                 await query(
-                    `insert into public.messages (conversation_id, tenant_id, role, content, confidence, intent)
-           values ($1, $2, 'user', $3, 1.0, $4)`,
-                    [conversationId, tenantId, message, intent]
+                    `insert into public.messages (conversation_id, tenant_id, role, content, confidence, intent, site_id)
+           values ($1, $2, 'user', $3, 1.0, $4, $5)`,
+                    [conversationId, tenantId, message, intent, siteId]
                 );
                 userLogged = true;
             } else {
@@ -250,9 +253,9 @@ ${contextText}`;
 
                 // Log user message
                 const userMessage = await query<{ id: string }>(
-                    `insert into public.messages (conversation_id, tenant_id, role, content, confidence, intent)
-           values ($1, $2, 'user', $3, 1.0, $4) returning id`,
-                    [conversationId, tenantId, message, intent]
+                    `insert into public.messages (conversation_id, tenant_id, role, content, confidence, intent, site_id)
+           values ($1, $2, 'user', $3, 1.0, $4, $5) returning id`,
+                    [conversationId, tenantId, message, intent, siteId]
                 );
                 userLogged = true;
 
@@ -271,9 +274,9 @@ ${contextText}`;
         if (!userLogged) {
             try {
                 await query(
-                    `insert into public.messages (conversation_id, tenant_id, role, content, confidence, intent)
-           values ($1, $2, 'user', $3, 1.0, $4)`,
-                    [conversationId, tenantId, message, intent]
+                    `insert into public.messages (conversation_id, tenant_id, role, content, confidence, intent, site_id)
+           values ($1, $2, 'user', $3, 1.0, $4, $5)`,
+                    [conversationId, tenantId, message, intent, siteId]
                 );
             } catch (e) {
                 console.error('⚠️ Failed to log user message (short-circuit)', e);
@@ -281,9 +284,9 @@ ${contextText}`;
         }
 
         const assistantMessage = await query<{ id: string }>(
-            `insert into public.messages (conversation_id, tenant_id, role, content, confidence, intent)
-       values ($1, $2, 'assistant', $3, $4, $5) returning id`,
-            [conversationId, tenantId, text, confidence, intent]
+            `insert into public.messages (conversation_id, tenant_id, role, content, confidence, intent, site_id)
+       values ($1, $2, 'assistant', $3, $4, $5, $6) returning id`,
+            [conversationId, tenantId, text, confidence, intent, siteId]
         );
 
         // Trigger message sent webhook for assistant response

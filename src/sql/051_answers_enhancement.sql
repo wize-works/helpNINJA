@@ -9,7 +9,7 @@ ALTER TABLE public.answers ADD COLUMN IF NOT EXISTS keywords text[] DEFAULT '{}'
 ALTER TABLE public.answers ADD COLUMN IF NOT EXISTS created_at timestamptz NOT NULL DEFAULT now();
 
 -- Create indexes for efficient querying
-CREATE INDEX IF NOT EXISTS answers_tenant_site_idx ON public.answers(tenant_id, site_id);
+CREATE INDEX IF NOT EXISTS answers_site_idx ON public.answers(tenant_id, site_id);
 CREATE INDEX IF NOT EXISTS answers_status_idx ON public.answers(status) WHERE status = 'active';
 CREATE INDEX IF NOT EXISTS answers_priority_idx ON public.answers(priority DESC);
 CREATE INDEX IF NOT EXISTS answers_keywords_idx ON public.answers USING gin(keywords);

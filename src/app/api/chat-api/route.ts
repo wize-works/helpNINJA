@@ -21,10 +21,15 @@ Rules:
   • End with a supportive closing line (e.g., “Need more help? I can connect you to support.”).
 `;
 
-async function ensureConversation(tenantId: string, sessionId: string) {
+async function ensureConversation(tenantId: string, sessionId: string, siteId?: string | null) {
     const existing = await query<{ id: string }>('select id from public.conversations where tenant_id=$1 and session_id=$2 limit 1', [tenantId, sessionId]);
     if (existing.rows[0]?.id) return existing.rows[0].id;
-    const ins = await query<{ id: string }>('insert into public.conversations (tenant_id, session_id) values ($1,$2) returning id', [tenantId, sessionId]);
+    const ins = await query<{ id: string }>(
+        siteId
+            ? 'insert into public.conversations (tenant_id, session_id, site_id) values ($1,$2,$3) returning id'
+            : 'insert into public.conversations (tenant_id, session_id) values ($1,$2) returning id',
+        siteId ? [tenantId, sessionId, siteId] : [tenantId, sessionId]
+    );
     return ins.rows[0].id;
 }
 
@@ -61,7 +66,7 @@ async function handleSendMessage(req: AuthenticatedRequest) {
             }, { status: 402 });
         }
 
-        const conversationId = await ensureConversation(tenantId, sessionId);
+        const conversationId = await ensureConversation(tenantId, sessionId, siteId || null);
 
         // Search for curated answers first, then RAG results
         const { curatedAnswers, ragResults } = await searchWithCuratedAnswers(tenantId, message, 6, siteId);
@@ -80,9 +85,9 @@ async function handleSendMessage(req: AuthenticatedRequest) {
             answerType = 'curated';
 
             // Log that we used a curated answer
-            await query(`insert into public.messages (conversation_id, tenant_id, role, content, confidence)
-                   values ($1, $2, 'user', $3, 1.0)`,
-                [conversationId, tenantId, message]);
+            await query(`insert into public.messages (conversation_id, tenant_id, role, content, confidence, site_id)
+                   values ($1, $2, 'user', $3, 1.0, $4)`,
+                [conversationId, tenantId, message, siteId]);
         } else {
             // Fall back to RAG + OpenAI
             const contextText = ragResults.map((c, i) => `[[${i + 1}]] ${c.url}\n${c.content}`).join('\n\n');
@@ -102,16 +107,16 @@ async function handleSendMessage(req: AuthenticatedRequest) {
             confidence = chat.choices[0]?.finish_reason === 'stop' ? 0.7 : 0.4;
 
             // Log user message
-            await query(`insert into public.messages (conversation_id, tenant_id, role, content, confidence)
-                   values ($1, $2, 'user', $3, 1.0)`,
-                [conversationId, tenantId, message]);
+            await query(`insert into public.messages (conversation_id, tenant_id, role, content, confidence, site_id)
+                   values ($1, $2, 'user', $3, 1.0, $4)`,
+                [conversationId, tenantId, message, siteId]);
         }
 
         // Log assistant response
         const assistantResult = await query<{ id: string }>(
-            `insert into public.messages (conversation_id, tenant_id, role, content, confidence, sources)
-       values ($1, $2, 'assistant', $3, $4, $5) returning id`,
-            [conversationId, tenantId, text, confidence, refs.length > 0 ? JSON.stringify(refs) : null]
+            `insert into public.messages (conversation_id, tenant_id, role, content, confidence, sources, site_id)
+       values ($1, $2, 'assistant', $3, $4, $5, $6) returning id`,
+            [conversationId, tenantId, text, confidence, refs.length > 0 ? JSON.stringify(refs) : null, siteId]
         );
 
         // Increment usage counter
