@@ -8,19 +8,54 @@ import Link from "next/link";
 
 export const runtime = 'nodejs'
 
-type Row = { id: string; session_id: string; created_at: string; messages: number }
+type Row = {
+    id: string;
+    session_id: string;
+    created_at: string;
+    messages: number;
+    escalations: number;
+    last_escalation_reason: string | null;
+    last_escalation_status: string | null;
+}
+
+type KPI = {
+    conversations: number;
+    messages: number;
+    escalations: number;
+    escalated_conversations: number;
+    avg_messages: number | null;
+    low_confidence_messages: number;
+}
 
 async function list(tenantId: string) {
     const { rows } = await query<Row>(
         `select c.id, c.session_id, c.created_at,
-            (select count(*) from public.messages m where m.conversation_id=c.id)::int as messages
-     from public.conversations c
-     where c.tenant_id=$1
-     order by c.created_at desc
-     limit 100`,
+            (select count(*) from public.messages m where m.conversation_id=c.id)::int as messages,
+            (select count(*) from public.escalations e where e.conversation_id=c.id)::int as escalations,
+            (select e.reason from public.escalations e where e.conversation_id=c.id order by e.created_at desc limit 1) as last_escalation_reason,
+            (select e.status from public.escalations e where e.conversation_id=c.id order by e.created_at desc limit 1) as last_escalation_status
+         from public.conversations c
+         where c.tenant_id=$1
+         order by c.created_at desc
+         limit 100`,
         [tenantId]
     )
     return rows
+}
+
+async function getKpis(tenantId: string): Promise<KPI> {
+    const { rows } = await query<KPI>(
+        `select 
+            (select count(*) from public.conversations c where c.tenant_id=$1)::int as conversations,
+            (select count(*) from public.messages m where m.tenant_id=$1)::int as messages,
+            (select count(*) from public.escalations e where e.tenant_id=$1)::int as escalations,
+            (select count(distinct e.conversation_id) from public.escalations e where e.tenant_id=$1)::int as escalated_conversations,
+            (select COALESCE(round(avg(mc)::numeric,2),0)::float from (select count(*) as mc from public.messages mm where mm.tenant_id=$1 group by mm.conversation_id) s) as avg_messages,
+            (select count(*) from public.messages m2 where m2.tenant_id=$1 and m2.role='assistant' and m2.confidence < 0.55)::int as low_confidence_messages
+        `,
+        [tenantId]
+    );
+    return rows[0] || { conversations: 0, messages: 0, escalations: 0, escalated_conversations: 0, avg_messages: 0, low_confidence_messages: 0 };
 }
 
 function ConversationsTable({ conversations }: { conversations: Row[] }) {
@@ -78,6 +113,7 @@ function ConversationsTable({ conversations }: { conversations: Row[] }) {
                                         <th className="text-left p-4 text-sm font-semibold text-base-content/80">Session</th>
                                         <th className="text-left p-4 text-sm font-semibold text-base-content/80">Activity</th>
                                         <th className="text-left p-4 text-sm font-semibold text-base-content/80">Started</th>
+                                        <th className="text-left p-4 text-sm font-semibold text-base-content/80">Escalations</th>
                                         <th className="text-right p-4 text-sm font-semibold text-base-content/80">Status</th>
                                     </tr>
                                 </thead>
@@ -123,14 +159,36 @@ function ConversationsTable({ conversations }: { conversations: Row[] }) {
                                                     })}
                                                 </div>
                                             </td>
+                                            <td className="p-4">
+                                                {r.escalations > 0 ? (
+                                                    <div className="flex items-center gap-2">
+                                                        <div className="flex items-center gap-2 px-2 py-1 bg-warning/10 text-warning rounded-md" title={r.last_escalation_reason || undefined}>
+                                                            <i className="fa-duotone fa-solid fa-fire text-xs" aria-hidden />
+                                                            <span className="text-sm font-medium">{r.escalations}</span>
+                                                        </div>
+                                                        <span className="text-xs text-base-content/60">
+                                                            {r.last_escalation_reason ? r.last_escalation_reason.replace(/_/g, ' ') : 'escalations'}
+                                                        </span>
+                                                    </div>
+                                                ) : (
+                                                    <span className="text-sm text-base-content/40">—</span>
+                                                )}
+                                            </td>
                                             <td className="p-4 text-right space-x-2 whitespace-nowrap">
                                                 <Link href={`/dashboard/conversations/${r.id}`} className="inline-flex items-center gap-1 px-2 py-1 bg-base-200/60 hover:bg-base-200 rounded-md text-xs font-medium text-base-content/80 transition-colors">
                                                     <i className="fa-duotone fa-solid fa-eye text-[10px]" aria-hidden /> View
                                                 </Link>
-                                                <span className="inline-flex items-center gap-2 px-2 py-1 bg-success/10 text-success rounded-md text-xs font-medium">
-                                                    <div className="w-1.5 h-1.5 bg-success rounded-full"></div>
-                                                    Completed
-                                                </span>
+                                                {r.escalations > 0 ? (
+                                                    <span className="inline-flex items-center gap-2 px-2 py-1 bg-warning/10 text-warning rounded-md text-xs font-medium" title={r.last_escalation_status || undefined}>
+                                                        <div className="w-1.5 h-1.5 bg-warning rounded-full"></div>
+                                                        Escalated
+                                                    </span>
+                                                ) : (
+                                                    <span className="inline-flex items-center gap-2 px-2 py-1 bg-success/10 text-success rounded-md text-xs font-medium">
+                                                        <div className="w-1.5 h-1.5 bg-success rounded-full"></div>
+                                                        Completed
+                                                    </span>
+                                                )}
                                             </td>
                                         </tr>
                                     ))}
@@ -192,6 +250,13 @@ function ConversationsTable({ conversations }: { conversations: Row[] }) {
                                                     <span className="text-sm font-semibold">{r.messages}</span>
                                                     <span className="text-xs opacity-80">messages</span>
                                                 </div>
+                                                {r.escalations > 0 && (
+                                                    <div className="flex items-center gap-2 px-3 py-2 bg-warning/10 text-warning rounded-lg" title={r.last_escalation_reason || undefined}>
+                                                        <i className="fa-duotone fa-solid fa-fire text-xs" aria-hidden />
+                                                        <span className="text-sm font-semibold">{r.escalations}</span>
+                                                        <span className="text-xs opacity-80">esc</span>
+                                                    </div>
+                                                )}
                                                 <HoverScale scale={1.05}>
                                                     <Link href={`/dashboard/conversations/${r.id}`} className="flex items-center gap-2 px-3 py-2 bg-primary/10 hover:bg-primary/20 text-primary rounded-lg text-sm font-medium transition-colors">
                                                         <i className="fa-duotone fa-solid fa-eye text-xs" aria-hidden />
@@ -271,6 +336,132 @@ export default async function ConversationsPage() {
 }
 
 async function ConversationsContent({ tenantId }: { tenantId: string }) {
-    const conversations = await list(tenantId);
-    return <ConversationsTable conversations={conversations} />;
+    const [conversations, kpis] = await Promise.all([
+        list(tenantId),
+        getKpis(tenantId)
+    ]);
+
+    const escalationRate = kpis.conversations ? (kpis.escalated_conversations / kpis.conversations) * 100 : 0;
+    return (
+        <div className="space-y-10">
+            {/* KPI Cards */}
+            <StaggerContainer>
+                <StaggerChild>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 xl:grid-cols-4 gap-6">
+                        <HoverScale scale={1.01}>
+                            <div className="stats shadow hover:shadow-md transition-all duration-300 w-full rounded-2xl overflow-hidden">
+                                <div className="stat bg-base-100 rounded-2xl">
+                                    <div className="stat-title">Conversations</div>
+                                    <div className="stat-figure">
+                                        <div className="bg-primary/20 rounded-2xl h-12 w-12 flex items-center justify-center">
+                                            <i className="fa-duotone fa-solid fa-messages text-lg text-primary" aria-hidden />
+                                        </div>
+                                    </div>
+                                    <div className="stat-value text-primary">{kpis.conversations}</div>
+                                </div>
+                            </div>
+                        </HoverScale>
+                        <HoverScale scale={1.01}>
+                            <div className="stats shadow hover:shadow-md transition-all duration-300 w-full rounded-2xl overflow-hidden">
+                                <div className="stat bg-base-100 rounded-2xl">
+                                    <div className="stat-title">Messages</div>
+                                    <div className="stat-figure">
+                                        <div className="bg-info/20 rounded-2xl h-12 w-12 flex items-center justify-center">
+                                            <i className="fa-duotone fa-solid fa-message-lines text-lg text-info" aria-hidden />
+                                        </div>
+                                    </div>
+                                    <div className="stat-value text-info">{kpis.messages}</div>
+                                </div>
+                            </div>
+                        </HoverScale>
+                        <HoverScale scale={1.01}>
+                            <div className="stats shadow hover:shadow-md transition-all duration-300 w-full rounded-2xl overflow-hidden">
+                                <div className="stat bg-base-100 rounded-2xl">
+                                    <div className="stat-title">Escalations</div>
+                                    <div className="stat-figure">
+                                        <div className={`${kpis.escalations ? 'bg-warning/20' : 'bg-base-200/60'} rounded-2xl h-12 w-12 flex items-center justify-center`}>
+                                            <i className={`fa-duotone fa-solid fa-fire text-lg ${kpis.escalations ? 'text-warning' : 'text-base-content/60'}`} aria-hidden />
+                                        </div>
+                                    </div>
+                                    <div className={`stat-value ${kpis.escalations ? 'text-warning' : 'text-base-content'}`}>{kpis.escalations}</div>
+                                    {kpis.escalations > 0 && <div className="stat-desc">{kpis.escalated_conversations} convos</div>}
+                                </div>
+                            </div>
+                        </HoverScale>
+                        <HoverScale scale={1.01}>
+                            <div className="stats shadow hover:shadow-md transition-all duration-300 w-full rounded-2xl overflow-hidden">
+                                <div className="stat bg-base-100 rounded-2xl">
+                                    <div className="stat-title">Escalation Rate</div>
+                                    <div className="stat-figure">
+                                        <div className="bg-secondary/20 rounded-2xl h-12 w-12 flex items-center justify-center">
+                                            <i className="fa-duotone fa-solid fa-gauge-high text-lg text-secondary" aria-hidden />
+                                        </div>
+                                    </div>
+                                    <div className="stat-value text-secondary">{escalationRate.toFixed(1)}%</div>
+                                    <div className="stat-desc">of conversations</div>
+                                </div>
+                            </div>
+                        </HoverScale>
+                        <HoverScale scale={1.01}>
+                            <div className="stats shadow hover:shadow-md transition-all duration-300 w-full rounded-2xl overflow-hidden">
+                                <div className="stat bg-base-100 rounded-2xl">
+                                    <div className="stat-title">Low Confidence</div>
+                                    <div className="stat-figure">
+                                        <div className={`${kpis.low_confidence_messages ? (kpis.low_confidence_messages > 10 ? 'bg-error/20' : 'bg-warning/20') : 'bg-base-200/60'} rounded-2xl h-12 w-12 flex items-center justify-center`}>
+                                            <i className={`fa-duotone fa-solid fa-triangle-exclamation text-lg ${kpis.low_confidence_messages ? (kpis.low_confidence_messages > 10 ? 'text-error' : 'text-warning') : 'text-base-content/60'}`} aria-hidden />
+                                        </div>
+                                    </div>
+                                    <div className={`${kpis.low_confidence_messages ? (kpis.low_confidence_messages > 10 ? 'text-error' : 'text-warning') : 'text-base-content'} stat-value`}>{kpis.low_confidence_messages}</div>
+                                    {kpis.low_confidence_messages > 0 && <div className="stat-desc">assistant msgs</div>}
+                                </div>
+                            </div>
+                        </HoverScale>
+                        <HoverScale scale={1.01}>
+                            <div className="stats shadow hover:shadow-md transition-all duration-300 w-full rounded-2xl overflow-hidden">
+                                <div className="stat bg-base-100 rounded-2xl">
+                                    <div className="stat-title">Healthy Convos</div>
+                                    <div className="stat-figure">
+                                        <div className="bg-success/20 rounded-2xl h-12 w-12 flex items-center justify-center">
+                                            <i className="fa-duotone fa-solid fa-badge-check text-lg text-success" aria-hidden />
+                                        </div>
+                                    </div>
+                                    <div className="stat-value text-success">{kpis.conversations - kpis.escalated_conversations}</div>
+                                    <div className="stat-desc">no escalations</div>
+                                </div>
+                            </div>
+                        </HoverScale>
+                        <HoverScale scale={1.01}>
+                            <div className="stats shadow hover:shadow-md transition-all duration-300 w-full rounded-2xl overflow-hidden">
+                                <div className="stat bg-base-100 rounded-2xl">
+                                    <div className="stat-title">Escalated Convos</div>
+                                    <div className="stat-figure">
+                                        <div className={`${kpis.escalated_conversations ? 'bg-warning/20' : 'bg-base-200/60'} rounded-2xl h-12 w-12 flex items-center justify-center`}>
+                                            <i className={`fa-duotone fa-solid fa-fire-flame text-lg ${kpis.escalated_conversations ? 'text-warning' : 'text-base-content/60'}`} aria-hidden />
+                                        </div>
+                                    </div>
+                                    <div className={`stat-value ${kpis.escalated_conversations ? 'text-warning' : 'text-base-content'}`}>{kpis.escalated_conversations}</div>
+                                    <div className="stat-desc">unique sessions</div>
+                                </div>
+                            </div>
+                        </HoverScale>
+                        <HoverScale scale={1.01}>
+                            <div className="stats shadow hover:shadow-md transition-all duration-300 w-full rounded-2xl overflow-hidden">
+                                <div className="stat bg-base-100 rounded-2xl">
+                                    <div className="stat-title">Avg Msgs/Convo</div>
+                                    <div className="stat-figure">
+                                        <div className="bg-accent/20 rounded-2xl h-12 w-12 flex items-center justify-center">
+                                            <i className="fa-duotone fa-solid fa-chart-simple text-lg text-accent" aria-hidden />
+                                        </div>
+                                    </div>
+                                    <div className="stat-value text-accent">{(kpis.avg_messages ?? 0).toFixed(1)}</div>
+                                    <div className="stat-desc">interaction depth</div>
+                                </div>
+                            </div>
+                        </HoverScale>
+                    </div>
+                </StaggerChild>
+            </StaggerContainer>
+            <ConversationsTable conversations={conversations} />
+        </div>
+    );
 }

@@ -6,9 +6,7 @@
         "dev": "next dev --turbopack -p 3001",
         "build": "next build",
         "start": "next start",
-        "lint": "next lint",
-        "seed": "node ./scripts/seed.mjs",
-        "generate-favicon": "node ./scripts/generate-favicon.mjs"
+        "lint": "next lint"
     },
     "dependencies": {
         "@clerk/elements": "^0.23.54",
