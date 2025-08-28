@@ -1,21 +1,35 @@
-import { getTenantIdStrict } from "@/lib/tenant-resolve";
-import { query } from "@/lib/db";
-import { PLAN_LIMITS, Plan } from "@/lib/limits";
+"use client";
+
+import { useEffect, useState } from "react";
 import SiteWizardButton from "@/components/site-wizard-button";
 
-export default async function SiteWizardLauncher() {
-    const tenantId = await getTenantIdStrict();
+export default function SiteWizardLauncher() {
+    const [canAdd, setCanAdd] = useState(false);
+    const [remaining, setRemaining] = useState(0);
+    const [loading, setLoading] = useState(true);
 
-    const planQ = await query<{ plan: Plan }>(`select plan from public.tenants where id=$1`, [tenantId]);
-    const sitesQ = await query<{ cnt: number }>(`select count(*)::int as cnt from public.tenant_sites where tenant_id=$1`, [tenantId]);
+    useEffect(() => {
+        async function fetchData() {
+            try {
+                const res = await fetch("/api/site-wizard");
+                if (!res.ok) throw new Error("Failed to fetch site wizard data");
 
-    const plan = (planQ.rows[0]?.plan || 'none') as Plan;
-    const current = Number(sitesQ.rows[0]?.cnt || 0);
-    const limit = PLAN_LIMITS[plan]?.sites ?? 0;
-    const remaining = Math.max(0, limit - current);
-    const canAdd = remaining > 0;
+                const data = await res.json();
+                setCanAdd(data.canAdd);
+                setRemaining(data.remaining);
+            } catch (error) {
+                console.error("Error fetching site wizard data:", error);
+            } finally {
+                setLoading(false);
+            }
+        }
 
-    return (
-        <SiteWizardButton canAdd={canAdd} remaining={remaining} />
-    );
+        fetchData();
+    }, []);
+
+    if (loading) {
+        return <div className="btn btn-primary rounded-xl loading">Loading...</div>;
+    }
+
+    return <SiteWizardButton canAdd={canAdd} remaining={remaining} />;
 }

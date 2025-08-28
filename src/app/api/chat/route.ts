@@ -12,6 +12,7 @@ import { handleEscalation } from '@/lib/escalation-service';
 import { classifyIntent } from '@/lib/intents';
 import type { EscalationDestination } from '@/lib/escalation-service';
 import { renderMarkdownLiteToHtml } from '@/lib/markdown-lite-server';
+import { logEvent } from '@/lib/events';
 
 export const runtime = 'nodejs';
 
@@ -63,6 +64,8 @@ async function ensureConversation(tenantId: string, sessionId: string, siteId?: 
         siteId ? [tenantId, sessionId, siteId] : [tenantId, sessionId]
     );
     const conversationId = ins.rows[0].id;
+    // Log conversation_started event
+    logEvent({ tenantId, name: 'conversation_started', data: { sessionId, conversationId }, soft: true });
 
     // Trigger conversation started webhook
     try {
@@ -263,6 +266,8 @@ ${contextText}`;
                 try {
                     // Triggering message.sent webhook for user message
                     await webhookEvents.messageSent(tenantId, conversationId, userMessage.rows[0].id, 'user');
+                    // (Optional sampling) message_sent event for user
+                    logEvent({ tenantId, name: 'message_sent', data: { conversationId, role: 'user' }, soft: true });
                     // message.sent webhook triggered successfully
                 } catch (error) {
                     console.error('💥 Chat API: Failed to trigger message.sent webhook for user:', error);
@@ -293,6 +298,7 @@ ${contextText}`;
         try {
             // Triggering message.sent webhook for assistant message
             await webhookEvents.messageSent(tenantId, conversationId, assistantMessage.rows[0].id, 'assistant', confidence);
+            logEvent({ tenantId, name: 'message_sent', data: { conversationId, role: 'assistant', confidence }, soft: true });
             // assistant message.sent webhook triggered successfully
         } catch (error) {
             console.error('💥 Chat API: Failed to trigger message.sent webhook for assistant:', error);

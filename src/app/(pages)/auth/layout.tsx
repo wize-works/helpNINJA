@@ -16,8 +16,9 @@ export default function AuthLayout({ children }: { children: React.ReactNode }) 
                     {/* Placeholder for logo */}
                     <span className="text-4xl font-bold text-primary">
                         <Logo
-                            size={50}
-                            className="text-base-content group-hover:text-primary transition-all duration-200 group-hover:scale-110"
+                            width={200}
+                            height={34}
+                            className="text-primary group-hover:text-primary transition-all duration-200 group-hover:scale-110"
                         />
                     </span>
                 </div>

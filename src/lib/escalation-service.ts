@@ -4,6 +4,7 @@ import { EscalationEvent, EscalationReason } from './integrations/types';
 import { query } from './db';
 import { webhookEvents } from './webhooks';
 import crypto from 'crypto';
+import { logEvent } from '@/lib/events';
 
 // Define types for the escalation service
 export interface EscalationDestination {
@@ -215,6 +216,8 @@ export async function handleEscalation({
       VALUES ($1, $2, $3, $4, $5, NOW())`,
             [tenantId, conversationId, reason, confidence || null, ruleId || null]
         );
+        // Log escalation event
+        logEvent({ tenantId, name: 'escalation_triggered', data: { conversationId, reason, confidence, ruleId }, soft: true });
         // Escalation event recorded
         // Fire a notification (MVP) - map reason to notification type
         try {

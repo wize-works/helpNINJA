@@ -1,6 +1,7 @@
 import { EscalationEvent, IntegrationRecord } from './types'
 import { getProvider } from './registry'
 import { query } from '@/lib/db'
+import { logEvent } from '@/lib/events';
 
 export async function loadDestinations(tenantId: string): Promise<IntegrationRecord[]> {
     const { rows } = await query<IntegrationRecord>('select * from public.integrations where tenant_id=$1 and status=' + "'active'", [tenantId])
@@ -191,8 +192,10 @@ export async function dispatchEscalation(ev: EscalationEvent, destinations?: Int
                 'insert into public.integration_outbox (tenant_id, provider, integration_id, payload, status, attempts, next_attempt_at, last_error) values ($1,$2,$3,$4,\'pending\',0, now() + interval \'2 minutes\', $5)',
                 [ev.tenantId, t.provider, t.id, ev, r.error || 'unknown']
             );
+            logEvent({ tenantId: ev.tenantId, name: 'integration_failed', data: { provider: t.provider, integrationId: t.id, error: r.error }, soft: true });
         } else {
             // Provider succeeded
+            logEvent({ tenantId: ev.tenantId, name: 'integration_succeeded', data: { provider: t.provider, integrationId: t.id }, soft: true });
         }
 
         // Include the integration ID in the result for dashboard visibility

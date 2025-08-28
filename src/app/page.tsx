@@ -13,7 +13,11 @@ export default function Home() {
                             <StaggerChild>
                                 <div className="w-full max-w-md">
                                     <div className="flex justify-center mb-8">
-                                        <Logo size={64} className="text-primary" />
+                                        <Logo
+                                            width={200}
+                                            height={34}
+                                            className="text-primary group-hover:text-primary transition-all duration-200 group-hover:scale-110"
+                                        />
                                     </div>
 
                                     <h1 className="text-3xl lg:text-4xl font-bold tracking-tight mb-4 text-center">

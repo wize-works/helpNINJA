@@ -62,17 +62,10 @@ export default function Titlebar() {
                                 <Link href="/" className="flex items-center gap-3 py-1.5 px-2 rounded-xl hover:bg-base-200/40 transition-all duration-200 group">
                                     <div className="relative">
                                         <Logo
-                                            size={30}
-                                            className="text-base-content group-hover:text-primary transition-all duration-200 group-hover:scale-110"
+                                            width={200}
+                                            height={34}
+                                            className="text-primary group-hover:text-primary transition-all duration-200 group-hover:scale-110"
                                         />
-                                    </div>
-                                    <div className="hidden sm:block">
-                                        <div className="text-base font-semibold tracking-tight text-base-content">
-                                            help<span className="text-primary font-bold">NINJA</span>
-                                        </div>
-                                        <div className="text-xs text-base-content/50 -mt-0.5">
-                                            AI Support Platform
-                                        </div>
                                     </div>
                                 </Link>
                             </HoverScale>

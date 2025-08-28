@@ -6,6 +6,8 @@ import toast from "react-hot-toast";
 import DomainVerification from "./domain-verification";
 import WidgetSetupModal from "./widget-setup-modal";
 import WidgetConfigModal from "./widget-config-modal";
+import SiteWizardButton from "./site-wizard-button";
+import SiteWizardLauncher from "./site-wizard-launcher";
 
 type Site = {
     id: string;
@@ -206,14 +208,7 @@ export default function SiteManager() {
                     </p>
                 </div>
                 <div className="flex items-center gap-3">
-                    <button
-                        onClick={() => setShowAddForm(true)}
-                        className="btn btn-primary rounded-xl"
-                        disabled={showAddForm}
-                    >
-                        <i className="fa-duotone fa-solid fa-plus mr-2" aria-hidden />
-                        Add Site
-                    </button>
+                    <SiteWizardLauncher />
                 </div>
             </div>
 

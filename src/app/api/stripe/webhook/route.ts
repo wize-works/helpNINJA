@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { stripe, planFromPriceId } from '@/lib/stripe';
 import Stripe from 'stripe';
 import { query } from '@/lib/db';
+import { logEvent } from '@/lib/events';
 
 export const runtime = 'nodejs';
 
@@ -37,6 +38,8 @@ export async function POST(req: NextRequest) {
            on conflict (tenant_id) do nothing`,
                     [tenantId]
                 );
+                // Log checkout completion event
+                logEvent({ tenantId, name: 'checkout_completed', data: { plan, status: 'active', subscriptionId: subId }, soft: true });
             }
             break;
         }
@@ -54,6 +57,7 @@ export async function POST(req: NextRequest) {
                     `update public.tenants set plan=$1, plan_status=$2, stripe_subscription_id=$3, current_period_end=$4 where id=$5`,
                     [plan, status, sub.id, periodEnd, tenantId]
                 );
+                logEvent({ tenantId, name: 'plan_updated', data: { plan, status, subscriptionId: sub.id }, soft: true });
             }
             break;
         }
@@ -65,6 +69,7 @@ export async function POST(req: NextRequest) {
                     `update public.tenants set plan_status='canceled' where id=$1`,
                     [tenantId]
                 );
+                logEvent({ tenantId, name: 'plan_updated', data: { status: 'canceled', subscriptionId: sub.id }, soft: true });
             }
             break;
         }

@@ -6,6 +6,7 @@ import { query } from '@/lib/db';
 import { canAddSite } from '@/lib/usage';
 import { getTenantIdStrict } from '@/lib/tenant-resolve';
 import { webhookEvents } from '@/lib/webhooks';
+import { logEvent } from '@/lib/events';
 
 export const runtime = 'nodejs';
 
@@ -46,7 +47,16 @@ export async function POST(req: NextRequest) {
         }
     } catch { }
 
-    const docs = await crawl(input);
+    // Log ingest start
+    logEvent({ tenantId, name: 'ingest_started', data: { input, siteId }, soft: true });
+    let docs = [] as Awaited<ReturnType<typeof crawl>>;
+    try {
+        docs = await crawl(input);
+    } catch (err) {
+        // Log ingest failure event then return
+        logEvent({ tenantId, name: 'ingest_failed', data: { input, siteId, error: (err as Error).message?.slice(0, 200) }, soft: true });
+        return NextResponse.json({ error: 'ingest_failed', message: (err as Error).message }, { status: 500 });
+    }
     // Normalize and dedupe by URL per tenant
     const seen = new Set<string>();
     for (const d of docs) {
@@ -108,5 +118,7 @@ export async function POST(req: NextRequest) {
             console.error('Failed to trigger document.ingested webhook:', error);
         }
     }
+    // Log ingest completion summary
+    logEvent({ tenantId, name: 'ingest_completed', data: { input, siteId, docs: docs.length }, soft: true });
     return NextResponse.json({ ok: true, docs: docs.length });
 }

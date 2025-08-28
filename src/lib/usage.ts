@@ -1,5 +1,6 @@
 import { query } from '@/lib/db';
 import { PLAN_LIMITS } from './limits';
+import { logEvent } from '@/lib/events';
 
 function firstOfMonth(): string { return new Date(Date.UTC(new Date().getUTCFullYear(), new Date().getUTCMonth(), 1)).toISOString().slice(0, 10); }
 
@@ -32,7 +33,11 @@ export async function canSendMessage(tenantId: string): Promise<{ ok: boolean; r
     const u = await query<{ messages_count: number }>('select messages_count from public.usage_counters where tenant_id=$1', [tenantId]);
     const used = u.rows[0]?.messages_count ?? 0;
     const limit = PLAN_LIMITS[plan].messages;
-    if (used >= limit) return { ok: false, reason: 'message limit reached' };
+    if (used >= limit) {
+        // Log quota exceeded event (soft, non-blocking)
+        logEvent({ tenantId, name: 'quota_exceeded', data: { quotaType: 'messages', limit, used }, soft: true });
+        return { ok: false, reason: 'message limit reached' };
+    }
     return { ok: true };
 }
 

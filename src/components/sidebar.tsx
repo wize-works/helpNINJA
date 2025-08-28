@@ -74,6 +74,7 @@ const navigationSections: NavSection[] = [
         ]
     },
     { id: "analytics", label: "Analytics", icon: "fa-chart-line", href: "/dashboard/analytics", collapsible: false },
+    { id: "events", label: "Events", icon: "fa-waveform-lines", href: "/dashboard/events", collapsible: false },
     { id: "playground", label: "Playground", icon: "fa-flask", href: "/dashboard/playground", collapsible: false },
     { id: "team", label: "Team & Access", icon: "fa-users", href: "/dashboard/team", collapsible: false },
     { id: "developers", label: "Developers", icon: "fa-code", href: "/dashboard/settings/api", collapsible: false },

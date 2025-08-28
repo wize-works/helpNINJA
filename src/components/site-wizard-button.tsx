@@ -9,7 +9,7 @@ export default function SiteWizardButton({ canAdd, remaining }: { canAdd: boolea
 
     if (!canAdd) {
         return (
-            <a href="/dashboard/billing" className="btn btn-outline btn-sm rounded-lg">
+            <a href="/dashboard/billing" className="btn btn-outline rounded-lg">
                 <i className="fa-duotone fa-solid fa-crown mr-2" aria-hidden />
                 Upgrade to add more sites
             </a>

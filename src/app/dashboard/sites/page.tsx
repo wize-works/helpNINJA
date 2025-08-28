@@ -96,7 +96,6 @@ export default async function SitesPage() {
                             </div>
                             <div className="flex-shrink-0 flex items-center gap-3">
                                 {/* Rerunnable site onboarding wizard, gated by plan limits */}
-                                <SiteWizardLauncher />
                                 <div className="stats shadow">
                                     <div className="stat">
                                         <div className="stat-figure text-primary">
