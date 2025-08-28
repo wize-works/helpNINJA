@@ -5,6 +5,18 @@ import { logEvent } from '@/lib/events';
 
 export async function loadDestinations(tenantId: string): Promise<IntegrationRecord[]> {
     const { rows } = await query<IntegrationRecord>('select * from public.integrations where tenant_id=$1 and status=' + "'active'", [tenantId])
+    console.log('🔍 Loaded destinations for tenant', { 
+        tenantId, 
+        count: rows.length, 
+        integrations: rows.map(r => ({ 
+            id: r.id, 
+            provider: r.provider, 
+            name: r.name,
+            hasCredentials: !!r.credentials,
+            credentialsKeys: Object.keys(r.credentials || {}),
+            hasWebhookUrl: !!(r.credentials as any)?.webhook_url
+        }))
+    });
     return rows
 }
 
@@ -101,7 +113,19 @@ export async function dispatchEscalation(ev: EscalationEvent, destinations?: Int
                     [ev.tenantId, ...integrationIds]
                 );
 
-                // Found matching integrations in DB
+                console.log('🔍 Loading specific integrations for escalation', {
+                    tenantId: ev.tenantId,
+                    requestedIds: integrationIds,
+                    foundCount: rows.length,
+                    foundIntegrations: rows.map(r => ({ 
+                        id: r.id, 
+                        provider: r.provider, 
+                        name: r.name,
+                        hasCredentials: !!r.credentials,
+                        credentialsKeys: Object.keys(r.credentials || {}),
+                        hasWebhookUrl: !!(r.credentials as any)?.webhook_url
+                    }))
+                });
 
                 if (rows.length > 0) {
                     if (destinations) {
@@ -171,9 +195,27 @@ export async function dispatchEscalation(ev: EscalationEvent, destinations?: Int
     }
 
     // Dispatching to destinations
+    console.log('🚀 Starting dispatch to destinations', {
+        destinationCount: list.length,
+        destinations: list.map(t => ({
+            id: t.id,
+            provider: t.provider,
+            name: t.name,
+            hasCredentials: !!t.credentials,
+            credentialsKeys: Object.keys(t.credentials || {}),
+            hasWebhookUrl: !!(t.credentials as any)?.webhook_url
+        }))
+    });
 
     const results = await Promise.all(list.map(async (t) => {
-        // Dispatching to provider
+        console.log('🔄 Dispatching to single provider', {
+            integrationId: t.id,
+            provider: t.provider,
+            name: t.name,
+            hasCredentials: !!t.credentials,
+            credentialsStructure: t.credentials
+        });
+        
         const p = getProvider(t.provider);
 
         if (!p) {
