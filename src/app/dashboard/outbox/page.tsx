@@ -2,6 +2,7 @@ import { getTenantIdStrict } from "@/lib/tenant-resolve";
 import OutboxTable from "@/components/outbox-table";
 import { Breadcrumb } from "@/components/ui/breadcrumb";
 import { AnimatedPage, StaggerContainer, StaggerChild } from "@/components/ui/animated-page";
+import Link from "next/link";
 
 export const runtime = 'nodejs';
 
@@ -128,14 +129,14 @@ export default async function OutboxPage() {
                                 </div>
 
                                 <div className="mt-6 flex gap-3">
-                                    <a href="/dashboard/integrations" className="btn btn-outline btn-sm rounded-lg">
+                                    <Link href="/dashboard/integrations" className="btn btn-outline btn-sm rounded-lg">
                                         <i className="fa-duotone fa-solid fa-puzzle-piece mr-2" aria-hidden />
                                         Manage Integrations
-                                    </a>
-                                    <a href="/dashboard/rules" className="btn btn-outline btn-sm rounded-lg">
+                                    </Link>
+                                    <Link href="/dashboard/rules" className="btn btn-outline btn-sm rounded-lg">
                                         <i className="fa-duotone fa-solid fa-route mr-2" aria-hidden />
                                         View Rules
-                                    </a>
+                                    </Link>
                                 </div>
                             </div>
                         </div>

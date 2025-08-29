@@ -98,7 +98,7 @@ export function FeedbackTable({ tenantId }: FeedbackTableProps) {
         } finally {
             setLoading(false);
         }
-    }, [tenantId, page, typeFilter, statusFilter, priorityFilter, searchFilter]);
+    }, [page, typeFilter, statusFilter, priorityFilter, searchFilter]);
 
     useEffect(() => {
         fetchFeedback();

@@ -9,6 +9,7 @@ import { AnimatedPage, StaggerContainer, StaggerChild, HoverScale } from "@/comp
 import { TenantProvider } from "@/components/tenant-context";
 import QuickStartDismiss from "../../components/quickstart-dismiss";
 import SiteWizardLauncher from "@/components/site-wizard-launcher";
+import Link from "next/link";
 
 export const runtime = "nodejs"; // ensure Node runtime for pg
 export const dynamic = "force-dynamic"; // always fetch fresh stats/charts
@@ -171,10 +172,10 @@ export default async function Dashboard() {
                                     <PlanBadge tenantId={tenantId} />
                                 </Suspense>
                                 <HoverScale scale={1.02}>
-                                    <a href={`/dashboard/billing`} className="flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-primary to-secondary text-primary-content rounded-xl font-medium text-sm shadow-lg hover:shadow-xl transition-all duration-200">
+                                    <Link href={`/dashboard/billing`} className="flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-primary to-secondary text-primary-content rounded-xl font-medium text-sm shadow-lg hover:shadow-xl transition-all duration-200">
                                         <i className="fa-duotone fa-solid fa-crown" aria-hidden />
                                         Upgrade Plan
-                                    </a>
+                                    </Link>
                                 </HoverScale>
                             </div>
                         </div>
@@ -280,13 +281,13 @@ export default async function Dashboard() {
                                             <p className="text-sm text-base-content/60">Connected services</p>
                                         </div>
                                         <HoverScale scale={1.02}>
-                                            <a
+                                            <Link
                                                 className="text-sm text-primary hover:text-primary/80 font-medium flex items-center gap-1 transition-colors"
                                                 href="/dashboard/integrations"
                                             >
                                                 View all
                                                 <i className="fa-duotone fa-solid fa-arrow-right text-xs" aria-hidden />
-                                            </a>
+                                            </Link>
                                         </HoverScale>
                                     </div>
                                     <Suspense fallback={<div className="space-y-3">{Array.from({ length: 3 }, (_, i) => <div key={i} className="animate-pulse bg-base-300/60 h-16 rounded-xl"></div>)}</div>}>
@@ -492,10 +493,10 @@ async function IntegrationsOverview({ tenantId }: { tenantId: string }) {
                             </div>
                             <p className="text-sm text-base-content/60">No integrations configured</p>
                             <HoverScale scale={1.02}>
-                                <a href="/dashboard/integrations" className="btn btn-primary btn-sm rounded-lg mt-3">
+                                <Link href="/dashboard/integrations" className="btn btn-primary btn-sm rounded-lg mt-3">
                                     <i className="fa-duotone fa-solid fa-plus mr-2" aria-hidden />
                                     Add Integration
-                                </a>
+                                </Link>
                             </HoverScale>
                         </div>
                     )}
@@ -819,10 +820,10 @@ async function QuickStartBanner({ tenantId }: { tenantId: string }) {
 
                     <div className="flex-shrink-0 flex gap-3">
                         {needsSites ? <SiteWizardLauncher /> : (
-                            <a href="/dashboard/documents" className="btn btn-primary rounded-xl">
+                            <Link href="/dashboard/documents" className="btn btn-primary rounded-xl">
                                 <i className="fa-duotone fa-solid fa-plus mr-2" aria-hidden />
                                 Add Content
-                            </a>
+                            </Link>
                         )}
                         <QuickStartDismiss />
                     </div>
