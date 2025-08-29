@@ -47,10 +47,16 @@ export function FeedbackAnalytics({ tenantId }: FeedbackAnalyticsProps) {
         async function fetchAnalytics() {
             try {
                 const response = await fetch('/api/feedback/analytics');
-                if (response.ok) {
-                    const analyticsData = await response.json();
-                    setData(analyticsData);
-                }
+                            if (response.ok) {
+                const analyticsData = await response.json();
+                // Ensure data structure is properly initialized
+                setData({
+                    dailyVolume: analyticsData.dailyVolume || [],
+                    typeDistribution: analyticsData.typeDistribution || [],
+                    statusDistribution: analyticsData.statusDistribution || [],
+                    resolutionTimes: analyticsData.resolutionTimes || []
+                });
+            }
             } catch (error) {
                 console.error('Error fetching feedback analytics:', error);
             } finally {
@@ -76,14 +82,16 @@ export function FeedbackAnalytics({ tenantId }: FeedbackAnalyticsProps) {
         );
     }
 
-    const formatDate = (dateString: string) => {
+    const formatDate = (dateString: unknown) => {
+        if (!dateString || typeof dateString !== 'string') return '';
         return new Date(dateString).toLocaleDateString('en-US', {
             month: 'short',
             day: 'numeric'
         });
     };
 
-    const formatType = (type: string) => {
+    const formatType = (type: unknown) => {
+        if (!type || typeof type !== 'string') return String(type || '');
         const typeLabels: Record<string, string> = {
             bug: 'Bug Reports',
             feature_request: 'Feature Requests',
@@ -95,7 +103,8 @@ export function FeedbackAnalytics({ tenantId }: FeedbackAnalyticsProps) {
         return typeLabels[type] || type;
     };
 
-    const formatStatus = (status: string) => {
+    const formatStatus = (status: unknown) => {
+        if (!status || typeof status !== 'string') return String(status || '');
         return status.replace('_', ' ').replace(/\b\w/g, l => l.toUpperCase());
     };
 
@@ -137,13 +146,13 @@ export function FeedbackAnalytics({ tenantId }: FeedbackAnalyticsProps) {
                                 <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
                                 <XAxis 
                                     dataKey="date" 
-                                    tickFormatter={formatDate}
+                                    tickFormatter={(value) => formatDate(value)}
                                     stroke="#6b7280"
                                     fontSize={12}
                                 />
                                 <YAxis stroke="#6b7280" fontSize={12} />
                                 <Tooltip 
-                                    labelFormatter={(value) => formatDate(value as string)}
+                                    labelFormatter={(value) => formatDate(value)}
                                     contentStyle={{
                                         backgroundColor: '#ffffff',
                                         border: '1px solid #e5e7eb',
@@ -192,7 +201,7 @@ export function FeedbackAnalytics({ tenantId }: FeedbackAnalyticsProps) {
                                     cx="50%"
                                     cy="50%"
                                     labelLine={false}
-                                    label={({ type, percentage }) => `${formatType(type)}: ${percentage}%`}
+                                    label={({ type, percentage }) => `${formatType(type)}: ${percentage || 0}%`}
                                     outerRadius={80}
                                     fill="#8884d8"
                                     dataKey="count"
@@ -228,7 +237,7 @@ export function FeedbackAnalytics({ tenantId }: FeedbackAnalyticsProps) {
                                 <YAxis 
                                     type="category" 
                                     dataKey="status" 
-                                    tickFormatter={formatStatus}
+                                    tickFormatter={(value) => formatStatus(value)}
                                     stroke="#6b7280" 
                                     fontSize={12}
                                     width={80}
