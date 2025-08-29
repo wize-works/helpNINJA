@@ -11,7 +11,64 @@ function subject(ev: EscalationEvent) {
 }
 
 function body(ev: EscalationEvent) {
-    // Extract data from the event
+    // Check if this is a feedback escalation
+    const isFeedback = ev.reason.startsWith('feedback_');
+    const feedbackMeta = ev.meta as {
+        feedbackId?: string;
+        feedbackType?: string;
+        priority?: string;
+        contactInfo?: string;
+        url?: string;
+        escalationReason?: string;
+        browserInfo?: any;
+    } | undefined;
+
+    if (isFeedback && feedbackMeta) {
+        // Format feedback escalation email
+        const typeLabel = feedbackMeta.feedbackType?.replace('_', ' ').toUpperCase() || 'FEEDBACK';
+        const priorityLabel = feedbackMeta.priority?.toUpperCase() || 'MEDIUM';
+        
+        const parts = [
+            `NEW ${typeLabel} FEEDBACK - ${priorityLabel} PRIORITY`,
+            '',
+            `Title: ${ev.userMessage}`,
+            '',
+            `Description:`,
+            ev.assistantAnswer || '—',
+            '',
+            `Feedback Details:`,
+            `• Type: ${feedbackMeta.feedbackType?.replace('_', ' ') || 'General'}`,
+            `• Priority: ${feedbackMeta.priority || 'medium'}`,
+            `• Feedback ID: ${feedbackMeta.feedbackId}`,
+        ];
+
+        if (feedbackMeta.contactInfo) {
+            parts.push(`• Contact: ${feedbackMeta.contactInfo}`);
+        }
+
+        if (feedbackMeta.url) {
+            parts.push(`• Source URL: ${feedbackMeta.url}`);
+        }
+
+        if (feedbackMeta.browserInfo) {
+            parts.push('', 'Technical Information:');
+            if (feedbackMeta.browserInfo.userAgent) {
+                parts.push(`• User Agent: ${feedbackMeta.browserInfo.userAgent}`);
+            }
+            if (feedbackMeta.browserInfo.language) {
+                parts.push(`• Language: ${feedbackMeta.browserInfo.language}`);
+            }
+            if (feedbackMeta.browserInfo.platform) {
+                parts.push(`• Platform: ${feedbackMeta.browserInfo.platform}`);
+            }
+        }
+
+        parts.push('', `View in Dashboard: ${process.env.SITE_URL || 'http://localhost:3001'}/dashboard/feedback`);
+        
+        return parts.join('\n');
+    }
+
+    // Default escalation format for non-feedback escalations
     const reason = ev.reason || 'Unknown';
     const confidence = typeof ev.confidence === 'number' ? ev.confidence.toFixed(2) : 'n/a';
     const sessionId = ev.sessionId || 'Unknown';
@@ -19,10 +76,41 @@ function body(ev: EscalationEvent) {
     const userMessage = ev.userMessage || 'No message available';
     const assistantAnswer = ev.assistantAnswer || '—';
 
+    // Extract contact info from meta
+    const contactInfo = ev.meta?.contactInfo as { name?: string; contact_method?: string; contact_value?: string } | undefined;
+    const contactLines = contactInfo 
+        ? [
+            'Customer Contact Information:',
+            `Name: ${contactInfo.name}`,
+            `Preferred Contact Method: ${contactInfo.contact_method}`,
+            `Contact Details: ${contactInfo.contact_value}`,
+            ''
+          ]
+        : [];
+
     // Handle references (URLs)
     let refsText = '—';
     if (Array.isArray(ev.refs) && ev.refs.length > 0) {
-        refsText = ev.refs.map(u => `- ${u}`).join('\n');
+        refsText = ev.refs.map((u, index) => {
+            // Try to extract a meaningful title from the URL
+            let linkText = u;
+            try {
+                const url = new URL(u);
+                let path = url.pathname.replace(/\/$/, ''); // remove trailing slash
+                if (path) {
+                    linkText = path.split('/').pop()?.replace(/\.(html|php|asp|aspx)$/, '') || url.hostname;
+                } else {
+                    linkText = url.hostname;
+                }
+                // Make it more readable
+                linkText = linkText.replace(/-/g, ' ').replace(/_/g, ' ');
+                // Capitalize first letter
+                linkText = linkText.charAt(0).toUpperCase() + linkText.slice(1);
+                return `${index + 1}. ${linkText}: ${u}`;
+            } catch (e) {
+                return `${index + 1}. ${u}`;
+            }
+        }).join('\n');
     }
 
     // Build the email body
@@ -32,6 +120,7 @@ function body(ev: EscalationEvent) {
         `Session: ${sessionId}`,
         `Conversation: ${conversationId}`,
         '',
+        ...contactLines,
         'User message:',
         userMessage,
         '',

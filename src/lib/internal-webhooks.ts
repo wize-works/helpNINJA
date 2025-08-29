@@ -173,6 +173,9 @@ async function handleEscalationEvent(
                 case 'handoff':
                 case 'user_request':
                 case 'fallback_error':
+                case 'feedback_urgent':
+                case 'feedback_bug':
+                case 'feedback_request':
                     reasonValue = payload.data.reason as EscalationReason;
                     break;
                 default:

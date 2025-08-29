@@ -1,5 +1,5 @@
-export type ProviderKey = 'email' | 'slack' | 'teams' | 'freshdesk' | 'zoho' | 'zendesk' | 'cherwell' | 'jira'
-export type EscalationReason = 'low_confidence' | 'restricted' | 'handoff' | 'user_request' | 'fallback_error'
+export type ProviderKey = 'email' | 'slack' | 'teams' | 'discord' | 'custom' | 'webhooks' | 'freshdesk' | 'zoho' | 'zendesk' | 'cherwell' | 'jira' | 'linear' | 'github' | 'gitlab' | 'servicenow'
+export type EscalationReason = 'low_confidence' | 'restricted' | 'handoff' | 'user_request' | 'fallback_error' | 'feedback_urgent' | 'feedback_bug' | 'feedback_request'
 export type EscalationEvent = {
     tenantId: string
     conversationId: string

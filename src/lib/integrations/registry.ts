@@ -1,13 +1,17 @@
 import { Provider } from './types'
 import email from './providers/email'
 import slack from './providers/slack'
+import teams from './providers/teams'
+import discord from './providers/discord'
 
 /**
  * Registry of all integration providers
  */
 const REGISTRY: Record<string, Provider> = {
     email,
-    slack
+    slack,
+    teams,
+    discord
 };
 
 /**

@@ -51,8 +51,15 @@ Core features (present)
   - Monthly counters per tenant; auto-init + monthly reset; enforce PLAN_LIMITS before AI calls; increment after.
   - Files: src/lib/usage.ts, src/lib/limits.ts
 - Integrations + outbox
-  - Provider interface (email/slack supported); registry + dispatch through centralized escalation service; failed sends go to integration_outbox; retry via API.
-  - Files: src/lib/integrations/types.ts, src/lib/integrations/registry.ts, src/lib/escalation-service.ts, src/app/api/outbox/retry/route.ts
+  - Provider interface (email/slack/teams/discord supported); registry + dispatch through centralized escalation service; failed sends go to integration_outbox; retry via API.
+  - **Microsoft Teams Integration**: Modern Power Automate webhook integration with Adaptive Card formatting, rich message support, and comprehensive setup wizard
+  - **Teams Features**: Modern Adaptive Cards, professional layout with logos and action buttons, markdown support, contact information display, reference links
+  - **Power Automate Integration**: Uses modern workflow-based webhooks (not deprecated Office 365 connectors), includes detailed Power Automate setup instructions
+  - **Discord Integration**: Rich embed-based escalation notifications with color-coded alerts, custom bot appearance, and comprehensive Discord webhook setup
+  - **Discord Features**: Rich embeds with emoji icons, color-coded escalation types, clickable links, custom bot username/avatar, organized field layout, timestamp integration
+  - **Discord Visual Design**: Dynamic color coding (amber for low confidence, red for restricted content, blue for handoffs, green for user requests), emoji-enhanced field headers, professional footer branding
+  - **UI Integration**: Complete configuration UI with provider-specific fields, detailed setup instructions, and marketplace integration (Discord available alongside Slack, Teams, and Email)
+  - Files: src/lib/integrations/types.ts, src/lib/integrations/registry.ts, src/lib/integrations/providers/teams.ts, src/lib/integrations/providers/discord.ts, src/lib/escalation-service.ts, src/app/api/outbox/retry/route.ts, src/components/integration-settings-form.tsx, src/app/dashboard/integrations/marketplace/page.tsx
 - Billing
   - Checkout/portal endpoints; Stripe webhook updates tenant plan/status and ensures usage counters.
   - Files: src/app/api/billing/**, src/app/api/stripe/webhook/route.ts, src/lib/stripe.ts

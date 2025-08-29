@@ -51,6 +51,7 @@ const navigationSections: NavSection[] = [
         ]
     },
     { id: "conversations", label: "Conversations", icon: "fa-comments", href: "/dashboard/conversations", collapsible: false },
+    { id: "feedback", label: "User Feedback", icon: "fa-comment-dots", href: "/dashboard/feedback", collapsible: false },
     {
         id: "automation",
         label: "Automation",

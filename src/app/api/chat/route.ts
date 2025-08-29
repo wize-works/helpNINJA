@@ -11,8 +11,35 @@ import { extractKeywords } from '@/lib/extract-keywords';
 import { handleEscalation } from '@/lib/escalation-service';
 import { classifyIntent } from '@/lib/intents';
 import type { EscalationDestination } from '@/lib/escalation-service';
+import type { EscalationReason } from '@/lib/integrations/types';
 import { renderMarkdownLiteToHtml } from '@/lib/markdown-lite-server';
 import { logEvent } from '@/lib/events';
+
+// Types for contact info handling
+interface ContactInfo {
+    name: string;
+    contact_method: 'email' | 'phone' | 'slack';
+    contact_value: string;
+}
+
+interface ContactInfoResponse {
+    isContactInfo: boolean;
+    contactInfo?: ContactInfo;
+}
+
+interface PendingEscalation {
+    id: string;
+    original_message: string;
+    assistant_answer: string;
+    confidence: number;
+    refs?: string[];
+    reason: EscalationReason;
+    rule_id?: string | null;
+    matched_rule_destinations?: EscalationDestination[] | null;
+    keywords?: string[];
+    trigger_webhooks: boolean;
+    meta: Record<string, unknown>;
+}
 
 export const runtime = 'nodejs';
 
@@ -47,6 +74,273 @@ export async function OPTIONS(req: NextRequest) {
     const ok = isOriginAllowed(req.headers.get('origin'), allowlist);
     if (!ok) return new NextResponse(null, { status: 403, headers: corsHeaders(req) });
     return new NextResponse(null, { status: 204, headers: corsHeaders(req) });
+}
+
+// Helper functions for contact info and escalation management
+
+/**
+ * Generates a friendly prompt asking the user for their contact information
+ */
+function generateContactInfoPrompt(): string {
+    return "I'd like to connect you with our support team to help with this. To make sure they can reach you, could you please provide:\n\n1. Your name\n2. How you'd prefer to be contacted (email, phone, or Slack)\n3. Your contact details (email address or phone number)\n\nYou can format it like: \"My name is John Smith, I prefer email, john@example.com\"";
+}
+
+/**
+ * Checks if a user message contains contact information in response to our prompt
+ */
+async function checkForContactInfoResponse(message: string, conversationId: string): Promise<ContactInfoResponse> {
+    // Check if there's a pending escalation first
+    let pendingEscalation: PendingEscalation | null = null;
+    try {
+        pendingEscalation = await getPendingEscalation(conversationId);
+    } catch (error) {
+        console.error('❌ Error in checkForContactInfoResponse, clearing corrupted data:', error);
+        await clearPendingEscalation(conversationId);
+        return { isContactInfo: false };
+    }
+    
+    if (!pendingEscalation) {
+        return { isContactInfo: false };
+    }
+
+    // Simple patterns to detect contact info
+    const emailPattern = /\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Z|a-z]{2,}\b/;
+    const phonePattern = /\b(?:\+?1[-.\s]?)?\(?([0-9]{3})\)?[-.\s]?([0-9]{3})[-.\s]?([0-9]{4})\b/;
+    
+    // More flexible name patterns
+    const namePatterns = [
+        /(?:my name is|i'm|i am|name:|call me)\s+([a-zA-Z\s]+)/i,
+        /^([a-zA-Z]+\s+[a-zA-Z]+)(?:,|\s+and|\s+I)/i, // "John Smith, and I..." or "John Smith and I..."
+        /^([a-zA-Z]+\s+[a-zA-Z]+)(?:\s+prefer|\s+would)/i // "John Smith prefer..." or "John Smith would..."
+    ];
+
+    const hasEmail = emailPattern.test(message);
+    const hasPhone = phonePattern.test(message);
+    
+    // Check if it looks like contact info response (has email/phone + mentions preference or contact method)
+    const mentionsContact = /\b(prefer|contact|email|phone|slack|reach|call|message)\b/i.test(message);
+    
+    if ((hasEmail || hasPhone) && mentionsContact) {
+        const emailMatch = message.match(emailPattern);
+        const phoneMatch = message.match(phonePattern);
+        
+        // Try to extract name using various patterns
+        let name = '';
+        let nameMatch = null;
+        
+        for (const pattern of namePatterns) {
+            nameMatch = message.match(pattern);
+            if (nameMatch) {
+                name = nameMatch[1].trim();
+                break;
+            }
+        }
+        
+        // If no specific pattern matched, try to extract a name from the beginning of the message
+        if (!name) {
+            const firstWordsMatch = message.match(/^([a-zA-Z]+(?:\s+[a-zA-Z]+)?)/);
+            if (firstWordsMatch) {
+                name = firstWordsMatch[1].trim();
+            }
+        }
+        
+        if (!name) return { isContactInfo: false };
+        let contactMethod: 'email' | 'phone' | 'slack' = 'email';
+        let contactValue = '';
+
+        // Determine preferred contact method based on what they provided and mentioned
+        if (hasEmail && (message.toLowerCase().includes('email') || !hasPhone)) {
+            contactMethod = 'email';
+            contactValue = emailMatch![0];
+        } else if (hasPhone) {
+            contactMethod = 'phone';
+            contactValue = phoneMatch![0];
+        }
+
+        // Check for Slack preference
+        if (message.toLowerCase().includes('slack')) {
+            contactMethod = 'slack';
+            // For Slack, we might get an email or username
+            contactValue = emailMatch ? emailMatch[0] : (phoneMatch ? phoneMatch[0] : name);
+        }
+
+        return {
+            isContactInfo: true,
+            contactInfo: {
+                name,
+                contact_method: contactMethod,
+                contact_value: contactValue
+            }
+        };
+    }
+
+    return { isContactInfo: false };
+}
+
+/**
+ * Stores contact information for a conversation
+ */
+async function storeContactInfo(conversationId: string, tenantId: string, contactInfo: ContactInfo): Promise<void> {
+    await query(
+        `INSERT INTO public.conversation_contact_info 
+         (conversation_id, tenant_id, name, contact_method, contact_value, created_at) 
+         VALUES ($1, $2, $3, $4, $5, NOW())
+         ON CONFLICT (conversation_id) DO UPDATE SET
+         name = EXCLUDED.name,
+         contact_method = EXCLUDED.contact_method,
+         contact_value = EXCLUDED.contact_value,
+         updated_at = NOW()`,
+        [conversationId, tenantId, contactInfo.name, contactInfo.contact_method, contactInfo.contact_value]
+    );
+}
+
+/**
+ * Retrieves contact information for a conversation
+ */
+async function getContactInfo(conversationId: string): Promise<ContactInfo | null> {
+    const result = await query<ContactInfo>(
+        `SELECT name, contact_method, contact_value FROM public.conversation_contact_info 
+         WHERE conversation_id = $1`,
+        [conversationId]
+    );
+    
+    return result.rows[0] || null;
+}
+
+/**
+ * Stores a pending escalation context to be processed after contact info is collected
+ */
+async function storePendingEscalation(conversationId: string, escalationContext: Omit<PendingEscalation, 'id'>): Promise<void> {
+    await query(
+        `INSERT INTO public.pending_escalations 
+         (conversation_id, original_message, assistant_answer, confidence, refs, reason, 
+          rule_id, matched_rule_destinations, keywords, trigger_webhooks, meta, created_at) 
+         VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, NOW())
+         ON CONFLICT (conversation_id) DO UPDATE SET
+         original_message = EXCLUDED.original_message,
+         assistant_answer = EXCLUDED.assistant_answer,
+         confidence = EXCLUDED.confidence,
+         refs = EXCLUDED.refs,
+         reason = EXCLUDED.reason,
+         rule_id = EXCLUDED.rule_id,
+         matched_rule_destinations = EXCLUDED.matched_rule_destinations,
+         keywords = EXCLUDED.keywords,
+         trigger_webhooks = EXCLUDED.trigger_webhooks,
+         meta = EXCLUDED.meta,
+         updated_at = NOW()`,
+        [
+            conversationId,
+            escalationContext.original_message,
+            escalationContext.assistant_answer,
+            escalationContext.confidence,
+            JSON.stringify(Array.isArray(escalationContext.refs) ? escalationContext.refs : []),
+            escalationContext.reason,
+            escalationContext.rule_id,
+            JSON.stringify(escalationContext.matched_rule_destinations),
+            JSON.stringify(Array.isArray(escalationContext.keywords) ? escalationContext.keywords : []),
+            escalationContext.trigger_webhooks,
+            JSON.stringify(escalationContext.meta || {})
+        ]
+    );
+}
+
+/**
+ * Retrieves a pending escalation for a conversation
+ */
+async function getPendingEscalation(conversationId: string): Promise<PendingEscalation | null> {
+    const result = await query<{
+        id: string;
+        original_message: string;
+        assistant_answer: string;
+        confidence: number;
+        refs: string;
+        reason: EscalationReason;
+        rule_id: string | null;
+        matched_rule_destinations: string;
+        keywords: string;
+        trigger_webhooks: boolean;
+        meta: string;
+    }>(
+        `SELECT id, original_message, assistant_answer, confidence, refs, reason, 
+         rule_id, matched_rule_destinations, keywords, trigger_webhooks, meta
+         FROM public.pending_escalations 
+         WHERE conversation_id = $1`,
+        [conversationId]
+    );
+    
+    if (!result.rows[0]) return null;
+    
+    const row = result.rows[0];
+    
+    // Helper function to safely parse JSON with fallback
+    function safeJsonParse<T>(str: string | null | undefined, fallback: T): T {
+        if (!str) return fallback;
+        
+        try {
+            // If it's already an object/array, return it
+            if (typeof str === 'object') return str as T;
+            
+            // Try to parse as JSON
+            return JSON.parse(str);
+        } catch {
+            console.warn('Failed to parse JSON, using fallback. Input:', typeof str, str?.substring(0, 100) + '...');
+            
+            // If it looks like an array but isn't valid JSON, try to handle it
+            if (typeof str === 'string') {
+                // Handle array-like strings that aren't valid JSON
+                if (str.startsWith('[') && str.includes('http')) {
+                    // Looks like a refs array, try to extract URLs
+                    const urlPattern = /https?:\/\/[^\s,\]]+/g;
+                    const urls = str.match(urlPattern) || [];
+                    if (urls.length > 0 && Array.isArray(fallback)) {
+                        return urls as T;
+                    }
+                }
+                
+                // Handle object-like strings that aren't valid JSON
+                if (str.includes('{') && str.includes('}')) {
+                    return fallback; // Just use fallback for complex objects
+                }
+                
+                // Handle simple arrays like keywords
+                if (str.includes(',') && Array.isArray(fallback)) {
+                    try {
+                        // Try to split by comma and clean up
+                        const items = str.replace(/[\[\]'"`]/g, '').split(',').map(s => s.trim()).filter(Boolean);
+                        return items as T;
+                    } catch {
+                        return fallback;
+                    }
+                }
+            }
+            
+            return fallback;
+        }
+    }
+    
+    return {
+        id: row.id,
+        original_message: row.original_message,
+        assistant_answer: row.assistant_answer,
+        confidence: row.confidence,
+        refs: safeJsonParse(row.refs || '[]', []),
+        reason: row.reason,
+        rule_id: row.rule_id,
+        matched_rule_destinations: safeJsonParse(row.matched_rule_destinations || 'null', null),
+        keywords: safeJsonParse(row.keywords || '[]', []),
+        trigger_webhooks: row.trigger_webhooks,
+        meta: safeJsonParse(row.meta || '{}', {})
+    };
+}
+
+/**
+ * Clears a pending escalation after it has been processed
+ */
+async function clearPendingEscalation(conversationId: string): Promise<void> {
+    await query(
+        `DELETE FROM public.pending_escalations WHERE conversation_id = $1`,
+        [conversationId]
+    );
 }
 
 async function ensureConversation(tenantId: string, sessionId: string, siteId?: string | null) {
@@ -318,6 +612,85 @@ ${contextText}`;
             ? ((confidence ?? 0) < threshold ? 'low_confidence' : 'handoff')
             : '';
 
+        // 3. Check if user provided contact information in response to our request
+        let isContactInfoResponse: ContactInfoResponse;
+        try {
+            isContactInfoResponse = await checkForContactInfoResponse(message, conversationId);
+        } catch (error) {
+            console.error('❌ Error checking contact info response:', error);
+            isContactInfoResponse = { isContactInfo: false };
+        }
+        
+        if (isContactInfoResponse.isContactInfo) {
+            // Store the contact info and proceed with pending escalation
+            await storeContactInfo(conversationId, tenantId, isContactInfoResponse.contactInfo!);
+            
+            // Check for pending escalation
+            let pendingEscalation: PendingEscalation | null = null;
+            try {
+                pendingEscalation = await getPendingEscalation(conversationId);
+            } catch (error) {
+                console.error('❌ Error getting pending escalation, clearing corrupted data:', error);
+                await clearPendingEscalation(conversationId);
+            }
+            
+            if (pendingEscalation) {
+                // Proceed with the escalation using stored context
+                text = "Thank you for providing your contact information. I'm connecting you with our support team now - they'll reach out to you shortly using your preferred method.";
+                confidence = 0.9;
+                
+                // Trigger the pending escalation
+                setTimeout(async () => {
+                    try {
+                        await handleEscalation({
+                            tenantId,
+                            conversationId,
+                            sessionId,
+                            userMessage: pendingEscalation.original_message,
+                            assistantAnswer: pendingEscalation.assistant_answer,
+                            confidence: pendingEscalation.confidence,
+                            refs: pendingEscalation.refs || [],
+                            reason: pendingEscalation.reason,
+                            siteId: siteId || null,
+                            ruleId: pendingEscalation.rule_id,
+                            matchedRuleDestinations: pendingEscalation.matched_rule_destinations,
+                            keywords: pendingEscalation.keywords || [],
+                            triggerWebhooks: pendingEscalation.trigger_webhooks !== false,
+                            meta: {
+                                ...pendingEscalation.meta,
+                                contactInfo: isContactInfoResponse.contactInfo,
+                                fromChat: true
+                            }
+                        });
+                        
+                        // Clear the pending escalation
+                        await clearPendingEscalation(conversationId);
+                    } catch (error) {
+                        console.error('❌ Failed to handle pending escalation:', error);
+                    }
+                }, 100); // Small delay to ensure response is sent first
+                
+                // Skip normal escalation flow since we're handling it asynchronously
+                await incMessages(tenantId);
+                const formattedHtml = renderMarkdownLiteToHtml(text);
+                return NextResponse.json(
+                    {
+                        answer: text,
+                        html: formattedHtml,
+                        refs: [],
+                        confidence,
+                        source: 'system',
+                        intent
+                    },
+                    { headers: headersOut }
+                );
+            } else {
+                // No pending escalation found, just acknowledge contact info and continue normally
+                text = "Thank you for providing your contact information. How else can I help you today?";
+                confidence = 0.9;
+            }
+        }
+
         // Extract keywords from the message
         const extractedKeywords = extractKeywords(message);
 
@@ -463,99 +836,157 @@ ${contextText}`;
         // Combine both escalation conditions
         if ((shouldEscalateForConfidence || shouldEscalateForRules) && !forcedHandled) {
             try {
-                // Store the rule destinations if a rule matched
-                let matchedRuleDestinations: EscalationDestination[] | null = null;
-                if (matchedRuleId) {
-                    try {
-                        // Fetch the rule to get its destinations
-                        const { rows } = await query(
-                            `SELECT destinations FROM public.escalation_rules WHERE id = $1 AND tenant_id = $2`,
-                            [matchedRuleId, tenantId]
-                        );
-
-                        if (rows.length > 0 && rows[0].destinations) {
-                            matchedRuleDestinations = rows[0].destinations as EscalationDestination[];
-                            // Found destinations for matched rule
+                // Check if we already have contact info for this conversation
+                const existingContactInfo = await getContactInfo(conversationId);
+                
+                if (!existingContactInfo) {
+                    // We need contact info before escalating - ask the user
+                    const contactPrompt = generateContactInfoPrompt();
+                    
+                    // Store the escalation context so we can proceed after getting contact info
+                    let matchedRuleDestinations: EscalationDestination[] | null = null;
+                    if (matchedRuleId) {
+                        try {
+                            const { rows } = await query(
+                                `SELECT destinations FROM public.escalation_rules WHERE id = $1 AND tenant_id = $2`,
+                                [matchedRuleId, tenantId]
+                            );
+                            if (rows.length > 0 && rows[0].destinations) {
+                                matchedRuleDestinations = rows[0].destinations as EscalationDestination[];
+                            }
+                        } catch (error) {
+                            console.error('❌ Error fetching rule destinations:', error);
                         }
-                    } catch (error) {
-                        console.error('❌ Error fetching rule destinations:', error);
                     }
-                }
-
-                // SOLUTION FOR DUPLICATE EMAILS: Choose whether to trigger webhooks based on destination types
-                const hasIntegrationDestinations = Array.isArray(matchedRuleDestinations) && matchedRuleDestinations.some(d => d.type === 'integration');
-
-                // Use our centralized escalation service
-                // Using escalation service
-
-                // Determine if we should trigger webhooks
-                const triggerWebhooks = !(shouldEscalateForRules && hasIntegrationDestinations);
-                // Webhooks may be skipped for rule-based escalation with integration destinations
-
-                // Call escalation service directly
-                const result = await handleEscalation({
-                    tenantId,
-                    conversationId,
-                    sessionId,
-                    userMessage: message,
-                    assistantAnswer: text,
-                    confidence,
-                    refs,
-                    reason: forcedEscalation
-                        ? 'user_request'
-                        : escalationReason === 'low_confidence'
-                            ? 'low_confidence'
-                            : escalationReason === 'handoff'
-                                ? 'handoff'
-                                : escalationReason === 'rule_match'
-                                    ? 'user_request'
-                                    : escalationReason === 'routing_rule'
+                    
+                    const escalationContext = {
+                        original_message: message,
+                        assistant_answer: text,
+                        confidence: confidence ?? 0.7,
+                        refs,
+                        reason: (forcedEscalation
+                            ? 'user_request'
+                            : escalationReason === 'low_confidence'
+                                ? 'low_confidence'
+                                : escalationReason === 'handoff'
+                                    ? 'handoff'
+                                    : escalationReason === 'rule_match'
                                         ? 'user_request'
-                                        : 'user_request',
-                    siteId: siteId || null,
-                    ruleId: matchedRuleId || null,
-                    matchedRuleDestinations: matchedRuleDestinations || null,
-                    keywords: extractedKeywords,
-                    triggerWebhooks,
-                    meta: {
-                        fromChat: true,
-                        usedCuratedAnswer: curatedAnswers.length > 0,
-                        forcedEscalation,
-                        intent, // handy for downstream routing/analytics
-                        intentScore,
-                        intentMargin: margin
+                                        : escalationReason === 'routing_rule'
+                                            ? 'user_request'
+                                            : 'user_request') as EscalationReason,
+                        rule_id: matchedRuleId,
+                        matched_rule_destinations: matchedRuleDestinations,
+                        keywords: extractedKeywords,
+                        trigger_webhooks: !(shouldEscalateForRules && Array.isArray(matchedRuleDestinations) && matchedRuleDestinations.some(d => d.type === 'integration')),
+                        meta: {
+                            fromChat: true,
+                            usedCuratedAnswer: curatedAnswers.length > 0,
+                            forcedEscalation,
+                            intent,
+                            intentScore,
+                            intentMargin: margin
+                        }
+                    };
+                    
+                    await storePendingEscalation(conversationId, escalationContext);
+                    
+                    // Override the response to ask for contact info
+                    text = contactPrompt;
+                    confidence = 0.9; // High confidence in our system response
+                } else {
+                    // We have contact info, proceed with escalation
+                    let matchedRuleDestinations: EscalationDestination[] | null = null;
+                    if (matchedRuleId) {
+                        try {
+                            const { rows } = await query(
+                                `SELECT destinations FROM public.escalation_rules WHERE id = $1 AND tenant_id = $2`,
+                                [matchedRuleId, tenantId]
+                            );
+                            if (rows.length > 0 && rows[0].destinations) {
+                                matchedRuleDestinations = rows[0].destinations as EscalationDestination[];
+                            }
+                        } catch (error) {
+                            console.error('❌ Error fetching rule destinations:', error);
+                        }
                     }
-                });
 
-                if (!result.ok) {
-                    console.error(`❌ Chat API: Escalation failed: ${result.error || 'Unknown error'}`);
+                    const hasIntegrationDestinations = Array.isArray(matchedRuleDestinations) && matchedRuleDestinations.some(d => d.type === 'integration');
+                    const triggerWebhooks = !(shouldEscalateForRules && hasIntegrationDestinations);
+
+                    const result = await handleEscalation({
+                        tenantId,
+                        conversationId,
+                        sessionId,
+                        userMessage: message,
+                        assistantAnswer: text,
+                        confidence,
+                        refs,
+                        reason: forcedEscalation
+                            ? 'user_request'
+                            : escalationReason === 'low_confidence'
+                                ? 'low_confidence'
+                                : escalationReason === 'handoff'
+                                    ? 'handoff'
+                                    : escalationReason === 'rule_match'
+                                        ? 'user_request'
+                                        : escalationReason === 'routing_rule'
+                                            ? 'user_request'
+                                            : 'user_request',
+                        siteId: siteId || null,
+                        ruleId: matchedRuleId || null,
+                        matchedRuleDestinations: matchedRuleDestinations || null,
+                        keywords: extractedKeywords,
+                        triggerWebhooks,
+                        meta: {
+                            fromChat: true,
+                            usedCuratedAnswer: curatedAnswers.length > 0,
+                            forcedEscalation,
+                            intent,
+                            intentScore,
+                            intentMargin: margin,
+                            contactInfo: existingContactInfo
+                        }
+                    });
+
+                    if (!result.ok) {
+                        console.error(`❌ Chat API: Escalation failed: ${result.error || 'Unknown error'}`);
+                    }
                 }
-                // Escalation triggered summary removed
             } catch (error) {
                 console.error('❌ Failed to handle escalation:', error);
             }
         }
 
         await incMessages(tenantId);
+        
+        // Ensure text is never undefined
+        const finalText = text || "I'm sorry, I encountered an issue. Let me connect you with support.";
+        
         // Server-side lightweight formatting (widget can directly inject this HTML)
-        const formattedHtml = renderMarkdownLiteToHtml(text);
+        const formattedHtml = renderMarkdownLiteToHtml(finalText);
         return NextResponse.json(
             {
-                answer: text,
+                answer: finalText,
                 html: formattedHtml,
                 refs,
-                confidence,
+                confidence: confidence ?? 0.5,
                 source: (Array.isArray(curatedAnswers) && curatedAnswers.length > 0) ? 'curated' : 'ai',
-                intent // expose for debugging; remove if you don’t want it public
+                intent // expose for debugging; remove if you don't want it public
             },
             { headers: headersOut }
         );
     } catch (e) {
-        // Don’t leak internal errors; keep message generic in production
+        // Log the full error for debugging
+        console.error('❌ CHAT API ERROR:', e);
+        console.error('❌ CHAT API ERROR STACK:', (e as Error).stack);
+        
+        // Don't leak internal errors; keep message generic in production
         const dev = process.env.NODE_ENV !== 'production';
+        const errorHeaders = headersOut || corsHeaders(req);
         return NextResponse.json(
             { error: 'internal_error', message: dev ? (e as Error).message : 'Unexpected server error.' },
-            { status: 500, headers: corsHeaders(req) }
+            { status: 500, headers: errorHeaders }
         );
     }
 }

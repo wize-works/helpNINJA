@@ -35,28 +35,26 @@ const integrationTypes = [
     {
         id: 'teams',
         name: 'Microsoft Teams',
-        description: 'Connect your team conversations with Microsoft Teams channels',
+        description: 'Send rich escalation notifications to Microsoft Teams channels using modern Adaptive Cards',
         icon: 'fa-brands fa-microsoft',
         color: 'primary',
-        features: ['Channel notifications', 'Adaptive cards', 'Rich formatting', 'Thread replies'],
+        features: ['Modern Adaptive Cards', 'Rich formatting & links', 'Action buttons', 'Professional layout'],
         configSchema: {
             webhook_url: { type: 'url', label: 'Teams Webhook URL', required: true, placeholder: 'https://outlook.office.com/webhook/...' },
             team_name: { type: 'text', label: 'Team Name', required: false, placeholder: 'Support Team' }
-        },
-        comingSoon: true
+        }
     },
     {
         id: 'discord',
         name: 'Discord',
-        description: 'Send notifications to Discord channels for community-driven support',
+        description: 'Send rich escalation notifications to Discord channels with beautiful embeds and color-coded alerts',
         icon: 'fa-brands fa-discord',
         color: 'secondary',
-        features: ['Rich embeds', 'Custom webhooks', 'Bot integration', 'Role mentions'],
+        features: ['Rich embeds', 'Color-coded alerts', 'Custom bot appearance', 'Clickable links'],
         configSchema: {
             webhook_url: { type: 'url', label: 'Discord Webhook URL', required: true, placeholder: 'https://discord.com/api/webhooks/...' },
-            username: { type: 'text', label: 'Bot Username', required: false, placeholder: 'helpNINJA' }
-        },
-        comingSoon: true
+            username: { type: 'text', label: 'Bot Username', required: false, placeholder: 'helpNINJA Bot' }
+        }
     },
     {
         id: 'zendesk',
@@ -84,6 +82,133 @@ const integrationTypes = [
             secret: { type: 'password', label: 'Secret Key', required: false, placeholder: 'Optional for verification' },
             events: { type: 'multiselect', label: 'Events', required: true, options: ['escalation', 'conversation_start', 'message_sent'] }
         }
+    },
+    {
+        id: 'custom',
+        name: 'Custom Integration',
+        description: 'Build your own custom integration for specialized workflows and requirements',
+        icon: 'fa-solid fa-duotone fa-puzzle-piece',
+        color: 'accent',
+        features: ['Full API access', 'Custom logic', 'Flexible configuration', 'Advanced workflows'],
+        configSchema: {
+            endpoint: { type: 'url', label: 'API Endpoint', required: true, placeholder: 'https://your-api.com/endpoint' },
+            auth_method: { type: 'select', label: 'Authentication', required: true, options: ['bearer', 'basic', 'apikey', 'none'] },
+            auth_value: { type: 'password', label: 'Auth Token/Key', required: false, placeholder: 'Authentication credential' }
+        }
+    },
+    {
+        id: 'freshdesk',
+        name: 'Freshdesk',
+        description: 'Automatically create support tickets in Freshdesk when conversations need human attention',
+        icon: 'fa-solid fa-duotone fa-headset',
+        color: 'success',
+        features: ['Auto-ticket creation', 'Priority assignment', 'Custom fields', 'Agent routing'],
+        configSchema: {
+            domain: { type: 'text', label: 'Freshdesk Domain', required: true, placeholder: 'yourcompany.freshdesk.com' },
+            api_key: { type: 'password', label: 'API Key', required: true, placeholder: 'Your Freshdesk API key' },
+            group_id: { type: 'text', label: 'Group ID', required: false, placeholder: 'Default group for tickets' }
+        },
+        comingSoon: true
+    },
+    {
+        id: 'servicenow',
+        name: 'ServiceNow',
+        description: 'Create incidents and service requests in ServiceNow for enterprise support workflows',
+        icon: 'fa-solid fa-duotone fa-building',
+        color: 'info',
+        features: ['Incident creation', 'Service requests', 'CMDB integration', 'SLA tracking'],
+        configSchema: {
+            instance_url: { type: 'url', label: 'ServiceNow Instance URL', required: true, placeholder: 'https://yourinstance.service-now.com' },
+            username: { type: 'text', label: 'Username', required: true, placeholder: 'ServiceNow username' },
+            password: { type: 'password', label: 'Password', required: true, placeholder: 'ServiceNow password' }
+        },
+        comingSoon: true
+    },
+    {
+        id: 'linear',
+        name: 'Linear',
+        description: 'Create issues in Linear for modern product development and bug tracking workflows',
+        icon: 'fa-solid fa-duotone fa-route',
+        color: 'primary',
+        features: ['Issue creation', 'Priority levels', 'Team assignment', 'Project tracking'],
+        configSchema: {
+            api_key: { type: 'password', label: 'Linear API Key', required: true, placeholder: 'Your Linear API key' },
+            team_id: { type: 'text', label: 'Team ID', required: true, placeholder: 'Default team for issues' },
+            project_id: { type: 'text', label: 'Project ID', required: false, placeholder: 'Optional project assignment' }
+        },
+        comingSoon: true
+    },
+    {
+        id: 'github',
+        name: 'GitHub',
+        description: 'Create GitHub issues automatically when technical problems need developer attention',
+        icon: 'fa-brands fa-github',
+        color: 'neutral',
+        features: ['Issue creation', 'Label assignment', 'Repository targeting', 'Milestone tracking'],
+        configSchema: {
+            repo_owner: { type: 'text', label: 'Repository Owner', required: true, placeholder: 'username or org' },
+            repo_name: { type: 'text', label: 'Repository Name', required: true, placeholder: 'repository-name' },
+            access_token: { type: 'password', label: 'Personal Access Token', required: true, placeholder: 'GitHub PAT with repo access' }
+        },
+        comingSoon: true
+    },
+    {
+        id: 'gitlab',
+        name: 'GitLab',
+        description: 'Create GitLab issues for development and technical support workflows',
+        icon: 'fa-brands fa-gitlab',
+        color: 'warning',
+        features: ['Issue creation', 'Label management', 'Milestone assignment', 'Merge request linking'],
+        configSchema: {
+            project_id: { type: 'text', label: 'Project ID', required: true, placeholder: 'GitLab project ID' },
+            access_token: { type: 'password', label: 'Access Token', required: true, placeholder: 'GitLab access token' },
+            gitlab_url: { type: 'url', label: 'GitLab URL', required: false, placeholder: 'https://gitlab.com (default)' }
+        },
+        comingSoon: true
+    },
+    {
+        id: 'zoho',
+        name: 'Zoho Desk',
+        description: 'Integrate with Zoho Desk for comprehensive customer support ticket management',
+        icon: 'fa-solid fa-duotone fa-ticket',
+        color: 'error',
+        features: ['Ticket creation', 'Department routing', 'Priority management', 'Customer linking'],
+        configSchema: {
+            org_id: { type: 'text', label: 'Organization ID', required: true, placeholder: 'Zoho organization ID' },
+            access_token: { type: 'password', label: 'Access Token', required: true, placeholder: 'Zoho Desk access token' },
+            department_id: { type: 'text', label: 'Department ID', required: false, placeholder: 'Default department' }
+        },
+        comingSoon: true
+    },
+    {
+        id: 'cherwell',
+        name: 'Cherwell',
+        description: 'Create incidents and service requests in Cherwell Service Management',
+        icon: 'fa-solid fa-duotone fa-wrench',
+        color: 'secondary',
+        features: ['Incident management', 'Service requests', 'Change management', 'Asset tracking'],
+        configSchema: {
+            server_url: { type: 'url', label: 'Cherwell Server URL', required: true, placeholder: 'https://your-cherwell-server.com' },
+            client_id: { type: 'text', label: 'Client ID', required: true, placeholder: 'API client ID' },
+            username: { type: 'text', label: 'Username', required: true, placeholder: 'Cherwell username' },
+            password: { type: 'password', label: 'Password', required: true, placeholder: 'Cherwell password' }
+        },
+        comingSoon: true
+    },
+    {
+        id: 'jira',
+        name: 'Jira',
+        description: 'Create Jira tickets for issue tracking and project management workflows',
+        icon: 'fa-brands fa-jira',
+        color: 'info',
+        features: ['Issue creation', 'Project assignment', 'Custom fields', 'Workflow integration'],
+        configSchema: {
+            server_url: { type: 'url', label: 'Jira Server URL', required: true, placeholder: 'https://yourcompany.atlassian.net' },
+            email: { type: 'email', label: 'Email', required: true, placeholder: 'your@email.com' },
+            api_token: { type: 'password', label: 'API Token', required: true, placeholder: 'Jira API token' },
+            project_key: { type: 'text', label: 'Project Key', required: true, placeholder: 'PROJ' }
+        },
+        comingSoon: true
     }
 ];
 

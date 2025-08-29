@@ -463,14 +463,28 @@ export async function GET(req: NextRequest) {
     headerLeft.appendChild(iconContainer);
     headerLeft.appendChild(headerTitle);
     
+    // Create feedback button
+    const feedbackButton = document.createElement('button');
+    feedbackButton.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path><circle cx="12" cy="12" r="3"></circle></svg>';
+    feedbackButton.style.cssText = 'background:rgba(255,255,255,0.1);border:none;color:rgba(255,255,255,0.8);cursor:pointer;padding:6px;border-radius:50%;display:flex;align-items:center;justify-content:center;margin-right:8px;';
+    feedbackButton.title = 'Send feedback';
+    feedbackButton.onmouseover = () => { feedbackButton.style.color = '#fff'; };
+    feedbackButton.onmouseout = () => { feedbackButton.style.color = 'rgba(255,255,255,0.8)'; };
+    
     const closeButton = document.createElement('button');
     closeButton.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>';
     closeButton.style.cssText = 'background:rgba(255,255,255,0.1);border:none;color:rgba(255,255,255,0.8);cursor:pointer;padding:6px;border-radius:50%;display:flex;align-items:center;justify-content:center;';
     closeButton.onmouseover = () => { closeButton.style.color = '#fff'; };
     closeButton.onmouseout = () => { closeButton.style.color = 'rgba(255,255,255,0.8)'; };
     
+    // Create header right section with feedback and close buttons
+    const headerRight = document.createElement('div');
+    headerRight.style.cssText = 'display:flex;align-items:center;gap:4px;';
+    headerRight.appendChild(feedbackButton);
+    headerRight.appendChild(closeButton);
+    
     header.appendChild(headerLeft);
-    header.appendChild(closeButton);
+    header.appendChild(headerRight);
     
     closeButton.onclick = () => {
       panel.style.display = 'none';
@@ -535,6 +549,256 @@ export async function GET(req: NextRequest) {
     panel.appendChild(messages);
     panel.appendChild(inputArea);
     document.body.appendChild(panel);
+
+    // Feedback modal functionality
+    let feedbackModal = null;
+    
+    function createFeedbackModal() {
+      if (feedbackModal) return;
+      
+      // Modal backdrop
+      feedbackModal = document.createElement('div');
+      feedbackModal.style.cssText = 'position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.5);z-index:1000000;display:none;align-items:center;justify-content:center;padding:20px;box-sizing:border-box;';
+      
+      // Modal content - using widget's panel colors
+      const modalContent = document.createElement('div');
+      modalContent.style.cssText = 'background:' + styles.panelBackground + ';border-radius:16px;width:100%;max-width:500px;max-height:90vh;overflow:hidden;box-shadow:0 25px 50px -12px rgba(0,0,0,0.25);position:relative;border:1px solid ' + styles.borderColor + ';';
+      
+      // Modal header - using the same style as the chat panel header
+      const modalHeader = document.createElement('div');
+      modalHeader.style.cssText = 'padding:20px;border-bottom:1px solid ' + styles.borderColor + ';display:flex;align-items:center;justify-content:space-between;background:' + styles.panelHeaderBackground + ';border-radius:16px 16px 0 0;';
+      modalHeader.innerHTML = \`
+        <div style="display:flex;align-items:center;gap:12px;flex:1;">
+          <div style="width:40px;height:40px;background:' + styles.headerIconBackground + ';border-radius:12px;display:flex;align-items:center;justify-content:center;">
+            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
+              <circle cx="12" cy="12" r="3"></circle>
+            </svg>
+          </div>
+          <div>
+            <h3 style="margin:0;font-size:18px;font-weight:600;color:white;">Share Your Feedback</h3>
+            <p style="margin:0;font-size:14px;color:rgba(255,255,255,0.8);">Help us improve your experience</p>
+          </div>
+        </div>
+        <button id="hn_feedback_close" style="background:rgba(255,255,255,0.1);border:none;cursor:pointer;padding:8px;border-radius:50%;color:rgba(255,255,255,0.8);transition:all 0.2s ease;">
+          <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <line x1="18" y1="6" x2="6" y2="18"></line>
+            <line x1="6" y1="6" x2="18" y2="18"></line>
+          </svg>
+        </button>
+      \`;
+      
+      // Modal body with form - using widget's colors
+      const modalBody = document.createElement('div');
+      modalBody.style.cssText = 'padding:20px;overflow-y:auto;max-height:60vh;background:' + styles.messagesBackground + ';';
+      
+      // Create dynamic CSS based on widget theme
+      const isDark = theme === 'dark' || (theme === 'auto' && prefersDark);
+      const textColor = isDark ? '#ffffff' : '#374151';
+      const mutedTextColor = isDark ? 'rgba(255,255,255,0.7)' : '#6b7280';
+      const inputBg = isDark ? '#374151' : '#ffffff';
+      const contactFieldsBg = isDark ? 'rgba(255,255,255,0.05)' : '#f9fafb';
+      const contactFieldsBorder = isDark ? 'rgba(255,255,255,0.1)' : '#e5e7eb';
+      
+      modalBody.innerHTML = \`
+        <form id="hn_feedback_form" style="display:flex;flex-direction:column;gap:16px;">
+          <div>
+            <label style="display:block;font-size:14px;font-weight:500;color:' + textColor + ';margin-bottom:6px;">What type of feedback is this?</label>
+            <select id="hn_feedback_type" style="width:100%;padding:10px;border:1px solid ' + styles.inputBorder + ';border-radius:8px;font-size:14px;background:' + inputBg + ';color:' + textColor + ';">
+              <option value="general">General Feedback</option>
+              <option value="bug">Bug Report</option>
+              <option value="feature_request">Feature Request</option>
+              <option value="improvement">Improvement Suggestion</option>
+              <option value="ui_ux">UI/UX Feedback</option>
+            </select>
+          </div>
+          
+          <div>
+            <label style="display:block;font-size:14px;font-weight:500;color:' + textColor + ';margin-bottom:6px;">Title *</label>
+            <input type="text" id="hn_feedback_title" placeholder="Brief summary of your feedback..." style="width:100%;padding:10px;border:1px solid ' + styles.inputBorder + ';border-radius:8px;font-size:14px;box-sizing:border-box;background:' + inputBg + ';color:' + textColor + ';" required>
+          </div>
+          
+          <div>
+            <label style="display:block;font-size:14px;font-weight:500;color:' + textColor + ';margin-bottom:6px;">Description *</label>
+            <textarea id="hn_feedback_description" placeholder="Please provide detailed information about your feedback..." style="width:100%;padding:10px;border:1px solid ' + styles.inputBorder + ';border-radius:8px;font-size:14px;min-height:100px;resize:vertical;box-sizing:border-box;background:' + inputBg + ';color:' + textColor + ';" required></textarea>
+          </div>
+          
+          <div>
+            <label style="display:flex;align-items:center;gap:8px;font-size:14px;color:' + textColor + ';">
+              <input type="checkbox" id="hn_feedback_contact" style="margin:0;accent-color:' + styles.primaryColor + ';">
+              I'd like updates on this feedback
+            </label>
+          </div>
+          
+          <div id="hn_contact_fields" style="display:none;border:1px solid ' + contactFieldsBorder + ';border-radius:8px;padding:16px;background:' + contactFieldsBg + ';">
+            <div style="margin-bottom:12px;">
+              <label style="display:block;font-size:14px;font-weight:500;color:' + textColor + ';margin-bottom:6px;">Your Email</label>
+              <input type="email" id="hn_feedback_email" placeholder="your@email.com" style="width:100%;padding:10px;border:1px solid ' + styles.inputBorder + ';border-radius:8px;font-size:14px;box-sizing:border-box;background:' + inputBg + ';color:' + textColor + ';">
+            </div>
+            <div>
+              <label style="display:block;font-size:14px;font-weight:500;color:' + textColor + ';margin-bottom:6px;">Your Name (optional)</label>
+              <input type="text" id="hn_feedback_name" placeholder="John Doe" style="width:100%;padding:10px;border:1px solid ' + styles.inputBorder + ';border-radius:8px;font-size:14px;box-sizing:border-box;background:' + inputBg + ';color:' + textColor + ';">
+            </div>
+          </div>
+          
+          <div style="display:flex;gap:12px;padding-top:8px;">
+            <button type="submit" style="flex:1;background:' + styles.buttonBackground + ';color:' + styles.buttonColor + ';border:none;padding:12px 24px;border-radius:8px;font-size:14px;font-weight:500;cursor:pointer;transition:background 0.2s ease;">
+              Submit Feedback
+            </button>
+            <button type="button" id="hn_feedback_cancel" style="background:' + contactFieldsBg + ';color:' + mutedTextColor + ';border:1px solid ' + styles.inputBorder + ';padding:12px 24px;border-radius:8px;font-size:14px;font-weight:500;cursor:pointer;transition:all 0.2s ease;">
+              Cancel
+            </button>
+          </div>
+        </form>
+      \`;
+      
+      modalContent.appendChild(modalHeader);
+      modalContent.appendChild(modalBody);
+      feedbackModal.appendChild(modalContent);
+      document.body.appendChild(feedbackModal);
+      
+      // Event listeners
+      document.getElementById('hn_feedback_close').onclick = closeFeedbackModal;
+      document.getElementById('hn_feedback_cancel').onclick = closeFeedbackModal;
+      
+      // Add hover effects for buttons to match widget style
+      const closeBtn = document.getElementById('hn_feedback_close');
+      closeBtn.onmouseover = () => { closeBtn.style.color = '#fff'; closeBtn.style.background = 'rgba(255,255,255,0.2)'; };
+      closeBtn.onmouseout = () => { closeBtn.style.color = 'rgba(255,255,255,0.8)'; closeBtn.style.background = 'rgba(255,255,255,0.1)'; };
+      
+      const submitBtn = document.querySelector('#hn_feedback_form button[type="submit"]');
+      submitBtn.onmouseover = () => { submitBtn.style.background = styles.buttonHoverBackground; };
+      submitBtn.onmouseout = () => { submitBtn.style.background = styles.buttonBackground; };
+      
+      const cancelBtn = document.getElementById('hn_feedback_cancel');
+      const originalCancelBg = contactFieldsBg;
+      cancelBtn.onmouseover = () => { 
+        cancelBtn.style.background = isDark ? 'rgba(255,255,255,0.1)' : '#f3f4f6'; 
+        cancelBtn.style.borderColor = styles.primaryColor;
+      };
+      cancelBtn.onmouseout = () => { 
+        cancelBtn.style.background = originalCancelBg; 
+        cancelBtn.style.borderColor = styles.inputBorder;
+      };
+      
+      // Add focus styles for inputs to match widget behavior
+      const inputs = feedbackModal.querySelectorAll('input, textarea, select');
+      inputs.forEach(input => {
+        input.addEventListener('focus', () => {
+          input.style.borderColor = styles.primaryColor;
+          input.style.boxShadow = '0 0 0 3px ' + styles.focusOutlineColor;
+        });
+        input.addEventListener('blur', () => {
+          input.style.borderColor = styles.inputBorder;
+          input.style.boxShadow = 'none';
+        });
+      });
+      
+      // Contact fields toggle
+      document.getElementById('hn_feedback_contact').onchange = function() {
+        const contactFields = document.getElementById('hn_contact_fields');
+        contactFields.style.display = this.checked ? 'block' : 'none';
+      };
+      
+      // Form submission
+      document.getElementById('hn_feedback_form').onsubmit = function(e) {
+        e.preventDefault();
+        submitFeedback();
+      };
+      
+      // Close on backdrop click
+      feedbackModal.onclick = function(e) {
+        if (e.target === feedbackModal) {
+          closeFeedbackModal();
+        }
+      };
+    }
+    
+    function openFeedbackModal() {
+      if (!feedbackModal) createFeedbackModal();
+      feedbackModal.style.display = 'flex';
+      // Focus first input
+      setTimeout(() => {
+        const titleInput = document.getElementById('hn_feedback_title');
+        if (titleInput) titleInput.focus();
+      }, 100);
+    }
+    
+    function closeFeedbackModal() {
+      if (feedbackModal) {
+        feedbackModal.style.display = 'none';
+        // Reset form
+        const form = document.getElementById('hn_feedback_form');
+        if (form) form.reset();
+        const contactFields = document.getElementById('hn_contact_fields');
+        if (contactFields) contactFields.style.display = 'none';
+      }
+    }
+    
+    async function submitFeedback() {
+      const title = document.getElementById('hn_feedback_title').value.trim();
+      const description = document.getElementById('hn_feedback_description').value.trim();
+      const type = document.getElementById('hn_feedback_type').value;
+      const wantsContact = document.getElementById('hn_feedback_contact').checked;
+      const email = wantsContact ? document.getElementById('hn_feedback_email').value.trim() : '';
+      const name = wantsContact ? document.getElementById('hn_feedback_name').value.trim() : '';
+      
+      if (!title || !description) {
+        alert('Please fill in the title and description fields.');
+        return;
+      }
+      
+      if (wantsContact && !email) {
+        alert('Please provide your email address for updates.');
+        return;
+      }
+      
+      try {
+        const feedbackData = {
+          tenantId: config.tenantId || tenantId,
+          sessionId: sessionId,
+          type: type,
+          title: title,
+          description: description,
+          userEmail: email || null,
+          userName: name || null,
+          contactMethod: wantsContact ? 'email' : 'none',
+          contactValue: email || null,
+          metadata: {
+            url: window.location.href,
+            userAgent: navigator.userAgent,
+            timestamp: new Date().toISOString()
+          }
+        };
+        
+        const response = await fetch(__base + '/api/feedback', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(feedbackData)
+        });
+        
+        if (response.ok) {
+          const result = await response.json();
+          closeFeedbackModal();
+          
+          // Show success message in chat
+          if (result.escalated) {
+            add('assistant', 'Thank you for your feedback! Your message has been escalated for immediate attention.');
+          } else {
+            add('assistant', 'Thank you for your feedback! We appreciate your input and will review it soon.');
+          }
+        } else {
+          const errorData = await response.json().catch(() => ({}));
+          alert('Failed to submit feedback: ' + (errorData.error || 'Please try again later.'));
+        }
+      } catch (error) {
+        console.error('Feedback submission error:', error);
+        alert('Failed to submit feedback. Please check your connection and try again.');
+      }
+    }
+    
+    // Connect feedback button to modal
+    feedbackButton.onclick = openFeedbackModal;
 
   // (Client markdown renderer removed; server now supplies formatted HTML)
 

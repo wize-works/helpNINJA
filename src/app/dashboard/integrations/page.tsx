@@ -214,9 +214,24 @@ function ActiveIntegrationCard({ integration }: { integration: Row; tenantId?: s
                                     <i className="fa-duotone fa-solid fa-ellipsis-vertical" />
                                 </button>
                                 <ul className="dropdown-content menu p-2 shadow bg-base-100 rounded-box w-52">
-                                    <li><a><i className="fa-duotone fa-solid fa-eye mr-2" />View Details</a></li>
-                                    <li><a><i className="fa-duotone fa-solid fa-cog mr-2" />Settings</a></li>
-                                    <li><a className="text-error"><i className="fa-duotone fa-solid fa-trash mr-2" />Remove</a></li>
+                                    <li>
+                                        <Link href={`/dashboard/integrations/${integration.id}`}>
+                                            <i className="fa-duotone fa-solid fa-eye mr-2" />
+                                            View Details
+                                        </Link>
+                                    </li>
+                                    <li>
+                                        <Link href={`/dashboard/integrations/${integration.id}/settings`}>
+                                            <i className="fa-duotone fa-solid fa-cog mr-2" />
+                                            Settings
+                                        </Link>
+                                    </li>
+                                    <li>
+                                        <Link href={`/dashboard/integrations/${integration.id}/delete`} className="text-error">
+                                            <i className="fa-duotone fa-solid fa-trash mr-2" />
+                                            Remove
+                                        </Link>
+                                    </li>
                                 </ul>
                             </div>
                         </div>
