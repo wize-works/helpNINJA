@@ -13,6 +13,7 @@ const isPublicRoute = createRouteMatcher([
     '/api/widget(.*)',
     '/api/chat(.*)',
     '/api/escalate(.*)',
+    '/api/feedback(.*)',
 
     // Authentication endpoints
     '/api/signup(.*)',

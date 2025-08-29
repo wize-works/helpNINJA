@@ -7,6 +7,39 @@ import { logEvent } from '@/lib/events';
 
 export const runtime = 'nodejs';
 
+// CORS handling functions (copied from chat API)
+function parseAllowedOrigins(): string[] | null {
+    const raw = process.env.ALLOWED_WIDGET_ORIGINS;
+    if (!raw) return null;
+    return raw.split(',').map(s => s.trim()).filter(Boolean);
+}
+
+function isOriginAllowed(origin: string | null, allowlist: string[] | null): boolean {
+    if (!allowlist || allowlist.length === 0) return true; // permissive by default
+    if (!origin) return false;
+    return allowlist.includes(origin);
+}
+
+function corsHeaders(req: NextRequest) {
+    const reqOrigin = req.headers.get('origin');
+    const allowlist = parseAllowedOrigins();
+    const allowed = isOriginAllowed(reqOrigin, allowlist);
+    const origin = allowed ? (reqOrigin || '*') : 'null';
+    return {
+        'Access-Control-Allow-Origin': origin,
+        'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, OPTIONS',
+        'Access-Control-Allow-Headers': 'Content-Type, Authorization',
+        'Access-Control-Allow-Credentials': 'true',
+    };
+}
+
+export async function OPTIONS(req: NextRequest) {
+    const allowlist = parseAllowedOrigins();
+    const ok = isOriginAllowed(req.headers.get('origin'), allowlist);
+    if (!ok) return new NextResponse(null, { status: 403, headers: corsHeaders(req) });
+    return new NextResponse(null, { status: 204, headers: corsHeaders(req) });
+}
+
 // Types for feedback API
 interface FeedbackSubmission {
     tenantId?: string;  // For widget submissions
@@ -46,7 +79,13 @@ interface FeedbackQuery {
  * GET /api/feedback - List feedback for dashboard (authenticated)
  */
 export async function GET(req: NextRequest) {
+    const headersOut = corsHeaders(req);
     try {
+        // Check origin for GET requests from widget context
+        const allowlist = parseAllowedOrigins();
+        const ok = isOriginAllowed(req.headers.get('origin'), allowlist);
+        if (!ok) return NextResponse.json({ error: 'origin not allowed' }, { status: 403, headers: headersOut });
+
         const tenantId = await getTenantIdStrict();
         const url = new URL(req.url);
         
@@ -141,13 +180,13 @@ export async function GET(req: NextRequest) {
                 totalPages: rows.length > 0 ? Math.ceil(parseInt(rows[0].total_count) / limit) : 0
             },
             stats: statsRows
-        });
+        }, { headers: headersOut });
 
     } catch (error) {
         console.error('Error fetching feedback:', error);
         return NextResponse.json(
             { error: 'Failed to fetch feedback' },
-            { status: 500 }
+            { status: 500, headers: headersOut }
         );
     }
 }
@@ -156,7 +195,13 @@ export async function GET(req: NextRequest) {
  * POST /api/feedback - Submit feedback (public widget or authenticated dashboard)
  */
 export async function POST(req: NextRequest) {
+    const headersOut = corsHeaders(req);
     try {
+        // Check origin for POST requests from widget context
+        const allowlist = parseAllowedOrigins();
+        const ok = isOriginAllowed(req.headers.get('origin'), allowlist);
+        if (!ok) return NextResponse.json({ error: 'origin not allowed' }, { status: 403, headers: headersOut });
+
         // Handle both widget (with tenantId in body) and dashboard (authenticated) submissions
         let tenantId: string;
         let body: FeedbackSubmission;
@@ -176,7 +221,7 @@ export async function POST(req: NextRequest) {
         if (!body.type || !body.title?.trim() || !body.description?.trim()) {
             return NextResponse.json({
                 error: 'type, title, and description are required'
-            }, { status: 400 });
+            }, { status: 400, headers: headersOut });
         }
 
         // Validate enum values
@@ -184,21 +229,21 @@ export async function POST(req: NextRequest) {
         if (!validTypes.includes(body.type)) {
             return NextResponse.json({
                 error: 'Invalid feedback type'
-            }, { status: 400 });
+            }, { status: 400, headers: headersOut });
         }
 
         const validPriorities = ['low', 'medium', 'high', 'urgent'];
         if (body.priority && !validPriorities.includes(body.priority)) {
             return NextResponse.json({
                 error: 'Invalid priority level'
-            }, { status: 400 });
+            }, { status: 400, headers: headersOut });
         }
 
         const validContactMethods = ['email', 'phone', 'slack', 'none'];
         if (body.contactMethod && !validContactMethods.includes(body.contactMethod)) {
             return NextResponse.json({
                 error: 'Invalid contact method'
-            }, { status: 400 });
+            }, { status: 400, headers: headersOut });
         }
 
         // Validate conversation exists if provided
@@ -210,7 +255,7 @@ export async function POST(req: NextRequest) {
             if (convCheck.rowCount === 0) {
                 return NextResponse.json({
                     error: 'Invalid conversationId for this tenant'
-                }, { status: 400 });
+                }, { status: 400, headers: headersOut });
                 }
         }
 
@@ -364,13 +409,13 @@ export async function POST(req: NextRequest) {
             id: feedbackId,
             message: 'Feedback submitted successfully',
             escalated: !!escalatedAt
-        });
+        }, { headers: headersOut });
 
     } catch (error) {
         console.error('Error submitting feedback:', error);
         return NextResponse.json(
             { error: 'Failed to submit feedback' },
-            { status: 500 }
+            { status: 500, headers: headersOut }
         );
     }
 }
