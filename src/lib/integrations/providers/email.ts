@@ -20,7 +20,7 @@ function body(ev: EscalationEvent) {
         contactInfo?: string;
         url?: string;
         escalationReason?: string;
-        browserInfo?: any;
+        browserInfo?: Record<string, unknown>;
     } | undefined;
 
     if (isFeedback && feedbackMeta) {
@@ -96,7 +96,7 @@ function body(ev: EscalationEvent) {
             let linkText = u;
             try {
                 const url = new URL(u);
-                let path = url.pathname.replace(/\/$/, ''); // remove trailing slash
+                const path = url.pathname.replace(/\/$/, ''); // remove trailing slash
                 if (path) {
                     linkText = path.split('/').pop()?.replace(/\.(html|php|asp|aspx)$/, '') || url.hostname;
                 } else {
@@ -107,7 +107,7 @@ function body(ev: EscalationEvent) {
                 // Capitalize first letter
                 linkText = linkText.charAt(0).toUpperCase() + linkText.slice(1);
                 return `${index + 1}. ${linkText}: ${u}`;
-            } catch (e) {
+            } catch {
                 return `${index + 1}. ${u}`;
             }
         }).join('\n');

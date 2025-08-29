@@ -65,15 +65,7 @@ interface FeedbackSubmission {
     metadata?: Record<string, unknown>;
 }
 
-interface FeedbackQuery {
-    page?: number;
-    limit?: number;
-    type?: string;
-    status?: string;
-    priority?: string;
-    search?: string;
-    siteId?: string;
-}
+
 
 /**
  * GET /api/feedback - List feedback for dashboard (authenticated)
@@ -214,7 +206,15 @@ export async function POST(req: NextRequest) {
             // Not authenticated, try to resolve from request body (widget submission)
             const resolved = await resolveTenantIdAndBodyFromRequest(req, false);
             tenantId = resolved.tenantId;
-            body = resolved.body as FeedbackSubmission;
+            
+            if (!resolved.body) {
+                return NextResponse.json({
+                    error: 'Request body is required'
+                }, { status: 400, headers: headersOut });
+            }
+            
+            // Cast to FeedbackSubmission after null check
+            body = resolved.body as unknown as FeedbackSubmission;
         }
 
         // Validate required fields

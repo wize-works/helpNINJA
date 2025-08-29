@@ -14,7 +14,7 @@ export async function loadDestinations(tenantId: string): Promise<IntegrationRec
             name: r.name,
             hasCredentials: !!r.credentials,
             credentialsKeys: Object.keys(r.credentials || {}),
-            hasWebhookUrl: !!(r.credentials as any)?.webhook_url
+            hasWebhookUrl: !!(r.credentials as Record<string, unknown>)?.webhook_url
         }))
     });
     return rows
@@ -123,7 +123,7 @@ export async function dispatchEscalation(ev: EscalationEvent, destinations?: Int
                         name: r.name,
                         hasCredentials: !!r.credentials,
                         credentialsKeys: Object.keys(r.credentials || {}),
-                        hasWebhookUrl: !!(r.credentials as any)?.webhook_url
+                        hasWebhookUrl: !!(r.credentials as Record<string, unknown>)?.webhook_url
                     }))
                 });
 
@@ -203,7 +203,7 @@ export async function dispatchEscalation(ev: EscalationEvent, destinations?: Int
             name: t.name,
             hasCredentials: !!t.credentials,
             credentialsKeys: Object.keys(t.credentials || {}),
-            hasWebhookUrl: !!(t.credentials as any)?.webhook_url
+            hasWebhookUrl: !!(t.credentials as Record<string, unknown>)?.webhook_url
         }))
     });
 

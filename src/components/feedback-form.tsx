@@ -478,7 +478,7 @@ export default function FeedbackForm({
                             }}
                         />
                         <div>
-                            <span className="label-text font-medium">I'd like updates on this feedback</span>
+                            <span className="label-text font-medium">I&apos;d like updates on this feedback</span>
                             <div className="text-xs text-base-content/60">
                                 Provide contact info if you want to be notified about progress
                             </div>

@@ -75,7 +75,7 @@ export default async function DeleteIntegrationPage({ params }: { params: Promis
                             <div>
                                 <h1 className="text-3xl font-bold text-base-content">Delete Integration</h1>
                                 <p className="text-base-content/60 mt-1">
-                                    Permanently remove "{integration.name}" integration
+                                    Permanently remove &ldquo;{integration.name}&rdquo; integration
                                 </p>
                             </div>
                         </div>

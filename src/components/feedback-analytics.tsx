@@ -202,7 +202,7 @@ export function FeedbackAnalytics({ tenantId }: FeedbackAnalyticsProps) {
                                     ))}
                                 </Pie>
                                 <Tooltip 
-                                    formatter={(value, name) => [value, 'Count']}
+                                    formatter={(value) => [value, 'Count']}
                                     labelFormatter={(label) => formatType(label)}
                                     contentStyle={{
                                         backgroundColor: '#ffffff',
@@ -234,7 +234,7 @@ export function FeedbackAnalytics({ tenantId }: FeedbackAnalyticsProps) {
                                     width={80}
                                 />
                                 <Tooltip 
-                                    formatter={(value, name) => [value, 'Count']}
+                                    formatter={(value) => [value, 'Count']}
                                     labelFormatter={(label) => formatStatus(label)}
                                     contentStyle={{
                                         backgroundColor: '#ffffff',
@@ -244,9 +244,13 @@ export function FeedbackAnalytics({ tenantId }: FeedbackAnalyticsProps) {
                                 />
                                 <Bar 
                                     dataKey="count" 
-                                    fill={(entry) => statusColors[entry.status] || '#6b7280'}
+                                    fill="#6b7280"
                                     radius={[0, 4, 4, 0]}
-                                />
+                                >
+                                    {data.statusDistribution.map((entry, index) => (
+                                        <Cell key={`cell-${index}`} fill={statusColors[entry.status] || '#6b7280'} />
+                                    ))}
+                                </Bar>
                             </BarChart>
                         </ResponsiveContainer>
                     </div>

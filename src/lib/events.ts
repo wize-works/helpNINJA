@@ -8,11 +8,18 @@ export type EventName =
     | 'checkout_completed'
     | 'plan_updated'
     | 'ingest_started'
+    
     | 'ingest_completed'
     | 'ingest_failed'
     | 'integration_failed'
     | 'integration_succeeded'
-    | 'quota_exceeded';
+    | 'quota_exceeded'
+    | 'feedback_submitted'
+    | 'feedback_updated'
+    | 'feedback_deleted'
+    | 'feedback_escalated'
+    | 'feedback_comment_added'
+    | 'feedback_escalation_failed';
 
 const ALLOWED: Set<string> = new Set([
     'conversation_started',
@@ -25,7 +32,13 @@ const ALLOWED: Set<string> = new Set([
     'ingest_failed',
     'integration_failed',
     'integration_succeeded',
-    'quota_exceeded'
+    'quota_exceeded',
+    'feedback_submitted',
+    'feedback_updated',
+    'feedback_deleted',
+    'feedback_escalated',
+    'feedback_comment_added',
+    'feedback_escalation_failed'
 ]);
 
 export interface LogEventOptions<T = Record<string, unknown>> {

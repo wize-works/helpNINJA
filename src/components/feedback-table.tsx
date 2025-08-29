@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
 import toast from 'react-hot-toast';
 
@@ -70,11 +70,7 @@ export function FeedbackTable({ tenantId }: FeedbackTableProps) {
     const priorityFilter = searchParams.get('priority') || '';
     const searchFilter = searchParams.get('search') || '';
 
-    useEffect(() => {
-        fetchFeedback();
-    }, [tenantId, page, typeFilter, statusFilter, priorityFilter, searchFilter]);
-
-    const fetchFeedback = async () => {
+    const fetchFeedback = useCallback(async () => {
         setLoading(true);
         try {
             const params = new URLSearchParams({
@@ -102,7 +98,11 @@ export function FeedbackTable({ tenantId }: FeedbackTableProps) {
         } finally {
             setLoading(false);
         }
-    };
+    }, [tenantId, page, typeFilter, statusFilter, priorityFilter, searchFilter]);
+
+    useEffect(() => {
+        fetchFeedback();
+    }, [fetchFeedback]);
 
     const updateFeedbackStatus = async (id: string, status: string) => {
         try {
