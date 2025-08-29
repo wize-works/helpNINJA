@@ -10,7 +10,7 @@ What's partial or pending
 - Auth model: Strict for admin/dashboard via Clerk org → tenant (getTenantIdStrict). Legacy header/env resolver remains only for public/widget contexts.
 - Rate limiting beyond plan gates.
 - RLS policies if using Supabase auth directly.
-- Team invitation emails: Infrastructure is ready but sendInvitationEmail() function not implemented (src/app/api/team/invitations/route.ts line 129)
+- Email system: Comprehensive HTML email template system with responsive design, consistent branding, and support for all email types (team invitations, escalations, notifications)
 
 Big picture
 - Embeddable widget calls /api/chat with tenant/session
@@ -106,6 +106,17 @@ Core features (present)
   - Escalation events automatically generate notifications (low confidence, handoff, rule matches)
   - Pending UI: bell, feed panel, preferences management, rule direct notification creation
   - Files: src/sql/063_notifications.sql, src/lib/notifications.ts, src/app/api/notifications/**, src/app/api/notification-preferences/route.ts, src/app/api/internal/notifications/route.ts, src/lib/escalation-service.ts (integration)
+- Email Template System (NEW - Complete implementation)
+  - **Comprehensive HTML email templates** with responsive design and consistent helpNINJA branding
+  - **Multiple email types**: Team invitations, escalation notifications, system notifications, custom emails
+  - **Modern design features**: Gradient headers, cards, badges, mobile-responsive layouts, accessibility compliance
+  - **Automatic template generation**: Both HTML and fallback text versions generated automatically
+  - **Integration complete**: Escalation emails and team invitations now use new template system
+  - **Notification email helpers**: Pre-built functions for billing, integration, and usage notifications
+  - **Customizable branding**: Support for custom colors and tenant-specific styling
+  - **Email client compatibility**: Tested across Gmail, Outlook, Apple Mail, Yahoo, and Thunderbird
+  - **Performance optimized**: Inline CSS, minimal images, semantic HTML for fast rendering
+  - Files: src/lib/emails/templates/base.ts (core engine), src/lib/emails/templates/builders.ts (email builders), src/lib/emails/notification-sender.ts (notification helpers), src/lib/emails/team-invitation.ts (updated), src/lib/integrations/providers/email.ts (updated), src/lib/emails/demo.ts (examples), docs/development/email-templates.md (documentation)
 - Site management (NEW - Phase 1 completed)
   - Multi-site registration and domain verification system for tenants
   - API routes: src/app/api/sites/route.ts, src/app/api/sites/[id]/route.ts, src/app/api/sites/[id]/verify/route.ts
