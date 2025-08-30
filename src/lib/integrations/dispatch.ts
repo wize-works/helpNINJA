@@ -169,13 +169,6 @@ export async function dispatchEscalation(ev: EscalationEvent, destinations?: Int
     }
 
     const results = await Promise.all(list.map(async (t) => {
-        console.log('🔄 Dispatching to single provider', {
-            integrationId: t.id,
-            provider: t.provider,
-            name: t.name,
-            hasCredentials: !!t.credentials,
-            credentialsStructure: t.credentials
-        });
         
         const p = getProvider(t.provider);
 
