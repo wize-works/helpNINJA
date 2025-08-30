@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import toast from 'react-hot-toast';
+import FileUpload, { FileUploadItem } from './file-upload';
 
 export interface FeedbackFormData {
     tenantId?: string;
@@ -21,6 +22,7 @@ export interface FeedbackFormData {
     contactValue?: string;
     tags?: string[];
     metadata?: Record<string, unknown>;
+    attachments?: FileUploadItem[];
 }
 
 interface FeedbackFormProps {
@@ -77,6 +79,7 @@ export default function FeedbackForm({
         contactMethod: mode === 'widget' ? 'email' : 'none',
         tags: [],
         metadata: {},
+        attachments: [],
         ...initialData
     });
 
@@ -84,6 +87,7 @@ export default function FeedbackForm({
     const [errors, setErrors] = useState<Record<string, string>>({});
     const [showBugFields, setShowBugFields] = useState(false);
     const [showContactFields, setShowContactFields] = useState(mode === 'widget');
+    const [attachmentFiles, setAttachmentFiles] = useState<FileUploadItem[]>([]);
 
     // Update bug fields visibility when type changes
     const handleTypeChange = (type: FeedbackFormData['type']) => {
@@ -171,7 +175,8 @@ export default function FeedbackForm({
                 tenantId: tenantId || formData.tenantId,
                 conversationId: conversationId || formData.conversationId,
                 sessionId: sessionId || formData.sessionId,
-                metadata
+                metadata,
+                attachments: attachmentFiles
             };
 
             if (onSubmit) {
@@ -191,12 +196,29 @@ export default function FeedbackForm({
 
                 const result = await response.json();
                 
-                toast.success(
-                    result.escalated 
-                        ? 'Feedback submitted and escalated for immediate attention!'
-                        : 'Thank you for your feedback!',
-                    { id: toastId }
-                );
+                // Upload attachments if any
+                if (attachmentFiles.length > 0) {
+                    try {
+                        await uploadAttachments(result.id, attachmentFiles);
+                        toast.success(
+                            `Feedback submitted with ${attachmentFiles.length} attachment(s)!`,
+                            { id: toastId }
+                        );
+                    } catch (uploadError) {
+                        console.warn('Attachment upload failed:', uploadError);
+                        toast.success(
+                            'Feedback submitted, but some attachments failed to upload.',
+                            { id: toastId }
+                        );
+                    }
+                } else {
+                    toast.success(
+                        result.escalated 
+                            ? 'Feedback submitted and escalated for immediate attention!'
+                            : 'Thank you for your feedback!',
+                        { id: toastId }
+                    );
+                }
 
                 if (onSuccess) {
                     onSuccess(result.id);
@@ -220,6 +242,32 @@ export default function FeedbackForm({
         if (errors[field]) {
             setErrors(prev => ({ ...prev, [field]: '' }));
         }
+    };
+
+    const uploadAttachments = async (feedbackId: string, files: FileUploadItem[]): Promise<void> => {
+        const formData = new FormData();
+        formData.append('feedbackId', feedbackId);
+        
+        files.forEach((fileItem) => {
+            formData.append('files', fileItem.file);
+        });
+
+        const response = await fetch('/api/feedback/attachments', {
+            method: 'POST',
+            body: formData
+        });
+
+        if (!response.ok) {
+            const errorData = await response.json().catch(() => ({}));
+            throw new Error(errorData.error || 'Failed to upload attachments');
+        }
+
+        return response.json();
+    };
+
+    const handleAttachmentFilesChange = (files: FileUploadItem[]) => {
+        setAttachmentFiles(files);
+        updateFormData('attachments', files);
     };
 
     return (
@@ -459,6 +507,27 @@ export default function FeedbackForm({
                         </div>
                     </div>
                 )}
+
+                {/* File Attachments */}
+                <div className="space-y-3">
+                    <div className="flex items-center gap-2">
+                        <i className="fa-duotone fa-solid fa-paperclip text-primary" />
+                        <span className="text-sm font-medium text-base-content">
+                            Attachments <span className="text-xs text-base-content/60">(optional)</span>
+                        </span>
+                    </div>
+                    <div className="text-xs text-base-content/60 mb-3">
+                        Add screenshots, documents, or files to help explain your feedback
+                    </div>
+                    <FileUpload
+                        onFilesChange={handleAttachmentFilesChange}
+                        disabled={loading}
+                        compact={mode === 'widget'}
+                        maxFiles={5}
+                        maxFileSize={10 * 1024 * 1024} // 10MB
+                        accept="image/*,.pdf,.doc,.docx,.txt,.log,.csv,.json"
+                    />
+                </div>
 
                 {/* Contact Information Toggle */}
                 <div className="form-control">

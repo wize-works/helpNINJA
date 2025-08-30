@@ -26,7 +26,10 @@ export interface WidgetConfigSchema {
     bubbleColor?: string;
     panelBackground?: string;
     panelHeaderBackground?: string;
+    panelColor?: string;
+    panelHeaderColor?: string;
     messagesBackground?: string;
+    messagesColor?: string;
     userBubbleBackground?: string;
     userBubbleColor?: string;
     assistantBubbleBackground?: string;
@@ -52,7 +55,10 @@ const defaultConfig: WidgetConfigSchema = {
     bubbleColor: "#ffffff",
     panelBackground: "#ff0000",
     panelHeaderBackground: "#4DA8DA",
+    panelColor: "#333333",
+    panelHeaderColor: "#ffffff",
     messagesBackground: "#f8fafc",
+    messagesColor: "#333333",
     userBubbleBackground: "#e5e7eb",
     userBubbleColor: "#333333",
     assistantBubbleBackground: "#4DA8DA44",
@@ -159,9 +165,12 @@ export default function WidgetConfiguration({
                     advancedColors: false,
                     bubbleBackground: defaultConfig.bubbleBackground,
                     bubbleColor: defaultConfig.bubbleColor,
-                    panelBackground: defaultConfig.panelBackground,
-                    panelHeaderBackground: defaultConfig.panelHeaderBackground,
-                    messagesBackground: defaultConfig.messagesBackground,
+                        panelBackground: defaultConfig.panelBackground,
+    panelHeaderBackground: defaultConfig.panelHeaderBackground,
+    panelColor: "#333333",
+    panelHeaderColor: "#ffffff",
+    messagesBackground: defaultConfig.messagesBackground,
+    messagesColor: "#333333",
                     userBubbleBackground: defaultConfig.userBubbleBackground,
                     userBubbleColor: defaultConfig.userBubbleColor,
                     assistantBubbleBackground: defaultConfig.assistantBubbleBackground,
@@ -179,7 +188,10 @@ export default function WidgetConfiguration({
                     bubbleColor: "#fff",
                     panelBackground: "#1E293B",
                     panelHeaderBackground: "#0f172a",
+                    panelColor: "#ffffff",
+                    panelHeaderColor: "#ffffff",
                     messagesBackground: "#334155",
+                    messagesColor: "#ffffff",
                     userBubbleBackground: "#3b82f6",
                     userBubbleColor: "#fff",
                     assistantBubbleBackground: "#475569",
@@ -197,7 +209,10 @@ export default function WidgetConfiguration({
                     bubbleColor: "#334155",
                     panelBackground: "#fff",
                     panelHeaderBackground: "#f8fafc",
+                    panelColor: "#334155",
+                    panelHeaderColor: "#334155",
                     messagesBackground: "#f1f5f9",
+                    messagesColor: "#334155",
                     userBubbleBackground: "#64748b",
                     userBubbleColor: "#fff",
                     assistantBubbleBackground: "#e2e8f0",
@@ -215,7 +230,10 @@ export default function WidgetConfiguration({
                     bubbleColor: "#fff",
                     panelBackground: "#fff",
                     panelHeaderBackground: "#0369a1",
+                    panelColor: "#1e40af",
+                    panelHeaderColor: "#ffffff",
                     messagesBackground: "#f0f9ff",
+                    messagesColor: "#1e40af",
                     userBubbleBackground: "#0284c7",
                     userBubbleColor: "#fff",
                     assistantBubbleBackground: "#e0f2fe",
@@ -233,7 +251,10 @@ export default function WidgetConfiguration({
                     bubbleColor: "#fff",
                     panelBackground: "#fff",
                     panelHeaderBackground: "#ea580c",
+                    panelColor: "#c2410c",
+                    panelHeaderColor: "#ffffff",
                     messagesBackground: "#fff7ed",
+                    messagesColor: "#c2410c",
                     userBubbleBackground: "#f97316",
                     userBubbleColor: "#fff",
                     assistantBubbleBackground: "#ffedd5",
@@ -403,7 +424,10 @@ export default function WidgetConfiguration({
                         >
                             {/* Chat header */}
                             <div className="p-4 flex items-center justify-between rounded-t-xl"
-                                style={{ backgroundColor: config.advancedColors ? config.panelHeaderBackground : config.primaryColor }}
+                                style={{ 
+                                    backgroundColor: config.advancedColors ? config.panelHeaderBackground : config.primaryColor,
+                                    color: config.advancedColors ? config.panelHeaderColor : '#ffffff'
+                                }}
                             >
                                 <div className="flex items-center gap-2">
                                     <div className="w-10 h-10 p-2 rounded-full bg-white/20 flex items-center justify-center">
@@ -420,7 +444,7 @@ export default function WidgetConfiguration({
                                             <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 640" style={{ width: "32px", height: "32px", fill: config.advancedColors ? config.bubbleColor : "#fff" }}><path opacity=".4" d="M112 304C112 346.8 127.1 386.4 153.2 418.7C165.4 433.8 167.3 454.8 158 471.9L140 505L198.5 479.9C210.3 474.8 223.7 474.7 235.6 479.6C261.3 490.1 289.8 496 319.9 496C437.7 496 527.9 407.2 527.9 304C527.9 200.8 437.8 112 320 112C202.2 112 112 200.8 112 304z" /><path d="M115.9 448.9C83.3 408.6 64 358.4 64 304C64 171.5 178.6 64 320 64C461.4 64 576 171.5 576 304C576 436.5 461.4 544 320 544C283.5 544 248.8 536.8 217.4 524L101 573.9C97.3 575.5 93.5 576 89.5 576C75.4 576 64 564.6 64 550.5C64 546.2 65.1 542 67.1 538.3L115.9 448.9zM153.2 418.7C165.4 433.8 167.3 454.8 158 471.9L140 505L198.5 479.9C210.3 474.8 223.7 474.7 235.6 479.6C261.3 490.1 289.8 496 319.9 496C437.7 496 527.9 407.2 527.9 304C527.9 200.8 437.8 112 320 112C202.2 112 112 200.8 112 304C112 346.8 127.1 386.4 153.2 418.7z" /></svg>
                                         )}
                                     </div>
-                                    <span className=" font-medium" style={{ color: config.advancedColors ? config.bubbleColor : "#fff" }}>{config.aiName || 'AI Assistant'}</span>
+                                    <span className=" font-medium" style={{ color: config.advancedColors ? config.panelHeaderColor : "#fff" }}>{config.aiName || 'AI Assistant'}</span>
                                 </div>
                                 <button onClick={toggleChat} className="bg-white/10 hover:bg-white/30 transition-colors rounded-full p-2 h-8 w-8" style={{ color: config.advancedColors ? config.bubbleColor : "#fff" }}>
                                     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 640" style={{ width: "16px", height: "16px", fill: config.advancedColors ? config.bubbleColor : "#fff" }}><path opacity=".4" d="" /><path d="M135.5 169C126.1 159.6 126.1 144.4 135.5 135.1C144.9 125.8 160.1 125.7 169.4 135.1L320.4 286.1L471.4 135.1C480.8 125.7 496 125.7 505.3 135.1C514.6 144.5 514.7 159.7 505.3 169L354.3 320L505.3 471C514.7 480.4 514.7 495.6 505.3 504.9C495.9 514.2 480.7 514.3 471.4 504.9L320.4 353.9L169.4 504.9C160 514.3 144.8 514.3 135.5 504.9C126.2 495.5 126.1 480.3 135.5 471L286.5 320L135.5 169z" /></svg>
@@ -428,7 +452,10 @@ export default function WidgetConfiguration({
                             </div>
 
                             {/* Chat content */}
-                            <div className={`p-4 h-64 overflow-y-auto`} style={{ backgroundColor: config.advancedColors ? config.messagesBackground : "#eef2f7" }}>
+                            <div className={`p-4 h-64 overflow-y-auto`} style={{ 
+                                backgroundColor: config.advancedColors ? config.messagesBackground : "#eef2f7",
+                                color: config.advancedColors ? config.messagesColor : '#333333'
+                            }}>
                                 {/* AI message */}
                                 <div className="flex gap-2 mb-4">
                                     <div className="w-8 h-8 rounded-full flex-shrink-0 flex items-center justify-center" style={{ backgroundColor: config.advancedColors ? config.assistantBubbleBackground : `${config.primaryColor}`, color: config.advancedColors ? config.assistantBubbleColor : '#fff' }}>
@@ -785,6 +812,52 @@ export default function WidgetConfiguration({
                                         </div>
                                         <p className="text-xs text-base-content/60 mt-1">Choose the background color for the chat header</p>
                                     </div>
+
+                                    {/* Panel Text Color */}
+                                    <div>
+                                        <label className="text-sm font-medium text-base-content block mb-2">Panel Text Color</label>
+                                        <div className="flex items-center gap-3">
+                                            <div className="w-8 h-8 rounded-full overflow-hidden relative">
+                                                <input
+                                                    type="color"
+                                                    value={config.panelColor}
+                                                    onChange={(e) => handleSpecificColorChange('panelColor', e.target.value)}
+                                                    className="w-20 h-20 absolute -mt-5 -ml-5 cursor-pointer "
+                                                />
+                                            </div>
+                                            <input
+                                                type="text"
+                                                name="panelColor"
+                                                value={config.panelColor}
+                                                onChange={handleInputChange}
+                                                className="input w-32 font-mono"
+                                            />
+                                        </div>
+                                        <p className="text-xs text-base-content/60 mt-1">Choose the text color for the main chat panel</p>
+                                    </div>
+
+                                    {/* Panel Header Text Color */}
+                                    <div>
+                                        <label className="text-sm font-medium text-base-content block mb-2">Header Text Color</label>
+                                        <div className="flex items-center gap-3">
+                                            <div className="w-8 h-8 rounded-full overflow-hidden relative">
+                                                <input
+                                                    type="color"
+                                                    value={config.panelHeaderColor}
+                                                    onChange={(e) => handleSpecificColorChange('panelHeaderColor', e.target.value)}
+                                                    className="w-20 h-20 absolute -mt-5 -ml-5 cursor-pointer "
+                                                />
+                                            </div>
+                                            <input
+                                                type="text"
+                                                name="panelHeaderColor"
+                                                value={config.panelHeaderColor}
+                                                onChange={handleInputChange}
+                                                className="input w-32 font-mono"
+                                            />
+                                        </div>
+                                        <p className="text-xs text-base-content/60 mt-1">Choose the text color for the chat header</p>
+                                    </div>
                                     {/* Messages Area Backgrond */}
                                     <div>
                                         <label className="text-sm font-medium text-base-content block mb-2">Messages Area Background</label>
@@ -806,6 +879,29 @@ export default function WidgetConfiguration({
                                             />
                                         </div>
                                         <p className="text-xs text-base-content/60 mt-1">Choose the background color for the messages area</p>
+                                    </div>
+
+                                    {/* Messages Text Color */}
+                                    <div>
+                                        <label className="text-sm font-medium text-base-content block mb-2">Messages Text Color</label>
+                                        <div className="flex items-center gap-3">
+                                            <div className="w-8 h-8 rounded-full overflow-hidden relative">
+                                                <input
+                                                    type="color"
+                                                    value={config.messagesColor}
+                                                    onChange={(e) => handleSpecificColorChange('messagesColor', e.target.value)}
+                                                    className="w-20 h-20 absolute -mt-5 -ml-5 cursor-pointer "
+                                                />
+                                            </div>
+                                            <input
+                                                type="text"
+                                                name="messagesColor"
+                                                value={config.messagesColor}
+                                                onChange={handleInputChange}
+                                                className="input w-32 font-mono"
+                                            />
+                                        </div>
+                                        <p className="text-xs text-base-content/60 mt-1">Choose the text color for the messages area</p>
                                     </div>
                                     {/* User Bubble Background */}
                                     <div>

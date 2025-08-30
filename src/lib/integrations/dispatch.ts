@@ -4,20 +4,8 @@ import { query } from '@/lib/db'
 import { logEvent } from '@/lib/events';
 
 export async function loadDestinations(tenantId: string): Promise<IntegrationRecord[]> {
-    const { rows } = await query<IntegrationRecord>('select * from public.integrations where tenant_id=$1 and status=' + "'active'", [tenantId])
-    console.log('🔍 Loaded destinations for tenant', { 
-        tenantId, 
-        count: rows.length, 
-        integrations: rows.map(r => ({ 
-            id: r.id, 
-            provider: r.provider, 
-            name: r.name,
-            hasCredentials: !!r.credentials,
-            credentialsKeys: Object.keys(r.credentials || {}),
-            hasWebhookUrl: !!(r.credentials as Record<string, unknown>)?.webhook_url
-        }))
-    });
-    return rows
+    const { rows } = await query<IntegrationRecord>('select * from public.integrations where tenant_id=$1 and status=' + "'active'", [tenantId]);
+    return rows;
 }
 
 export async function dispatchEscalation(ev: EscalationEvent, destinations?: IntegrationRecord[]) {
@@ -113,20 +101,6 @@ export async function dispatchEscalation(ev: EscalationEvent, destinations?: Int
                     [ev.tenantId, ...integrationIds]
                 );
 
-                console.log('🔍 Loading specific integrations for escalation', {
-                    tenantId: ev.tenantId,
-                    requestedIds: integrationIds,
-                    foundCount: rows.length,
-                    foundIntegrations: rows.map(r => ({ 
-                        id: r.id, 
-                        provider: r.provider, 
-                        name: r.name,
-                        hasCredentials: !!r.credentials,
-                        credentialsKeys: Object.keys(r.credentials || {}),
-                        hasWebhookUrl: !!(r.credentials as Record<string, unknown>)?.webhook_url
-                    }))
-                });
-
                 if (rows.length > 0) {
                     if (destinations) {
                         destinations.push(...rows as IntegrationRecord[]);
@@ -193,19 +167,6 @@ export async function dispatchEscalation(ev: EscalationEvent, destinations?: Int
         // No destinations configured or available
         return { ok: false, error: 'no destinations configured' };
     }
-
-    // Dispatching to destinations
-    console.log('🚀 Starting dispatch to destinations', {
-        destinationCount: list.length,
-        destinations: list.map(t => ({
-            id: t.id,
-            provider: t.provider,
-            name: t.name,
-            hasCredentials: !!t.credentials,
-            credentialsKeys: Object.keys(t.credentials || {}),
-            hasWebhookUrl: !!(t.credentials as Record<string, unknown>)?.webhook_url
-        }))
-    });
 
     const results = await Promise.all(list.map(async (t) => {
         console.log('🔄 Dispatching to single provider', {
