@@ -77,7 +77,7 @@ async function FeedbackOverview({ tenantId }: FeedbackOverviewProps) {
     const stats = await getFeedbackStats(tenantId);
 
     return (
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+        <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-6">
             <StatCard
                 title="Total Feedback"
                 value={stats.totalFeedback.toString()}
@@ -119,7 +119,7 @@ async function FeedbackOverview({ tenantId }: FeedbackOverviewProps) {
 
 function FeedbackOverviewSkeleton() {
     return (
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+        <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-6">
             {Array.from({ length: 4 }, (_, i) => (
                 <div key={i} className="bg-base-100 rounded-2xl p-6 shadow-sm">
                     <div className="animate-pulse space-y-3">

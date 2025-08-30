@@ -435,7 +435,7 @@ async function ConversationsContent({ tenantId, filters }: { tenantId: string; f
             {/* KPI Cards */}
             <StaggerContainer>
                 <StaggerChild>
-                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 xl:grid-cols-4 gap-6">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 xl:grid-cols-4 gap-6">
                         <HoverScale scale={1.01}>
                             <div className="stats shadow hover:shadow-md transition-all duration-300 w-full rounded-2xl overflow-hidden">
                                 <div className="stat bg-base-100 rounded-2xl">

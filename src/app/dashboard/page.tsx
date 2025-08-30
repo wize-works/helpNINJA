@@ -195,7 +195,7 @@ export default async function Dashboard() {
                 <StaggerContainer>
                     <StaggerChild>
                         <Suspense fallback={
-                            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+                            <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-6">
                                 {Array.from({ length: 4 }, (_, i) => <StatCardSkeleton key={i} />)}
                             </div>
                         }>
@@ -373,7 +373,7 @@ async function StatsCards({ tenantId }: { tenantId: string }) {
         const lowConfRate = lowDenom ? Math.round((stats.low_conf / lowDenom) * 100) : 0;
 
         return (
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+            <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-6">
                 <HoverScale scale={1.02}>
                     <StatCard
                         icon="fa-comments"
@@ -420,7 +420,7 @@ async function StatsCards({ tenantId }: { tenantId: string }) {
         );
     } catch {
         return (
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+            <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-6">
                 {Array.from({ length: 4 }, (_, i) => <StatCardSkeleton key={i} />)}
             </div>
         );

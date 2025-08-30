@@ -87,7 +87,7 @@ export default async function SourcesPage() {
                 {/* Stats Overview */}
                 <StaggerContainer>
                     <StaggerChild>
-                        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+                        <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-6">
                             <HoverScale scale={1.01}>
                                 <div className="stats shadow hover:shadow-md transition-all duration-300 w-full rounded-2xl">
                                     <div className="stat bg-base-100 rounded-2xl">
@@ -176,7 +176,7 @@ export default async function SourcesPage() {
                                         <p className="text-base-content/60 text-sm">Understanding different ways to add content</p>
                                     </div>
                                 </div>
-                                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mt-4">
+                                <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-6 mt-4">
                                     <div>
                                         <div className="flex items-center gap-2 mb-2">
                                             <i className="fa-duotone fa-solid fa-link text-primary" aria-hidden />

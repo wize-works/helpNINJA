@@ -158,7 +158,7 @@ export default function QueryTester({ onResultsChange }: QueryTesterProps) {
                         <fieldset className="space-y-4">
                             <legend className="text-base font-semibold text-base-content mb-3">Test Configuration</legend>
 
-                            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                            <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4">
                                 {/* Site Filter */}
                                 <label className="block">
                                     <span className="text-sm font-medium text-base-content mb-2 block">Site Filter</span>

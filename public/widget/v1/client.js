@@ -82,21 +82,81 @@ export function mountChatWidget(payload) {
     bubble.innerHTML = iconSvg
     document.body.appendChild(bubble);
   
-    // ---- Panel ----
+        // ---- Panel ----
+    // Function to calculate maximum available height for chat panel
+    function calculateMaxPanelHeight() {
+        const bubbleOffsetFromEdge = 20; // 20px from edge
+        const bubbleHeight = 40; // bubble is 40px tall
+        const panelGap = 30; // gap between bubble and panel
+        const topPadding = 20; // minimum padding from top
+        
+        if (pos.startsWith('bottom-')) {
+            // For bottom positions, calculate from bottom edge to top of viewport
+            const maxHeight = window.innerHeight - bubbleOffsetFromEdge - bubbleHeight - panelGap - topPadding;
+            return Math.max(200, maxHeight); // minimum 200px
+        } else {
+            // For top positions, calculate from top edge to bottom of viewport  
+            const maxHeight = window.innerHeight - bubbleOffsetFromEdge - bubbleHeight - panelGap - topPadding;
+            return Math.max(200, maxHeight); // minimum 200px
+        }
+    }
+
     const posPanel = {
         'bottom-right': 'bottom:90px;right:20px;',
         'bottom-left':  'bottom:90px;left:20px;',
         'top-right':    'top:90px;right:20px;',
         'top-left':     'top:90px;left:20px;'
     }[pos];
- 
+
+    // Start with initial compact size, but allow growing to max available
+    const maxPanelHeight = calculateMaxPanelHeight();
+    const initialPanelHeight = Math.min(450, maxPanelHeight); // Start with 450px or max available if smaller
     const panel = el('div',
-        `position:fixed;${posPanel}width:360px;max-height:70vh;background:${styles.panelBackground};` +
+        `position:fixed;${posPanel}width:360px;height:${initialPanelHeight}px;max-height:${maxPanelHeight}px;background:${styles.panelBackground};` +
         `border-radius:16px;box-shadow:-10px 10px 25px -5px rgba(0,0,0,.1),` +
         `0 8px 10px -6px rgba(0,0,0,.1);display:none;flex-direction:column;overflow:hidden;z-index:999998;` + 
         `font-family:${styles.fontFamily};`
     );
     document.body.appendChild(panel);
+
+    // Function to update panel height constraints on window resize
+    function updatePanelHeight() {
+        const newMaxHeight = calculateMaxPanelHeight();
+        panel.style.maxHeight = `${newMaxHeight}px`;
+        
+        // If current height exceeds new max, adjust it
+        const currentHeight = parseInt(panel.style.height) || initialPanelHeight;
+        if (currentHeight > newMaxHeight) {
+            panel.style.height = `${newMaxHeight}px`;
+        }
+    }
+
+    // Function to dynamically grow panel based on content
+    function adjustPanelSize() {
+        if (!msgs) return;
+        
+        const headerHeight = 60;
+        const inputHeight = 80;
+        const msgsPadding = 32; // top + bottom padding
+        const maxAvailableHeight = calculateMaxPanelHeight();
+        
+        // Calculate required height based on messages content
+        const messagesScrollHeight = msgs.scrollHeight;
+        const requiredPanelHeight = messagesScrollHeight + headerHeight + inputHeight + msgsPadding;
+        
+        // Use larger of: initial size or required size, but not more than max available
+        const newPanelHeight = Math.min(
+            Math.max(initialPanelHeight, requiredPanelHeight),
+            maxAvailableHeight
+        );
+        
+        // Update panel height
+        panel.style.height = `${newPanelHeight}px`;
+        
+        // Update messages container height
+        const newMessagesHeight = newPanelHeight - headerHeight - inputHeight;
+        msgs.style.height = `${Math.max(150, newMessagesHeight)}px`;
+    }
 
     // Header
     const header = el('div', `padding:14px 16px;border-bottom:1px solid ${styles.borderColor};font-weight:600;color:${styles.panelHeaderColor};background:${styles.panelHeaderBackground};display:flex;align-items:center;justify-content:space-between;border-radius:16px 16px 0 0;`);
@@ -143,9 +203,15 @@ export function mountChatWidget(payload) {
     titleButtons.appendChild(close);
     header.appendChild(titleButtons);
   
-    // Messages
-    const msgs = el('div', `padding:16px;gap:16px;display:flex;flex-direction:column;overflow-y:auto;height:360px;background:${styles.messagesBackground};color:${styles.messagesColor};`);
+    // Messages - start with initial compact size
+    const headerHeight = 60;
+    const inputHeight = 80;
+    const initialMessagesHeight = initialPanelHeight - headerHeight - inputHeight;
+    const msgs = el('div', `padding:16px;gap:16px;display:flex;flex-direction:column;overflow-y:auto;height:${initialMessagesHeight}px;background:${styles.messagesBackground};color:${styles.messagesColor};`);
     msgs.id = 'hn_msgs';
+    
+    // Listen for window resize to update panel height (after msgs is defined)
+    window.addEventListener('resize', updatePanelHeight);
     
     // Input
     const inputWrap = el('div', `display:flex;border-top:1px solid "${styles.inputBorder}";background:${styles.panelBackground};padding:12px 16px 16px;`);
@@ -219,6 +285,10 @@ export function mountChatWidget(payload) {
          }
          
          msgs.appendChild(row);
+         
+         // Adjust panel size based on content after adding message
+         adjustPanelSize();
+         
          msgs.scrollTop = msgs.scrollHeight;
       }
   
@@ -251,7 +321,12 @@ export function mountChatWidget(payload) {
       panel.style.display = 'flex';
       bubble.style.display = 'none';
       if (!msgs.children.length) add('assistant', config.welcomeMessage || 'Hi there! How can I help?');
-      setTimeout(() => input.focus(), 50);
+      
+      // Adjust panel size when opening to fit existing content
+      setTimeout(() => {
+        adjustPanelSize();
+        input.focus();
+      }, 50);
     };
     bubble.onclick = () => (panel.style.display === 'none' ? open() : (panel.style.display = 'none', bubble.style.display = 'flex'));
     sendBtn.onclick = send;

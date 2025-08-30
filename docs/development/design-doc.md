@@ -291,7 +291,7 @@ import StatCard from '@/components/ui/stat-card';
 #### Form Layout Patterns
 ```tsx
 // Grid layout for form sections
-<div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+<div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4">
   {/* Form fields */}
 </div>
 

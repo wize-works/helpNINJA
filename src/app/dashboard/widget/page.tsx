@@ -137,7 +137,7 @@ export default async function WidgetPage() {
                 {/* Widget Stats */}
                 <StaggerContainer>
                     <StaggerChild>
-                        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+                        <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-6">
                             <StatCard
                                 title="Widget Engagement"
                                 value={stats.total_interactions || 0}
@@ -176,7 +176,7 @@ export default async function WidgetPage() {
                 {/* Additional Stats */}
                 <StaggerContainer>
                     <StaggerChild>
-                        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mt-2">
+                        <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-6 mt-2">
                             <StatCard
                                 title="Total Messages"
                                 value={stats.total_messages || 0}
