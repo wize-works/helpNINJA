@@ -8,7 +8,7 @@ export async function loadDestinations(tenantId: string): Promise<IntegrationRec
     return rows;
 }
 
-export async function dispatchEscalation(ev: EscalationEvent, destinations?: IntegrationRecord[]) {
+export async function dispatchEscalation(ev: EscalationEvent, destinations?: IntegrationRecord[], skipFallback = false) {
     // dispatchEscalation invoked
 
     // Check if the event has pre-configured destinations
@@ -116,16 +116,31 @@ export async function dispatchEscalation(ev: EscalationEvent, destinations?: Int
     }
 
     // If no valid destinations provided or found, load from tenant's active integrations
-    const targets = destinations || await loadDestinations(ev.tenantId);
+    // But only if we're not skipping fallback (for rule-based escalations)
+    let targets = destinations;
+    
+    if (!targets || targets.length === 0) {
+        if (skipFallback) {
+            console.log(`⏭️ Skipping fallback integrations for rule-based escalation - no valid rule destinations found`);
+            return { ok: false, error: 'No valid destinations specified for rule-based escalation' };
+        } else {
+            // Load all active integrations as fallback for automatic escalations
+            targets = await loadDestinations(ev.tenantId);
+            console.log(`🔄 Using fallback integrations for automatic escalation (${targets.length} integrations)`);
+        }
+    } else {
+        console.log(`🎯 Using specified destinations for ${skipFallback ? 'rule-based' : 'targeted'} escalation (${targets.length} destinations)`);
+    }
+    
     // Target destinations count
     if (targets.length > 0) {
         // First target info removed
     }
 
-    // Set up fallback channels if no targets available
+    // Set up fallback channels if no targets available (only for non-rule escalations)
     const fallbacks: IntegrationRecord[] = [];
-    if (!targets.length) {
-        // No targets found, checking for fallbacks
+    if (!targets.length && !skipFallback) {
+        // No targets found, checking for environment fallbacks
 
         if (process.env.SUPPORT_FALLBACK_TO_EMAIL) {
             // Adding email fallback

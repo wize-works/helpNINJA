@@ -208,13 +208,37 @@ export async function handleEscalation({
 }): Promise<EscalationResult> {
     // Escalation initiated (removed verbose console.log)
 
-    // 1. Record the escalation event in the database
+    // 1. Check for recent escalations to prevent duplicates
+    try {
+        const { rows: recentEscalations } = await query(
+            `SELECT id, created_at FROM public.escalations 
+             WHERE tenant_id = $1 AND conversation_id = $2 AND reason = $3
+             AND created_at > NOW() - INTERVAL '1 minute'
+             ORDER BY created_at DESC LIMIT 1`,
+            [tenantId, conversationId, reason]
+        );
+
+        if (recentEscalations.length > 0) {
+            console.log(`⏭️ Skipping duplicate escalation for conversation ${conversationId} - recent escalation found within 1 minute`);
+            return {
+                ok: true,
+                skipped: true,
+                reason: 'duplicate_prevention',
+                existingEscalationId: recentEscalations[0].id
+            } as EscalationResult & { skipped: boolean; existingEscalationId: string };
+        }
+    } catch (error) {
+        console.error('❌ ESCALATION SERVICE: Failed to check for recent escalations:', error);
+        // Continue anyway - deduplication is helpful but not critical
+    }
+
+    // 2. Record the escalation event in the database
     try {
         await query(
             `INSERT INTO public.escalations 
-      (tenant_id, conversation_id, reason, confidence, rule_id, created_at) 
-      VALUES ($1, $2, $3, $4, $5, NOW())`,
-            [tenantId, conversationId, reason, confidence || null, ruleId || null]
+      (tenant_id, conversation_id, session_id, reason, confidence, rule_id, created_at) 
+      VALUES ($1, $2, $3, $4, $5, $6, NOW())`,
+            [tenantId, conversationId, sessionId || null, reason, confidence || null, ruleId || null]
         );
         // Log escalation event
         logEvent({ tenantId, name: 'escalation_triggered', data: { conversationId, reason, confidence, ruleId }, soft: true });
@@ -248,7 +272,7 @@ export async function handleEscalation({
         // Continue anyway - recording is helpful but not critical
     }
 
-    // 2. Determine destinations (from rule, parameter, or default integrations)
+    // 3. Determine destinations (from rule, parameter, or default integrations)
     let escalationDestinations: EscalationDestination[] | null = matchedRuleDestinations;
 
     // If direct integration ID is provided, use that
@@ -274,26 +298,28 @@ export async function handleEscalation({
         }
     }
 
-    // 3. If webhooks are requested, dispatch them before integration handling
-    if (triggerWebhooks) {
-        try {
-            // Triggering webhooks for escalation
-            await webhookEvents.escalationTriggered(
-                tenantId,
-                conversationId,
-                reason,
-                confidence,
-                userMessage
-            );
-            // Webhooks triggered successfully
-        } catch (error) {
-            console.error('❌ ESCALATION SERVICE: Failed to trigger webhooks:', error);
+            // 4. If webhooks are requested, dispatch them before integration handling
+        if (triggerWebhooks) {
+            try {
+                // Triggering webhooks for escalation with rule context
+                await webhookEvents.escalationTriggered(
+                    tenantId,
+                    conversationId,
+                    reason,
+                    confidence,
+                    userMessage,
+                    ruleId || undefined,
+                    matchedRuleDestinations || undefined
+                );
+                // Webhooks triggered successfully
+            } catch (error) {
+                console.error('❌ ESCALATION SERVICE: Failed to trigger webhooks:', error);
+            }
+        } else {
+            // Webhooks skipped as requested
         }
-    } else {
-        // Webhooks skipped as requested
-    }
 
-    // 4. Prepare the escalation event
+    // 5. Prepare the escalation event
     const event: EscalationEvent = {
         tenantId,
         conversationId,
@@ -335,11 +361,17 @@ export async function handleEscalation({
         });
     }
 
-    // 5. Dispatch to all destinations
+    // 6. Dispatch to all destinations
     // Dispatching to integrations
 
     try {
-        const dispatchResult = await dispatchEscalation(event);
+        // Determine if this is a rule-based escalation that should skip fallback
+        const isRuleBased = Boolean(ruleId || (matchedRuleDestinations && matchedRuleDestinations.length > 0));
+        const skipFallback = isRuleBased;
+        
+        console.log(`📨 Dispatching ${isRuleBased ? 'rule-based' : 'automatic'} escalation (skipFallback: ${skipFallback})`);
+        
+        const dispatchResult = await dispatchEscalation(event, undefined, skipFallback);
         // Dispatch complete
 
         // Record each integration dispatch in webhook_deliveries for dashboard visibility

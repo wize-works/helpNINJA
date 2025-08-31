@@ -60,14 +60,14 @@ async function getAnalyticsData(tenantId: string): Promise<AnalyticsData> {
         total_messages: number;
         total_conversations: number;
         avg_confidence: number;
-        escalation_rate: number;
+        total_escalations: number;
         active_integrations: number;
     }>(`
         SELECT 
             COUNT(CASE WHEN role = 'user' THEN 1 END)::int as total_messages,
             COUNT(DISTINCT conversation_id)::int as total_conversations,
             AVG(CASE WHEN confidence IS NOT NULL THEN confidence ELSE 0 END) as avg_confidence,
-            (COUNT(CASE WHEN confidence < 0.55 THEN 1 END)::float / NULLIF(COUNT(CASE WHEN role = 'assistant' THEN 1 END), 0)) * 100 as escalation_rate,
+            (SELECT COUNT(*)::int FROM public.escalations WHERE tenant_id = $1 AND created_at >= NOW() - INTERVAL '30 days') as total_escalations,
             (SELECT COUNT(*)::int FROM public.integrations WHERE tenant_id = $1 AND status = 'active') as active_integrations
         FROM public.messages 
         WHERE tenant_id = $1 
@@ -79,13 +79,13 @@ async function getAnalyticsData(tenantId: string): Promise<AnalyticsData> {
         prev_messages: number;
         prev_conversations: number;
         prev_confidence: number;
-        prev_escalation_rate: number;
+        prev_escalations: number;
     }>(`
         SELECT 
             COUNT(CASE WHEN role = 'user' THEN 1 END)::int as prev_messages,
             COUNT(DISTINCT conversation_id)::int as prev_conversations,
             AVG(CASE WHEN confidence IS NOT NULL THEN confidence ELSE 0 END) as prev_confidence,
-            (COUNT(CASE WHEN confidence < 0.55 THEN 1 END)::float / NULLIF(COUNT(CASE WHEN role = 'assistant' THEN 1 END), 0)) * 100 as prev_escalation_rate
+            (SELECT COUNT(*)::int FROM public.escalations WHERE tenant_id = $1 AND created_at >= NOW() - INTERVAL '60 days' AND created_at < NOW() - INTERVAL '30 days') as prev_escalations
         FROM public.messages 
         WHERE tenant_id = $1 
         AND created_at >= NOW() - INTERVAL '60 days'
@@ -99,16 +99,33 @@ async function getAnalyticsData(tenantId: string): Promise<AnalyticsData> {
         messages: number;
         escalations: number;
     }>(`
+        WITH daily_messages AS (
+            SELECT 
+                date_trunc('day', created_at)::date as date,
+                COUNT(DISTINCT conversation_id)::int as conversations,
+                COUNT(CASE WHEN role = 'user' THEN 1 END)::int as messages
+            FROM public.messages 
+            WHERE tenant_id = $1 
+            AND created_at >= NOW() - INTERVAL '30 days'
+            GROUP BY date_trunc('day', created_at)::date
+        ),
+        daily_escalations AS (
+            SELECT 
+                date_trunc('day', created_at)::date as date,
+                COUNT(*)::int as escalations
+            FROM public.escalations 
+            WHERE tenant_id = $1 
+            AND created_at >= NOW() - INTERVAL '30 days'
+            GROUP BY date_trunc('day', created_at)::date
+        )
         SELECT 
-            date_trunc('day', created_at)::date::text as date,
-            COUNT(DISTINCT conversation_id)::int as conversations,
-            COUNT(CASE WHEN role = 'user' THEN 1 END)::int as messages,
-            COUNT(CASE WHEN confidence < 0.55 THEN 1 END)::int as escalations
-        FROM public.messages 
-        WHERE tenant_id = $1 
-        AND created_at >= NOW() - INTERVAL '30 days'
-        GROUP BY date_trunc('day', created_at)::date
-        ORDER BY date
+            dm.date::text as date,
+            COALESCE(dm.conversations, 0) as conversations,
+            COALESCE(dm.messages, 0) as messages,
+            COALESCE(de.escalations, 0) as escalations
+        FROM daily_messages dm
+        LEFT JOIN daily_escalations de ON dm.date = de.date
+        ORDER BY dm.date
     `, [tenantId]);
 
     // Confidence score distribution
@@ -144,18 +161,39 @@ async function getAnalyticsData(tenantId: string): Promise<AnalyticsData> {
             END) DESC
     `, [tenantId]);
 
-    // Response time by hour (simplified - using mock data for now)
+    // Response time by hour (calculate actual response times from conversation pairs)
     const responseTimeQuery = await query<{
         hour: number;
         volume: number;
+        avg_response_time: number;
     }>(`
+        WITH response_times AS (
+            SELECT 
+                EXTRACT(hour FROM user_msg.created_at)::int as hour,
+                EXTRACT(EPOCH FROM (assistant_msg.created_at - user_msg.created_at)) as response_seconds
+            FROM public.messages user_msg
+            JOIN public.messages assistant_msg ON 
+                user_msg.conversation_id = assistant_msg.conversation_id 
+                AND assistant_msg.created_at > user_msg.created_at
+                AND assistant_msg.role = 'assistant'
+            WHERE user_msg.tenant_id = $1 
+                AND user_msg.role = 'user'
+                AND user_msg.created_at >= NOW() - INTERVAL '7 days'
+                AND assistant_msg.created_at <= user_msg.created_at + INTERVAL '10 minutes'
+            AND NOT EXISTS (
+                SELECT 1 FROM public.messages mid_msg 
+                WHERE mid_msg.conversation_id = user_msg.conversation_id 
+                AND mid_msg.created_at > user_msg.created_at 
+                AND mid_msg.created_at < assistant_msg.created_at
+            )
+        )
         SELECT 
-            EXTRACT(hour FROM created_at)::int as hour,
-            COUNT(*)::int as volume
-        FROM public.messages 
-        WHERE tenant_id = $1 
-        AND created_at >= NOW() - INTERVAL '7 days'
-        GROUP BY EXTRACT(hour FROM created_at)
+            hour,
+            COUNT(*)::int as volume,
+            AVG(response_seconds) as avg_response_time
+        FROM response_times
+        WHERE response_seconds BETWEEN 0 AND 600  -- Filter out unrealistic response times
+        GROUP BY hour
         ORDER BY hour
     `, [tenantId]);
 
@@ -189,7 +227,7 @@ async function getAnalyticsData(tenantId: string): Promise<AnalyticsData> {
         total_messages: 0,
         total_conversations: 0,
         avg_confidence: 0,
-        escalation_rate: 0,
+        total_escalations: 0,
         active_integrations: 0
     };
 
@@ -197,7 +235,7 @@ async function getAnalyticsData(tenantId: string): Promise<AnalyticsData> {
         prev_messages: 0,
         prev_conversations: 0,
         prev_confidence: 0,
-        prev_escalation_rate: 0
+        prev_escalations: 0
     };
 
     // Process conversation trends data to fill gaps
@@ -225,14 +263,11 @@ async function getAnalyticsData(tenantId: string): Promise<AnalyticsData> {
         percentage: totalConfidenceRecords > 0 ? Math.round((row.count / totalConfidenceRecords) * 100) : 0
     }));
 
-    // Process response time data with mock response times
+    // Process response time data with actual calculated response times
     const responseTimeByHour = Array.from({ length: 24 }, (_, hour) => {
         const data = responseTimeQuery.rows.find(row => row.hour === hour);
         const volume = data?.volume || 0;
-        // Mock response time based on realistic patterns (higher during business hours)
-        const baseResponseTime = hour >= 9 && hour <= 17 ? 2.5 : 1.8;
-        const variation = Math.random() * 0.8 - 0.4; // ±0.4s variation
-        const avgResponse = volume > 0 ? Math.max(1.0, baseResponseTime + variation) : 0;
+        const avgResponse = volume > 0 ? (data?.avg_response_time || 0) : 0;
 
         return {
             hour,
@@ -248,12 +283,58 @@ async function getAnalyticsData(tenantId: string): Promise<AnalyticsData> {
         accuracy: Math.round((row.avg_confidence || 0) * 100)
     }));
 
+    // Calculate escalation rate and average response time from real data
+    const escalationRate = currData.total_conversations > 0 
+        ? Math.round((currData.total_escalations / currData.total_conversations) * 100) 
+        : 0;
+    
+    const prevEscalationRate = prevData.prev_conversations > 0 
+        ? Math.round((prevData.prev_escalations / prevData.prev_conversations) * 100) 
+        : 0;
+
+    // Calculate average response time from response time data
+    const totalVolumeForResponseTime = responseTimeByHour.reduce((sum, hour) => sum + hour.volume, 0);
+    const weightedResponseTime = responseTimeByHour.reduce((sum, hour) => {
+        return sum + (hour.avgResponse * hour.volume);
+    }, 0);
+    const avgResponseTime = totalVolumeForResponseTime > 0 
+        ? Math.round((weightedResponseTime / totalVolumeForResponseTime) * 10) / 10 
+        : 0;
+
+    // Calculate previous period response time for growth
+    const { rows: prevResponseTimeRows } = await query<{ avg_response_time: number }>(`
+        WITH response_times AS (
+            SELECT EXTRACT(EPOCH FROM (assistant_msg.created_at - user_msg.created_at)) as response_seconds
+            FROM public.messages user_msg
+            JOIN public.messages assistant_msg ON 
+                user_msg.conversation_id = assistant_msg.conversation_id 
+                AND assistant_msg.created_at > user_msg.created_at
+                AND assistant_msg.role = 'assistant'
+            WHERE user_msg.tenant_id = $1 
+                AND user_msg.role = 'user'
+                AND user_msg.created_at >= NOW() - INTERVAL '60 days'
+                AND user_msg.created_at < NOW() - INTERVAL '30 days'
+                AND assistant_msg.created_at <= user_msg.created_at + INTERVAL '10 minutes'
+            AND NOT EXISTS (
+                SELECT 1 FROM public.messages mid_msg 
+                WHERE mid_msg.conversation_id = user_msg.conversation_id 
+                AND mid_msg.created_at > user_msg.created_at 
+                AND mid_msg.created_at < assistant_msg.created_at
+            )
+        )
+        SELECT AVG(response_seconds) as avg_response_time
+        FROM response_times
+        WHERE response_seconds BETWEEN 0 AND 600
+    `, [tenantId]);
+
+    const prevAvgResponseTime = prevResponseTimeRows[0]?.avg_response_time || 0;
+
     return {
         totalMessages: currData.total_messages,
         totalConversations: currData.total_conversations,
         avgConfidence: Math.round((currData.avg_confidence || 0) * 100),
-        escalationRate: Math.round(currData.escalation_rate || 0),
-        avgResponseTime: 2.3, // Mock average response time
+        escalationRate,
+        avgResponseTime,
         activeIntegrations: currData.active_integrations,
         messagesGrowth: calculateGrowth(currData.total_messages, prevData.prev_messages),
         conversationsGrowth: calculateGrowth(currData.total_conversations, prevData.prev_conversations),
@@ -261,11 +342,8 @@ async function getAnalyticsData(tenantId: string): Promise<AnalyticsData> {
             (currData.avg_confidence || 0) * 100,
             (prevData.prev_confidence || 0) * 100
         ),
-        escalationGrowth: calculateGrowth(
-            currData.escalation_rate || 0,
-            prevData.prev_escalation_rate || 0
-        ),
-        responseTimeGrowth: -5.2, // Mock improvement
+        escalationGrowth: calculateGrowth(escalationRate, prevEscalationRate),
+        responseTimeGrowth: calculateGrowth(avgResponseTime, prevAvgResponseTime),
         integrationsGrowth: 0, // Assuming stable integration count
         conversationsByDay,
         confidenceDistribution,

@@ -172,7 +172,15 @@ async function processInternalWebhook(
                 return false;
             }
 
-            const integration = rows[0];
+            const integration = rows[0] as {
+                id: string;
+                tenant_id: string;
+                provider: 'email' | 'slack' | 'teams' | 'discord' | 'custom' | 'webhooks' | 'freshdesk' | 'zoho' | 'zendesk' | 'cherwell' | 'jira' | 'linear' | 'github' | 'gitlab' | 'servicenow';
+                name: string;
+                config: Record<string, unknown>;
+                status: 'active' | 'disabled';
+                credentials: Record<string, unknown>;
+            };
 
             // Handle specific event types
             if (event.type === 'escalation.triggered' && event.data.conversation_id) {
@@ -183,40 +191,77 @@ async function processInternalWebhook(
                 let response;
 
                 try {
-                    // Import the escalation service (at runtime to avoid circular dependencies)
-                    const { handleEscalation } = await import('./escalation-service');
+                    // Import the integration dispatch functions
+                    const { getProvider } = await import('./integrations/registry');
 
-                    // If we don't already have a user message from the event, try to fetch it
-                    if (!event.data.user_message) {
-                        // Get the latest user message from this conversation
-                        const { rows: messages } = await query(
-                            `SELECT content FROM public.messages 
-                            WHERE conversation_id = $1 
-                            AND role = 'user' 
-                            ORDER BY created_at DESC LIMIT 1`,
-                            [event.data.conversation_id]
-                        );
+                    // Get conversation details including assistant answer
+                    const { rows: conversations } = await query(`
+                        SELECT c.id, c.session_id,
+                            (SELECT content FROM public.messages 
+                             WHERE conversation_id = c.id AND role = 'user' 
+                             ORDER BY created_at DESC LIMIT 1) as user_message,
+                            (SELECT content FROM public.messages 
+                             WHERE conversation_id = c.id AND role = 'assistant' 
+                             ORDER BY created_at DESC LIMIT 1) as assistant_answer
+                        FROM public.conversations c
+                        WHERE c.id = $1 AND c.tenant_id = $2
+                    `, [event.data.conversation_id, event.tenantId]);
 
-                        userMessage = messages.length > 0 ? messages[0].content : "No message available";
-                        // User message presence logged (removed)
-                    } else {
-                        // Using provided user message
+                    if (conversations.length === 0) {
+                        throw new Error(`Conversation not found: ${event.data.conversation_id}`);
                     }
 
-                    // Use our centralized escalation service directly instead of making an HTTP call
-                    const result = await handleEscalation({
+                    const conversation = conversations[0];
+                    userMessage = conversation.user_message || event.data.user_message || "No message available";
+
+                    // Validate that we have meaningful escalation context
+                    // Don't send user-only escalations without AI response
+                    if (!conversation.assistant_answer) {
+                        console.log(`⏭️ Skipping user-only escalation for conversation ${event.data.conversation_id} - no AI response yet`);
+                        await updateWebhookDelivery(deliveryId, 'delivered', 200, 'Skipped - no AI response');
+                        await updateWebhookStats(integration.id, true);
+                        return true; // Skip this integration
+                    }
+
+                    // Create escalation event with full context
+                    const escalationEvent = {
                         tenantId: event.tenantId,
-                        conversationId: String(event.data.conversation_id || ''),
-                        userMessage: String(userMessage || 'No message available'),
-                        reason: (String(event.data.reason || 'webhook') as EscalationReason),
+                        conversationId: String(event.data.conversation_id),
+                        sessionId: conversation.session_id,
+                        userMessage: String(userMessage),
+                        assistantAnswer: conversation.assistant_answer,
                         confidence: typeof event.data.confidence === 'number' ? event.data.confidence : undefined,
-                        integrationId: integrationId,
+                        reason: (event.data.reason as 'low_confidence' | 'restricted' | 'handoff' | 'user_request' | 'fallback_error' | 'feedback_urgent' | 'feedback_bug' | 'feedback_request') || 'user_request',
                         meta: {
                             fromWebhook: true,
-                            webhookDeliveryId: deliveryId
-                        },
-                        triggerWebhooks: false // Don't trigger additional webhooks to prevent loops
-                    });
+                            webhookDeliveryId: deliveryId,
+                            provider: integration.provider
+                        }
+                    };
+
+                                    // Check if this escalation has rule-based destinations that should override
+                // If this is a rule-based escalation, only forward to integrations that are in the rule destinations
+                if (event.data.rule_id || (event.data.destinations && Array.isArray(event.data.destinations) && event.data.destinations.length > 0)) {
+                    // This is a rule-based escalation - check if this integration should receive it
+                    const ruleDestinations = event.data.destinations as Array<{provider?: string, id?: string}>;
+                    const shouldReceive = ruleDestinations.some(dest => 
+                        dest.provider === integration.provider || dest.id === integration.id
+                    );
+                    
+                    if (!shouldReceive) {
+                        console.log(`⏭️ Skipping ${integration.provider} integration (${integration.id}) - not in rule destinations`);
+                        return true; // Skip this integration
+                    }
+                }
+
+                // Forward directly to this specific integration's provider
+                const provider = getProvider(integration.provider);
+                if (!provider) {
+                    throw new Error(`Provider not found: ${integration.provider}`);
+                }
+
+                console.log(`🎯 Forwarding escalation directly to ${integration.provider} integration (${integration.id})`);
+                const result = await provider.sendEscalation(escalationEvent, integration);
 
                     // Simulate an HTTP response for compatibility with existing code
                     response = {
@@ -422,7 +467,15 @@ export const webhookEvents = {
             }
         }),
 
-    escalationTriggered: async (tenantId: string, conversationId: string, reason: string, confidence?: number, userMessage?: string) => {
+    escalationTriggered: async (
+        tenantId: string, 
+        conversationId: string, 
+        reason: string, 
+        confidence?: number, 
+        userMessage?: string,
+        ruleId?: string,
+        ruleDestinations?: Array<{integrationId?: string, provider?: string, directEmail?: string}>
+    ) => {
         // escalationTriggered webhook called
 
         // If we don't have the user message and we have a conversation ID, try to fetch it
@@ -447,7 +500,7 @@ export const webhookEvents = {
             // Using provided user message
         }
 
-        // Dispatching escalation.triggered webhook
+        // Dispatching escalation.triggered webhook with rule context
         return dispatchWebhooks({
             type: 'escalation.triggered',
             tenantId,
@@ -456,6 +509,8 @@ export const webhookEvents = {
                 user_message: userMessage, // Include the user message if available
                 reason,
                 confidence,
+                rule_id: ruleId, // Include rule ID if this is rule-based
+                destinations: ruleDestinations, // Include rule destinations if available
                 triggered_at: new Date().toISOString()
             }
         });

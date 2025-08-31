@@ -68,6 +68,13 @@ Core features (present)
   - Tenant resolved strictly server-side (Clerk org → tenant); outbox retry button.
   - Files: src/app/dashboard/page.tsx, src/components/sidebar.tsx, src/lib/tenant-resolve.ts
   - Notes: "Messages (this month)" derives from `public.messages` for the current calendar month, counting `role='user'` messages (aligned with the Chat Volume chart). Low-confidence counts use assistant messages with confidence < 0.55 in the same period.
+- Analytics & Integration Health
+  - **Real escalation tracking**: Escalation rate calculated from actual escalations table, not just low-confidence messages
+  - **Actual response times**: Calculated from real message pairs instead of mock data  
+  - **Integration delivery metrics**: Tracks real integration deliveries and escalations with proper success rates
+  - **Complete data sources**: All analytics metrics now pull from real database data including conversation trends, confidence distribution, and top knowledge sources
+  - Dashboard showing message volume, escalations, integration status, response times with 30-day trends and growth calculations
+  - Files: src/app/dashboard/analytics/page.tsx, src/app/api/analytics/integration-health/route.ts, src/components/analytics/integration-health-dashboard.tsx
 - Admin pages
   - Documents: src/app/dashboard/documents/page.tsx and DELETE API src/app/api/documents/[id]/route.ts
     - Document statistics: chunk count, total tokens, content length surfaced in dashboard table (new columns + sorting by chunks/tokens). Derived live via LEFT JOIN aggregate on public.chunks (no duplicate storage). Sort keys: chunks_desc/asc, tokens_desc/asc. Zero-chunk docs highlighted with warning badge.

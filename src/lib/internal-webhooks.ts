@@ -3,9 +3,7 @@
  */
 
 import { query } from '@/lib/db';
-import { handleEscalation } from './escalation-service';
 import { EscalationEvent, EscalationReason, IntegrationRecord } from './integrations/types';
-import { dispatchEscalation } from './integrations/dispatch';
 
 type WebhookPayload = {
     type: string;
@@ -157,6 +155,13 @@ async function handleEscalationEvent(
 
         const conversation = conversations[0];
 
+        // Validate that we have meaningful escalation context
+        // Don't send user-only escalations without AI response
+        if (!conversation.assistant_answer) {
+            console.log(`⏭️ Skipping user-only escalation for conversation ${conversationId} - no AI response yet`);
+            return true; // Return success but don't actually send
+        }
+
         // Convert confidence to number if present
         const confidenceValue = typeof payload.data.confidence === 'number'
             ? payload.data.confidence
@@ -188,7 +193,7 @@ async function handleEscalationEvent(
 
         // Dispatching escalation (debug log removed)
 
-        // Use our centralized escalation service
+        // Create escalation event with full context
         const event: EscalationEvent = {
             tenantId: payload.tenant_id,
             conversationId: conversationId,
@@ -203,8 +208,31 @@ async function handleEscalationEvent(
             }
         };
 
-        // Forward to only this specific integration
-        const result = await dispatchEscalation(event, [integration]);
+        // Check if this escalation has rule-based destinations that should override
+        // If this is a rule-based escalation, only forward to integrations that are in the rule destinations
+        if (payload.data.rule_id || (payload.data.destinations && Array.isArray(payload.data.destinations) && payload.data.destinations.length > 0)) {
+            // This is a rule-based escalation - check if this integration should receive it
+            const ruleDestinations = payload.data.destinations as Array<{provider?: string, id?: string}>;
+            const shouldReceive = ruleDestinations.some(dest => 
+                dest.provider === integration.provider || dest.id === integration.id
+            );
+            
+            if (!shouldReceive) {
+                console.log(`⏭️ Skipping ${integration.provider} integration (${integration.id}) - not in rule destinations`);
+                return true; // Skip this integration
+            }
+        }
+
+        // Forward directly to this specific integration's provider
+        const { getProvider } = await import('./integrations/registry');
+        const provider = getProvider(integration.provider);
+        if (!provider) {
+            console.error(`❌ Provider not found: ${integration.provider}`);
+            return false;
+        }
+
+        console.log(`🎯 Forwarding escalation directly to ${integration.provider} integration (${integration.id})`);
+        const result = await provider.sendEscalation(event, integration);
 
         if (result.ok) {
             // Successfully dispatched escalation
