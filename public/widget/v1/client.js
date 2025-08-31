@@ -63,7 +63,7 @@ export function mountChatWidget(payload) {
     }[pos];
   
     const bubble = el('div',
-      `position:fixed;${posBubble}width:40px;height:40px;border-radius:50%;` +
+      `position:fixed;${posBubble}width:60px;height:60px;border-radius:50%;` +
       `box-shadow:0 10px 30px rgba(0,0,0,.2);background:${styles.bubbleBackground};` +
       `color:${styles.bubbleColor};display:flex;align-items:center;justify-content:center;` +
       `cursor:pointer;z-index:999999;transition:all .2s ease;padding:12px;`
