@@ -4,7 +4,8 @@
 
 import { query } from '@/lib/db';
 import { handleEscalation } from './escalation-service';
-import { EscalationReason, IntegrationRecord } from './integrations/types';
+import { EscalationEvent, EscalationReason, IntegrationRecord } from './integrations/types';
+import { dispatchEscalation } from './integrations/dispatch';
 
 type WebhookPayload = {
     type: string;
@@ -188,7 +189,7 @@ async function handleEscalationEvent(
         // Dispatching escalation (debug log removed)
 
         // Use our centralized escalation service
-        const result = await handleEscalation({
+        const event: EscalationEvent = {
             tenantId: payload.tenant_id,
             conversationId: conversationId,
             sessionId: conversation.session_id,
@@ -196,12 +197,14 @@ async function handleEscalationEvent(
             assistantAnswer: conversation.assistant_answer,
             confidence: confidenceValue,
             reason: reasonValue,
-            integrationId: integration.id,
             meta: {
                 fromWebhook: true,
                 provider: integration.provider
             }
-        });
+        };
+
+        // Forward to only this specific integration
+        const result = await dispatchEscalation(event, [integration]);
 
         if (result.ok) {
             // Successfully dispatched escalation
