@@ -95,7 +95,7 @@ export async function GET(
             showBranding: true,
             autoOpenDelay: 0,
             buttonIcon: "default",
-            theme: "auto",
+            theme: "system",
             voice: "friendly",
             // Default styling options
             bubbleBackground: '#111',

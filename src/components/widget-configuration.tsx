@@ -18,7 +18,7 @@ export interface WidgetConfigSchema {
     autoOpenDelay: number; // in milliseconds, 0 means disabled
     buttonIcon: "default" | "chat" | "help" | "message" | "custom";
     customIconUrl?: string;
-    theme: "light" | "dark" | "auto";
+    theme: "light" | "dark" | "system";
     fontFamily?: string;
     voice: "friendly" | "professional" | "casual" | "formal";
     // New styling options
@@ -677,16 +677,32 @@ export default function WidgetConfiguration({
                             <div className="flex flex-col gap-4 flex-1">
                                 <div>
                                     <label className="text-sm font-medium text-base-content block mb-2">Theme</label>
-                                    <select
-                                        name="theme"
-                                        value={config.theme}
-                                        onChange={handleSelectChange}
-                                        className="select select-bordered w-full max-w-md"
-                                    >
-                                        <option value="light">Light</option>
-                                        <option value="dark">Dark</option>
-                                        <option value="auto">Auto (Match User Preference)</option>
-                                    </select>
+                                    <div className="flex items-center gap-3">
+                                        {/* Theme Toggle Button */}
+                                        <div className="flex bg-base-200/60 rounded-lg p-1 border border-base-300/40">
+                                            {([
+                                                { value: 'light' as const, label: 'Light', icon: 'fa-sun' },
+                                                { value: 'dark' as const, label: 'Dark', icon: 'fa-moon' },
+                                                { value: 'system' as const, label: 'Auto', icon: 'fa-display' }
+                                            ] as const).map((option) => (
+                                                <button
+                                                    key={option.value}
+                                                    type="button"
+                                                    onClick={() => setConfig(prev => ({ ...prev, theme: option.value }))}
+                                                    className={`flex items-center gap-2 px-3 py-2 rounded-md text-sm font-medium transition-all duration-200 ${
+                                                        config.theme === option.value
+                                                            ? 'bg-primary text-primary-content shadow-sm'
+                                                            : 'text-base-content/70 hover:text-base-content hover:bg-base-200/80'
+                                                    }`}
+                                                    aria-label={`Set theme to ${option.label}`}
+                                                    title={`Set theme to ${option.label}`}
+                                                >
+                                                    <i className={`fa-duotone fa-solid ${option.icon} text-sm`} aria-hidden />
+                                                    <span className="hidden sm:inline">{option.label}</span>
+                                                </button>
+                                            ))}
+                                        </div>
+                                    </div>
                                     <p className="text-xs text-base-content/60 mt-1">Choose the color theme for your chat widget</p>
                                 </div>
                                 {/* Primary Color */}

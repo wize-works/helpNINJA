@@ -5,14 +5,14 @@ export function mountChatWidget(payload) {
       tenantId,
       siteId,
       voice,
-      theme = 'auto',
+      theme = 'system',
       paletteLight = {},
       paletteDark = {},
       config = {},
     } = payload;
     
     const prefersDark = matchMedia?.('(prefers-color-scheme: dark)').matches;
-    const styles = (theme === 'dark' || (theme === 'auto' && prefersDark)) ? paletteDark : paletteLight;
+    const styles = (theme === 'dark' || (theme === 'system' && prefersDark)) ? paletteDark : paletteLight;
     
     // ---- DOM helpers ----
     const el = (tag, css = '') => { const n = document.createElement(tag); if (css) n.style.cssText = css; return n; };
@@ -110,7 +110,7 @@ export function mountChatWidget(payload) {
 
     // Start with initial compact size, but allow growing to max available
     const maxPanelHeight = calculateMaxPanelHeight();
-    const initialPanelHeight = Math.min(450, maxPanelHeight); // Start with 450px or max available if smaller
+    const initialPanelHeight = Math.min(600, maxPanelHeight); // Start with 450px or max available if smaller
     const panel = el('div',
         `position:fixed;${posPanel}width:360px;height:${initialPanelHeight}px;max-height:${maxPanelHeight}px;background:${styles.panelBackground};` +
         `border-radius:16px;box-shadow:-10px 10px 25px -5px rgba(0,0,0,.1),` +
@@ -367,7 +367,7 @@ export function mountChatWidget(payload) {
 
         // Re-calculate theme colors
         const prefersDark = matchMedia?.('(prefers-color-scheme: dark)').matches;
-        const currentStyles = (theme === 'dark' || (theme === 'auto' && prefersDark)) ? paletteDark : paletteLight;
+        const currentStyles = (theme === 'dark' || (theme === 'system' && prefersDark)) ? paletteDark : paletteLight;
         const textColor = currentStyles.textColor || '#333333';
         const mutedTextColor = currentStyles.mutedTextColor || '#666666';
 

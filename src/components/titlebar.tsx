@@ -102,15 +102,63 @@ export default function Titlebar() {
                         <SlideIn direction="left" delay={0.3}>
                             <div className="flex items-center gap-1">
                                 {/* Quick Create */}
-                                <HoverScale scale={1.05}>
-                                    <button
-                                        className="w-9 h-9 rounded-lg bg-primary/10 hover:bg-primary/20 border border-primary/20 flex items-center justify-center transition-all duration-200 group"
-                                        aria-label="Quick create"
-                                        title="Quick create"
+                                <div className="dropdown dropdown-end">
+                                    <HoverScale scale={1.05}>
+                                        <div
+                                            tabIndex={0}
+                                            role="button"
+                                            className="w-9 h-9 rounded-lg bg-primary/10 hover:bg-primary/20 border border-primary/20 flex items-center justify-center transition-all duration-200 group cursor-pointer"
+                                            aria-label="Quick create"
+                                            title="Quick create"
+                                        >
+                                            <i className="fa-duotone fa-solid fa-plus text-sm text-primary group-hover:text-primary/80" aria-hidden />
+                                        </div>
+                                    </HoverScale>
+                                    <ul
+                                        tabIndex={0}
+                                        className="dropdown-content menu bg-base-100/95 backdrop-blur-sm rounded-2xl shadow-xl border border-base-200/60 w-56 p-2 mt-2"
                                     >
-                                        <i className="fa-duotone fa-solid fa-plus text-sm text-primary group-hover:text-primary/80" aria-hidden />
-                                    </button>
-                                </HoverScale>
+                                        <li className="menu-title text-xs font-semibold text-base-content/50 px-3 py-2 uppercase tracking-wide">
+                                            Quick Create
+                                        </li>
+                                        <li>
+                                            <Link href="/dashboard/answers" className="flex items-center gap-3 py-2.5 px-3 rounded-xl hover:bg-base-200/60 transition-colors">
+                                                <i className="fa-duotone fa-solid fa-message-question text-base text-primary" aria-hidden />
+                                                <div>
+                                                    <div className="font-medium">New Answer</div>
+                                                    <div className="text-xs text-base-content/50">Create curated response</div>
+                                                </div>
+                                            </Link>
+                                        </li>
+                                        <li>
+                                            <Link href="/dashboard/sites" className="flex items-center gap-3 py-2.5 px-3 rounded-xl hover:bg-base-200/60 transition-colors">
+                                                <i className="fa-duotone fa-solid fa-globe text-base text-success" aria-hidden />
+                                                <div>
+                                                    <div className="font-medium">New Site</div>
+                                                    <div className="text-xs text-base-content/50">Register domain</div>
+                                                </div>
+                                            </Link>
+                                        </li>
+                                        <li>
+                                            <Link href="/dashboard/sources" className="flex items-center gap-3 py-2.5 px-3 rounded-xl hover:bg-base-200/60 transition-colors">
+                                                <i className="fa-duotone fa-solid fa-upload text-base text-info" aria-hidden />
+                                                <div>
+                                                    <div className="font-medium">Add Source</div>
+                                                    <div className="text-xs text-base-content/50">Upload content</div>
+                                                </div>
+                                            </Link>
+                                        </li>
+                                        <li>
+                                            <Link href="/dashboard/rules" className="flex items-center gap-3 py-2.5 px-3 rounded-xl hover:bg-base-200/60 transition-colors">
+                                                <i className="fa-duotone fa-solid fa-route text-base text-warning" aria-hidden />
+                                                <div>
+                                                    <div className="font-medium">New Rule</div>
+                                                    <div className="text-xs text-base-content/50">Setup escalation</div>
+                                                </div>
+                                            </Link>
+                                        </li>
+                                    </ul>
+                                </div>
 
                                 {/* Notifications */}
                                 <NotificationsBell />
