@@ -3,15 +3,14 @@ import { useState, Suspense } from 'react';
 import { Breadcrumb } from '@/components/ui/breadcrumb';
 import { AnimatedPage, StaggerContainer, StaggerChild, HoverScale } from '@/components/ui/animated-page';
 import { toastUtils } from '@/lib/toast';
+import { PLAN_DETAILS } from '@/lib/plan';
+import { Plan } from '@/lib/limits';
 
-const PLANS = [
-    { key: 'starter', name: 'Starter', price: '$29/mo', features: ['1 site', '1k messages', 'Email handoff'] },
-    { key: 'pro', name: 'Pro', price: '$79/mo', features: ['3 sites', '5k messages', 'Slack handoff', 'Analytics'] },
-    { key: 'agency', name: 'Agency', price: '$249/mo', features: ['10 sites', '20k messages', 'White-label', 'Multi-client'] },
-] as const;
+type BillingPeriod = 'monthly' | 'yearly';
 
 export default function BillingPage() {
     const [loading, setLoading] = useState<string | null>(null);
+    const [billingPeriod, setBillingPeriod] = useState<BillingPeriod>('monthly');
 
     const breadcrumbItems = [
         { label: "Dashboard", href: "/dashboard", icon: "fa-gauge-high" },
@@ -20,7 +19,7 @@ export default function BillingPage() {
 
     async function checkout(plan: string) {
         setLoading(plan);
-        const r = await fetch('/api/billing/checkout', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ plan }) });
+        const r = await fetch('/api/billing/checkout', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ plan, billingPeriod }) });
         const j = await r.json();
         setLoading(null);
         if (j.url) window.location.href = j.url; else toastUtils.error(j.error || 'Error creating checkout');
@@ -75,54 +74,93 @@ export default function BillingPage() {
                         </StaggerChild>
                     </StaggerContainer>
 
+                    {/* Billing Period Toggle */}
+                    <StaggerContainer>
+                        <StaggerChild>
+                            <div className="flex justify-center">
+                                <div className="join">
+                                    <button
+                                        className={`btn join-item ${billingPeriod === 'monthly' ? 'btn-active' : ''}`}
+                                        onClick={() => setBillingPeriod('monthly')}
+                                    >
+                                        Monthly
+                                    </button>
+                                    <button
+                                        className={`btn join-item ${billingPeriod === 'yearly' ? 'btn-active' : ''}`}
+                                        onClick={() => setBillingPeriod('yearly')}
+                                    >
+                                        Yearly
+                                        <span className="badge badge-accent badge-sm ml-1">Save up to 20%</span>
+                                    </button>
+                                </div>
+                            </div>
+                        </StaggerChild>
+                    </StaggerContainer>
+
                     {/* Plans Grid */}
                     <StaggerContainer>
                         <StaggerChild>
                             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                                {PLANS.map((plan, index) => (
-                                    <div key={plan.key} className="card bg-base-100 rounded-2xl shadow-sm hover:shadow-md transition-all duration-300 group">
-                                        <div className="p-6">
-                                            <div className="flex items-center gap-3 mb-4">
-                                                <div className="w-12 h-12 bg-primary/10 rounded-2xl flex items-center justify-center group-hover:scale-105 transition-transform duration-200">
-                                                    <i className={`fa-duotone fa-solid ${index === 0 ? 'fa-seedling' : index === 1 ? 'fa-rocket' : 'fa-building'} text-lg text-primary`} aria-hidden />
+                                {(Object.keys(PLAN_DETAILS) as Plan[]).filter(plan => plan !== 'none').map((plan, index) => {
+                                    const details = PLAN_DETAILS[plan as keyof typeof PLAN_DETAILS];
+                                    const pricing = details[billingPeriod];
+                                    
+                                    return (
+                                        <div key={plan} className={`card bg-base-100 rounded-2xl shadow-sm hover:shadow-md transition-all duration-300 group relative ${details.popular ? 'border-2 border-primary' : ''}`}>
+                                            {details.popular && (
+                                                <div className="absolute -top-3 left-1/2 transform -translate-x-1/2">
+                                                    <div className="badge badge-accent">Most Popular</div>
                                                 </div>
-                                                <div>
-                                                    <h3 className="text-xl font-bold text-base-content">{plan.name}</h3>
-                                                    <div className="text-3xl font-bold text-primary">{plan.price}</div>
+                                            )}
+                                            <div className="p-6">
+                                                <div className="flex items-center gap-3 mb-4">
+                                                    <div className="w-12 h-12 bg-primary/10 rounded-2xl flex items-center justify-center group-hover:scale-105 transition-transform duration-200">
+                                                        <i className={`fa-duotone fa-solid ${index === 0 ? 'fa-seedling' : index === 1 ? 'fa-rocket' : 'fa-building'} text-lg text-primary`} aria-hidden />
+                                                    </div>
+                                                    <div>
+                                                        <h3 className="text-xl font-bold text-base-content">{details.name}</h3>
+                                                        <div className="text-3xl font-bold text-primary">{pricing.price}</div>
+                                                        <div className="text-sm text-base-content/60">/{pricing.period}</div>
+                                                        {billingPeriod === 'yearly' && 'savings' in pricing && (
+                                                            <div className="text-xs text-success mt-1">{pricing.savings}</div>
+                                                        )}
+                                                    </div>
                                                 </div>
+
+                                                <p className="text-sm text-base-content/60 mb-4">{details.description}</p>
+
+                                                <ul className="space-y-2 mb-6">
+                                                    {details.features.map((feature, featureIndex) => (
+                                                        <li key={featureIndex} className="flex items-center gap-2 text-sm text-base-content/70">
+                                                            <i className="fa-duotone fa-solid fa-check text-success text-xs" aria-hidden />
+                                                            <span>{feature}</span>
+                                                        </li>
+                                                    ))}
+                                                </ul>
+
+                                                <HoverScale scale={1.02}>
+                                                    <button
+                                                        onClick={() => checkout(plan)}
+                                                        disabled={loading === plan}
+                                                        className={`btn w-full rounded-xl mt-auto ${details.color} ${loading === plan ? 'loading' : ''}`}
+                                                    >
+                                                        {loading === plan ? (
+                                                            <>
+                                                                <span className="loading loading-spinner loading-sm"></span>
+                                                                Processing...
+                                                            </>
+                                                        ) : (
+                                                            <>
+                                                                <i className="fa-duotone fa-solid fa-credit-card mr-2" aria-hidden />
+                                                                Choose {details.name}
+                                                            </>
+                                                        )}
+                                                    </button>
+                                                </HoverScale>
                                             </div>
-
-                                            <ul className="space-y-2 mb-6">
-                                                {plan.features.map(feature => (
-                                                    <li key={feature} className="flex items-center gap-2 text-sm text-base-content/70">
-                                                        <i className="fa-duotone fa-solid fa-check text-success text-xs" aria-hidden />
-                                                        <span>{feature}</span>
-                                                    </li>
-                                                ))}
-                                            </ul>
-
-                                            <HoverScale scale={1.02}>
-                                                <button
-                                                    onClick={() => checkout(plan.key)}
-                                                    disabled={loading === plan.key}
-                                                    className={`btn w-full rounded-xl mt-auto ${index === 1 ? 'btn-primary' : 'btn-outline'} ${loading === plan.key ? 'loading' : ''}`}
-                                                >
-                                                    {loading === plan.key ? (
-                                                        <>
-                                                            <span className="loading loading-spinner loading-sm"></span>
-                                                            Processing...
-                                                        </>
-                                                    ) : (
-                                                        <>
-                                                            <i className="fa-duotone fa-solid fa-credit-card mr-2" aria-hidden />
-                                                            Choose {plan.name}
-                                                        </>
-                                                    )}
-                                                </button>
-                                            </HoverScale>
                                         </div>
-                                    </div>
-                                ))}
+                                    );
+                                })}
                             </div>
                         </StaggerChild>
                     </StaggerContainer>

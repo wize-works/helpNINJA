@@ -1,17 +1,47 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { stripe, PRICE_BY_PLAN, Plan } from '@/lib/stripe';
+import { stripe, Plan } from '@/lib/stripe';
 import { transaction } from '@/lib/db';
 import { getTenantIdStrict } from '@/lib/tenant-resolve';
 import { QueryResult } from 'pg';
 
 export const runtime = 'nodejs';
 
+function getStripePriceId(plan: Exclude<Plan, 'none'>, billingPeriod: 'monthly' | 'yearly'): string {
+    const priceIds = {
+        starter: {
+            monthly: process.env.STRIPE_PRICE_STARTER_MONTHLY || '',
+            yearly: process.env.STRIPE_PRICE_STARTER_YEARLY || '',
+        },
+        pro: {
+            monthly: process.env.STRIPE_PRICE_PRO_MONTHLY || '',
+            yearly: process.env.STRIPE_PRICE_PRO_YEARLY || '',
+        },
+        agency: {
+            monthly: process.env.STRIPE_PRICE_AGENCY_MONTHLY || '',
+            yearly: process.env.STRIPE_PRICE_AGENCY_YEARLY || '',
+        },
+    };
+    return priceIds[plan][billingPeriod];
+}
+
 export async function POST(req: NextRequest) {
     try {
-        const { plan } = (await req.json()) as { plan: Plan };
+        const { plan, billingPeriod = 'monthly' } = (await req.json()) as { 
+            plan: Plan; 
+            billingPeriod?: 'monthly' | 'yearly';
+        };
+        
+        if (!plan || !(plan in { starter: true, pro: true, agency: true })) {
+            return NextResponse.json({ error: 'Valid plan required' }, { status: 400 });
+        }
+        
+        if (billingPeriod && !['monthly', 'yearly'].includes(billingPeriod)) {
+            return NextResponse.json({ error: 'Invalid billing period' }, { status: 400 });
+        }
+
         const tenantId = await getTenantIdStrict();
-        if (!tenantId || !plan || !(plan in PRICE_BY_PLAN)) {
-            return NextResponse.json({ error: 'tenantId and valid plan required' }, { status: 400 });
+        if (!tenantId) {
+            return NextResponse.json({ error: 'tenantId required' }, { status: 400 });
         }
 
         const siteUrl = process.env.SITE_URL || 'http://localhost:3000';
@@ -37,17 +67,34 @@ export async function POST(req: NextRequest) {
             return customerId;
         });
 
+        // Get the appropriate price ID for the plan and billing period
+        const priceId = getStripePriceId(plan as Exclude<Plan, 'none'>, billingPeriod);
+        if (!priceId) {
+            console.error(`Price not available for plan: ${plan}, billingPeriod: ${billingPeriod}`);
+            console.error('Available environment variables:', {
+                starter_monthly: process.env.STRIPE_PRICE_STARTER_MONTHLY,
+                starter_yearly: process.env.STRIPE_PRICE_STARTER_YEARLY,
+                pro_monthly: process.env.STRIPE_PRICE_PRO_MONTHLY,
+                pro_yearly: process.env.STRIPE_PRICE_PRO_YEARLY,
+                agency_monthly: process.env.STRIPE_PRICE_AGENCY_MONTHLY,
+                agency_yearly: process.env.STRIPE_PRICE_AGENCY_YEARLY,
+            });
+            return NextResponse.json({ 
+                error: `Price not available for ${plan} plan with ${billingPeriod} billing. Please contact support.` 
+            }, { status: 400 });
+        }
+
         const session = await stripe.checkout.sessions.create({
             mode: 'subscription',
             customer: customerId,
-            line_items: [{ price: PRICE_BY_PLAN[plan], quantity: 1 }],
+            line_items: [{ price: priceId, quantity: 1 }],
             allow_promotion_codes: true,
-            success_url: `${siteUrl}/billing?success=1`,
-            cancel_url: `${siteUrl}/billing?canceled=1`,
+            success_url: `${siteUrl}/dashboard/billing?success=1`,
+            cancel_url: `${siteUrl}/dashboard/billing?canceled=1`,
             subscription_data: {
-                metadata: { tenantId, plan },
+                metadata: { tenantId, plan, billingPeriod },
             },
-            metadata: { tenantId, plan },
+            metadata: { tenantId, plan, billingPeriod },
         });
 
         return NextResponse.json({ url: session.url });
