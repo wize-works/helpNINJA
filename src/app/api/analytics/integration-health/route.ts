@@ -9,11 +9,11 @@ type IntegrationHealthData = {
     name: string;
     provider: string;
     status: 'active' | 'error' | 'warning' | 'disabled';
-    lastDelivery: string | null;
-    successRate: number;
-    totalDeliveries: number;
-    failedDeliveries: number;
-    avgResponseTime: number;
+    last_delivery: string | null;
+    success_rate: number;
+    total_deliveries: number;
+    failed_deliveries: number;
+    avg_response_time: number;
     uptime: number;
     webhook_endpoint_id?: string;
 };
@@ -100,10 +100,10 @@ export async function GET() {
         // Get overall statistics
         const totalIntegrations = integrations.length;
         const activeIntegrations = integrations.filter(i => i.status === 'active').length;
-        const totalDeliveries = integrations.reduce((sum, i) => sum + (Number(i.totalDeliveries) || 0), 0);
-        const failedDeliveries = integrations.reduce((sum, i) => sum + (Number(i.failedDeliveries) || 0), 0);
+        const totalDeliveries = integrations.reduce((sum, i) => sum + (Number(i.total_deliveries) || 0), 0);
+        const failedDeliveries = integrations.reduce((sum, i) => sum + (Number(i.failed_deliveries) || 0), 0);
         const averageSuccessRate = totalIntegrations > 0
-            ? integrations.reduce((sum, i) => sum + (Number(i.successRate) || 100), 0) / totalIntegrations
+            ? integrations.reduce((sum, i) => sum + (Number(i.success_rate) || 100), 0) / totalIntegrations
             : 100;
         const averageUptime = totalIntegrations > 0
             ? integrations.reduce((sum, i) => sum + (Number(i.uptime) || 100), 0) / totalIntegrations
@@ -148,11 +148,12 @@ export async function GET() {
         const response: IntegrationHealthResponse = {
             integrations: integrations.map(integration => ({
                 ...integration,
-                successRate: Number(integration.successRate) || 0,
+                successRate: Number(integration.success_rate) || 0,
                 uptime: Number(integration.uptime) || 0,
-                avgResponseTime: Number(integration.avgResponseTime) || 0,
-                totalDeliveries: Number(integration.totalDeliveries) || 0,
-                failedDeliveries: Number(integration.failedDeliveries) || 0
+                avgResponseTime: Number(integration.avg_response_time) || 0,
+                totalDeliveries: Number(integration.total_deliveries) || 0,
+                failedDeliveries: Number(integration.failed_deliveries) || 0,
+                lastDelivery: integration.last_delivery
             })),
             overall: {
                 totalIntegrations,
@@ -167,7 +168,8 @@ export async function GET() {
                 totalDeliveries: row.total_deliveries || 0,
                 successfulDeliveries: row.successful_deliveries || 0,
                 failedDeliveries: row.failed_deliveries || 0,
-                averageResponseTime: Math.round((row.average_response_time || 0) * 100) / 100
+                averageResponseTime: Math.round((row.average_response_time || 0) * 100) / 100,
+                last_delivery: row.last_delivery
             }))
         };
 

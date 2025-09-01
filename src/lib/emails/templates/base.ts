@@ -193,14 +193,14 @@ function generateStyles(colors: EmailColors = defaultColors): string {
       }
       
       .footer-link {
-        color: ${colors.textLight};
+        color: ${colors.primary};
         text-decoration: none;
         margin: 0 12px;
         font-size: 14px;
       }
       
       .footer-text {
-        color: ${colors.textLight};
+        color: ${colors.primary};
         font-size: 14px;
         line-height: 1.4;
         margin: 8px 0;
