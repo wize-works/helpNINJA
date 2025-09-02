@@ -80,7 +80,7 @@ export async function GET(req: NextRequest) {
 
         const tenantId = await getTenantIdStrict();
         const url = new URL(req.url);
-        
+
         // Parse query parameters
         const page = parseInt(url.searchParams.get('page') || '1');
         const limit = Math.min(parseInt(url.searchParams.get('limit') || '20'), 100);
@@ -115,8 +115,8 @@ export async function GET(req: NextRequest) {
         }
 
         if (search) {
-            conditions.push(`f.search_vector @@ plainto_tsquery('english', $${paramIndex})`);
-            params.push(search);
+            conditions.push(`(f.title ILIKE $${paramIndex} OR f.description ILIKE $${paramIndex})`);
+            params.push(`%${search}%`);
             paramIndex++;
         }
 
@@ -206,13 +206,13 @@ export async function POST(req: NextRequest) {
             // Not authenticated, try to resolve from request body (widget submission)
             const resolved = await resolveTenantIdAndBodyFromRequest(req, false);
             tenantId = resolved.tenantId;
-            
+
             if (!resolved.body) {
                 return NextResponse.json({
                     error: 'Request body is required'
                 }, { status: 400, headers: headersOut });
             }
-            
+
             // Cast to FeedbackSubmission after null check
             body = resolved.body as unknown as FeedbackSubmission;
         }
@@ -256,14 +256,14 @@ export async function POST(req: NextRequest) {
                 return NextResponse.json({
                     error: 'Invalid conversationId for this tenant'
                 }, { status: 400, headers: headersOut });
-                }
+            }
         }
 
         // Capture request metadata
         const userAgent = req.headers.get('user-agent');
         const referer = req.headers.get('referer');
         const clientIp = req.headers.get('x-forwarded-for') || req.headers.get('x-real-ip');
-        
+
         // Build browser info
         const browserInfo = {
             ...(body.browserInfo || {}),
@@ -331,7 +331,7 @@ export async function POST(req: NextRequest) {
             try {
                 // Determine escalation reason based on feedback type and priority
                 let escalationReason: 'feedback_urgent' | 'feedback_bug' | 'feedback_request' = 'feedback_urgent';
-                
+
                 if (body.type === 'bug' && body.priority === 'high') {
                     escalationReason = 'feedback_bug';
                 } else if (body.type === 'feature_request' && body.priority === 'high') {
@@ -342,9 +342,9 @@ export async function POST(req: NextRequest) {
 
                 // Create enhanced escalation message
                 const escalationTitle = `${body.type === 'bug' ? '🐛' : body.type === 'feature_request' ? '💡' : '📝'} ${body.type.replace('_', ' ').toUpperCase()}: ${body.title}`;
-                
+
                 let escalationMessage = body.description;
-                
+
                 // Add additional context for bug reports
                 if (body.type === 'bug') {
                     if (body.stepsToReproduce) {

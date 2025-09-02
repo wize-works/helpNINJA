@@ -11,6 +11,7 @@ export async function GET(req: NextRequest) {
         const siteId = searchParams.get('siteId');
         const enabled = searchParams.get('enabled');
         const ruleType = searchParams.get('type');
+        const search = searchParams.get('search');
 
         let queryText = `
             SELECT er.*, 
@@ -26,6 +27,12 @@ export async function GET(req: NextRequest) {
 
         const params: unknown[] = [tenantId];
         let paramIndex = 2;
+
+        if (search) {
+            queryText += ` AND (er.name ILIKE $${paramIndex} OR er.description ILIKE $${paramIndex})`;
+            params.push(`%${search}%`);
+            paramIndex++;
+        }
 
         if (siteId) {
             queryText += ` AND er.site_id = $${paramIndex++}`;

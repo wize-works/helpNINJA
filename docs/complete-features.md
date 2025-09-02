@@ -80,6 +80,18 @@ Core features (present)
     - Document statistics: chunk count, total tokens, content length surfaced in dashboard table (new columns + sorting by chunks/tokens). Derived live via LEFT JOIN aggregate on public.chunks (no duplicate storage). Sort keys: chunks_desc/asc, tokens_desc/asc. Zero-chunk docs highlighted with warning badge.
   - Integrations: src/app/dashboard/integrations/page.tsx plus src/app/api/integrations/[id]/route.ts and /status/route.ts
   - Conversations: src/app/dashboard/conversations/page.tsx
+  - **Rules (Escalation Rules)**: Complete CRUD interface with standardized filter implementation following filter-button-guide.md pattern
+    - Server-side filtering with URL persistence for search, status (enabled/disabled), rule type, and site association
+    - Debounced search with responsive filter dropdown, proper loading states, and visual filter count badges
+    - Rule editor with comprehensive form validation, priority sliders, and integrated rule testing interface
+    - Files: src/app/dashboard/rules/page.tsx (server-side main page), src/app/dashboard/rules/rules-content.tsx (client component), src/app/dashboard/rules/filter-controls.tsx (standardized filters), src/app/api/rules/route.ts (updated with search support)
+  - **Feedback Management**: Complete feedback system with standardized filter implementation following filter-button-guide.md pattern
+    - Server-side filtering with URL persistence for search, type, status, priority, and site association
+    - Comprehensive feedback analytics with visual charts showing trends, priority distribution, and resolution metrics
+    - Advanced feedback table with modal detail views, status management, and escalation tracking
+    - Site-specific feedback filtering allows isolation of feedback by verified tenant sites
+    - Auto-escalation for urgent/high-priority feedback with centralized escalation service integration
+    - Files: src/app/dashboard/feedback/page.tsx (server-side main page), src/app/dashboard/feedback/feedback-content.tsx (client component), src/app/dashboard/feedback/filter-controls.tsx (standardized filters), src/app/api/feedback/route.ts (enhanced with ILIKE search), src/components/feedback-table.tsx, src/components/feedback-analytics.tsx
   - Settings + Keys: src/app/dashboard/settings/page.tsx and scaffolded src/app/api/tenants/[id]/rotate-keys/route.ts
   - API Keys Management: src/app/dashboard/settings/api/page.tsx for advanced API key and webhook management
 - Webhook Event System (NEW - Production-ready implementation)
