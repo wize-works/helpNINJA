@@ -43,7 +43,7 @@ export async function GET(req: NextRequest) {
 
         // Add filter conditions
         if (searchQuery) {
-            queryText += ` AND (d.title ILIKE $${paramIndex} OR d.url ILIKE $${paramIndex})`;
+            queryText += ` AND (d.title ILIKE $${paramIndex} OR d.url ILIKE $${paramIndex} OR d.content ILIKE $${paramIndex})`;
             params.push(`%${searchQuery}%`);
             paramIndex++;
         }

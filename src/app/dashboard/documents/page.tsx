@@ -1,14 +1,22 @@
 import { getTenantIdStrict } from "@/lib/tenant-resolve";
 import { query } from "@/lib/db";
 import IngestForm from "@/components/ingest-form";
-import DocumentsContentWrapper from "@/components/documents-content-wrapper";
+import SelectableDocumentsTable from "@/components/selectable-documents-table";
 
 import { TableSkeleton } from "@/components/ui/skeleton";
 import { Breadcrumb } from "@/components/ui/breadcrumb";
 import { AnimatedPage, StaggerContainer, StaggerChild, HoverScale } from "@/components/ui/animated-page";
 import { Suspense } from "react";
+import FilterControls from "./filter-controls";
 
 export const runtime = 'nodejs'
+
+interface Filters {
+    q?: string;
+    site?: string;
+    source?: string;
+    sort?: string;
+}
 
 type DocRow = {
     id: string;
@@ -25,7 +33,56 @@ type DocRow = {
     content_length: number;
 }
 
-async function getDocs(tenantId: string, siteId?: string) {
+function buildConditions(tenantId: string, filters: Filters) {
+    const conditions: string[] = ['d.tenant_id = $1'];
+    const params: unknown[] = [tenantId];
+    let idx = 2;
+
+    if (filters.site) {
+        conditions.push(`d.site_id = $${idx}`);
+        params.push(filters.site);
+        idx++;
+    }
+
+    if (filters.source) {
+        conditions.push(`s.kind = $${idx}`);
+        params.push(filters.source);
+        idx++;
+    }
+
+    if (filters.q) {
+        conditions.push(`(
+            d.title ILIKE $${idx} OR 
+            d.url ILIKE $${idx} OR 
+            d.content ILIKE $${idx}
+        )`);
+        params.push(`%${filters.q}%`);
+        idx++;
+    }
+
+    return { where: conditions.join(' AND '), params };
+}
+
+function buildOrderBy(sort?: string): string {
+    if (!sort || sort === 'created_desc') return 'd.created_at DESC';
+
+    const sortMap: Record<string, string> = {
+        'created_asc': 'd.created_at ASC',
+        'title_asc': 'd.title ASC',
+        'title_desc': 'd.title DESC',
+        'chunks_desc': 'COALESCE(c.chunk_count, 0) DESC',
+        'chunks_asc': 'COALESCE(c.chunk_count, 0) ASC',
+        'tokens_desc': 'COALESCE(c.total_tokens, 0) DESC',
+        'tokens_asc': 'COALESCE(c.total_tokens, 0) ASC'
+    };
+
+    return sortMap[sort] || 'd.created_at DESC';
+}
+
+async function getDocs(tenantId: string, filters: Filters = {}) {
+    const { where, params } = buildConditions(tenantId, filters);
+    const orderBy = buildOrderBy(filters.sort);
+
     let queryText = `
         SELECT d.id, d.url, d.title, d.created_at, d.site_id,
                ts.name as site_name, ts.domain as site_domain,
@@ -41,20 +98,29 @@ async function getDocs(tenantId: string, siteId?: string) {
             FROM public.chunks
             GROUP BY document_id
         ) c ON c.document_id = d.id
-        WHERE d.tenant_id = $1
+        WHERE ${where}
+        ORDER BY ${orderBy}
+        LIMIT 100
     `;
-
-    const params: unknown[] = [tenantId];
-
-    if (siteId) {
-        queryText += ' AND d.site_id = $2';
-        params.push(siteId);
-    }
-
-    queryText += ' ORDER BY d.created_at DESC LIMIT 100';
 
     const { rows } = await query<DocRow>(queryText, params);
     return rows;
+}
+
+async function listSites(tenantId: string) {
+    try {
+        const { rows } = await query<{ id: string; domain: string; name: string }>(
+            `SELECT id, domain, name 
+             FROM public.tenant_sites 
+             WHERE tenant_id=$1 
+             ORDER BY name ASC`,
+            [tenantId]
+        );
+        return rows;
+    } catch (error) {
+        console.error('Error fetching sites:', error);
+        return [];
+    }
 }
 
 async function DocumentsStats({ tenantId }: { tenantId: string }) {
@@ -109,8 +175,21 @@ async function DocumentsStats({ tenantId }: { tenantId: string }) {
     }
 }
 
-export default async function DocumentsPage() {
-    const tenantId = await getTenantIdStrict()
+export default async function DocumentsPage({
+    searchParams
+}: {
+    searchParams: Promise<Record<string, string | string[] | undefined>>
+}) {
+    const resolved = await searchParams;
+    const filters: Filters = {
+        q: typeof resolved.q === 'string' ? resolved.q : undefined,
+        site: typeof resolved.site === 'string' ? resolved.site : undefined,
+        source: typeof resolved.source === 'string' ? resolved.source : undefined,
+        sort: typeof resolved.sort === 'string' ? resolved.sort : undefined
+    };
+
+    const tenantId = await getTenantIdStrict();
+    const sites = await listSites(tenantId);
 
     const breadcrumbItems = [
         { label: "Dashboard", href: "/dashboard", icon: "fa-gauge-high" },
@@ -141,12 +220,15 @@ export default async function DocumentsPage() {
                                 </div>
                                 <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3">
                                     <DocumentsStats tenantId={tenantId} />
-                                    <HoverScale scale={1.02}>
-                                        <a href="/dashboard/sources" className="btn btn-outline btn-sm rounded-lg">
-                                            <i className="fa-duotone fa-solid fa-database mr-2" aria-hidden />
-                                            Manage Sources
-                                        </a>
-                                    </HoverScale>
+                                    <div className="flex items-center gap-3">
+                                        <FilterControls filters={filters} sites={sites} />
+                                        <HoverScale scale={1.02}>
+                                            <a href="/dashboard/sources" className="btn btn-outline btn-sm rounded-lg">
+                                                <i className="fa-duotone fa-solid fa-database mr-2" aria-hidden />
+                                                Manage Sources
+                                            </a>
+                                        </HoverScale>
+                                    </div>
                                 </div>
                             </div>
                             <IngestForm />
@@ -154,20 +236,25 @@ export default async function DocumentsPage() {
                     </StaggerChild>
                 </StaggerContainer>
 
-                {/* Content with filters */}
+                {/* Content */}
                 <Suspense fallback={
                     <div className="space-y-4">
                         <TableSkeleton rows={5} columns={5} />
                     </div>
                 }>
-                    <DocumentsContent tenantId={tenantId} />
+                    <DocumentsContent tenantId={tenantId} filters={filters} />
                 </Suspense>
             </div>
         </AnimatedPage>
     )
 }
 
-async function DocumentsContent({ tenantId }: { tenantId: string }) {
-    const docs = await getDocs(tenantId);
-    return <DocumentsContentWrapper initialDocs={docs} tenantId={tenantId} />;
+async function DocumentsContent({ tenantId, filters }: { tenantId: string; filters: Filters }) {
+    const docs = await getDocs(tenantId, filters);
+
+    return (
+        <div className="space-y-6">
+            <SelectableDocumentsTable docs={docs} />
+        </div>
+    );
 }
