@@ -213,7 +213,7 @@ export default function FilterControls({
                             )}
                         </div>
                         
-                        {/* Action buttons */}
+                        {/* Action buttons - REQUIRED: Always include both Apply and Reset buttons */}
                         <div className="flex items-center justify-between pt-2 gap-2">
                             <button
                                 onClick={() => { applyFilters(local, false); setOpen(false); }}
@@ -464,7 +464,7 @@ You can customize the appearance of the filter button:
 
 2. **UX Considerations**
    - Show visual feedback when filters are active
-   - Provide a clear way to reset all filters
+   - ALWAYS include BOTH "Apply" and "Reset" buttons at the bottom of the filter panel
    - Position the dropdown appropriately (usually right-aligned for desktop)
    - Ensure the filter panel has appropriate z-index to appear above other content
 

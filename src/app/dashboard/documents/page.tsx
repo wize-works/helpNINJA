@@ -83,7 +83,7 @@ async function getDocs(tenantId: string, filters: Filters = {}) {
     const { where, params } = buildConditions(tenantId, filters);
     const orderBy = buildOrderBy(filters.sort);
 
-    let queryText = `
+    const queryText = `
         SELECT d.id, d.url, d.title, d.created_at, d.site_id,
                ts.name as site_name, ts.domain as site_domain,
                s.kind as source_kind, s.title as source_title,
