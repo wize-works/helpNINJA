@@ -29,11 +29,17 @@ type Site = {
     verified: boolean;
 };
 
-export default function SourcesTable() {
+interface Filters {
+    site?: string;
+    status?: string;
+    type?: string;
+    search?: string;
+}
+
+export default function SourcesTable({ initialFilters = {} }: { initialFilters?: Filters }) {
     const [sources, setSources] = useState<Source[]>([]);
     const [sites, setSites] = useState<Site[]>([]);
     const [loading, setLoading] = useState(true);
-    const [selectedSite, setSelectedSite] = useState<string>('');
     const [showAddForm, setShowAddForm] = useState(false);
     const [editingSource, setEditingSource] = useState<Source | null>(null);
     const [formData, setFormData] = useState<{
@@ -52,7 +58,12 @@ export default function SourcesTable() {
     const loadSources = useCallback(async () => {
         try {
             const params = new URLSearchParams();
-            if (selectedSite) params.set('siteId', selectedSite);
+
+            // Use initialFilters from page URL
+            if (initialFilters.site) params.set('siteId', initialFilters.site);
+            if (initialFilters.status) params.set('status', initialFilters.status);
+            if (initialFilters.type) params.set('kind', initialFilters.type);
+            if (initialFilters.search) params.set('search', initialFilters.search);
 
             const response = await fetch(`/api/sources?${params}`);
             if (response.ok) {
@@ -64,7 +75,7 @@ export default function SourcesTable() {
         } finally {
             setLoading(false);
         }
-    }, [selectedSite]);
+    }, [initialFilters]);
 
     const loadSites = useCallback(async () => {
         try {
@@ -204,34 +215,14 @@ export default function SourcesTable() {
 
     return (
         <div className="space-y-6">
-            {/* Header and Filters */}
-            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-                <div className="flex items-center gap-4">
-                    <div className="form-control">
-                        <label className="label">
-                            <span className="label-text">Filter by site</span>
-                        </label>
-                        <select
-                            className="select select-bordered"
-                            value={selectedSite}
-                            onChange={(e) => setSelectedSite(e.target.value)}
-                        >
-                            <option value="">All sites</option>
-                            {sites.map(site => (
-                                <option key={site.id} value={site.id}>
-                                    {site.name} ({site.domain})
-                                </option>
-                            ))}
-                        </select>
-                    </div>
-                </div>
-
+            {/* Header with Add Button */}
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-end gap-4">
                 <HoverScale scale={1.02}>
                     <button
                         className="btn btn-primary rounded-xl"
                         onClick={() => {
                             setEditingSource(null);
-                            setFormData({ kind: 'url', url: '', title: '', siteId: selectedSite });
+                            setFormData({ kind: 'url', url: '', title: '', siteId: initialFilters.site || '' });
                             setShowAddForm(true);
                         }}
                     >
@@ -412,7 +403,7 @@ export default function SourcesTable() {
                             </div>
                             <h3 className="text-xl font-semibold text-base-content mb-3">No sources yet</h3>
                             <p className="text-base-content/60 mb-6 max-w-md mx-auto">
-                                {selectedSite
+                                {initialFilters.site
                                     ? 'No content sources found for the selected site. Add your first source to start building the knowledge base.'
                                     : 'Add your first content source to start building your knowledge base and enable AI-powered support.'
                                 }
@@ -426,7 +417,7 @@ export default function SourcesTable() {
                                     className="btn btn-primary rounded-xl"
                                     onClick={() => {
                                         setEditingSource(null);
-                                        setFormData({ kind: 'url', url: '', title: '', siteId: selectedSite });
+                                        setFormData({ kind: 'url', url: '', title: '', siteId: initialFilters.site || '' });
                                         setShowAddForm(true);
                                     }}
                                 >

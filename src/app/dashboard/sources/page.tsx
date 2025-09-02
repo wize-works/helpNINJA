@@ -3,11 +3,57 @@ import SourcesTable from "@/components/sources-table";
 import { Breadcrumb } from "@/components/ui/breadcrumb";
 import { AnimatedPage, StaggerContainer, StaggerChild, HoverScale } from "@/components/ui/animated-page";
 import { query } from "@/lib/db";
+import { Suspense } from "react";
+import FilterControls from "./filter-controls";
 
 export const runtime = 'nodejs';
 
-async function getSourcesStats(tenantId: string) {
+interface Filters {
+    site?: string;
+    status?: string;
+    type?: string;
+    search?: string;
+}
+
+function buildConditions(tenantId: string, filters: Filters) {
+    const conditions: string[] = ['s.tenant_id = $1'];
+    const params: unknown[] = [tenantId];
+    let idx = 2;
+
+    if (filters.site) {
+        conditions.push(`s.site_id = $${idx}`);
+        params.push(filters.site);
+        idx++;
+    }
+
+    if (filters.status) {
+        conditions.push(`s.status = $${idx}`);
+        params.push(filters.status);
+        idx++;
+    }
+
+    if (filters.type) {
+        conditions.push(`s.kind = $${idx}`);
+        params.push(filters.type);
+        idx++;
+    }
+
+    if (filters.search) {
+        conditions.push(`(
+            s.url ILIKE $${idx} OR 
+            s.title ILIKE $${idx}
+        )`);
+        params.push(`%${filters.search}%`);
+        idx++;
+    }
+
+    return { where: conditions.join(' AND '), params };
+}
+
+async function getSourcesStats(tenantId: string, filters: Filters = {}) {
     try {
+        const { where, params } = buildConditions(tenantId, filters);
+
         const statsQuery = await query<{
             total_sources: number;
             total_documents: number;
@@ -21,8 +67,8 @@ async function getSourcesStats(tenantId: string) {
                 COUNT(DISTINCT CASE WHEN s.status = 'ready' THEN s.id END)::int as ready_count
             FROM public.sources s
             LEFT JOIN public.documents d ON d.source_id = s.id
-            WHERE s.tenant_id = $1`,
-            [tenantId]
+            WHERE ${where}`,
+            params
         );
 
         return statsQuery.rows[0] || {
@@ -42,9 +88,40 @@ async function getSourcesStats(tenantId: string) {
     }
 }
 
-export default async function SourcesPage() {
+async function listSites(tenantId: string) {
+    try {
+        const { rows } = await query<{ id: string; domain: string; name: string }>(
+            `SELECT id, domain, name 
+             FROM public.tenant_sites 
+             WHERE tenant_id=$1 
+             ORDER BY name ASC`,
+            [tenantId]
+        );
+        return rows;
+    } catch (error) {
+        console.error('Error fetching sites:', error);
+        return [];
+    }
+}
+
+export default async function SourcesPage({
+    searchParams
+}: {
+    searchParams: Promise<Record<string, string | string[] | undefined>>
+}) {
+    const resolved = await searchParams;
+    const filters: Filters = {
+        site: typeof resolved.site === 'string' ? resolved.site : undefined,
+        status: typeof resolved.status === 'string' ? resolved.status : undefined,
+        type: typeof resolved.type === 'string' ? resolved.type : undefined,
+        search: typeof resolved.search === 'string' ? resolved.search : undefined
+    };
+
     const tenantId = await getTenantIdStrict();
-    const stats = await getSourcesStats(tenantId);
+    const [stats, sites] = await Promise.all([
+        getSourcesStats(tenantId, filters),
+        listSites(tenantId)
+    ]);
 
     const breadcrumbItems = [
         { label: "Dashboard", href: "/dashboard", icon: "fa-gauge-high" },
@@ -73,6 +150,7 @@ export default async function SourcesPage() {
                                 </p>
                             </div>
                             <div className="flex items-center gap-3">
+                                <FilterControls filters={filters} sites={sites} />
                                 <HoverScale scale={1.02}>
                                     <a href="/dashboard/documents" className="btn btn-outline btn-secondary btn-sm rounded-lg">
                                         <i className="fa-duotone fa-solid fa-file-lines mr-2" aria-hidden />
@@ -158,7 +236,7 @@ export default async function SourcesPage() {
                 {/* Content */}
                 <StaggerContainer>
                     <StaggerChild>
-                        <SourcesTable />
+                        <SourcesTable initialFilters={filters} />
                     </StaggerChild>
                 </StaggerContainer>
 

@@ -8,7 +8,12 @@ export async function GET(req: NextRequest) {
     try {
         const tenantId = await getTenantIdStrict();
         const { searchParams } = new URL(req.url);
+
+        // Extract filter parameters
         const siteId = searchParams.get('siteId');
+        const status = searchParams.get('status');
+        const kind = searchParams.get('kind');
+        const search = searchParams.get('search');
 
         let queryText = `
             SELECT s.*, 
@@ -24,10 +29,31 @@ export async function GET(req: NextRequest) {
         `;
 
         const params: unknown[] = [tenantId];
+        let paramIndex = 2;
 
+        // Apply filters if provided
         if (siteId) {
-            queryText += ' AND s.site_id = $2';
+            queryText += ` AND s.site_id = $${paramIndex}`;
             params.push(siteId);
+            paramIndex++;
+        }
+
+        if (status) {
+            queryText += ` AND s.status = $${paramIndex}`;
+            params.push(status);
+            paramIndex++;
+        }
+
+        if (kind) {
+            queryText += ` AND s.kind = $${paramIndex}`;
+            params.push(kind);
+            paramIndex++;
+        }
+
+        if (search) {
+            queryText += ` AND (s.url ILIKE $${paramIndex} OR s.title ILIKE $${paramIndex})`;
+            params.push(`%${search}%`);
+            paramIndex++;
         }
 
         queryText += `
