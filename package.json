@@ -6,7 +6,11 @@
         "dev": "next dev --turbopack -p 3001",
         "build": "next build",
         "start": "next start",
-        "lint": "next lint"
+        "lint": "next lint",
+        "screenshots": "node scripts/capture-screenshots.mjs",
+        "screenshots:debug": "node scripts/capture-screenshots-debug.mjs",
+        "screenshots:test": "playwright test tests/screenshot-capture.spec.ts",
+        "screenshots:install": "playwright install chromium"
     },
     "dependencies": {
         "@clerk/elements": "^0.23.54",

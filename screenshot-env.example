@@ -1,0 +1,9 @@
+# Screenshot Capture Configuration
+# Copy this file to .env and fill in your actual credentials
+
+# Your helpNINJA account credentials for screenshot capture
+SCREENSHOT_EMAIL=your-email@example.com
+SCREENSHOT_PASSWORD=your-password
+
+# Note: These credentials are only used for automated screenshot capture
+# and are not stored or logged anywhere in the screenshots themselves.
