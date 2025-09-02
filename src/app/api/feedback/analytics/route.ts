@@ -11,7 +11,7 @@ export async function GET(req: NextRequest) {
     try {
         const tenantId = await getTenantIdStrict();
         const url = new URL(req.url);
-        
+
         // Parse optional filters
         const siteId = url.searchParams.get('siteId');
         const days = parseInt(url.searchParams.get('days') || '30');
@@ -58,9 +58,10 @@ export async function GET(req: NextRequest) {
         const typeQuery = `
             SELECT 
                 f.type,
-                COUNT(*) as count,
-                COUNT(*) FILTER (WHERE f.status = 'completed') as completed,
-                COUNT(*) FILTER (WHERE f.priority IN ('high', 'urgent')) as high_priority
+                COUNT(*)::int as count,
+                COUNT(*) FILTER (WHERE f.status = 'completed')::int as completed,
+                COUNT(*) FILTER (WHERE f.priority IN ('high', 'urgent'))::int as high_priority,
+                ROUND(COUNT(*) * 100.0 / SUM(COUNT(*)) OVER(), 2)::int as percentage
             FROM public.feedback f
             ${joinClause}
             WHERE ${whereClause}

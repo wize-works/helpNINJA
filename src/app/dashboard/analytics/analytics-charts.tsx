@@ -78,17 +78,17 @@ export function ConversationTrendsChart({ data }: { data: ConversationTrendsData
                             <stop offset="95%" stopColor={colors.warning} stopOpacity={0} />
                         </linearGradient>
                     </defs>
-                    <CartesianGrid strokeDasharray="3 3" stroke={colors.neutral} opacity={0.2} />
+                    <CartesianGrid strokeDasharray="3 3" stroke={colors.baseContent} opacity={0.2} />
                     <XAxis
                         dataKey="date"
                         axisLine={false}
                         tickLine={false}
-                        tick={{ fontSize: 12, fill: colors.neutral, opacity: 0.7 }}
+                        tick={{ fontSize: 12, fill: colors.baseContent, opacity: 0.7 }}
                     />
                     <YAxis
                         axisLine={false}
                         tickLine={false}
-                        tick={{ fontSize: 12, fill: colors.neutral, opacity: 0.7 }}
+                        tick={{ fontSize: 12, fill: colors.baseContent, opacity: 0.7 }}
                     />
                     <Tooltip content={<CustomTooltip />} />
                     <Area
@@ -164,18 +164,18 @@ export function ResponseTimeChart({ data }: { data: ResponseTimeData[] }) {
         <div className="h-64">
             <ResponsiveContainer width="100%" height="100%">
                 <BarChart data={formattedData} margin={{ top: 10, right: 30, left: 0, bottom: 0 }}>
-                    <CartesianGrid strokeDasharray="3 3" stroke={colors.neutral} opacity={0.2} />
+                    <CartesianGrid strokeDasharray="3 3" stroke={colors.baseContent} opacity={0.2} />
                     <XAxis
                         dataKey="hour"
                         axisLine={false}
                         tickLine={false}
-                        tick={{ fontSize: 12, fill: colors.neutral, opacity: 0.7 }}
+                        tick={{ fontSize: 12, fill: colors.baseContent, opacity: 0.7 }}
                         interval={3}
                     />
                     <YAxis
                         axisLine={false}
                         tickLine={false}
-                        tick={{ fontSize: 12, fill: colors.neutral, opacity: 0.7 }}
+                        tick={{ fontSize: 12, fill: colors.baseContent, opacity: 0.7 }}
                     />
                     <Tooltip content={<CustomTooltip />} />
                     <Bar
@@ -207,16 +207,16 @@ export function TopSourcesChart({ data }: { data: TopSourcesData[] }) {
                     layout="horizontal"
                     margin={{ top: 20, right: 30, left: 20, bottom: 5 }}
                 >
-                    <CartesianGrid strokeDasharray="3 3" stroke="#E2E8F0" />
+                    <CartesianGrid strokeDasharray="3 3" stroke={colors.baseContent} />
                     <XAxis
                         type="number"
-                        stroke="#64748B"
+                        stroke={colors.baseContent}
                         fontSize={12}
                     />
                     <YAxis
                         type="category"
                         dataKey="source"
-                        stroke="#64748B"
+                        stroke={colors.baseContent}
                         fontSize={12}
                         width={100}
                     />

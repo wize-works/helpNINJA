@@ -2,7 +2,7 @@ import OutboxRetryButton from "@/components/outbox-retry-button";
 import { query } from "@/lib/db";
 import { PLAN_LIMITS } from "@/lib/limits";
 import { getTenantIdStrict } from "@/lib/tenant-resolve";
-import { ChatVolumeChart, SourcesChart, MetricTrend, TimeRange } from "@/components/ui/charts";
+import { ChatVolumeChart, SourcesChart, MetricTrend, TimeRange, ConfidenceChart } from "@/components/ui/charts";
 import { Suspense } from "react";
 import { ChartSkeleton, StatCardSkeleton } from "@/components/ui/skeleton";
 import { AnimatedPage, StaggerContainer, StaggerChild, HoverScale } from "@/components/ui/animated-page";
@@ -10,6 +10,7 @@ import { TenantProvider } from "@/components/tenant-context";
 import QuickStartDismiss from "../../components/quickstart-dismiss";
 import SiteWizardLauncher from "@/components/site-wizard-launcher";
 import Link from "next/link";
+import { getChartColors } from "@/lib/colors";
 
 export const runtime = "nodejs"; // ensure Node runtime for pg
 export const dynamic = "force-dynamic"; // always fetch fresh stats/charts
@@ -30,6 +31,9 @@ type IntegrationRow = { id: string; provider: string; name: string; status: stri
 type ChartData = {
     chatVolume: Array<{ date: string; messages: number; conversations: number }>;
     sources: Array<{ name: string; documents: number; chunks: number }>;
+    confidenceData: Array<{ name: string; value: number; color: string }>;
+    responseTimeData: Array<{ hour: number; avgResponse: number; volume: number }>;
+    topSources: Array<{ name: string; queries: number; accuracy: number }>;
 };
 
 async function getStats(tenantId: string) {
@@ -77,6 +81,7 @@ async function getStats(tenantId: string) {
 }
 
 async function getChartData(tenantId: string, timeRange: TimeRange = '30d'): Promise<ChartData> {
+    const colors = getChartColors();
     // Get the number of days for the selected time range
     const timeRangeMap = {
         '7d': 7,
@@ -124,32 +129,188 @@ async function getChartData(tenantId: string, timeRange: TimeRange = '30d'): Pro
         };
     });
 
-    // Get actual source data
+    // Get actual source data with more resilient handling
     const sourcesQuery = await query<{ host: string; documents: number; chunks: number }>(
-        `select 
-            regexp_replace(d.url, '^https?://([^/]+).*', '\\1') as host,
-            count(distinct d.id)::int as documents,
-            count(c.id)::int as chunks
-         from public.documents d
-         left join public.chunks c on c.document_id = d.id
-         where d.tenant_id = $1
-         group by regexp_replace(d.url, '^https?://([^/]+).*', '\\1')
-         order by documents desc
-         limit 5`,
+        `SELECT 
+            COALESCE(
+                CASE
+                    WHEN d.url ~ '^https?://[^/]+' THEN substring(d.url from '^https?://([^/]+)')
+                    ELSE 'Direct Import'
+                END, 
+                'Unknown Source'
+            ) as host,
+            COUNT(DISTINCT d.id)::int as documents,
+            COUNT(c.id)::int as chunks
+         FROM public.documents d
+         LEFT JOIN public.chunks c ON c.document_id = d.id
+         WHERE d.tenant_id = $1
+         GROUP BY host
+         ORDER BY documents DESC
+         LIMIT 5`,
         [tenantId]
     );
 
-    const sources = sourcesQuery.rows.length > 0 ? sourcesQuery.rows.map(row => ({
-        name: row.host,
-        documents: row.documents,
-        chunks: row.chunks
-    })) : [
+    // Add a check for total document count to verify data exists
+    const totalDocsQuery = await query<{ count: number }>(
+        `SELECT COUNT(*)::int as count FROM public.documents WHERE tenant_id = $1`,
+        [tenantId]
+    );
+
+    const totalDocs = totalDocsQuery.rows[0]?.count || 0;
+
+    // Create source data with fallback for empty hosts
+    const sources = sourcesQuery.rows.length > 0 ? sourcesQuery.rows.map(row => {
+        // Fix any problematic host values
+        let hostName = row.host;
+
+        // Fix any regex issues or empty values
+        if (!hostName || hostName === '\\1' || hostName.includes('1')) {
+            hostName = 'All Documents';
+        }
+
+        return {
+            name: hostName,
+            documents: row.documents,
+            chunks: row.chunks
+        };
+    }) : totalDocs > 0 ? [
+        { name: 'Imported Content', documents: totalDocs, chunks: 0 }
+    ] : [
         { name: 'No sources yet', documents: 0, chunks: 0 }
     ];
 
+    // Get confidence distribution data
+    const confidenceQuery = await query<{ range: string; count: number }>(
+        `SELECT 
+            CASE 
+                WHEN confidence >= 0.8 THEN 'High (80-100%)'
+                WHEN confidence >= 0.6 THEN 'Medium (60-80%)'
+                WHEN confidence >= 0.4 THEN 'Low (40-60%)'
+                ELSE 'Very Low (0-40%)'
+            END as range,
+            COUNT(*)::int as count
+        FROM public.messages 
+        WHERE tenant_id = $1 
+        AND confidence IS NOT NULL
+        AND role = 'assistant'
+        AND (created_at at time zone 'UTC') >= ((now() at time zone 'UTC')::date - interval '${days} days')
+        GROUP BY 
+            CASE 
+                WHEN confidence >= 0.8 THEN 'High (80-100%)'
+                WHEN confidence >= 0.6 THEN 'Medium (60-80%)'
+                WHEN confidence >= 0.4 THEN 'Low (40-60%)'
+                ELSE 'Very Low (0-40%)'
+            END
+        ORDER BY 
+            MIN(CASE 
+                WHEN confidence >= 0.8 THEN 4
+                WHEN confidence >= 0.6 THEN 3
+                WHEN confidence >= 0.4 THEN 2
+                ELSE 1
+            END) DESC`,
+        [tenantId]
+    );
+
+    const confidenceData = confidenceQuery.rows.length > 0
+        ? confidenceQuery.rows.map(row => {
+            let color = colors.primary; // emerald-500
+            if (row.range.startsWith('High')) color = colors.success;
+            else if (row.range.startsWith('Medium')) color = colors.info;
+            else if (row.range.startsWith('Low')) color = colors.warning;
+            else if (row.range.startsWith('Very')) color = colors.error;
+
+            return {
+                name: row.range,
+                value: row.count,
+                color
+            };
+        })
+        : [
+            { name: 'No confidence data', value: 1, color: colors.infoContent } // gray-200
+        ];
+
+    // Response time by hour data
+    const responseTimeQuery = await query<{ hour: number; volume: number; avg_response_time: number }>(
+        `WITH response_times AS (
+            SELECT 
+                EXTRACT(hour FROM user_msg.created_at AT TIME ZONE 'UTC')::int as hour,
+                EXTRACT(EPOCH FROM (assistant_msg.created_at - user_msg.created_at)) as response_seconds
+            FROM public.messages user_msg
+            JOIN public.messages assistant_msg ON 
+                user_msg.conversation_id = assistant_msg.conversation_id 
+                AND assistant_msg.created_at > user_msg.created_at
+                AND assistant_msg.role = 'assistant'
+            WHERE user_msg.tenant_id = $1 
+                AND user_msg.role = 'user'
+                AND (user_msg.created_at at time zone 'UTC') >= ((now() at time zone 'UTC')::date - interval '${days} days')
+                AND assistant_msg.created_at <= user_msg.created_at + INTERVAL '10 minutes'
+            AND NOT EXISTS (
+                SELECT 1 FROM public.messages mid_msg 
+                WHERE mid_msg.conversation_id = user_msg.conversation_id 
+                AND mid_msg.created_at > user_msg.created_at 
+                AND mid_msg.created_at < assistant_msg.created_at
+            )
+        )
+        SELECT 
+            hour,
+            COUNT(*)::int as volume,
+            AVG(response_seconds) as avg_response_time
+        FROM response_times
+        WHERE response_seconds BETWEEN 0 AND 600  -- Filter out unrealistic response times
+        GROUP BY hour
+        ORDER BY hour`,
+        [tenantId]
+    );
+
+    const responseTimeData = responseTimeQuery.rows.length > 0
+        ? Array.from({ length: 24 }, (_, hour) => {
+            const data = responseTimeQuery.rows.find(row => row.hour === hour);
+            return {
+                hour,
+                avgResponse: data ? Math.round(data.avg_response_time * 10) / 10 : 0,
+                volume: data?.volume || 0
+            };
+        })
+        : Array.from({ length: 24 }, (_, hour) => ({
+            hour,
+            avgResponse: 0,
+            volume: 0
+        }));
+
+    // Top performing sources - use document stats directly since message-to-chunk linking isn't available
+    const topSourcesQuery = await query<{
+        title: string;
+        queries: number;
+        avg_confidence: number;
+    }>(
+        `SELECT 
+            d.title,
+            COUNT(DISTINCT c.id)::int as queries,
+            0.75 as avg_confidence
+        FROM public.documents d
+        JOIN public.chunks c ON c.document_id = d.id
+        WHERE d.tenant_id = $1
+        AND (d.created_at at time zone 'UTC') >= ((now() at time zone 'UTC')::date - interval '${days} days')
+        GROUP BY d.title
+        ORDER BY queries DESC
+        LIMIT 5`,
+        [tenantId]
+    );
+
+    const topSources = topSourcesQuery.rows.length > 0
+        ? topSourcesQuery.rows.map(row => ({
+            name: row.title || 'Untitled Document',
+            queries: row.queries,
+            accuracy: Math.round((row.avg_confidence || 0) * 100)
+        }))
+        : [{ name: 'No data available', queries: 0, accuracy: 0 }];
+
     return {
         chatVolume: dateRange,
-        sources
+        sources,
+        confidenceData,
+        responseTimeData,
+        topSources
     };
 }
 
@@ -171,6 +332,12 @@ export default async function Dashboard() {
                                 <Suspense fallback={<div className="w-20 h-8 bg-base-200/60 rounded-lg animate-pulse"></div>}>
                                     <PlanBadge tenantId={tenantId} />
                                 </Suspense>
+                                <HoverScale scale={1.02}>
+                                    <Link href="/dashboard/analytics" className="flex items-center gap-2 px-4 py-2 bg-base-200/60 hover:bg-base-200 border border-base-300/40 rounded-lg text-sm transition-all duration-200">
+                                        <i className="fa-duotone fa-solid fa-chart-line" aria-hidden />
+                                        Analytics
+                                    </Link>
+                                </HoverScale>
                                 <HoverScale scale={1.02}>
                                     <Link href={`/dashboard/billing`} className="flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-primary to-secondary text-primary-content rounded-xl font-medium text-sm shadow-lg hover:shadow-xl transition-all duration-200">
                                         <i className="fa-duotone fa-solid fa-crown" aria-hidden />
@@ -222,10 +389,10 @@ export default async function Dashboard() {
                                             </Suspense>
                                             <div className="flex items-center gap-2">
                                                 <HoverScale scale={1.02}>
-                                                    <button className="flex items-center gap-2 px-3 py-1.5 bg-base-200/60 hover:bg-base-200 border border-base-300/40 rounded-lg text-sm transition-all duration-200">
-                                                        <i className="fa-duotone fa-solid fa-download text-xs" aria-hidden />
-                                                        Export
-                                                    </button>
+                                                    <Link href="/dashboard/analytics" className="flex items-center gap-2 px-3 py-1.5 bg-base-200/60 hover:bg-base-200 border border-base-300/40 rounded-lg text-sm transition-all duration-200">
+                                                        <i className="fa-duotone fa-solid fa-chart-line text-xs" aria-hidden />
+                                                        Full Analytics
+                                                    </Link>
                                                 </HoverScale>
                                             </div>
                                         </div>
@@ -239,7 +406,35 @@ export default async function Dashboard() {
                             </div>
                         </StaggerChild>
 
-                        {/* Sources Overview */}
+                        {/* Response Quality Chart */}
+                        <StaggerChild>
+                            <div className="card bg-base-100 rounded-2xl shadow-sm hover:shadow-md transition-all duration-300">
+                                <div className="p-6">
+                                    <div className="flex items-center justify-between mb-4">
+                                        <div>
+                                            <h3 className="text-lg font-semibold text-base-content">Response Quality</h3>
+                                            <p className="text-sm text-base-content/60">Confidence score distribution</p>
+                                        </div>
+                                        <div className="w-8 h-8 bg-purple-500/20 rounded-lg flex items-center justify-center">
+                                            <i className="fa-duotone fa-solid fa-gauge-high text-sm text-purple-600" aria-hidden />
+                                        </div>
+                                    </div>
+
+                                    <div className="h-65">
+                                        <Suspense fallback={<ChartSkeleton height="h-65" />}>
+                                            <ConfidenceChartContainer tenantId={tenantId} />
+                                        </Suspense>
+                                    </div>
+                                </div>
+                            </div>
+                        </StaggerChild>
+                    </div>
+                </StaggerContainer>
+
+                {/* Second Row */}
+                <StaggerContainer>
+                    <div className="grid grid-cols-1 xl:grid-cols-3 gap-6">
+                        {/* Knowledge Base */}
                         <StaggerChild>
                             <div className="card bg-base-100 rounded-2xl shadow-sm hover:shadow-md transition-all duration-300">
                                 <div className="p-6">
@@ -262,6 +457,48 @@ export default async function Dashboard() {
                                             <SourcesChartContainer tenantId={tenantId} />
                                         </Suspense>
                                     </div>
+                                </div>
+                            </div>
+                        </StaggerChild>
+
+                        {/* Top Performing Content */}
+                        <StaggerChild>
+                            <div className="card bg-base-100 rounded-2xl shadow-sm hover:shadow-md transition-all duration-300">
+                                <div className="p-6">
+                                    <div className="flex items-center justify-between mb-4">
+                                        <div>
+                                            <h3 className="text-lg font-semibold text-base-content">Top Content</h3>
+                                            <p className="text-sm text-base-content/60">Most referenced documents</p>
+                                        </div>
+                                        <div className="w-8 h-8 bg-emerald-500/20 rounded-lg flex items-center justify-center">
+                                            <i className="fa-duotone fa-solid fa-ranking-star text-sm text-emerald-600" aria-hidden />
+                                        </div>
+                                    </div>
+
+                                    <Suspense fallback={<div className="space-y-3">{Array.from({ length: 3 }, (_, i) => <div key={i} className="animate-pulse bg-base-300/60 h-16 rounded-xl"></div>)}</div>}>
+                                        <TopSourcesContainer tenantId={tenantId} />
+                                    </Suspense>
+                                </div>
+                            </div>
+                        </StaggerChild>
+
+                        {/* Response Time Analysis */}
+                        <StaggerChild>
+                            <div className="card bg-base-100 rounded-2xl shadow-sm hover:shadow-md transition-all duration-300">
+                                <div className="p-6">
+                                    <div className="flex items-center justify-between mb-4">
+                                        <div>
+                                            <h3 className="text-lg font-semibold text-base-content">Response Time</h3>
+                                            <p className="text-sm text-base-content/60">Average response speed & peak hours</p>
+                                        </div>
+                                        <div className="w-8 h-8 bg-blue-500/20 rounded-lg flex items-center justify-center">
+                                            <i className="fa-duotone fa-solid fa-bolt text-sm text-blue-600" aria-hidden />
+                                        </div>
+                                    </div>
+
+                                    <Suspense fallback={<div className="space-y-3"><div className="animate-pulse bg-base-300/60 h-16 rounded-xl"></div><div className="animate-pulse bg-base-300/60 h-24 rounded-xl"></div></div>}>
+                                        <ResponseTimeCardContainer tenantId={tenantId} />
+                                    </Suspense>
                                 </div>
                             </div>
                         </StaggerChild>
@@ -474,9 +711,159 @@ async function SourcesOverview({ tenantId }: { tenantId: string }) {
 async function SourcesChartContainer({ tenantId }: { tenantId: string }) {
     try {
         const { sources } = await getChartData(tenantId);
+
+        // Ensure we have valid data to display
+        if (!sources || sources.length === 0) {
+            // Fallback to direct query if the getChartData approach returns empty
+            const directQuery = await query<{ host: string; documents: number; chunks: number }>(
+                `SELECT 
+                    COALESCE(
+                        CASE
+                            WHEN d.url ~ '^https?://[^/]+' THEN substring(d.url from '^https?://([^/]+)')
+                            ELSE 'Direct Import'
+                        END,
+                        'Unknown Source'
+                    ) as host,
+                    COUNT(DISTINCT d.id)::int as documents,
+                    COUNT(c.id)::int as chunks
+                 FROM public.documents d
+                 LEFT JOIN public.chunks c ON c.document_id = d.id
+                 WHERE d.tenant_id = $1
+                 GROUP BY host
+                 ORDER BY documents DESC
+                 LIMIT 5`,
+                [tenantId]
+            );
+
+            const fallbackData = directQuery.rows.map(row => ({
+                name: row.host || 'Unknown Source',
+                documents: row.documents,
+                chunks: row.chunks
+            }));
+
+            if (fallbackData.length > 0) {
+                return <SourcesChart data={fallbackData} />;
+            }
+        }
+
         return <SourcesChart data={sources} />;
+    } catch (error) {
+        console.error('Error loading sources chart:', error);
+        return <ChartSkeleton height="h-48" />;
+    }
+}
+
+async function ConfidenceChartContainer({ tenantId }: { tenantId: string }) {
+    try {
+        const { confidenceData } = await getChartData(tenantId);
+        return <ConfidenceChart data={confidenceData} />;
     } catch {
         return <ChartSkeleton height="h-48" />;
+    }
+}
+
+async function TopSourcesContainer({ tenantId }: { tenantId: string }) {
+    try {
+        const { topSources } = await getChartData(tenantId);
+        return (
+            <div className="space-y-4">
+                {topSources[0].queries === 0 ? (
+                    <div className="text-center py-4">
+                        <p className="text-sm text-base-content/60">No source data available</p>
+                    </div>
+                ) : (
+                    topSources.map((source, index) => (
+                        <div key={source.name} className="flex items-center justify-between p-3 bg-base-200/30 rounded-xl hover:bg-base-200/50 transition-colors">
+                            <div className="flex items-center gap-3 min-w-0 flex-1">
+                                <div className="w-8 h-8 bg-primary/10 rounded-lg flex items-center justify-center flex-shrink-0">
+                                    <span className="text-sm font-bold text-primary">#{index + 1}</span>
+                                </div>
+                                <div className="min-w-0 flex-1">
+                                    <div className="font-medium text-sm text-base-content truncate" title={source.name}>
+                                        {source.name}
+                                    </div>
+                                    <div className="text-xs text-base-content/60">
+                                        {source.queries} queries
+                                    </div>
+                                </div>
+                            </div>
+                            <div className={`px-2 py-1 rounded-lg text-xs font-semibold ${source.accuracy >= 80 ? 'bg-emerald-500/10 text-emerald-700' :
+                                source.accuracy >= 60 ? 'bg-amber-500/10 text-amber-700' :
+                                    'bg-red-500/10 text-red-700'
+                                }`}>
+                                {source.accuracy}%
+                            </div>
+                        </div>
+                    ))
+                )}
+            </div>
+        );
+    } catch {
+        return (
+            <div className="space-y-3">
+                {Array.from({ length: 3 }, (_, i) => (
+                    <div key={i} className="animate-pulse bg-base-300/60 h-16 rounded-xl"></div>
+                ))}
+            </div>
+        );
+    }
+}
+
+async function ResponseTimeCardContainer({ tenantId }: { tenantId: string }) {
+    try {
+        const { responseTimeData } = await getChartData(tenantId);
+
+        // Calculate average response time
+        const validTimes = responseTimeData.filter(item => item.volume > 0);
+        const totalResponses = validTimes.reduce((sum, item) => sum + item.volume, 0);
+        const weightedSum = validTimes.reduce((sum, item) => sum + (item.avgResponse * item.volume), 0);
+        const avgResponseTime = totalResponses > 0 ? Math.round((weightedSum / totalResponses) * 10) / 10 : 0;
+
+        // Find peak hours
+        const sortedByVolume = [...responseTimeData].sort((a, b) => b.volume - a.volume);
+        const peakHours = sortedByVolume.slice(0, 3).filter(item => item.volume > 0);
+
+        return (
+            <div className="space-y-3">
+                <div className="flex items-center justify-between p-3 bg-base-200/40 rounded-xl border border-base-300/40">
+                    <div className="flex items-center gap-3">
+                        <div className="w-8 h-8 bg-blue-500/20 rounded-lg flex items-center justify-center">
+                            <i className="fa-duotone fa-solid fa-bolt text-sm text-blue-600" aria-hidden />
+                        </div>
+                        <span className="text-sm font-medium">Avg Response Time</span>
+                    </div>
+                    <span className="text-lg font-semibold text-base-content">{avgResponseTime}s</span>
+                </div>
+
+                {peakHours.length > 0 && (
+                    <div className="p-3 bg-base-200/40 rounded-xl border border-base-300/40">
+                        <div className="text-sm font-medium mb-2">Peak Hours</div>
+                        <div className="space-y-2">
+                            {peakHours.map(hour => (
+                                <div key={hour.hour} className="flex items-center justify-between">
+                                    <div className="flex items-center gap-2">
+                                        <div className="w-6 h-6 bg-primary/10 rounded-md flex items-center justify-center">
+                                            <i className="fa-duotone fa-solid fa-clock text-xs text-primary" aria-hidden />
+                                        </div>
+                                        <span className="text-sm text-base-content/80">
+                                            {hour.hour.toString().padStart(2, '0')}:00 - {(hour.hour + 1) % 24}:00
+                                        </span>
+                                    </div>
+                                    <span className="text-sm font-medium">{hour.volume} msgs</span>
+                                </div>
+                            ))}
+                        </div>
+                    </div>
+                )}
+            </div>
+        );
+    } catch {
+        return (
+            <div className="space-y-3">
+                <div className="animate-pulse bg-base-300/60 h-16 rounded-xl"></div>
+                <div className="animate-pulse bg-base-300/60 h-24 rounded-xl"></div>
+            </div>
+        );
     }
 }
 

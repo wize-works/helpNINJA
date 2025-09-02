@@ -1,7 +1,8 @@
 "use client";
 
 import { useState, useEffect } from 'react';
-import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, BarChart, Bar, PieChart, Pie, Cell } from 'recharts';
+import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, BarChart, Bar, PieChart, Pie, Cell, Legend } from 'recharts';
+import { getChartColors } from '@/lib/colors';
 
 interface FeedbackAnalyticsData {
     dailyVolume: Array<{
@@ -35,6 +36,7 @@ interface FeedbackAnalyticsProps {
 }
 
 export function FeedbackAnalytics({ tenantId }: FeedbackAnalyticsProps) {
+    const colors = getChartColors();
     const [data, setData] = useState<FeedbackAnalyticsData>({
         dailyVolume: [],
         typeDistribution: [],
@@ -47,16 +49,16 @@ export function FeedbackAnalytics({ tenantId }: FeedbackAnalyticsProps) {
         async function fetchAnalytics() {
             try {
                 const response = await fetch('/api/feedback/analytics');
-                            if (response.ok) {
-                const analyticsData = await response.json();
-                // Ensure data structure is properly initialized
-                setData({
-                    dailyVolume: analyticsData.dailyVolume || [],
-                    typeDistribution: analyticsData.typeDistribution || [],
-                    statusDistribution: analyticsData.statusDistribution || [],
-                    resolutionTimes: analyticsData.resolutionTimes || []
-                });
-            }
+                if (response.ok) {
+                    const analyticsData = await response.json();
+                    // Ensure data structure is properly initialized
+                    setData({
+                        dailyVolume: analyticsData.dailyVolume || [],
+                        typeDistribution: analyticsData.typeDistribution || [],
+                        statusDistribution: analyticsData.statusDistribution || [],
+                        resolutionTimes: analyticsData.resolutionTimes || []
+                    });
+                }
             } catch (error) {
                 console.error('Error fetching feedback analytics:', error);
             } finally {
@@ -109,7 +111,7 @@ export function FeedbackAnalytics({ tenantId }: FeedbackAnalyticsProps) {
     };
 
     // Colors for charts
-    const colors = ['#3b82f6', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6', '#06b6d4'];
+    const typeColors = [colors.primary, colors.accent, colors.success, colors.warning, colors.error, colors.neutral];
     const statusColors: Record<string, string> = {
         open: '#3b82f6',
         in_review: '#f59e0b',
@@ -143,45 +145,56 @@ export function FeedbackAnalytics({ tenantId }: FeedbackAnalyticsProps) {
                     <div className="h-64">
                         <ResponsiveContainer width="100%" height="100%">
                             <AreaChart data={data.dailyVolume}>
-                                <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
-                                <XAxis 
-                                    dataKey="date" 
+                                <CartesianGrid strokeDasharray="3 3" stroke={colors.neutralContent} opacity={0.3} />
+                                <XAxis
+                                    dataKey="date"
                                     tickFormatter={(value) => formatDate(value)}
-                                    stroke="#6b7280"
+                                    stroke={colors.neutralContent}
+                                    tick={{ fill: colors.neutralContent, opacity: 0.7 }}
+                                    tickLine={false}
+                                    axisLine={false}
                                     fontSize={12}
                                 />
-                                <YAxis stroke="#6b7280" fontSize={12} />
-                                <Tooltip 
+                                <YAxis
+                                    stroke={colors.neutralContent}
+                                    tick={{ fill: colors.neutralContent, opacity: 0.7 }}
+                                    tickLine={false}
+                                    axisLine={false}
+                                    fontSize={12} />
+                                <Tooltip
                                     labelFormatter={(value) => formatDate(value)}
                                     contentStyle={{
-                                        backgroundColor: '#ffffff',
-                                        border: '1px solid #e5e7eb',
+                                        backgroundColor: colors.base100,
+                                        border: `1px solid ${colors.neutral}`,
                                         borderRadius: '8px'
                                     }}
                                 />
                                 <Area
                                     type="monotone"
                                     dataKey="feedback_count"
-                                    stroke="#3b82f6"
-                                    fill="#3b82f6"
+                                    stroke={colors.primary}
+                                    fill={colors.primary}
                                     fillOpacity={0.2}
                                     name="Total Feedback"
+                                    connectNulls={true}
                                 />
                                 <Area
                                     type="monotone"
                                     dataKey="bug_count"
-                                    stroke="#ef4444"
-                                    fill="#ef4444"
+                                    stroke={colors.error}
+                                    fill={colors.error}
                                     fillOpacity={0.2}
                                     name="Bug Reports"
+                                    connectNulls={true}
                                 />
                                 <Area
                                     type="monotone"
                                     dataKey="feature_request_count"
-                                    stroke="#10b981"
-                                    fill="#10b981"
+                                    stroke={colors.success}
+                                    fill={colors.success}
                                     fillOpacity={0.2}
                                     name="Feature Requests"
+                                    connectNulls={true}
                                 />
                             </AreaChart>
                         </ResponsiveContainer>
@@ -191,8 +204,8 @@ export function FeedbackAnalytics({ tenantId }: FeedbackAnalyticsProps) {
 
             {/* Type Distribution */}
             {data.typeDistribution.length > 0 && (
-                <div className="bg-base-50 rounded-xl p-4">
-                    <h3 className="text-lg font-semibold text-base-content mb-4">Feedback by Type</h3>
+                <div className="bg-base-100 text-base-content rounded-xl p-4">
+                    <h3 className="text-lg font-semibold mb-4">Feedback by Type</h3>
                     <div className="h-64">
                         <ResponsiveContainer width="100%" height="100%">
                             <PieChart>
@@ -202,22 +215,29 @@ export function FeedbackAnalytics({ tenantId }: FeedbackAnalyticsProps) {
                                     cy="50%"
                                     labelLine={false}
                                     label={({ type, percentage }) => `${formatType(type)}: ${percentage || 0}%`}
-                                    outerRadius={80}
-                                    fill="#8884d8"
+                                    innerRadius={50}
+                                    outerRadius={90}
+                                    paddingAngle={3}
                                     dataKey="count"
+                                    nameKey="type"
+                                    strokeWidth={1}
+                                    stroke={colors.base300}
                                 >
-                                    {data.typeDistribution.map((_, index) => (
-                                        <Cell key={`cell-${index}`} fill={colors[index % colors.length]} />
+                                    {data.typeDistribution.map((entry, index) => (
+                                        <Cell key={`cell-${index}`} fill={`${typeColors[index % typeColors.length]}`} />
                                     ))}
                                 </Pie>
-                                <Tooltip 
+                                <Tooltip
                                     formatter={(value) => [value, 'Count']}
-                                    labelFormatter={(label) => formatType(label)}
+                                    labelFormatter={(type) => formatType(type)}
                                     contentStyle={{
-                                        backgroundColor: '#ffffff',
-                                        border: '1px solid #e5e7eb',
+                                        color: colors.primary,
+                                        backgroundColor: colors.base300,
+                                        border: `1px solid ${colors.base300}`,
                                         borderRadius: '8px'
                                     }}
+                                    itemStyle={{ color: colors.baseContent }}
+
                                 />
                             </PieChart>
                         </ResponsiveContainer>
@@ -232,32 +252,37 @@ export function FeedbackAnalytics({ tenantId }: FeedbackAnalyticsProps) {
                     <div className="h-64">
                         <ResponsiveContainer width="100%" height="100%">
                             <BarChart data={data.statusDistribution} layout="horizontal">
-                                <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
-                                <XAxis type="number" stroke="#6b7280" fontSize={12} />
-                                <YAxis 
-                                    type="category" 
-                                    dataKey="status" 
+                                <CartesianGrid strokeDasharray="3 3" stroke={colors.baseContent} />
+                                <XAxis
+                                    stroke={colors.baseContent}
+                                    fontSize={12}
+                                    dataKey="status"
+                                />
+                                <YAxis
+                                    //type="category"
+                                    dataKey="count"
                                     tickFormatter={(value) => formatStatus(value)}
-                                    stroke="#6b7280" 
+                                    stroke={colors.baseContent}
                                     fontSize={12}
                                     width={80}
                                 />
-                                <Tooltip 
+                                <Legend />
+                                <Tooltip
                                     formatter={(value) => [value, 'Count']}
-                                    labelFormatter={(label) => formatStatus(label)}
+                                    labelFormatter={(status) => formatStatus(status)}
                                     contentStyle={{
-                                        backgroundColor: '#ffffff',
-                                        border: '1px solid #e5e7eb',
+                                        color: colors.baseContent,
+                                        backgroundColor: colors.base100,
+                                        border: `1px solid ${colors.base300}`,
                                         borderRadius: '8px'
                                     }}
                                 />
-                                <Bar 
-                                    dataKey="count" 
-                                    fill="#6b7280"
-                                    radius={[0, 4, 4, 0]}
+                                <Bar
+                                    dataKey="count"
+                                    fill={colors.primary}
                                 >
                                     {data.statusDistribution.map((entry, index) => (
-                                        <Cell key={`cell-${index}`} fill={statusColors[entry.status] || '#6b7280'} />
+                                        <Cell key={`cell-${index}`} fill={statusColors[entry.status]} />
                                     ))}
                                 </Bar>
                             </BarChart>
@@ -268,26 +293,26 @@ export function FeedbackAnalytics({ tenantId }: FeedbackAnalyticsProps) {
 
             {/* Resolution Times */}
             {data.resolutionTimes.length > 0 && (
-                <div className="bg-base-50 rounded-xl p-4">
+                <div className="bg-base-100 rounded-xl p-4">
                     <h3 className="text-lg font-semibold text-base-content mb-4">Average Resolution Time</h3>
                     <div className="space-y-3">
                         {data.resolutionTimes.map((item, index) => (
-                            <div key={index} className="flex items-center justify-between p-3 bg-white rounded-lg">
+                            <div key={index} className="flex items-center justify-between p-3 bg-base-300 rounded-lg">
                                 <div>
                                     <div className="font-medium text-base-content">
                                         {formatType(item.type)}
                                     </div>
-                                    <div className="text-sm text-base-content/60">
+                                    <div className={`text-sm ${item.priority === "medium" ? "text-warning/60" : item.priority === "high" ? "text-error/60" : item.priority === "critical" ? "text-error/60" : "text-info/60"}`}>
                                         {item.priority} priority • {item.resolved_count} resolved
                                     </div>
                                 </div>
                                 <div className="text-right">
                                     <div className="font-semibold text-base-content">
-                                        {item.avg_hours < 1 
+                                        {item.avg_hours < 1
                                             ? `${Math.round(item.avg_hours * 60)}m`
                                             : item.avg_hours < 24
-                                            ? `${item.avg_hours}h`
-                                            : `${Math.round(item.avg_hours / 24)}d`
+                                                ? `${item.avg_hours}h`
+                                                : `${Math.round(item.avg_hours / 24)}d`
                                         }
                                     </div>
                                     <div className="text-xs text-base-content/60">

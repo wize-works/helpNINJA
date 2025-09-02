@@ -12,7 +12,8 @@ import {
     ResponsiveContainer,
     PieChart,
     Pie,
-    Cell
+    Cell,
+    Legend
 } from 'recharts';
 import { HoverScale } from './animated-page';
 import { getChartColors } from '@/lib/colors';
@@ -154,23 +155,23 @@ export function ChatVolumeChart({
                 </defs>
                 <CartesianGrid
                     strokeDasharray="3 3"
-                    stroke={colors.neutral}
+                    stroke={colors.neutralContent}
                     opacity={0.3}
                 />
                 <XAxis
                     dataKey="date"
-                    stroke={colors.neutral}
+                    stroke={colors.neutralContent}
                     fontSize={11}
                     tickLine={false}
                     axisLine={false}
-                    tick={{ fill: colors.neutral, opacity: 0.7 }}
+                    tick={{ fill: colors.neutralContent, opacity: 0.7 }}
                 />
                 <YAxis
-                    stroke={colors.neutral}
+                    stroke={colors.neutralContent}
                     fontSize={11}
                     tickLine={false}
                     axisLine={false}
-                    tick={{ fill: colors.neutral, opacity: 0.7 }}
+                    tick={{ fill: colors.neutralContent, opacity: 0.7 }}
                     width={30}
                 />
                 <Tooltip content={<CustomTooltip />} />
@@ -247,44 +248,70 @@ export function SourcesChart({
     // Get theme-consistent colors
     const colors = getChartColors();
 
+    // Sort by document count (descending) and limit to 5 entries for better display
+    const sortedData = [...validData]
+        .sort((a, b) => b.documents - a.documents || b.chunks - a.chunks)
+        .slice(0, 5)
+        .map(item => {
+            // Fix any invalid regex capture that might still come through
+            let displayName = item.name;
+
+            // Fix the "\\1" issue - replace with better label
+            if (displayName === "\\1") {
+                displayName = "All Documents";
+            }
+
+            // Ensure name isn't too long for display
+            displayName = displayName.length > 20 ? displayName.substring(0, 18) + '...' : displayName;
+
+            return {
+                ...item,
+                name: displayName
+            };
+        });
+
     return (
         <ResponsiveContainer width="100%" height="100%">
-            <BarChart data={validData} layout="horizontal" margin={{ top: 5, right: 5, left: 5, bottom: 5 }}>
-                <CartesianGrid
-                    strokeDasharray="3 3"
-                    stroke={colors.neutral}
-                    opacity={0.3}
-                />
+            <BarChart data={sortedData} margin={{ top: 5, right: 5, left: 5, bottom: 5 }}>
                 <XAxis
-                    type="number"
-                    stroke={colors.neutral}
+                    //type="number"
+                    dataKey="name"
+                    stroke={colors.neutralContent}
                     fontSize={11}
                     tickLine={false}
                     axisLine={false}
-                    tick={{ fill: colors.neutral, opacity: 0.7 }}
+                    tick={{ fill: colors.neutralContent, opacity: 0.7 }}
                 />
                 <YAxis
-                    type="category"
-                    dataKey="name"
-                    stroke="hsl(var(--bc))"
+                    //type="category"
+                    //dataKey="name"
+                    stroke={colors.secondary}
                     fontSize={11}
                     tickLine={false}
                     axisLine={false}
-                    width={100}
-                    tick={{ fill: 'hsl(var(--bc))', opacity: 0.7 }}
+                    tick={{ fill: colors.neutralContent, opacity: 0.7 }}
                 />
                 <Tooltip content={<CustomTooltip />} />
+                <CartesianGrid
+                    strokeDasharray="3 3"
+                    stroke={colors.neutralContent}
+                    opacity={0.3}
+                />
                 <Bar
                     dataKey="documents"
-                    fill="hsl(var(--p))"
+                    fill={colors.primary}
+                    barSize={20}
                     radius={[0, 6, 6, 0]}
                     name="Documents"
+                    animationDuration={1000}
                 />
                 <Bar
                     dataKey="chunks"
-                    fill="hsl(var(--s))"
+                    fill={colors.secondary}
+                    barSize={20}
                     radius={[0, 6, 6, 0]}
                     name="Chunks"
+                    animationDuration={1000}
                 />
             </BarChart>
         </ResponsiveContainer>
@@ -299,6 +326,9 @@ export function ConfidenceChart({
     data: Array<{ name: string; value: number; color: string }>;
     loading?: boolean;
 }) {
+
+    const colors = getChartColors();
+
     if (loading) {
         return (
             <div className="w-full h-48 flex items-center justify-center">
@@ -322,6 +352,7 @@ export function ConfidenceChart({
     return (
         <ResponsiveContainer width="100%" height="100%">
             <PieChart>
+                <Legend verticalAlign='top' />
                 <Pie
                     data={data}
                     cx="50%"
@@ -331,10 +362,10 @@ export function ConfidenceChart({
                     paddingAngle={3}
                     dataKey="value"
                     strokeWidth={2}
-                    stroke="hsl(var(--b1))"
+                    stroke={colors.base100}
                 >
                     {data.map((entry, index) => (
-                        <Cell key={`cell-${index}`} fill={entry.color} />
+                        <Cell key={`cell-${index}`} fill={`${entry.color}`} />
                     ))}
                 </Pie>
                 <Tooltip content={<CustomTooltip />} />
