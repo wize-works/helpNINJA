@@ -1,5 +1,6 @@
 'use client';
 import Logo from "@/components/logo";
+import Image from "next/image";
 import React from "react";
 
 export default function AuthLayout({ children }: { children: React.ReactNode }) {
@@ -13,14 +14,13 @@ export default function AuthLayout({ children }: { children: React.ReactNode }) 
                 </p>
                 {/* You can add a logo or illustration here */}
                 <div className="w-32 h-32 bg-base-300 rounded-full flex items-center justify-center mb-4 group">
-                    {/* Placeholder for logo */}
-                    <span className="text-4xl font-bold text-primary">
-                        <Logo
-                            width={200}
-                            height={34}
-                            className="text-primary group-hover:text-primary transition-all duration-200 group-hover:scale-110"
-                        />
-                    </span>
+                    <Image
+                        src="/icon.svg"
+                        alt="helpNINJA Icon"
+                        width={80}
+                        height={80}
+                        className="text-primary group-hover:text-primary transition-all duration-200 group-hover:scale-110 rounded-full"
+                    />
                 </div>
             </div>
             {/* Right side: Auth form */}
