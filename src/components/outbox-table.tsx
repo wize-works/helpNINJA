@@ -4,6 +4,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { HoverScale } from './ui/animated-page';
 import { toastUtils } from '@/lib/toast';
+import StatCard from './ui/stat-card';
 
 type OutboxItem = {
     id: string;
@@ -208,33 +209,35 @@ export default function OutboxTable() {
     return (
         <div className="space-y-6">
             {/* Stats Cards */}
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                <div className="stat bg-base-100 border border-base-300 rounded-xl shadow-sm">
-                    <div className="stat-figure text-success">
-                        <i className="fa-duotone fa-solid fa-check-circle text-2xl" aria-hidden />
-                    </div>
-                    <div className="stat-title">Sent</div>
-                    <div className="stat-value text-success">{sentCount}</div>
-                    <div className="stat-desc">Successfully delivered</div>
-                </div>
-
-                <div className="stat bg-base-100 border border-base-300 rounded-xl shadow-sm">
-                    <div className="stat-figure text-warning">
-                        <i className="fa-duotone fa-solid fa-clock text-2xl" aria-hidden />
-                    </div>
-                    <div className="stat-title">Pending</div>
-                    <div className="stat-value text-warning">{pendingCount}</div>
-                    <div className="stat-desc">Waiting to send</div>
-                </div>
-
-                <div className="stat bg-base-100 border border-base-300 rounded-xl shadow-sm">
-                    <div className="stat-figure text-error">
-                        <i className="fa-duotone fa-solid fa-exclamation-circle text-2xl" aria-hidden />
-                    </div>
-                    <div className="stat-title">Failed</div>
-                    <div className="stat-value text-error">{failedCount}</div>
-                    <div className="stat-desc">Need attention</div>
-                </div>
+            <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+                <StatCard
+                    title="Sent"
+                    value={sentCount}
+                    description="Successfully delivered"
+                    color='success'
+                    icon='fa-check-circle'
+                />
+                <StatCard
+                    title="Pending"
+                    value={pendingCount}
+                    description="Waiting to send"
+                    color='warning'
+                    icon='fa-clock'
+                />
+                <StatCard
+                    title="Failed"
+                    value={failedCount}
+                    description="Need attention"
+                    color='error'
+                    icon='fa-exclamation-circle'
+                />
+                <StatCard
+                    title="Total"
+                    value={items.length}
+                    description="Total delivery attempts"
+                    color='info'
+                    icon='fa-inbox'
+                />
             </div>
 
             {/* Actions */}

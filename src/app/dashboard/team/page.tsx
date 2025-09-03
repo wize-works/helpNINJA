@@ -182,6 +182,7 @@ export default function TeamPage() {
                             <StatCard
                                 title="Total Members"
                                 value={stats.total}
+                                description="All roles"
                                 icon="fa-users"
                                 color="primary"
                             />
@@ -189,6 +190,7 @@ export default function TeamPage() {
                             <StatCard
                                 title="Active"
                                 value={stats.active}
+                                description="Currently active"
                                 icon="fa-user-check"
                                 color="success"
                             />
@@ -196,6 +198,7 @@ export default function TeamPage() {
                             <StatCard
                                 title="Pending"
                                 value={stats.pending}
+                                description="Invitations sent"
                                 icon="fa-user-clock"
                                 color="warning"
                             />
@@ -203,6 +206,7 @@ export default function TeamPage() {
                             <StatCard
                                 title="Suspended"
                                 value={stats.suspended}
+                                description="Access disabled"
                                 icon="fa-user-slash"
                                 color="error"
                             />

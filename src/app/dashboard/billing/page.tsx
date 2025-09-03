@@ -53,16 +53,6 @@ export default function BillingPage() {
                                     </p>
                                 </div>
                                 <div className="flex items-center gap-3">
-                                    <div className="stats shadow">
-                                        <div className="stat">
-                                            <div className="stat-figure text-success">
-                                                <i className="fa-duotone fa-solid fa-credit-card text-2xl" aria-hidden />
-                                            </div>
-                                            <div className="stat-title">Current Plan</div>
-                                            <div className="stat-value text-success text-lg">Active</div>
-                                            <div className="stat-desc">Billing up to date</div>
-                                        </div>
-                                    </div>
                                     <HoverScale scale={1.02}>
                                         <button onClick={portal} className="btn btn-outline rounded-lg btn-sm">
                                             <i className="fa-duotone fa-solid fa-gear mr-2" aria-hidden />
@@ -104,7 +94,7 @@ export default function BillingPage() {
                                 {(Object.keys(PLAN_DETAILS) as Plan[]).filter(plan => plan !== 'none').map((plan, index) => {
                                     const details = PLAN_DETAILS[plan as keyof typeof PLAN_DETAILS];
                                     const pricing = details[billingPeriod];
-                                    
+
                                     return (
                                         <div key={plan} className={`card bg-base-100 rounded-2xl shadow-sm hover:shadow-md transition-all duration-300 group relative ${details.popular ? 'border-2 border-primary' : ''}`}>
                                             {details.popular && (

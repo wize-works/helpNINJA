@@ -53,7 +53,7 @@ export default function FilterControls({ filters, sites = [] }: { filters: Filte
     return (
         <div className="relative">
             <HoverScale scale={1.02}>
-                <button onClick={() => setOpen(o => !o)} className="flex items-center gap-2 px-4 py-2 bg-base-200/60 hover:bg-base-200 border border-base-300/40 rounded-lg text-sm font-medium transition-all duration-200">
+                <button onClick={() => setOpen(o => !o)} className="btn btn-sm rounded-lg">
                     <i className="fa-duotone fa-solid fa-filter text-xs" aria-hidden />
                     Filters
                     {(filters.escalated || filters.range || filters.search || filters.site) && (

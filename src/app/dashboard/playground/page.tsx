@@ -7,6 +7,7 @@ import SearchResultsViewer from "@/components/search-results-viewer";
 import ConfidenceDisplay from "@/components/confidence-display";
 import { Breadcrumb } from "@/components/ui/breadcrumb";
 import { AnimatedPage, StaggerContainer, StaggerChild, HoverScale } from "@/components/ui/animated-page";
+import StatCard from '@/components/ui/stat-card';
 
 type TestResult = {
     query: string;
@@ -136,20 +137,6 @@ export default function PlaygroundPage() {
                                 </p>
                             </div>
                             <div className="flex items-center gap-3">
-                                {analytics && (
-                                    <div className="stats shadow">
-                                        <div className="stat">
-                                            <div className="stat-figure text-primary">
-                                                <i className="fa-duotone fa-solid fa-heart-pulse text-2xl" aria-hidden />
-                                            </div>
-                                            <div className="stat-title">Health Score</div>
-                                            <div className={`stat-value text-lg ${getHealthColor(analytics.performance.health_score)}`}>
-                                                {analytics.performance.health_score}
-                                            </div>
-                                            <div className="stat-desc">Grade {analytics.performance.health_grade}</div>
-                                        </div>
-                                    </div>
-                                )}
                                 <HoverScale scale={1.02}>
                                     <a href="/dashboard/analytics" className="btn btn-outline btn-sm rounded-lg">
                                         <i className="fa-duotone fa-solid fa-chart-line mr-2" aria-hidden />
@@ -165,95 +152,90 @@ export default function PlaygroundPage() {
                 {analytics && (
                     <StaggerContainer>
                         <StaggerChild>
-                            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-6">
+                            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-6">
                                 <HoverScale scale={1.01}>
-                                    <div className="card bg-base-100 rounded-2xl border border-primary/20 shadow-sm hover:shadow-md transition-all duration-300 group">
-                                        <div className="p-6">
-                                            <div className="flex items-center gap-4">
-                                                <div className="w-12 h-12 bg-primary/10 rounded-2xl flex items-center justify-center group-hover:scale-105 transition-transform duration-200 flex-shrink-0">
-                                                    <i className="fa-duotone fa-solid fa-file-text text-lg text-primary" aria-hidden />
-                                                </div>
-                                                <div className="flex-1 min-w-0">
-                                                    <div className="text-sm text-base-content/70 font-semibold tracking-wide uppercase mb-1">Documents</div>
-                                                    <div className="text-2xl font-bold text-base-content tracking-tight">{analytics.knowledge_base.total_documents}</div>
-                                                    <div className="text-xs text-base-content/60 mt-1">{analytics.knowledge_base.total_chunks} chunks</div>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div>
+                                    <StatCard
+                                        title="Sites"
+                                        value={analytics.knowledge_base.total_sites}
+                                        description="Registered"
+                                        icon="fa-globe"
+                                        color="info"
+                                    />
+                                </HoverScale>
+                                <HoverScale scale={1.01}>
+                                    <StatCard
+                                        title="Documents"
+                                        value={analytics.knowledge_base.total_documents}
+                                        description={`${analytics.knowledge_base.total_chunks} chunks`}
+                                        icon="fa-file-text"
+                                        color="primary"
+                                    />
                                 </HoverScale>
 
                                 <HoverScale scale={1.01}>
-                                    <div className="card bg-base-100 rounded-2xl border border-secondary/20 shadow-sm hover:shadow-md transition-all duration-300 group">
-                                        <div className="p-6">
-                                            <div className="flex items-center gap-4">
-                                                <div className="w-12 h-12 bg-secondary/10 rounded-2xl flex items-center justify-center group-hover:scale-105 transition-transform duration-200 flex-shrink-0">
-                                                    <i className="fa-duotone fa-solid fa-star text-lg text-secondary" aria-hidden />
-                                                </div>
-                                                <div className="flex-1 min-w-0">
-                                                    <div className="text-sm text-base-content/70 font-semibold tracking-wide uppercase mb-1">Curated</div>
-                                                    <div className="text-2xl font-bold text-base-content tracking-tight">{analytics.knowledge_base.total_curated_answers}</div>
-                                                    <div className="text-xs text-base-content/60 mt-1">Manual answers</div>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div>
+                                    <StatCard
+                                        title="Curated Answers"
+                                        value={analytics.knowledge_base.total_curated_answers}
+                                        description="Manual answers"
+                                        icon="fa-star"
+                                        color="secondary"
+                                    />
                                 </HoverScale>
 
                                 <HoverScale scale={1.01}>
-                                    <div className="card bg-base-100 rounded-2xl border border-accent/20 shadow-sm hover:shadow-md transition-all duration-300 group">
-                                        <div className="p-6">
-                                            <div className="flex items-center gap-4">
-                                                <div className="w-12 h-12 bg-accent/10 rounded-2xl flex items-center justify-center group-hover:scale-105 transition-transform duration-200 flex-shrink-0">
-                                                    <i className="fa-duotone fa-solid fa-globe text-lg text-accent" aria-hidden />
-                                                </div>
-                                                <div className="flex-1 min-w-0">
-                                                    <div className="text-sm text-base-content/70 font-semibold tracking-wide uppercase mb-1">Sites</div>
-                                                    <div className="text-2xl font-bold text-base-content tracking-tight">{analytics.knowledge_base.total_sites}</div>
-                                                    <div className="text-xs text-base-content/60 mt-1">Registered</div>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div>
+                                    <StatCard
+                                        title="Recent Content"
+                                        value={`${analytics.knowledge_base.recent_content_percentage}%`}
+                                        description="added in last 30 days"
+                                        icon="fa-clock-rotate-left"
+                                        color="warning"
+                                    />
                                 </HoverScale>
 
                                 <HoverScale scale={1.01}>
-                                    <div className="card bg-base-100 rounded-2xl border border-info/20 shadow-sm hover:shadow-md transition-all duration-300 group">
-                                        <div className="p-6">
-                                            <div className="flex items-center gap-4">
-                                                <div className="w-12 h-12 bg-info/10 rounded-2xl flex items-center justify-center group-hover:scale-105 transition-transform duration-200 flex-shrink-0">
-                                                    <i className="fa-duotone fa-solid fa-comments text-lg text-info" aria-hidden />
-                                                </div>
-                                                <div className="flex-1 min-w-0">
-                                                    <div className="text-sm text-base-content/70 font-semibold tracking-wide uppercase mb-1">Conversations</div>
-                                                    <div className="text-2xl font-bold text-base-content tracking-tight">{analytics.conversations.total_conversations}</div>
-                                                    <div className="text-xs text-base-content/60 mt-1">{analytics.conversations.total_messages} messages</div>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div>
+                                    <StatCard
+                                        title="Avg. Confidence"
+                                        value={analytics.conversations.avg_confidence.toFixed(1)}
+                                        description="across all convos"
+                                        icon="fa-gauge"
+                                        color="secondary"
+                                    />
+                                </HoverScale>
+                                <HoverScale scale={1.01}>
+                                    <StatCard
+                                        title="Conversations"
+                                        value={analytics.conversations.total_conversations}
+                                        description="total sessions"
+                                        icon="fa-comments"
+                                        color="info"
+                                    />
                                 </HoverScale>
 
                                 <HoverScale scale={1.01}>
-                                    <div className="card bg-base-100 rounded-2xl border border-success/20 shadow-sm hover:shadow-md transition-all duration-300 group">
-                                        <div className="p-6">
-                                            <div className="flex items-center gap-4">
-                                                <div className="w-12 h-12 bg-success/10 rounded-2xl flex items-center justify-center group-hover:scale-105 transition-transform duration-200 flex-shrink-0">
-                                                    <i className={`fa-duotone fa-solid fa-heart-pulse text-lg ${getHealthColor(analytics.performance.health_score)}`} aria-hidden />
-                                                </div>
-                                                <div className="flex-1 min-w-0">
-                                                    <div className="text-sm text-base-content/70 font-semibold tracking-wide uppercase mb-1">Health Score</div>
-                                                    <div className={`text-2xl font-bold tracking-tight ${getHealthColor(analytics.performance.health_score)}`}>{analytics.performance.health_score}</div>
-                                                    <div className="text-xs text-base-content/60 mt-1">Grade {analytics.performance.health_grade}</div>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div>
+                                    <StatCard
+                                        title="Low Confidence"
+                                        value={analytics.conversations.low_confidence_count}
+                                        description="below 50%"
+                                        icon="fa-face-frown"
+                                        color="error"
+                                    />
+                                </HoverScale>
+
+                                <HoverScale scale={1.01}>
+                                    <StatCard
+                                        title="Health Score"
+                                        value={analytics.performance.health_score}
+                                        description={`Grade ${analytics.performance.health_grade}`}
+                                        icon="fa-heart-pulse"
+                                        color={analytics.performance.health_score >= 80 ? 'success' :
+                                            analytics.performance.health_score >= 60 ? 'warning' : 'error'}
+                                    />
                                 </HoverScale>
                             </div>
                         </StaggerChild>
                     </StaggerContainer>
-                )}
+                )
+                }
 
                 {/* Query Tester */}
                 <StaggerContainer>
@@ -263,103 +245,105 @@ export default function PlaygroundPage() {
                 </StaggerContainer>
 
                 {/* Results Display */}
-                {results && (
-                    <StaggerContainer>
-                        <StaggerChild>
-                            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                                {/* AI Response & Confidence */}
-                                <div className="lg:col-span-1 space-y-6">
-                                    {/* AI Confidence */}
-                                    {results.ai_response && !results.ai_response.error && (
+                {
+                    results && (
+                        <StaggerContainer>
+                            <StaggerChild>
+                                <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                                    {/* AI Response & Confidence */}
+                                    <div className="lg:col-span-1 space-y-6">
+                                        {/* AI Confidence */}
+                                        {results.ai_response && !results.ai_response.error && (
+                                            <div className="card bg-base-100 rounded-2xl shadow-sm">
+                                                <div className="p-6">
+                                                    <div className="flex items-center gap-3 mb-4">
+                                                        <div className="w-10 h-10 bg-primary/10 rounded-xl flex items-center justify-center">
+                                                            <i className="fa-duotone fa-solid fa-gauge text-primary" aria-hidden />
+                                                        </div>
+                                                        <h4 className="text-lg font-semibold text-base-content">Response Confidence</h4>
+                                                    </div>
+                                                    <ConfidenceDisplay
+                                                        confidence={results.ai_response.confidence}
+                                                        size="lg"
+                                                    />
+                                                </div>
+                                            </div>
+                                        )}
+
+                                        {/* Performance Metrics */}
                                         <div className="card bg-base-100 rounded-2xl shadow-sm">
                                             <div className="p-6">
                                                 <div className="flex items-center gap-3 mb-4">
-                                                    <div className="w-10 h-10 bg-primary/10 rounded-xl flex items-center justify-center">
-                                                        <i className="fa-duotone fa-solid fa-gauge text-primary" aria-hidden />
+                                                    <div className="w-10 h-10 bg-secondary/10 rounded-xl flex items-center justify-center">
+                                                        <i className="fa-duotone fa-solid fa-stopwatch text-secondary" aria-hidden />
                                                     </div>
-                                                    <h4 className="text-lg font-semibold text-base-content">Response Confidence</h4>
+                                                    <h4 className="text-lg font-semibold text-base-content">Performance</h4>
                                                 </div>
-                                                <ConfidenceDisplay
-                                                    confidence={results.ai_response.confidence}
-                                                    size="lg"
-                                                />
-                                            </div>
-                                        </div>
-                                    )}
-
-                                    {/* Performance Metrics */}
-                                    <div className="card bg-base-100 rounded-2xl shadow-sm">
-                                        <div className="p-6">
-                                            <div className="flex items-center gap-3 mb-4">
-                                                <div className="w-10 h-10 bg-secondary/10 rounded-xl flex items-center justify-center">
-                                                    <i className="fa-duotone fa-solid fa-stopwatch text-secondary" aria-hidden />
-                                                </div>
-                                                <h4 className="text-lg font-semibold text-base-content">Performance</h4>
-                                            </div>
-                                            <div className="space-y-3">
-                                                <div className="flex justify-between">
-                                                    <span className="text-base-content/70">Search Time:</span>
-                                                    <span className="font-medium">{results.search_time_ms}ms</span>
-                                                </div>
-                                                {results.ai_response && (
+                                                <div className="space-y-3">
                                                     <div className="flex justify-between">
-                                                        <span className="text-base-content/70">AI Time:</span>
-                                                        <span className="font-medium">{results.ai_response.response_time_ms}ms</span>
+                                                        <span className="text-base-content/70">Search Time:</span>
+                                                        <span className="font-medium">{results.search_time_ms}ms</span>
                                                     </div>
-                                                )}
-                                                <div className="flex justify-between border-t border-base-200/60 pt-2">
-                                                    <span className="text-base-content/70">Total Time:</span>
-                                                    <span className="font-semibold">{results.total_time_ms}ms</span>
+                                                    {results.ai_response && (
+                                                        <div className="flex justify-between">
+                                                            <span className="text-base-content/70">AI Time:</span>
+                                                            <span className="font-medium">{results.ai_response.response_time_ms}ms</span>
+                                                        </div>
+                                                    )}
+                                                    <div className="flex justify-between border-t border-base-200/60 pt-2">
+                                                        <span className="text-base-content/70">Total Time:</span>
+                                                        <span className="font-semibold">{results.total_time_ms}ms</span>
+                                                    </div>
                                                 </div>
                                             </div>
                                         </div>
-                                    </div>
 
-                                    {/* Query Info */}
-                                    <div className="card bg-base-100 rounded-2xl shadow-sm">
-                                        <div className="p-6">
-                                            <div className="flex items-center gap-3 mb-4">
-                                                <div className="w-10 h-10 bg-info/10 rounded-xl flex items-center justify-center">
-                                                    <i className="fa-duotone fa-solid fa-info-circle text-info" aria-hidden />
+                                        {/* Query Info */}
+                                        <div className="card bg-base-100 rounded-2xl shadow-sm">
+                                            <div className="p-6">
+                                                <div className="flex items-center gap-3 mb-4">
+                                                    <div className="w-10 h-10 bg-info/10 rounded-xl flex items-center justify-center">
+                                                        <i className="fa-duotone fa-solid fa-info-circle text-info" aria-hidden />
+                                                    </div>
+                                                    <h4 className="text-lg font-semibold text-base-content">Query Details</h4>
                                                 </div>
-                                                <h4 className="text-lg font-semibold text-base-content">Query Details</h4>
-                                            </div>
-                                            <div className="space-y-2 text-sm">
-                                                <div>
-                                                    <span className="text-base-content/70">Method:</span>
-                                                    <span className="ml-2 font-medium">{results.metadata.search_method}</span>
-                                                </div>
-                                                <div>
-                                                    <span className="text-base-content/70">Timestamp:</span>
-                                                    <span className="ml-2">{new Date(results.metadata.timestamp).toLocaleTimeString()}</span>
-                                                </div>
-                                                {results.metadata.site_id && (
+                                                <div className="space-y-2 text-sm">
                                                     <div>
-                                                        <span className="text-base-content/70">Site:</span>
-                                                        <span className="ml-2">{results.metadata.site_id.substring(0, 8)}...</span>
+                                                        <span className="text-base-content/70">Method:</span>
+                                                        <span className="ml-2 font-medium">{results.metadata.search_method}</span>
                                                     </div>
-                                                )}
-                                                <div>
-                                                    <span className="text-base-content/70">AI Enabled:</span>
-                                                    <span className="ml-2">{results.metadata.ai_enabled ? 'Yes' : 'No'}</span>
+                                                    <div>
+                                                        <span className="text-base-content/70">Timestamp:</span>
+                                                        <span className="ml-2">{new Date(results.metadata.timestamp).toLocaleTimeString()}</span>
+                                                    </div>
+                                                    {results.metadata.site_id && (
+                                                        <div>
+                                                            <span className="text-base-content/70">Site:</span>
+                                                            <span className="ml-2">{results.metadata.site_id.substring(0, 8)}...</span>
+                                                        </div>
+                                                    )}
+                                                    <div>
+                                                        <span className="text-base-content/70">AI Enabled:</span>
+                                                        <span className="ml-2">{results.metadata.ai_enabled ? 'Yes' : 'No'}</span>
+                                                    </div>
                                                 </div>
                                             </div>
                                         </div>
                                     </div>
-                                </div>
 
-                                {/* Search Results */}
-                                <div className="lg:col-span-2">
-                                    <SearchResultsViewer
-                                        curatedAnswers={results.curated_answers}
-                                        ragResults={results.rag_results}
-                                        query={results.query}
-                                    />
+                                    {/* Search Results */}
+                                    <div className="lg:col-span-2">
+                                        <SearchResultsViewer
+                                            curatedAnswers={results.curated_answers}
+                                            ragResults={results.rag_results}
+                                            query={results.query}
+                                        />
+                                    </div>
                                 </div>
-                            </div>
-                        </StaggerChild>
-                    </StaggerContainer>
-                )}
+                            </StaggerChild>
+                        </StaggerContainer>
+                    )
+                }
 
                 {/* Help Section */}
                 <StaggerContainer>
@@ -410,7 +394,7 @@ export default function PlaygroundPage() {
                         </div>
                     </StaggerChild>
                 </StaggerContainer>
-            </div>
-        </AnimatedPage>
+            </div >
+        </AnimatedPage >
     );
 }

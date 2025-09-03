@@ -93,19 +93,6 @@ export default async function SitesPage() {
                                     Register and manage the domains where your chat widget can be embedded. Domain verification ensures security and prevents unauthorized use.
                                 </p>
                             </div>
-                            <div className="flex-shrink-0 flex items-center gap-3">
-                                {/* Rerunnable site onboarding wizard, gated by plan limits */}
-                                <div className="stats shadow">
-                                    <div className="stat">
-                                        <div className="stat-figure text-primary">
-                                            <i className="fa-duotone fa-solid fa-shield-check text-2xl" aria-hidden />
-                                        </div>
-                                        <div className="stat-title">Security</div>
-                                        <div className="stat-value text-primary text-lg">Verified</div>
-                                        <div className="stat-desc">Domain-protected widget</div>
-                                    </div>
-                                </div>
-                            </div>
                         </div>
                     </StaggerChild>
                 </StaggerContainer>
@@ -119,7 +106,7 @@ export default async function SitesPage() {
                                 value={stats.total_sites}
                                 icon="fa-globe"
                                 color="primary"
-                                subtitle={stats.total_sites === 1 ? "domain registered" : "domains registered"}
+                                description={stats.total_sites === 1 ? "domain registered" : "domains registered"}
                             />
 
                             <StatCard
@@ -127,7 +114,7 @@ export default async function SitesPage() {
                                 value={stats.verified_sites}
                                 icon="fa-shield-check"
                                 color="success"
-                                subtitle="domains verified"
+                                description="domains verified"
                             />
 
                             <StatCard
@@ -135,15 +122,15 @@ export default async function SitesPage() {
                                 value={stats.pending_sites}
                                 icon="fa-clock"
                                 color="warning"
-                                subtitle="awaiting verification"
+                                description="awaiting verification"
                             />
 
                             <StatCard
-                                title="Content Sources"
-                                value={stats.total_sources}
+                                title="Content Documents"
+                                value={stats.total_documents}
                                 icon="fa-database"
                                 color="info"
-                                subtitle="linked to sites"
+                                description="linked to sites"
                             />
                         </div>
                     </StaggerChild>

@@ -109,7 +109,7 @@ async function FeedbackOverview({ tenantId }: FeedbackOverviewProps) {
             <StatCard
                 title="Total Feedback"
                 value={stats.totalFeedback.toString()}
-                subtitle={`${stats.feedbackLast30Days} this month`}
+                description={`${stats.feedbackLast30Days} this month`}
                 icon="fa-comments"
                 color="primary"
                 className="hover:scale-[1.02] transition-transform duration-200"
@@ -118,7 +118,7 @@ async function FeedbackOverview({ tenantId }: FeedbackOverviewProps) {
             <StatCard
                 title="Pending Items"
                 value={stats.pendingFeedback.toString()}
-                subtitle={`${stats.escalatedFeedback} escalated`}
+                description={`${stats.escalatedFeedback} escalated`}
                 icon="fa-clock"
                 color={stats.pendingFeedback > 10 ? "warning" : "info"}
                 className="hover:scale-[1.02] transition-transform duration-200"
@@ -127,7 +127,7 @@ async function FeedbackOverview({ tenantId }: FeedbackOverviewProps) {
             <StatCard
                 title="Resolved"
                 value={stats.completedFeedback.toString()}
-                subtitle={stats.averageResolutionHours > 0 ? `~${stats.averageResolutionHours}h avg` : 'No data yet'}
+                description={stats.averageResolutionHours > 0 ? `~${stats.averageResolutionHours}h avg` : 'No data yet'}
                 icon="fa-check-circle"
                 color="success"
                 className="hover:scale-[1.02] transition-transform duration-200"
@@ -136,7 +136,7 @@ async function FeedbackOverview({ tenantId }: FeedbackOverviewProps) {
             <StatCard
                 title="Contact Rate"
                 value={stats.totalFeedback > 0 ? `${Math.round((stats.feedbackWithContact / stats.totalFeedback) * 100)}%` : '0%'}
-                subtitle={`${stats.feedbackWithContact} provided contact`}
+                description={`${stats.feedbackWithContact} provided contact`}
                 icon="fa-address-card"
                 color="secondary"
                 className="hover:scale-[1.02] transition-transform duration-200"
@@ -196,9 +196,9 @@ export default async function FeedbackPage({
                                 <DashboardFeedbackButton
                                     tenantId={tenantId}
                                     variant="outline"
-                                    className="btn-sm"
+                                    className="btn-sm rounded-lg"
                                 />
-                                <button className="btn btn-primary btn-sm">
+                                <button className="btn btn-primary btn-sm rounded-lg">
                                     <i className="fa-duotone fa-solid fa-download" />
                                     Export CSV
                                 </button>

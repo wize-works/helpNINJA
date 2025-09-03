@@ -5,6 +5,7 @@ import { AnimatedPage, StaggerContainer, StaggerChild, HoverScale, FadeIn, Slide
 import { WebhookAnalyticsDashboard } from "@/components/webhook-analytics-dashboard";
 import { Suspense } from "react";
 import Link from "next/link";
+import StatCard from "@/components/ui/stat-card";
 
 export const runtime = 'nodejs'
 
@@ -55,55 +56,44 @@ function IntegrationsPage({ integrations, tenantId }: { integrations: Row[]; ten
 
             {/* Overview Stats */}
             <StaggerContainer>
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
                     <StaggerChild>
-                        <div className="bg-gradient-to-br from-success/5 to-success/10 rounded-2xl border border-success/20 p-6">
-                            <div className="flex items-center gap-4">
-                                <div className="w-12 h-12 bg-success/20 rounded-xl flex items-center justify-center">
-                                    <i className="fa-duotone fa-solid fa-plug text-lg text-success" aria-hidden />
-                                </div>
-                                <div>
-                                    <div className="text-2xl font-bold text-base-content">
-                                        {activeIntegrations.length}
-                                    </div>
-                                    <div className="text-sm text-base-content/60">Active Integrations</div>
-                                </div>
-                            </div>
-                        </div>
+                        <StatCard
+                            title="Total Integrations"
+                            value={totalIntegrations}
+                            description="connected services"
+                            icon="fa-plug"
+                            color="success"
+                        />
                     </StaggerChild>
 
                     <StaggerChild>
-                        <div className="bg-gradient-to-br from-primary/5 to-primary/10 rounded-2xl border border-primary/20 p-6">
-                            <div className="flex items-center gap-4">
-                                <div className="w-12 h-12 bg-primary/20 rounded-xl flex items-center justify-center">
-                                    <i className="fa-duotone fa-solid fa-heart-pulse text-lg text-primary" aria-hidden />
-                                </div>
-                                <div>
-                                    <div className="text-2xl font-bold text-base-content">
-                                        {totalIntegrations > 0 ? Math.round((healthyIntegrations / totalIntegrations) * 100) : 100}%
-                                    </div>
-                                    <div className="text-sm text-base-content/60">Health Score</div>
-                                </div>
-                            </div>
-                        </div>
+                        <StatCard
+                            title="Active Integrations"
+                            value={activeIntegrations.length}
+                            description="running smoothly"
+                            icon="fa-check-circle"
+                            color="primary"
+                        />
                     </StaggerChild>
 
                     <StaggerChild>
-                        <div className="bg-gradient-to-br from-info/5 to-info/10 rounded-2xl border border-info/20 p-6">
-                            <div className="flex items-center gap-4">
-                                <div className="w-12 h-12 bg-info/20 rounded-xl flex items-center justify-center">
-                                    <i className="fa-duotone fa-solid fa-webhook text-lg text-info" aria-hidden />
-                                </div>
-                                <div>
-                                    <div className="text-2xl font-bold text-base-content">
-                                        <Suspense fallback="...">
-                                            <WebhookCount tenantId={tenantId} />
-                                        </Suspense>
-                                    </div>
-                                    <div className="text-sm text-base-content/60">Webhook Endpoints</div>
-                                </div>
-                            </div>
-                        </div>
+                        <StatCard
+                            title="Healthy Integrations"
+                            value={healthyIntegrations}
+                            description="no issues"
+                            icon="fa-thumbs-up"
+                            color="success"
+                        />
+                    </StaggerChild>
+                    <StaggerChild>
+                        <StatCard
+                            title="Integration Health"
+                            value={(totalIntegrations > 0 ? Math.round((healthyIntegrations / totalIntegrations) * 100) : 100) + '%'}
+                            description="overall"
+                            icon="fa-heart-pulse"
+                            color={healthyIntegrations === totalIntegrations ? 'success' : healthyIntegrations === 0 ? 'error' : 'warning'}
+                        />
                     </StaggerChild>
                 </div>
             </StaggerContainer>

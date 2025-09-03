@@ -8,6 +8,7 @@ import { Breadcrumb } from "@/components/ui/breadcrumb";
 import { AnimatedPage, StaggerContainer, StaggerChild, HoverScale } from "@/components/ui/animated-page";
 import { Suspense } from "react";
 import FilterControls from "./filter-controls";
+import StatCard from "@/components/ui/stat-card";
 
 export const runtime = 'nodejs'
 
@@ -123,58 +124,6 @@ async function listSites(tenantId: string) {
     }
 }
 
-async function DocumentsStats({ tenantId }: { tenantId: string }) {
-    try {
-        const statsQuery = await query<{
-            total_docs: number;
-            sites_count: number;
-            avg_docs_per_site: number;
-            last_added: string;
-        }>(
-            `SELECT 
-                COUNT(d.id)::int as total_docs,
-                COUNT(DISTINCT d.site_id)::int as sites_count,
-                CASE 
-                    WHEN COUNT(DISTINCT d.site_id) > 0 
-                    THEN ROUND(COUNT(d.id)::numeric / COUNT(DISTINCT d.site_id), 1)::numeric
-                    ELSE 0 
-                END as avg_docs_per_site,
-                MAX(d.created_at) as last_added
-            FROM public.documents d 
-            WHERE d.tenant_id = $1`,
-            [tenantId]
-        );
-
-        const stats = statsQuery.rows[0];
-
-        return (
-            <div className="stats shadow">
-                <div className="stat">
-                    <div className="stat-figure text-info">
-                        <i className="fa-duotone fa-solid fa-book-open text-2xl" aria-hidden />
-                    </div>
-                    <div className="stat-title">Knowledge Base</div>
-                    <div className="stat-value text-info text-lg">{stats.total_docs}</div>
-                    <div className="stat-desc">Across {stats.sites_count} sites</div>
-                </div>
-            </div>
-        );
-    } catch {
-        return (
-            <div className="stats shadow">
-                <div className="stat">
-                    <div className="stat-figure text-info">
-                        <i className="fa-duotone fa-solid fa-book-open text-2xl" aria-hidden />
-                    </div>
-                    <div className="stat-title">Knowledge Base</div>
-                    <div className="stat-value text-info text-lg">0</div>
-                    <div className="stat-desc">No documents yet</div>
-                </div>
-            </div>
-        );
-    }
-}
-
 export default async function DocumentsPage({
     searchParams
 }: {
@@ -219,7 +168,6 @@ export default async function DocumentsPage({
                                     </p>
                                 </div>
                                 <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3">
-                                    <DocumentsStats tenantId={tenantId} />
                                     <div className="flex items-center gap-3">
                                         <FilterControls filters={filters} sites={sites} />
                                         <HoverScale scale={1.02}>
@@ -231,10 +179,51 @@ export default async function DocumentsPage({
                                     </div>
                                 </div>
                             </div>
-                            <IngestForm />
                         </div>
                     </StaggerChild>
                 </StaggerContainer>
+
+                <StaggerContainer>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+                        <StaggerChild>
+                            <StatCard
+                                title="Total Documents"
+                                value="500"
+                                icon="fa-file-lines"
+                                color="primary"
+                                description="in your knowledge base"
+                            />
+                        </StaggerChild>
+                        <StaggerChild>
+                            <StatCard
+                                title="Total Chunks"
+                                value="12,345"
+                                icon="fa-puzzle-piece"
+                                color="secondary"
+                                description="across all documents"
+                            />
+                        </StaggerChild>
+                        <StaggerChild>
+                            <StatCard
+                                title="Total Tokens"
+                                value="1.2M"
+                                icon="fa-coins"
+                                color="success"
+                                description="in your knowledge base"
+                            />
+                        </StaggerChild>
+                        <StaggerChild>
+                            <StatCard
+                                title="Average Chunks/Document"
+                                value="24.7"
+                                icon="fa-chart-simple"
+                                color="info"
+                                description="based on current documents"
+                            />
+                        </StaggerChild>
+                    </div>
+                </StaggerContainer>
+                <IngestForm />
 
                 {/* Content */}
                 <Suspense fallback={

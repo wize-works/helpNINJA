@@ -48,18 +48,6 @@ export default async function SettingsPage() {
                                     Manage your account information, API keys, and chat widget configuration
                                 </p>
                             </div>
-                            <div className="flex items-center gap-3">
-                                <div className="stats shadow">
-                                    <div className="stat">
-                                        <div className="stat-figure text-primary">
-                                            <i className="fa-duotone fa-solid fa-shield-check text-2xl" aria-hidden />
-                                        </div>
-                                        <div className="stat-title">Account Status</div>
-                                        <div className="stat-value text-primary text-lg">{t.plan_status}</div>
-                                        <div className="stat-desc">{t.plan} plan</div>
-                                    </div>
-                                </div>
-                            </div>
                         </div>
                     </StaggerChild>
                 </StaggerContainer>

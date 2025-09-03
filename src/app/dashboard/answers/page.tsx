@@ -5,6 +5,7 @@ import { AnimatedPage, StaggerContainer, StaggerChild } from "@/components/ui/an
 import { Suspense } from "react";
 import FilterControls from "./filter-controls";
 import AnswersClient from "./client";
+import StatCard from "@/components/ui/stat-card";
 
 export const runtime = 'nodejs'
 
@@ -145,21 +146,53 @@ export default async function AnswersPage({
                                 </p>
                             </div>
                             <div className="flex items-center gap-3">
-                                <div className="stats shadow">
-                                    <div className="stat">
-                                        <div className="stat-figure text-primary">
-                                            <i className="fa-duotone fa-solid fa-comment-question text-2xl" aria-hidden />
-                                        </div>
-                                        <div className="stat-value text-primary text-lg">{stats.total}</div>
-                                        <div className="stat-desc">Active: {stats.active}</div>
-                                    </div>
-                                </div>
                                 <div className="flex items-center gap-3">
                                     <FilterControls filters={filters} />
                                 </div>
                             </div>
                         </div>
                     </StaggerChild>
+                </StaggerContainer>
+
+                <StaggerContainer>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+                        <StaggerChild>
+                            <StatCard
+                                title="Total Answers"
+                                value={stats.total}
+                                icon="fa-comments"
+                                color="primary"
+                                description="in your knowledge base"
+                            />
+                        </StaggerChild>
+                        <StaggerChild>
+                            <StatCard
+                                title="Active Answers"
+                                value={stats.active}
+                                icon="fa-check"
+                                color="success"
+                                description="currently live"
+                            />
+                        </StaggerChild>
+                        <StaggerChild>
+                            <StatCard
+                                title="Draft Answers"
+                                value={stats.draft}
+                                icon="fa-pencil"
+                                color="warning"
+                                description="in progress"
+                            />
+                        </StaggerChild>
+                        <StaggerChild>
+                            <StatCard
+                                title="Disabled Answers"
+                                value={stats.disabled}
+                                icon="fa-ban"
+                                color="info"
+                                description="not in use"
+                            />
+                        </StaggerChild>
+                    </div>
                 </StaggerContainer>
 
                 {/* Content */}

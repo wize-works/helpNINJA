@@ -3,9 +3,10 @@ import { HoverScale } from './animated-page';
 export interface StatCardProps {
     title: string;
     value: string | number;
-    subtitle?: string;
+    description?: React.ReactNode;
+    action?: React.ReactNode;
     icon?: string;
-    color?: 'primary' | 'secondary' | 'success' | 'warning' | 'error' | 'info';
+    color?: 'primary' | 'secondary' | 'accent' | 'success' | 'warning' | 'error' | 'info';
     className?: string;
 }
 
@@ -16,16 +17,17 @@ export interface StatCardProps {
 export default function StatCard({
     title,
     value,
-    subtitle,
+    description,
+    action,
     icon = 'fa-chart-line',
     color = 'primary',
     className = ''
 }: StatCardProps) {
     return (
         <HoverScale scale={1.01}>
-            <div className={`stats shadow hover:shadow-md transition-all duration-300 w-full rounded-2xl ${className}`}>
+            <div className={`stats shadow-lg hover:shadow-xl transition-all duration-300 w-full rounded-2xl ${className}`}>
                 <div className="stat bg-base-100 rounded-2xl">
-                    <div className="stat-title">{title}</div>
+                    <div className="stat-title font-bold uppercase overflow-hidden">{title}</div>
                     {icon && (
                         <div className="stat-figure">
                             <div className={`w-12 h-12 bg-${color}/10 rounded-2xl flex items-center justify-center group-hover:scale-105 transition-transform duration-200 flex-shrink-0`}>
@@ -36,8 +38,13 @@ export default function StatCard({
                     <div className={`stat-value text-${color}`}>
                         {value}
                     </div>
-                    {subtitle && (
-                        <div className="stat-desc">{subtitle}</div>
+                    {description && (
+                        <div className="stat-desc">{description}</div>
+                    )}
+                    {action && (
+                        <div className="stat-action">
+                            {action}
+                        </div>
                     )}
                 </div>
             </div>
@@ -51,7 +58,7 @@ export default function StatCard({
 export function SimpleStatCard({
     title,
     value,
-    subtitle,
+    description,
     icon = 'fa-chart-line',
     color = 'primary',
     className = ''
@@ -69,8 +76,8 @@ export function SimpleStatCard({
                         <div className="flex-1 min-w-0">
                             <div className="text-sm text-base-content/70 font-semibold tracking-wide uppercase mb-1">{title}</div>
                             <div className={`text-2xl font-bold text-${color} tracking-tight`}>{value}</div>
-                            {subtitle && (
-                                <div className="text-xs text-base-content/60 mt-1">{subtitle}</div>
+                            {description && (
+                                <div className="text-xs text-base-content/60 mt-1">{description}</div>
                             )}
                         </div>
                     </div>

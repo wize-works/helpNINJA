@@ -5,7 +5,7 @@ import { useTenant } from "@/components/tenant-context";
 import { Breadcrumb } from "@/components/ui/breadcrumb";
 import { AnimatedPage, StaggerContainer, StaggerChild } from "@/components/ui/animated-page";
 import { toastUtils } from '@/lib/toast';
-import { SimpleStatCard } from '@/components/ui/stat-card';
+import StatCard, { SimpleStatCard } from '@/components/ui/stat-card';
 
 type ApiKey = {
     id: string;
@@ -279,37 +279,37 @@ export default function ApiKeysPage() {
                 <StaggerContainer>
                     <StaggerChild>
                         <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-6">
-                            <SimpleStatCard
+                            <StatCard
                                 title="API Keys"
                                 value={apiKeys.length}
-                                subtitle={`${apiKeys.filter(k => !k.is_expired).length} active`}
+                                description={`${apiKeys.filter(k => !k.is_expired).length} active`}
                                 icon="fa-key"
                                 color="primary"
                             />
 
-                            <SimpleStatCard
+                            <StatCard
                                 title="Webhooks"
                                 value={webhooks.length}
-                                subtitle={`${webhooks.filter(w => w.is_active).length} active`}
+                                description={`${webhooks.filter(w => w.is_active).length} active`}
                                 icon="fa-webhook"
                                 color="secondary"
                             />
 
-                            <SimpleStatCard
+                            <StatCard
                                 title="Total Requests"
                                 value={apiKeys.reduce((sum, key) => sum + key.usage_count, 0).toLocaleString()}
-                                subtitle="API calls made"
+                                description="API calls made"
                                 icon="fa-chart-line"
                                 color="info"
                             />
 
-                            <SimpleStatCard
+                            <StatCard
                                 title="Webhook Success"
                                 value={`${webhooks.length > 0
                                     ? Math.round(webhooks.reduce((sum, w) => sum + w.stats.success_rate, 0) / webhooks.length)
                                     : 100
                                     }%`}
-                                subtitle="Delivery rate"
+                                description="Delivery rate"
                                 icon="fa-check-circle"
                                 color="success"
                             />

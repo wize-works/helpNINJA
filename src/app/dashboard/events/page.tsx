@@ -4,6 +4,7 @@ import { Breadcrumb } from '@/components/ui/breadcrumb';
 import { AnimatedPage, StaggerContainer, StaggerChild, HoverScale } from '@/components/ui/animated-page';
 import FilterControls from './filter-controls';
 import EventsContent from './events-content';
+import StatCard from '@/components/ui/stat-card';
 
 export const runtime = 'nodejs';
 
@@ -46,12 +47,23 @@ export default async function EventsPage({ searchParams }: Props) {
                             <div className="flex items-center gap-3">
                                 <FilterControls filters={{ search, event, dateRange }} />
                                 <HoverScale scale={1.02}>
-                                    <a href="/dashboard/analytics" className="btn btn-outline btn-sm rounded-lg">
+                                    <a href="/dashboard/analytics" className="btn btn-primary btn-sm rounded-lg">
                                         <i className="fa-duotone fa-solid fa-chart-line mr-2" aria-hidden />
                                         Analytics
                                     </a>
                                 </HoverScale>
                             </div>
+                        </div>
+                    </StaggerChild>
+                </StaggerContainer>
+
+                <StaggerContainer>
+                    <StaggerChild>
+                        <div className='grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6'>
+                            <StatCard title="Total Events" value="1,234" description="Events in the last 30 days" icon="fa-waveform-lines" color="primary" />
+                            <StatCard title="Unique Users" value="567" description="Users generating events" icon="fa-users" color="secondary" />
+                            <StatCard title="Error Events" value="45" description="Events with errors" icon="fa-triangle-exclamation" color="warning" />
+                            <StatCard title="Avg. Events/User" value="2.17" description="Average events per user" icon="fa-user-chart" color="info" />
                         </div>
                     </StaggerChild>
                 </StaggerContainer>

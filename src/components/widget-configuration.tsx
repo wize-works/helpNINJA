@@ -424,7 +424,7 @@ export default function WidgetConfiguration({
                         >
                             {/* Chat header */}
                             <div className="p-4 flex items-center justify-between rounded-t-xl"
-                                style={{ 
+                                style={{
                                     backgroundColor: config.advancedColors ? config.panelHeaderBackground : config.primaryColor,
                                     color: config.advancedColors ? config.panelHeaderColor : '#ffffff'
                                 }}
@@ -452,16 +452,16 @@ export default function WidgetConfiguration({
                             </div>
 
                             {/* Chat content */}
-                            <div className={`p-4 h-64 overflow-y-auto`} style={{ 
+                            <div className={`p-4 h-64 overflow-y-auto`} style={{
                                 backgroundColor: config.advancedColors ? config.messagesBackground : "#eef2f7",
                                 color: config.advancedColors ? config.messagesColor : '#333333'
                             }}>
                                 {/* AI message */}
                                 <div className="flex gap-2 mb-4">
                                     <div className="w-10 h-10 p-2 rounded-full flex-shrink-0 flex items-center justify-center" style={{ backgroundColor: config.advancedColors ? config.assistantBubbleBackground : `${config.primaryColor}`, color: config.advancedColors ? config.assistantBubbleColor : '#fff' }}>
-                                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 956.64 755.1" style={{width:"100%", height:"100%", fill:"currentColor", transition:"transform 0.3s ease"}}>
-                                            <path d="M881.79,312.74c39.7-2.7,69.63,32.16,72.85,69.65,2.49,28.99,2.84,71.14,0,99.98-3.32,33.71-25.27,64.29-60.77,68.23-3.79.42-15.01-.53-16.75,1.25-1.57,1.6-3.92,11.56-5.29,14.71-36.91,85.11-121.05,139.58-212.45,148.55-21.08,34.37-64.81,45.83-102.74,37.28-73.64-16.61-62.97-110.41,15.52-118.5,30.57-3.15,53.55-.69,77.04,19.95,4.58,4.03.85,4.59,9.83,3.91,150.57-11.41,192.52-154.99,173.45-284.2-31.77-215.33-222.58-341.22-435.02-298.35C205.65,113.9,108.17,278.52,121.66,467.37c1.64,22.9,8.34,46.43,9.97,68.02,1.48,19.58-12.44,13.97-25.52,14.45-29.32,1.07-49.44,6.57-75.18-11.74-13.35-9.5-21.84-21.17-25.79-37.21-3.43-33.3-6.48-73.04-4.53-106.55,1.9-32.51,14.65-68,48.5-78.5,4.27-1.33,21.8-3.24,23.04-4.96,1.41-1.97,5.57-22.28,7.01-26.99C145.21,69.49,373.1-40.91,587.08,13.95c145.03,37.18,261.97,151.64,294.72,298.79Z"/>
-                                            <path d="M428.45,329.17c42.73-1.25,88.12-1.04,130.7,1.72,66.55,4.31,205.78,20.26,213.38,106.62,8.53,96.89-108.27,127.26-183.69,109.69-28.27-6.59-51.79-21.81-78.66-30.34-68.8-21.84-107.58,30.48-171.03,35.01-65.52,4.67-173.87-28.91-159.04-113.04,17.6-99.83,168.87-107.34,248.34-109.66ZM322.44,399.16c-48.11,6.17-52.08,102.36,2.84,107.6,65.56,6.25,68.28-116.71-2.84-107.6ZM620.45,399.17c-51,5.3-55.76,92.59-5.58,105.99,68.17,18.2,78.14-113.52,5.58-105.99Z"/>
+                                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 956.64 755.1" style={{ width: "100%", height: "100%", fill: "currentColor", transition: "transform 0.3s ease" }}>
+                                            <path d="M881.79,312.74c39.7-2.7,69.63,32.16,72.85,69.65,2.49,28.99,2.84,71.14,0,99.98-3.32,33.71-25.27,64.29-60.77,68.23-3.79.42-15.01-.53-16.75,1.25-1.57,1.6-3.92,11.56-5.29,14.71-36.91,85.11-121.05,139.58-212.45,148.55-21.08,34.37-64.81,45.83-102.74,37.28-73.64-16.61-62.97-110.41,15.52-118.5,30.57-3.15,53.55-.69,77.04,19.95,4.58,4.03.85,4.59,9.83,3.91,150.57-11.41,192.52-154.99,173.45-284.2-31.77-215.33-222.58-341.22-435.02-298.35C205.65,113.9,108.17,278.52,121.66,467.37c1.64,22.9,8.34,46.43,9.97,68.02,1.48,19.58-12.44,13.97-25.52,14.45-29.32,1.07-49.44,6.57-75.18-11.74-13.35-9.5-21.84-21.17-25.79-37.21-3.43-33.3-6.48-73.04-4.53-106.55,1.9-32.51,14.65-68,48.5-78.5,4.27-1.33,21.8-3.24,23.04-4.96,1.41-1.97,5.57-22.28,7.01-26.99C145.21,69.49,373.1-40.91,587.08,13.95c145.03,37.18,261.97,151.64,294.72,298.79Z" />
+                                            <path d="M428.45,329.17c42.73-1.25,88.12-1.04,130.7,1.72,66.55,4.31,205.78,20.26,213.38,106.62,8.53,96.89-108.27,127.26-183.69,109.69-28.27-6.59-51.79-21.81-78.66-30.34-68.8-21.84-107.58,30.48-171.03,35.01-65.52,4.67-173.87-28.91-159.04-113.04,17.6-99.83,168.87-107.34,248.34-109.66ZM322.44,399.16c-48.11,6.17-52.08,102.36,2.84,107.6,65.56,6.25,68.28-116.71-2.84-107.6ZM620.45,399.17c-51,5.3-55.76,92.59-5.58,105.99,68.17,18.2,78.14-113.52,5.58-105.99Z" />
                                         </svg>
                                     </div>
                                     <div className="p-3 rounded-xl rounded-tl-none max-w-[80%] animate-fadeIn" style={{ backgroundColor: config.advancedColors ? config.assistantBubbleBackground : `${config.primaryColor}`, color: config.advancedColors ? config.assistantBubbleColor : '#fff' }}>
@@ -482,9 +482,9 @@ export default function WidgetConfiguration({
                                 {/* Typing indicator - AI response */}
                                 <div className="flex gap-2 mb-4">
                                     <div className="w-10 h-10 p-2 rounded-full flex-shrink-0 flex items-center justify-center" style={{ backgroundColor: config.advancedColors ? config.assistantBubbleBackground : `${config.primaryColor}`, color: config.advancedColors ? config.assistantBubbleColor : '#fff' }}>
-                                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 956.64 755.1" style={{width:"100%", height:"100%", fill:"currentColor", transition:"transform 0.3s ease"}}>
-                                            <path d="M881.79,312.74c39.7-2.7,69.63,32.16,72.85,69.65,2.49,28.99,2.84,71.14,0,99.98-3.32,33.71-25.27,64.29-60.77,68.23-3.79.42-15.01-.53-16.75,1.25-1.57,1.6-3.92,11.56-5.29,14.71-36.91,85.11-121.05,139.58-212.45,148.55-21.08,34.37-64.81,45.83-102.74,37.28-73.64-16.61-62.97-110.41,15.52-118.5,30.57-3.15,53.55-.69,77.04,19.95,4.58,4.03.85,4.59,9.83,3.91,150.57-11.41,192.52-154.99,173.45-284.2-31.77-215.33-222.58-341.22-435.02-298.35C205.65,113.9,108.17,278.52,121.66,467.37c1.64,22.9,8.34,46.43,9.97,68.02,1.48,19.58-12.44,13.97-25.52,14.45-29.32,1.07-49.44,6.57-75.18-11.74-13.35-9.5-21.84-21.17-25.79-37.21-3.43-33.3-6.48-73.04-4.53-106.55,1.9-32.51,14.65-68,48.5-78.5,4.27-1.33,21.8-3.24,23.04-4.96,1.41-1.97,5.57-22.28,7.01-26.99C145.21,69.49,373.1-40.91,587.08,13.95c145.03,37.18,261.97,151.64,294.72,298.79Z"/>
-                                            <path d="M428.45,329.17c42.73-1.25,88.12-1.04,130.7,1.72,66.55,4.31,205.78,20.26,213.38,106.62,8.53,96.89-108.27,127.26-183.69,109.69-28.27-6.59-51.79-21.81-78.66-30.34-68.8-21.84-107.58,30.48-171.03,35.01-65.52,4.67-173.87-28.91-159.04-113.04,17.6-99.83,168.87-107.34,248.34-109.66ZM322.44,399.16c-48.11,6.17-52.08,102.36,2.84,107.6,65.56,6.25,68.28-116.71-2.84-107.6ZM620.45,399.17c-51,5.3-55.76,92.59-5.58,105.99,68.17,18.2,78.14-113.52,5.58-105.99Z"/>
+                                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 956.64 755.1" style={{ width: "100%", height: "100%", fill: "currentColor", transition: "transform 0.3s ease" }}>
+                                            <path d="M881.79,312.74c39.7-2.7,69.63,32.16,72.85,69.65,2.49,28.99,2.84,71.14,0,99.98-3.32,33.71-25.27,64.29-60.77,68.23-3.79.42-15.01-.53-16.75,1.25-1.57,1.6-3.92,11.56-5.29,14.71-36.91,85.11-121.05,139.58-212.45,148.55-21.08,34.37-64.81,45.83-102.74,37.28-73.64-16.61-62.97-110.41,15.52-118.5,30.57-3.15,53.55-.69,77.04,19.95,4.58,4.03.85,4.59,9.83,3.91,150.57-11.41,192.52-154.99,173.45-284.2-31.77-215.33-222.58-341.22-435.02-298.35C205.65,113.9,108.17,278.52,121.66,467.37c1.64,22.9,8.34,46.43,9.97,68.02,1.48,19.58-12.44,13.97-25.52,14.45-29.32,1.07-49.44,6.57-75.18-11.74-13.35-9.5-21.84-21.17-25.79-37.21-3.43-33.3-6.48-73.04-4.53-106.55,1.9-32.51,14.65-68,48.5-78.5,4.27-1.33,21.8-3.24,23.04-4.96,1.41-1.97,5.57-22.28,7.01-26.99C145.21,69.49,373.1-40.91,587.08,13.95c145.03,37.18,261.97,151.64,294.72,298.79Z" />
+                                            <path d="M428.45,329.17c42.73-1.25,88.12-1.04,130.7,1.72,66.55,4.31,205.78,20.26,213.38,106.62,8.53,96.89-108.27,127.26-183.69,109.69-28.27-6.59-51.79-21.81-78.66-30.34-68.8-21.84-107.58,30.48-171.03,35.01-65.52,4.67-173.87-28.91-159.04-113.04,17.6-99.83,168.87-107.34,248.34-109.66ZM322.44,399.16c-48.11,6.17-52.08,102.36,2.84,107.6,65.56,6.25,68.28-116.71-2.84-107.6ZM620.45,399.17c-51,5.3-55.76,92.59-5.58,105.99,68.17,18.2,78.14-113.52,5.58-105.99Z" />
                                         </svg>
                                     </div>
                                     <div className="p-3 rounded-xl rounded-tl-none max-w-[80%] animate-fadeIn" style={{ backgroundColor: config.advancedColors ? config.assistantBubbleBackground : `${config.primaryColor}`, color: config.advancedColors ? config.assistantBubbleColor : '#fff' }}>
@@ -695,11 +695,10 @@ export default function WidgetConfiguration({
                                                     key={option.value}
                                                     type="button"
                                                     onClick={() => setConfig(prev => ({ ...prev, theme: option.value }))}
-                                                    className={`flex items-center gap-2 px-3 py-2 rounded-md text-sm font-medium transition-all duration-200 ${
-                                                        config.theme === option.value
-                                                            ? 'bg-primary text-primary-content shadow-sm'
-                                                            : 'text-base-content/70 hover:text-base-content hover:bg-base-200/80'
-                                                    }`}
+                                                    className={`flex items-center gap-2 px-3 py-2 rounded-md text-sm font-medium transition-all duration-200 ${config.theme === option.value
+                                                        ? 'bg-primary text-primary-content shadow-sm'
+                                                        : 'text-base-content/70 hover:text-base-content hover:bg-base-200/80'
+                                                        }`}
                                                     aria-label={`Set theme to ${option.label}`}
                                                     title={`Set theme to ${option.label}`}
                                                 >
@@ -716,7 +715,7 @@ export default function WidgetConfiguration({
                                     <div className="">
                                         <label className="text-sm font-medium text-base-content block mb-2">Primary Color</label>
                                         <div className="flex items-center gap-3">
-                                            <div className="w-8 h-8 rounded-full overflow-hidden relative">
+                                            <div className="w-8 h-8 rounded-full overflow-hidden relative border border-solid border-base-content/20">
                                                 <input
                                                     type="color"
                                                     value={config.primaryColor}
@@ -750,7 +749,7 @@ export default function WidgetConfiguration({
                                     <div>
                                         <label className="text-sm font-medium text-base-content block mb-2">Bubble Color</label>
                                         <div className="flex items-center gap-3">
-                                            <div className="w-8 h-8 rounded-full overflow-hidden relative">
+                                            <div className="w-8 h-8 rounded-full overflow-hidden relative border border-solid border-base-content/20">
                                                 <input
                                                     type="color"
                                                     value={config.bubbleColor}
@@ -772,7 +771,7 @@ export default function WidgetConfiguration({
                                     <div>
                                         <label className="text-sm font-medium text-base-content block mb-2">Bubble Background</label>
                                         <div className="flex items-center gap-3">
-                                            <div className="w-8 h-8 rounded-full overflow-hidden relative">
+                                            <div className="w-8 h-8 rounded-full overflow-hidden relative border border-solid border-base-content/20">
                                                 <input
                                                     type="color"
                                                     value={config.bubbleBackground}
@@ -794,7 +793,7 @@ export default function WidgetConfiguration({
                                     <div>
                                         <label className="text-sm font-medium text-base-content block mb-2">Panel Background</label>
                                         <div className="flex items-center gap-3">
-                                            <div className="w-8 h-8 rounded-full overflow-hidden relative">
+                                            <div className="w-8 h-8 rounded-full overflow-hidden relative border border-solid border-base-content/20">
                                                 <input
                                                     type="color"
                                                     value={config.panelBackground}
@@ -816,7 +815,7 @@ export default function WidgetConfiguration({
                                     <div>
                                         <label className="text-sm font-medium text-base-content block mb-2">Header Background</label>
                                         <div className="flex items-center gap-3">
-                                            <div className="w-8 h-8 rounded-full overflow-hidden relative">
+                                            <div className="w-8 h-8 rounded-full overflow-hidden relative border border-solid border-base-content/20">
                                                 <input
                                                     type="color"
                                                     value={config.panelHeaderBackground}
@@ -839,7 +838,7 @@ export default function WidgetConfiguration({
                                     <div>
                                         <label className="text-sm font-medium text-base-content block mb-2">Panel Text Color</label>
                                         <div className="flex items-center gap-3">
-                                            <div className="w-8 h-8 rounded-full overflow-hidden relative">
+                                            <div className="w-8 h-8 rounded-full overflow-hidden relative border border-solid border-base-content/20">
                                                 <input
                                                     type="color"
                                                     value={config.panelColor}
@@ -862,7 +861,7 @@ export default function WidgetConfiguration({
                                     <div>
                                         <label className="text-sm font-medium text-base-content block mb-2">Header Text Color</label>
                                         <div className="flex items-center gap-3">
-                                            <div className="w-8 h-8 rounded-full overflow-hidden relative">
+                                            <div className="w-8 h-8 rounded-full overflow-hidden relative border border-solid border-base-content/20">
                                                 <input
                                                     type="color"
                                                     value={config.panelHeaderColor}
@@ -884,7 +883,7 @@ export default function WidgetConfiguration({
                                     <div>
                                         <label className="text-sm font-medium text-base-content block mb-2">Messages Area Background</label>
                                         <div className="flex items-center gap-3">
-                                            <div className="w-8 h-8 rounded-full overflow-hidden relative">
+                                            <div className="w-8 h-8 rounded-full overflow-hidden relative border border-solid border-base-content/20">
                                                 <input
                                                     type="color"
                                                     value={config.messagesBackground}
@@ -907,7 +906,7 @@ export default function WidgetConfiguration({
                                     <div>
                                         <label className="text-sm font-medium text-base-content block mb-2">Messages Text Color</label>
                                         <div className="flex items-center gap-3">
-                                            <div className="w-8 h-8 rounded-full overflow-hidden relative">
+                                            <div className="w-8 h-8 rounded-full overflow-hidden relative border border-solid border-base-content/20">
                                                 <input
                                                     type="color"
                                                     value={config.messagesColor}
@@ -929,7 +928,7 @@ export default function WidgetConfiguration({
                                     <div>
                                         <label className="text-sm font-medium text-base-content block mb-2">User Bubble Background</label>
                                         <div className="flex items-center gap-3">
-                                            <div className="w-8 h-8 rounded-full overflow-hidden relative">
+                                            <div className="w-8 h-8 rounded-full overflow-hidden relative border border-solid border-base-content/20">
                                                 <input
                                                     type="color"
                                                     value={config.userBubbleBackground}
@@ -951,7 +950,7 @@ export default function WidgetConfiguration({
                                     <div>
                                         <label className="text-sm font-medium text-base-content block mb-2">User Bubble Color</label>
                                         <div className="flex items-center gap-3">
-                                            <div className="w-8 h-8 rounded-full overflow-hidden relative">
+                                            <div className="w-8 h-8 rounded-full overflow-hidden relative border border-solid border-base-content/20">
                                                 <input
                                                     type="color"
                                                     value={config.userBubbleColor}
@@ -973,7 +972,7 @@ export default function WidgetConfiguration({
                                     <div>
                                         <label className="text-sm font-medium text-base-content block mb-2">Assistant Bubble Background</label>
                                         <div className="flex items-center gap-3">
-                                            <div className="w-8 h-8 rounded-full overflow-hidden relative">
+                                            <div className="w-8 h-8 rounded-full overflow-hidden relative border border-solid border-base-content/20">
                                                 <input
                                                     type="color"
                                                     value={config.assistantBubbleBackground}
@@ -995,7 +994,7 @@ export default function WidgetConfiguration({
                                     <div>
                                         <label className="text-sm font-medium text-base-content block mb-2">Assistant Bubble Color</label>
                                         <div className="flex items-center gap-3">
-                                            <div className="w-8 h-8 rounded-full overflow-hidden relative">
+                                            <div className="w-8 h-8 rounded-full overflow-hidden relative border border-solid border-base-content/20">
                                                 <input
                                                     type="color"
                                                     value={config.assistantBubbleColor}
@@ -1017,7 +1016,7 @@ export default function WidgetConfiguration({
                                     <div>
                                         <label className="text-sm font-medium text-base-content block mb-2">Send Button Background</label>
                                         <div className="flex items-center gap-3">
-                                            <div className="w-8 h-8 rounded-full overflow-hidden relative">
+                                            <div className="w-8 h-8 rounded-full overflow-hidden relative border border-solid border-base-content/20">
                                                 <input
                                                     type="color"
                                                     value={config.buttonBackground}
@@ -1039,7 +1038,7 @@ export default function WidgetConfiguration({
                                     <div>
                                         <label className="text-sm font-medium text-base-content block mb-2">Send Button Color</label>
                                         <div className="flex items-center gap-3">
-                                            <div className="w-8 h-8 rounded-full overflow-hidden relative">
+                                            <div className="w-8 h-8 rounded-full overflow-hidden relative border border-solid border-base-content/20">
                                                 <input
                                                     type="color"
                                                     value={config.buttonColor}

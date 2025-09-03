@@ -6,6 +6,7 @@ import { AnimatedPage, StaggerContainer, StaggerChild, HoverScale, FadeIn } from
 import { Suspense } from "react";
 import FilterControls from "./filter-controls";
 import Link from "next/link";
+import StatCard from "@/components/ui/stat-card";
 
 export const runtime = 'nodejs'
 
@@ -400,7 +401,7 @@ export default async function ConversationsPage({ searchParams }: { searchParams
                             <div className="flex items-center gap-3">
                                 <FilterControls filters={filters} sites={sites} />
                                 <HoverScale scale={1.02}>
-                                    <button className="flex items-center gap-2 px-4 py-2 bg-base-200/60 hover:bg-base-200 border border-base-300/40 rounded-lg text-sm font-medium transition-all duration-200">
+                                    <button className="btn btn-secondary btn-sm rounded-lg">
                                         <i className="fa-duotone fa-solid fa-download text-xs" aria-hidden />
                                         Export
                                     </button>
@@ -437,114 +438,76 @@ async function ConversationsContent({ tenantId, filters }: { tenantId: string; f
                 <StaggerChild>
                     <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 xl:grid-cols-4 gap-6">
                         <HoverScale scale={1.01}>
-                            <div className="stats shadow hover:shadow-md transition-all duration-300 w-full rounded-2xl overflow-hidden">
-                                <div className="stat bg-base-100 rounded-2xl">
-                                    <div className="stat-title">Conversations</div>
-                                    <div className="stat-figure">
-                                        <div className="bg-primary/20 rounded-2xl h-12 w-12 flex items-center justify-center">
-                                            <i className="fa-duotone fa-solid fa-messages text-lg text-primary" aria-hidden />
-                                        </div>
-                                    </div>
-                                    <div className="stat-value text-primary">{kpis.conversations}</div>
-                                </div>
-                            </div>
+                            <StatCard
+                                title="Conversations"
+                                value={kpis.conversations}
+                                description="total conversations"
+                                icon="fa-messages"
+                                color="primary"
+                            />
                         </HoverScale>
                         <HoverScale scale={1.01}>
-                            <div className="stats shadow hover:shadow-md transition-all duration-300 w-full rounded-2xl overflow-hidden">
-                                <div className="stat bg-base-100 rounded-2xl">
-                                    <div className="stat-title">Messages</div>
-                                    <div className="stat-figure">
-                                        <div className="bg-info/20 rounded-2xl h-12 w-12 flex items-center justify-center">
-                                            <i className="fa-duotone fa-solid fa-message-lines text-lg text-info" aria-hidden />
-                                        </div>
-                                    </div>
-                                    <div className="stat-value text-info">{kpis.messages}</div>
-                                </div>
-                            </div>
+                            <StatCard
+                                title="Messages"
+                                value={kpis.messages}
+                                description="total messages"
+                                icon="fa-message-lines"
+                                color="info"
+                            />
                         </HoverScale>
                         <HoverScale scale={1.01}>
-                            <div className="stats shadow hover:shadow-md transition-all duration-300 w-full rounded-2xl overflow-hidden">
-                                <div className="stat bg-base-100 rounded-2xl">
-                                    <div className="stat-title">Escalations</div>
-                                    <div className="stat-figure">
-                                        <div className={`${kpis.escalations ? 'bg-warning/20' : 'bg-base-200/60'} rounded-2xl h-12 w-12 flex items-center justify-center`}>
-                                            <i className={`fa-duotone fa-solid fa-fire text-lg ${kpis.escalations ? 'text-warning' : 'text-base-content/60'}`} aria-hidden />
-                                        </div>
-                                    </div>
-                                    <div className={`stat-value ${kpis.escalations ? 'text-warning' : 'text-base-content'}`}>{kpis.escalations}</div>
-                                    {kpis.escalations > 0 && <div className="stat-desc">{kpis.escalated_conversations} convos</div>}
-                                </div>
-                            </div>
+                            <StatCard
+                                title="Avg. Messages"
+                                value={kpis.avg_messages ? kpis.avg_messages.toFixed(1) : '0'}
+                                description="per conversation"
+                                icon="fa-chart-simple"
+                                color="accent"
+                            />
                         </HoverScale>
                         <HoverScale scale={1.01}>
-                            <div className="stats shadow hover:shadow-md transition-all duration-300 w-full rounded-2xl overflow-hidden">
-                                <div className="stat bg-base-100 rounded-2xl">
-                                    <div className="stat-title">Escalation Rate</div>
-                                    <div className="stat-figure">
-                                        <div className="bg-secondary/20 rounded-2xl h-12 w-12 flex items-center justify-center">
-                                            <i className="fa-duotone fa-solid fa-gauge-high text-lg text-secondary" aria-hidden />
-                                        </div>
-                                    </div>
-                                    <div className="stat-value text-secondary">{escalationRate.toFixed(1)}%</div>
-                                    <div className="stat-desc">of conversations</div>
-                                </div>
-                            </div>
+                            <StatCard
+                                title="Escalation Rate"
+                                value={`${escalationRate.toFixed(1)}%`}
+                                description="of conversations"
+                                icon="fa-gauge-high"
+                                color="secondary"
+                            />
                         </HoverScale>
                         <HoverScale scale={1.01}>
-                            <div className="stats shadow hover:shadow-md transition-all duration-300 w-full rounded-2xl overflow-hidden">
-                                <div className="stat bg-base-100 rounded-2xl">
-                                    <div className="stat-title">Low Confidence</div>
-                                    <div className="stat-figure">
-                                        <div className={`${kpis.low_confidence_messages ? (kpis.low_confidence_messages > 10 ? 'bg-error/20' : 'bg-warning/20') : 'bg-base-200/60'} rounded-2xl h-12 w-12 flex items-center justify-center`}>
-                                            <i className={`fa-duotone fa-solid fa-triangle-exclamation text-lg ${kpis.low_confidence_messages ? (kpis.low_confidence_messages > 10 ? 'text-error' : 'text-warning') : 'text-base-content/60'}`} aria-hidden />
-                                        </div>
-                                    </div>
-                                    <div className={`${kpis.low_confidence_messages ? (kpis.low_confidence_messages > 10 ? 'text-error' : 'text-warning') : 'text-base-content'} stat-value`}>{kpis.low_confidence_messages}</div>
-                                    {kpis.low_confidence_messages > 0 && <div className="stat-desc">assistant msgs</div>}
-                                </div>
-                            </div>
+                            <StatCard
+                                title="Low Confidence"
+                                value={kpis.low_confidence_messages}
+                                description="assistant messages"
+                                icon="fa-triangle-exclamation"
+                                color={kpis.low_confidence_messages > 10 ? 'error' : kpis.low_confidence_messages > 0 ? 'warning' : 'info'}
+                            />
                         </HoverScale>
                         <HoverScale scale={1.01}>
-                            <div className="stats shadow hover:shadow-md transition-all duration-300 w-full rounded-2xl overflow-hidden">
-                                <div className="stat bg-base-100 rounded-2xl">
-                                    <div className="stat-title">Healthy Convos</div>
-                                    <div className="stat-figure">
-                                        <div className="bg-success/20 rounded-2xl h-12 w-12 flex items-center justify-center">
-                                            <i className="fa-duotone fa-solid fa-badge-check text-lg text-success" aria-hidden />
-                                        </div>
-                                    </div>
-                                    <div className="stat-value text-success">{kpis.conversations - kpis.escalated_conversations}</div>
-                                    <div className="stat-desc">no escalations</div>
-                                </div>
-                            </div>
+                            <StatCard
+                                title="Healthy Convos"
+                                value={kpis.conversations - kpis.escalated_conversations}
+                                description="no escalations"
+                                icon="fa-badge-check"
+                                color="success"
+                            />
                         </HoverScale>
                         <HoverScale scale={1.01}>
-                            <div className="stats shadow hover:shadow-md transition-all duration-300 w-full rounded-2xl overflow-hidden">
-                                <div className="stat bg-base-100 rounded-2xl">
-                                    <div className="stat-title">Escalated Convos</div>
-                                    <div className="stat-figure">
-                                        <div className={`${kpis.escalated_conversations ? 'bg-warning/20' : 'bg-base-200/60'} rounded-2xl h-12 w-12 flex items-center justify-center`}>
-                                            <i className={`fa-duotone fa-solid fa-fire-flame text-lg ${kpis.escalated_conversations ? 'text-warning' : 'text-base-content/60'}`} aria-hidden />
-                                        </div>
-                                    </div>
-                                    <div className={`stat-value ${kpis.escalated_conversations ? 'text-warning' : 'text-base-content'}`}>{kpis.escalated_conversations}</div>
-                                    <div className="stat-desc">unique sessions</div>
-                                </div>
-                            </div>
+                            <StatCard
+                                title="Escalated Convos"
+                                value={kpis.escalated_conversations}
+                                description="unique sessions"
+                                icon="fa-fire-flame"
+                                color={kpis.escalated_conversations ? 'warning' : 'info'}
+                            />
                         </HoverScale>
                         <HoverScale scale={1.01}>
-                            <div className="stats shadow hover:shadow-md transition-all duration-300 w-full rounded-2xl overflow-hidden">
-                                <div className="stat bg-base-100 rounded-2xl">
-                                    <div className="stat-title">Avg Msgs/Convo</div>
-                                    <div className="stat-figure">
-                                        <div className="bg-accent/20 rounded-2xl h-12 w-12 flex items-center justify-center">
-                                            <i className="fa-duotone fa-solid fa-chart-simple text-lg text-accent" aria-hidden />
-                                        </div>
-                                    </div>
-                                    <div className="stat-value text-accent">{(kpis.avg_messages ?? 0).toFixed(1)}</div>
-                                    <div className="stat-desc">interaction depth</div>
-                                </div>
-                            </div>
+                            <StatCard
+                                title="Escalations"
+                                value={kpis.escalations ? kpis.escalations.toFixed(1) : '0'}
+                                description="total escalations"
+                                icon="fa-fire"
+                                color="error"
+                            />
                         </HoverScale>
                     </div>
                 </StaggerChild>

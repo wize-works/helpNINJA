@@ -11,6 +11,7 @@ import QuickStartDismiss from "../../components/quickstart-dismiss";
 import SiteWizardLauncher from "@/components/site-wizard-launcher";
 import Link from "next/link";
 import { getChartColors } from "@/lib/colors";
+import StatCard from "@/components/ui/stat-card";
 
 export const runtime = "nodejs"; // ensure Node runtime for pg
 export const dynamic = "force-dynamic"; // always fetch fresh stats/charts
@@ -333,7 +334,7 @@ export default async function Dashboard() {
                                     <PlanBadge tenantId={tenantId} />
                                 </Suspense>
                                 <HoverScale scale={1.02}>
-                                    <Link href="/dashboard/analytics" className="flex items-center gap-2 px-4 py-2 bg-base-200/60 hover:bg-base-200 border border-base-300/40 rounded-lg text-sm transition-all duration-200">
+                                    <Link href="/dashboard/analytics" className="btn btn-primary btn-sm rounded-lg">
                                         <i className="fa-duotone fa-solid fa-chart-line" aria-hidden />
                                         Analytics
                                     </Link>
@@ -614,43 +615,37 @@ async function StatsCards({ tenantId }: { tenantId: string }) {
                 <HoverScale scale={1.02}>
                     <StatCard
                         icon="fa-comments"
-                        iconColor="text-blue-600"
-                        iconBg="bg-blue-500/10"
-                        accentColor="border-blue-500/20"
+                        color="primary"
                         title="Conversations"
                         value={num(stats.conversations)}
-                        trend={<MetricTrend value={stats.conversations} previousValue={Math.max(1, stats.conversations - 5)} label="vs last week" />}
+                        description={<MetricTrend value={stats.conversations} previousValue={Math.max(1, stats.conversations - 5)} label="vs last week" />}
                     />
                 </HoverScale>
                 <HoverScale scale={1.02}>
-                    <UsageCard used={stats.messages_this_month} limit={limit} assistant={stats.assistant_messages_this_month} />
+                    <StatCard
+                        icon="fa-message"
+                        color="secondary"
+                        title="User Messages"
+                        value={`${num(stats.messages_this_month)}/${limit}`}
+                        description={<MetricTrend value={stats.messages_this_month} previousValue={Math.max(1, stats.messages_this_month - 20)} label="vs last week" />}
+                    />
                 </HoverScale>
                 <HoverScale scale={1.02}>
                     <StatCard
-                        icon="fa-triangle-exclamation"
-                        iconColor={lowConfRate > 25 ? "text-red-600" : "text-amber-600"}
-                        iconBg={lowConfRate > 25 ? "bg-red-500/10" : "bg-amber-500/10"}
-                        accentColor={lowConfRate > 25 ? "border-red-500/20" : "border-amber-500/20"}
-                        title="Low-confidence rate"
+                        icon="fa-shield-check"
+                        color="warning"
+                        title="Low-confidence"
                         value={`${lowConfRate}%`}
-                        delta={stats.low_conf ? `${stats.low_conf} msgs` : undefined}
-                        negative={lowConfRate > 25}
-                        trend={<MetricTrend value={lowConfRate} previousValue={Math.max(0, lowConfRate - 1)} label="vs last week" />}
+                        description={<MetricTrend value={lowConfRate} previousValue={Math.max(0, lowConfRate - 1)} label="vs last week" />}
                     />
                 </HoverScale>
                 <HoverScale scale={1.02}>
                     <StatCard
                         icon="fa-puzzle-piece"
-                        iconColor="text-violet-600"
-                        iconBg="bg-violet-500/10"
-                        accentColor="border-violet-500/20"
+                        color="info"
                         title="Active integrations"
-                        value={`${num(stats.integrations_active)} of ${2}`}
-                        delta={stats.escalations_pending ? `${stats.escalations_pending} pending` : undefined}
-                        negative={Boolean(stats.escalations_pending)}
-                        trend={<div className="text-xs text-base-content/60">
-                            {stats.integrations_active >= 2 ? 'All connected' : `${2 - stats.integrations_active} more available`}
-                        </div>}
+                        value={num(stats.integrations_active)}
+                        description={<MetricTrend value={stats.integrations_active} previousValue={Math.max(0, stats.integrations_active - 1)} label="vs last week" />}
                     />
                 </HoverScale>
             </div>
@@ -1009,113 +1004,6 @@ async function UsageOverview({ tenantId }: { tenantId: string }) {
             </div>
         );
     }
-}
-
-function StatCard({
-    icon,
-    iconColor = "text-base-content/60",
-    iconBg = "bg-base-200/60",
-    accentColor = "border-base-200/60",
-    title,
-    value,
-    delta,
-    negative,
-    trend
-}: {
-    icon: string;
-    iconColor?: string;
-    iconBg?: string;
-    accentColor?: string;
-    title: string;
-    value: string | number;
-    delta?: string;
-    negative?: boolean;
-    trend?: React.ReactNode;
-}) {
-    return (
-        <div className={`card bg-base-100 rounded-2xl border ${accentColor} shadow-sm hover:shadow-md transition-all duration-300 group`}>
-            <div className="p-6">
-                <div className="flex items-center gap-4">
-                    <div className={`w-12 h-12 ${iconBg} rounded-2xl flex items-center justify-center group-hover:scale-105 transition-transform duration-200 flex-shrink-0`}>
-                        <i className={`fa-duotone fa-solid ${icon} text-lg ${iconColor}`} aria-hidden />
-                    </div>
-                    <div className="flex-1 min-w-0">
-                        <div className="text-sm text-base-content/70 font-semibold tracking-wide uppercase mb-1">{title}</div>
-                        <div className="text-2xl font-bold text-base-content tracking-tight">{value}</div>
-                        {trend && <div className="mt-1">{trend}</div>}
-                        {delta && (
-                            <div className={`inline-flex items-center gap-1 px-3 py-1 rounded-lg text-xs font-semibold shadow-sm mt-2 ${negative ? "bg-red-500/10 text-red-700 border border-red-500/20" : "bg-emerald-500/10 text-emerald-700 border border-emerald-500/20"
-                                }`}>
-                                {delta}
-                            </div>
-                        )}
-                    </div>
-                </div>
-            </div>
-        </div>
-    );
-}
-
-function UsageCard({ used, limit, assistant }: { used: number; limit: number; assistant?: number }) {
-    const pct = limit ? Math.min(100, Math.round((used / limit) * 100)) : 0;
-
-    const getUsageColors = () => {
-        if (pct > 90) return {
-            iconBg: 'bg-red-500/10',
-            iconColor: 'text-red-600',
-            badgeBg: 'bg-red-500/10 text-red-700 border border-red-500/20',
-            accentColor: 'border-red-500/20',
-            progressColor: 'bg-red-500'
-        };
-        if (pct > 70) return {
-            iconBg: 'bg-amber-500/10',
-            iconColor: 'text-amber-600',
-            badgeBg: 'bg-amber-500/10 text-amber-700 border border-amber-500/20',
-            accentColor: 'border-amber-500/20',
-            progressColor: 'bg-amber-500'
-        };
-        return {
-            iconBg: 'bg-emerald-500/10',
-            iconColor: 'text-emerald-600',
-            badgeBg: 'bg-emerald-500/10 text-emerald-700 border border-emerald-500/20',
-            accentColor: 'border-emerald-500/20',
-            progressColor: 'bg-emerald-500'
-        };
-    };
-
-    const colors = getUsageColors();
-
-    return (
-        <div className={`card bg-base-100 rounded-2xl border ${colors.accentColor} shadow-sm hover:shadow-md transition-all duration-300 group`}>
-            <div className="p-6">
-                <div className="flex items-center gap-4">
-                    <div className={`w-12 h-12 ${colors.iconBg} rounded-2xl flex items-center justify-center group-hover:scale-105 transition-transform duration-200 flex-shrink-0`}>
-                        <i className={`fa-duotone fa-solid fa-message text-lg ${colors.iconColor}`} aria-hidden />
-                    </div>
-                    <div className="flex-1 min-w-0">
-                        <div className="flex items-center justify-between mb-1">
-                            <div className="text-sm text-base-content/70 font-semibold tracking-wide uppercase">Messages</div>
-                            <div className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-xs font-semibold ${colors.badgeBg}`}>
-                                {pct}%
-                            </div>
-                        </div>
-                        <div className="text-2xl font-bold text-base-content tracking-tight">
-                            {num(used)}
-                            <span className="text-lg text-base-content/60 font-normal">/{num(limit)}</span>
-                        </div>
-                        <div className="flex items-center justify-between text-xs">
-                            {typeof assistant === 'number' && (
-                                <div className="text-base-content/60">AI: <span className="font-medium text-base-content">{num(assistant)}</span></div>
-                            )}
-                            <div className="ml-auto">
-                                <MetricTrend value={used} previousValue={Math.max(1, used - 10)} label="vs last week" />
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-    );
 }
 
 function num(n: number) { return new Intl.NumberFormat().format(n); }

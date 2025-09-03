@@ -7,6 +7,7 @@ import { AnimatedPage, StaggerContainer, StaggerChild, HoverScale } from "@/comp
 import { ConversationTrendsChart, ConfidenceAnalysisChart, ResponseTimeChart } from "./analytics-charts";
 import { IntegrationHealthDashboard } from "@/components/analytics/integration-health-dashboard";
 import { ExportControls } from "@/components/analytics/export-controls";
+import StatCard from "@/components/ui/stat-card";
 
 export const runtime = 'nodejs'
 
@@ -284,12 +285,12 @@ async function getAnalyticsData(tenantId: string): Promise<AnalyticsData> {
     }));
 
     // Calculate escalation rate and average response time from real data
-    const escalationRate = currData.total_conversations > 0 
-        ? Math.round((currData.total_escalations / currData.total_conversations) * 100) 
+    const escalationRate = currData.total_conversations > 0
+        ? Math.round((currData.total_escalations / currData.total_conversations) * 100)
         : 0;
-    
-    const prevEscalationRate = prevData.prev_conversations > 0 
-        ? Math.round((prevData.prev_escalations / prevData.prev_conversations) * 100) 
+    console.log('Escalation Rate:', escalationRate, 'Curr Escalations:', currData.total_escalations, 'Curr Conversations:', currData.total_conversations);
+    const prevEscalationRate = prevData.prev_conversations > 0
+        ? Math.round((prevData.prev_escalations / prevData.prev_conversations) * 100)
         : 0;
 
     // Calculate average response time from response time data
@@ -297,8 +298,8 @@ async function getAnalyticsData(tenantId: string): Promise<AnalyticsData> {
     const weightedResponseTime = responseTimeByHour.reduce((sum, hour) => {
         return sum + (hour.avgResponse * hour.volume);
     }, 0);
-    const avgResponseTime = totalVolumeForResponseTime > 0 
-        ? Math.round((weightedResponseTime / totalVolumeForResponseTime) * 10) / 10 
+    const avgResponseTime = totalVolumeForResponseTime > 0
+        ? Math.round((weightedResponseTime / totalVolumeForResponseTime) * 10) / 10
         : 0;
 
     // Calculate previous period response time for growth
@@ -476,62 +477,56 @@ function AnalyticsSkeleton() {
 }
 
 function AnalyticsOverview({ data }: { data: AnalyticsData }) {
-    const metrics = [
-        {
-            label: "Total Messages",
-            value: data.totalMessages.toLocaleString(),
-            trend: data.messagesGrowth,
-            icon: "fa-messages",
-            color: "blue"
-        },
-        {
-            label: "Conversations",
-            value: data.totalConversations.toLocaleString(),
-            trend: data.conversationsGrowth,
-            icon: "fa-comments",
-            color: "green"
-        },
-        {
-            label: "Avg Confidence",
-            value: `${data.avgConfidence}%`,
-            trend: data.confidenceGrowth,
-            icon: "fa-gauge-high",
-            color: "purple"
-        },
-        {
-            label: "Escalation Rate",
-            value: `${data.escalationRate}%`,
-            trend: data.escalationGrowth,
-            icon: "fa-triangle-exclamation",
-            color: "orange"
-        },
-        {
-            label: "Response Time",
-            value: `${data.avgResponseTime}s`,
-            trend: data.responseTimeGrowth,
-            icon: "fa-clock",
-            color: "teal"
-        },
-        {
-            label: "Active Integrations",
-            value: data.activeIntegrations.toString(),
-            trend: data.integrationsGrowth,
-            icon: "fa-puzzle-piece",
-            color: "pink"
-        }
-    ];
-
-    const getColorClasses = (color: string) => {
-        const colors = {
-            blue: "bg-blue-500/10 text-blue-600 border-blue-500/20",
-            green: "bg-emerald-500/10 text-emerald-600 border-emerald-500/20",
-            purple: "bg-purple-500/10 text-purple-600 border-purple-500/20",
-            orange: "bg-orange-500/10 text-orange-600 border-orange-500/20",
-            teal: "bg-teal-500/10 text-teal-600 border-teal-500/20",
-            pink: "bg-pink-500/10 text-pink-600 border-pink-500/20"
-        };
-        return colors[color as keyof typeof colors] || colors.blue;
-    };
+    const metrics: Array<{
+        label: string;
+        value: string;
+        trend: number;
+        icon: string;
+        color: 'primary' | 'secondary' | 'accent' | 'success' | 'warning' | 'error' | 'info';
+    }> = [
+            {
+                label: "Total Messages",
+                value: data.totalMessages.toLocaleString(),
+                trend: data.messagesGrowth,
+                icon: "fa-messages",
+                color: "success"
+            },
+            {
+                label: "Conversations",
+                value: data.totalConversations.toLocaleString(),
+                trend: data.conversationsGrowth,
+                icon: "fa-comments",
+                color: "primary"
+            },
+            {
+                label: "Avg Confidence",
+                value: `${data.avgConfidence}%`,
+                trend: data.confidenceGrowth,
+                icon: "fa-gauge-high",
+                color: "secondary"
+            },
+            {
+                label: "Escalation Rate",
+                value: `${data.escalationRate}%`,
+                trend: data.escalationGrowth,
+                icon: "fa-triangle-exclamation",
+                color: "warning"
+            },
+            {
+                label: "Response Time",
+                value: `${data.avgResponseTime}s`,
+                trend: data.responseTimeGrowth,
+                icon: "fa-clock",
+                color: "accent"
+            },
+            {
+                label: "Active Integrations",
+                value: data.activeIntegrations.toString(),
+                trend: data.integrationsGrowth,
+                icon: "fa-puzzle-piece",
+                color: "info"
+            }
+        ];
 
     return (
         <StaggerContainer>
@@ -539,25 +534,22 @@ function AnalyticsOverview({ data }: { data: AnalyticsData }) {
                 {metrics.map((metric) => (
                     <StaggerChild key={metric.label}>
                         <HoverScale scale={1.02}>
-                            <div className={`card bg-base-100 rounded-2xl border ${getColorClasses(metric.color).split(' ')[2]} shadow-sm hover:shadow-md transition-all duration-300 p-6 group`}>
-                                <div className="flex items-center gap-4">
-                                    <div className={`w-12 h-12 ${getColorClasses(metric.color).split(' ')[0]} rounded-2xl flex items-center justify-center group-hover:scale-105 transition-transform duration-200 flex-shrink-0`}>
-                                        <i className={`fa-duotone fa-solid ${metric.icon} text-lg ${getColorClasses(metric.color).split(' ')[1]}`} aria-hidden />
+                            <StatCard
+                                title={metric.label}
+                                value={metric.value}
+                                icon={metric.icon}
+                                color={metric.color}
+                                description={
+                                    <div className={`flex items-center gap-1 text-xs mt-1 ${metric.trend > 0 ? 'text-emerald-600' :
+                                        metric.trend < 0 ? 'text-red-600' : 'text-base-content/60'
+                                        }`}>
+                                        {metric.trend > 0 && <i className="fa-duotone fa-solid fa-arrow-trend-up" aria-hidden />}
+                                        {metric.trend < 0 && <i className="fa-duotone fa-solid fa-arrow-trend-down" aria-hidden />}
+                                        {metric.trend === 0 && <i className="fa-duotone fa-solid fa-minus" aria-hidden />}
+                                        <span className="font-semibold">{Math.abs(metric.trend).toFixed(1)}%</span>
                                     </div>
-                                    <div className="flex-1 min-w-0">
-                                        <div className="text-sm text-base-content/70 font-semibold tracking-wide uppercase mb-1">{metric.label}</div>
-                                        <div className="text-2xl font-bold text-base-content tracking-tight">{metric.value}</div>
-                                        <div className={`flex items-center gap-1 text-xs mt-1 ${metric.trend > 0 ? 'text-emerald-600' :
-                                            metric.trend < 0 ? 'text-red-600' : 'text-base-content/60'
-                                            }`}>
-                                            {metric.trend > 0 && <i className="fa-duotone fa-solid fa-arrow-trend-up" aria-hidden />}
-                                            {metric.trend < 0 && <i className="fa-duotone fa-solid fa-arrow-trend-down" aria-hidden />}
-                                            {metric.trend === 0 && <i className="fa-duotone fa-solid fa-minus" aria-hidden />}
-                                            <span className="font-semibold">{Math.abs(metric.trend).toFixed(1)}%</span>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
+                                }
+                            />
                         </HoverScale>
                     </StaggerChild>
                 ))}

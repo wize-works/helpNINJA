@@ -5,6 +5,7 @@ import { AnimatedPage, StaggerContainer, StaggerChild, HoverScale } from "@/comp
 import { query } from "@/lib/db";
 import { Suspense } from "react";
 import FilterControls from "./filter-controls";
+import StatCard from "@/components/ui/stat-card";
 
 export const runtime = 'nodejs';
 
@@ -167,67 +168,42 @@ export default async function SourcesPage({
                     <StaggerChild>
                         <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-6">
                             <HoverScale scale={1.01}>
-                                <div className="stats shadow hover:shadow-md transition-all duration-300 w-full rounded-2xl">
-                                    <div className="stat bg-base-100 rounded-2xl">
-                                        <div className="stat-title">Total Sources</div>
-                                        <div className="stat-figure">
-                                            <div className="bg-primary/20 rounded-2xl h-12 w-12 flex items-center justify-center group-hover:scale-105 transition-transform duration-200 flex-shrink-0">
-                                                <i className="fa-duotone fa-solid fa-database text-lg text-primary" aria-hidden />
-                                            </div>
-                                        </div>
-                                        <div className="stat-value text-primary">
-                                            {stats.total_sources}
-                                        </div>
-                                    </div>
-                                </div>
+                                <StatCard
+                                    title="Total Sources"
+                                    value={stats.total_sources}
+                                    icon="fa-database"
+                                    color="primary"
+                                    description="linked to sites"
+                                />
                             </HoverScale>
 
                             <HoverScale scale={1.01}>
-                                <div className="stats shadow hover:shadow-md transition-all duration-300 w-full">
-                                    <div className="stat bg-base-100 rounded-2xl">
-                                        <div className="stat-title">Ready</div>
-                                        <div className="stat-figure">
-                                            <div className="w-12 h-12 bg-success/10 rounded-2xl flex items-center justify-center group-hover:scale-105 transition-transform duration-200 flex-shrink-0">
-                                                <i className="fa-duotone fa-solid fa-check-circle text-lg text-success" aria-hidden />
-                                            </div>
-                                        </div>
-                                        <div className="stat-value text-success">
-                                            {stats.ready_count}
-                                        </div>
-                                    </div>
-                                </div>
+                                <StatCard
+                                    title="Ready"
+                                    value={stats.ready_count}
+                                    icon="fa-check-circle"
+                                    color="success"
+                                    description="sources ready"
+                                />
+                            </HoverScale>
+                            <HoverScale scale={1.01}>
+                                <StatCard
+                                    title="Crawling"
+                                    value={stats.crawling_count}
+                                    icon="fa-spinner"
+                                    color="warning"
+                                    description="sources crawling"
+                                />
                             </HoverScale>
 
                             <HoverScale scale={1.01}>
-                                <div className="stats shadow hover:shadow-md transition-all duration-300 w-full">
-                                    <div className="stat bg-base-100 rounded-2xl">
-                                        <div className="stat-title">Crawling</div>
-                                        <div className="stat-figure">
-                                            <div className="w-12 h-12 bg-warning/10 rounded-2xl flex items-center justify-center group-hover:scale-105 transition-transform duration-200 flex-shrink-0">
-                                                <i className="fa-duotone fa-solid fa-spinner text-lg text-warning" aria-hidden />
-                                            </div>
-                                        </div>
-                                        <div className="stat-value text-warning">
-                                            {stats.crawling_count}
-                                        </div>
-                                    </div>
-                                </div>
-                            </HoverScale>
-
-                            <HoverScale scale={1.01}>
-                                <div className="stats shadow hover:shadow-md transition-all duration-300 w-full">
-                                    <div className="stat bg-base-100 rounded-2xl">
-                                        <div className="stat-title">Total Documents</div>
-                                        <div className="stat-figure">
-                                            <div className="w-12 h-12 bg-info/10 rounded-2xl flex items-center justify-center group-hover:scale-105 transition-transform duration-200 flex-shrink-0">
-                                                <i className="fa-duotone fa-solid fa-file-text text-lg text-info" aria-hidden />
-                                            </div>
-                                        </div>
-                                        <div className="stat-value text-info">
-                                            {stats.total_documents}
-                                        </div>
-                                    </div>
-                                </div>
+                                <StatCard
+                                    title="Content Documents"
+                                    value={stats.total_documents}
+                                    icon="fa-file-text"
+                                    color="info"
+                                    description="documents indexed"
+                                />
                             </HoverScale>
                         </div>
                     </StaggerChild>

@@ -143,7 +143,7 @@ export default async function WidgetPage() {
                                 value={stats.total_interactions || 0}
                                 icon="fa-message-bot"
                                 color="primary"
-                                subtitle={stats.total_interactions === 1 ? "user interaction" : "user interactions"}
+                                description={stats.total_interactions === 1 ? "user interaction" : "user interactions"}
                             />
 
                             <StatCard
@@ -151,7 +151,7 @@ export default async function WidgetPage() {
                                 value={stats.messages_per_day || 0}
                                 icon="fa-bolt"
                                 color="info"
-                                subtitle="daily average"
+                                description="daily average"
                             />
 
                             <StatCard
@@ -159,7 +159,7 @@ export default async function WidgetPage() {
                                 value={stats.answer_quality_rate ? `${stats.answer_quality_rate}%` : "N/A"}
                                 icon="fa-chart-line-up"
                                 color="success"
-                                subtitle="high confidence answers"
+                                description="high confidence answers"
                             />
 
                             <StatCard
@@ -167,7 +167,7 @@ export default async function WidgetPage() {
                                 value={stats.active_deployments || 0}
                                 icon="fa-globe-stand"
                                 color="secondary"
-                                subtitle={stats.active_deployments === 1 ? "verified site" : "verified sites"}
+                                description={stats.active_deployments === 1 ? "verified site" : "verified sites"}
                             />
                         </div>
                     </StaggerChild>
@@ -182,7 +182,7 @@ export default async function WidgetPage() {
                                 value={stats.total_messages || 0}
                                 icon="fa-comments"
                                 color="success"
-                                subtitle="AI responses"
+                                description="AI responses"
                             />
 
                             <StatCard
@@ -190,7 +190,7 @@ export default async function WidgetPage() {
                                 value={stats.total_conversations || 0}
                                 icon="fa-messages"
                                 color="warning"
-                                subtitle="chat sessions"
+                                description="chat sessions"
                             />
 
                             <StatCard
@@ -198,7 +198,7 @@ export default async function WidgetPage() {
                                 value={stats.high_confidence_count || 0}
                                 icon="fa-badge-check"
                                 color="info"
-                                subtitle="confident responses"
+                                description="confident responses"
                             />
 
                             <StatCard
@@ -206,7 +206,7 @@ export default async function WidgetPage() {
                                 value={stats.low_confidence_count || 0}
                                 icon="fa-circle-exclamation"
                                 color="error"
-                                subtitle="needs improvement"
+                                description="needs improvement"
                             />
                         </div>
                     </StaggerChild>
