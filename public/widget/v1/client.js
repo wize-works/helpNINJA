@@ -1,74 +1,74 @@
 // public/widget/client.js
 export function mountChatWidget(payload) {
     const {
-      baseOrigin, // e.g. https://helpninja.app
-      tenantId,
-      siteId,
-      voice,
-      theme = 'system',
-      paletteLight = {},
-      paletteDark = {},
-      config = {},
+        baseOrigin, // e.g. https://helpninja.app
+        tenantId,
+        siteId,
+        voice,
+        theme = 'system',
+        paletteLight = {},
+        paletteDark = {},
+        config = {},
     } = payload;
-    
+
     const prefersDark = matchMedia?.('(prefers-color-scheme: dark)').matches;
     const styles = (theme === 'dark' || (theme === 'system' && prefersDark)) ? paletteDark : paletteLight;
-    
+
     // ---- DOM helpers ----
     const el = (tag, css = '') => { const n = document.createElement(tag); if (css) n.style.cssText = css; return n; };
 
     let iconSvg = '';
     const icon = config.buttonIcon || 'default';
-    switch(icon) {
+    switch (icon) {
         case 'chat':
-          iconSvg = '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path></svg>';
-          break;
+            iconSvg = '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path></svg>';
+            break;
         case 'help':
-          iconSvg = '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"></path><line x1="12" y1="17" x2="12.01" y2="17"></line></svg>';
-          break;
+            iconSvg = '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"></path><line x1="12" y1="17" x2="12.01" y2="17"></line></svg>';
+            break;
         case 'message':
-          iconSvg = '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"></path></svg>';
-          break;
+            iconSvg = '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"></path></svg>';
+            break;
         default:
-          iconSvg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 956.64 755.1" style="width:100%;height:100%;fill:currentColor;transition:transform 0.3s ease;">
+            iconSvg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 956.64 755.1" style="width:100%;height:100%;fill:currentColor;transition:transform 0.3s ease;">
             <path d="M881.79,312.74c39.7-2.7,69.63,32.16,72.85,69.65,2.49,28.99,2.84,71.14,0,99.98-3.32,33.71-25.27,64.29-60.77,68.23-3.79.42-15.01-.53-16.75,1.25-1.57,1.6-3.92,11.56-5.29,14.71-36.91,85.11-121.05,139.58-212.45,148.55-21.08,34.37-64.81,45.83-102.74,37.28-73.64-16.61-62.97-110.41,15.52-118.5,30.57-3.15,53.55-.69,77.04,19.95,4.58,4.03.85,4.59,9.83,3.91,150.57-11.41,192.52-154.99,173.45-284.2-31.77-215.33-222.58-341.22-435.02-298.35C205.65,113.9,108.17,278.52,121.66,467.37c1.64,22.9,8.34,46.43,9.97,68.02,1.48,19.58-12.44,13.97-25.52,14.45-29.32,1.07-49.44,6.57-75.18-11.74-13.35-9.5-21.84-21.17-25.79-37.21-3.43-33.3-6.48-73.04-4.53-106.55,1.9-32.51,14.65-68,48.5-78.5,4.27-1.33,21.8-3.24,23.04-4.96,1.41-1.97,5.57-22.28,7.01-26.99C145.21,69.49,373.1-40.91,587.08,13.95c145.03,37.18,261.97,151.64,294.72,298.79Z"/>
             <path d="M428.45,329.17c42.73-1.25,88.12-1.04,130.7,1.72,66.55,4.31,205.78,20.26,213.38,106.62,8.53,96.89-108.27,127.26-183.69,109.69-28.27-6.59-51.79-21.81-78.66-30.34-68.8-21.84-107.58,30.48-171.03,35.01-65.52,4.67-173.87-28.91-159.04-113.04,17.6-99.83,168.87-107.34,248.34-109.66ZM322.44,399.16c-48.11,6.17-52.08,102.36,2.84,107.6,65.56,6.25,68.28-116.71-2.84-107.6ZM620.45,399.17c-51,5.3-55.76,92.59-5.58,105.99,68.17,18.2,78.14-113.52,5.58-105.99Z"/>
           </svg>`;
-          break;
-      }
-  
+            break;
+    }
+
     // ---- Ensure CSS (DaisyUI optional) ----
     if (!document.querySelector('link[data-hn-styles]')) {
-      const link = document.createElement('link');
-      link.rel = 'stylesheet';
-      link.href = 'https://cdn.jsdelivr.net/npm/daisyui@5.0.50/dist/full.css';
-      link.setAttribute('data-hn-styles', 'true');
-      document.head.appendChild(link);
+        const link = document.createElement('link');
+        link.rel = 'stylesheet';
+        link.href = 'https://cdn.jsdelivr.net/npm/daisyui@5.0.50/dist/full.css';
+        link.setAttribute('data-hn-styles', 'true');
+        document.head.appendChild(link);
     }
-  
+
     // ---- Session ----
     let sessionId = 'sid_' + Math.random().toString(36).slice(2);
     try {
-      sessionId = localStorage.getItem('hn_sid') || crypto.randomUUID();
-      localStorage.setItem('hn_sid', sessionId);
-    } catch {}
-  
+        sessionId = localStorage.getItem('hn_sid') || crypto.randomUUID();
+        localStorage.setItem('hn_sid', sessionId);
+    } catch { }
+
     // ---- Bubble ----
     const pos = config.position || 'bottom-right';
     const posBubble = {
-      'bottom-right': 'bottom:20px;right:20px;',
-      'bottom-left':  'bottom:20px;left:20px;',
-      'top-right':    'top:20px;right:20px;',
-      'top-left':     'top:20px;left:20px;'
+        'bottom-right': 'bottom:20px;right:20px;',
+        'bottom-left': 'bottom:20px;left:20px;',
+        'top-right': 'top:20px;right:20px;',
+        'top-left': 'top:20px;left:20px;'
     }[pos];
-  
+
     const bubble = el('div',
-      `position:fixed;${posBubble}width:60px;height:60px;border-radius:50%;` +
-      `box-shadow:0 10px 30px rgba(0,0,0,.2);background:${styles.bubbleBackground};` +
-      `color:${styles.bubbleColor};display:flex;align-items:center;justify-content:center;` +
-      `cursor:pointer;z-index:999999;transition:all .2s ease;padding:12px;`
+        `position:fixed;${posBubble}width:60px;height:60px;border-radius:50%;` +
+        `box-shadow:0 10px 30px rgba(0,0,0,.2);background:${styles.bubbleBackground};` +
+        `color:${styles.bubbleColor};display:flex;align-items:center;justify-content:center;` +
+        `cursor:pointer;z-index:999999;transition:all .2s ease;padding:12px;`
     );
-    
+
     // Add hover effect to bubble
     bubble.addEventListener('mouseenter', () => {
         bubble.style.transform = 'scale(1.1)';
@@ -81,15 +81,15 @@ export function mountChatWidget(payload) {
 
     bubble.innerHTML = iconSvg
     document.body.appendChild(bubble);
-  
-        // ---- Panel ----
+
+    // ---- Panel ----
     // Function to calculate maximum available height for chat panel
     function calculateMaxPanelHeight() {
         const bubbleOffsetFromEdge = 20; // 20px from edge
         const bubbleHeight = 40; // bubble is 40px tall
         const panelGap = 30; // gap between bubble and panel
         const topPadding = 20; // minimum padding from top
-        
+
         if (pos.startsWith('bottom-')) {
             // For bottom positions, calculate from bottom edge to top of viewport
             const maxHeight = window.innerHeight - bubbleOffsetFromEdge - bubbleHeight - panelGap - topPadding;
@@ -103,9 +103,9 @@ export function mountChatWidget(payload) {
 
     const posPanel = {
         'bottom-right': 'bottom:90px;right:20px;',
-        'bottom-left':  'bottom:90px;left:20px;',
-        'top-right':    'top:90px;right:20px;',
-        'top-left':     'top:90px;left:20px;'
+        'bottom-left': 'bottom:90px;left:20px;',
+        'top-right': 'top:90px;right:20px;',
+        'top-left': 'top:90px;left:20px;'
     }[pos];
 
     // Start with initial compact size, but allow growing to max available
@@ -114,7 +114,7 @@ export function mountChatWidget(payload) {
     const panel = el('div',
         `position:fixed;${posPanel}width:360px;height:${initialPanelHeight}px;max-height:${maxPanelHeight}px;background:${styles.panelBackground};` +
         `border-radius:16px;box-shadow:-10px 10px 25px -5px rgba(0,0,0,.1),` +
-        `0 8px 10px -6px rgba(0,0,0,.1);display:none;flex-direction:column;overflow:hidden;z-index:999998;` + 
+        `0 8px 10px -6px rgba(0,0,0,.1);display:none;flex-direction:column;overflow:hidden;z-index:999998;` +
         `font-family:${styles.fontFamily};`
     );
     document.body.appendChild(panel);
@@ -123,7 +123,7 @@ export function mountChatWidget(payload) {
     function updatePanelHeight() {
         const newMaxHeight = calculateMaxPanelHeight();
         panel.style.maxHeight = `${newMaxHeight}px`;
-        
+
         // If current height exceeds new max, adjust it
         const currentHeight = parseInt(panel.style.height) || initialPanelHeight;
         if (currentHeight > newMaxHeight) {
@@ -134,25 +134,25 @@ export function mountChatWidget(payload) {
     // Function to dynamically grow panel based on content
     function adjustPanelSize() {
         if (!msgs) return;
-        
+
         const headerHeight = 60;
         const inputHeight = 80;
         const msgsPadding = 32; // top + bottom padding
         const maxAvailableHeight = calculateMaxPanelHeight();
-        
+
         // Calculate required height based on messages content
         const messagesScrollHeight = msgs.scrollHeight;
         const requiredPanelHeight = messagesScrollHeight + headerHeight + inputHeight + msgsPadding;
-        
+
         // Use larger of: initial size or required size, but not more than max available
         const newPanelHeight = Math.min(
             Math.max(initialPanelHeight, requiredPanelHeight),
             maxAvailableHeight
         );
-        
+
         // Update panel height
         panel.style.height = `${newPanelHeight}px`;
-        
+
         // Update messages container height
         const newMessagesHeight = newPanelHeight - headerHeight - inputHeight;
         msgs.style.height = `${Math.max(150, newMessagesHeight)}px`;
@@ -160,7 +160,7 @@ export function mountChatWidget(payload) {
 
     // Header
     const header = el('div', `padding:14px 16px;border-bottom:1px solid ${styles.borderColor};font-weight:600;color:${styles.panelHeaderColor};background:${styles.panelHeaderBackground};display:flex;align-items:center;justify-content:space-between;border-radius:16px 16px 0 0;`);
-    const title = el('span'); 
+    const title = el('span');
     title.innerHTML = `
         <div style="display:flex;align-items:center;gap:8px;color:${styles.panelHeaderColor};">
             <div style="width:30px;height:30px;margin:4px;padding:4px;display:flex;align-items:center;justify-content:center;">
@@ -175,7 +175,7 @@ export function mountChatWidget(payload) {
     feedback.onclick = () => {
         openFeedbackModal();
     };
-    
+
     // Add hover effect to feedback button
     feedback.addEventListener('mouseenter', () => {
         feedback.style.transform = 'scale(1.1)';
@@ -188,7 +188,7 @@ export function mountChatWidget(payload) {
     const close = el('button', `background:${styles.buttonBackground};color:${styles.buttonColor};border:none;cursor:pointer;padding:6px;border-radius:50%;height:40px;width:40px;transition:all .2s ease;`);
     close.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 640" fill="currentColor"><path d="M506.4 135.4C514.9 125.3 513.6 110.1 503.5 101.6C493.4 93.1 478.2 94.4 469.7 104.5L320 282.7L170.4 104.6C161.9 94.4 146.7 93.1 136.6 101.6C126.5 110.1 125.1 125.3 133.6 135.4L288.7 320L133.6 504.6C125.1 514.8 126.4 529.9 136.5 538.4C146.6 546.9 161.8 545.6 170.3 535.5L320 357.3L469.6 535.4C478.1 545.6 493.3 546.9 503.4 538.3C513.5 529.7 514.9 514.6 506.3 504.5L351.3 320L506.4 135.4z"/></svg>';
     close.onclick = () => { panel.style.display = 'none'; bubble.style.display = 'flex'; };
-    
+
     // Add hover effect to close button
     close.addEventListener('mouseenter', () => {
         close.style.transform = 'scale(1.1)';
@@ -202,17 +202,17 @@ export function mountChatWidget(payload) {
     titleButtons.appendChild(feedback);
     titleButtons.appendChild(close);
     header.appendChild(titleButtons);
-  
+
     // Messages - start with initial compact size
     const headerHeight = 60;
     const inputHeight = 80;
     const initialMessagesHeight = initialPanelHeight - headerHeight - inputHeight;
     const msgs = el('div', `padding:16px;gap:16px;display:flex;flex-direction:column;overflow-y:auto;height:${initialMessagesHeight}px;background:${styles.messagesBackground};color:${styles.messagesColor};`);
     msgs.id = 'hn_msgs';
-    
+
     // Listen for window resize to update panel height (after msgs is defined)
     window.addEventListener('resize', updatePanelHeight);
-    
+
     // Input
     const inputWrap = el('div', `display:flex;border-top:1px solid "${styles.inputBorder}";background:${styles.panelBackground};padding:12px 16px 16px;`);
     const input = el('input', `flex:1;padding:12px 16px;border:0 solid ${styles.inputBorder};border-radius:10px;outline:none;color:${styles.buttonColor};background:${styles.buttonBackground};margin-right:8px;`);
@@ -220,7 +220,7 @@ export function mountChatWidget(payload) {
     const sendBtn = el('button', `width:40px;height:40px;border:0;background:${styles.buttonBackground};color:${styles.buttonColor};cursor:pointer;border-radius:50%;padding:8px;rotate:-45deg;transition:all .2s ease;`);
     sendBtn.title = 'Send';
     sendBtn.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 640 640"><path d="M201.9 344L126.9 512.6L493.2 344L201.9 344zM493.2 296L126.9 127.4L201.9 296L493.2 296zM66.8 529.6L160 320L66.8 110.4C65 106.2 64 101.6 64 97C64 78.8 78.7 64 96.8 64C101.5 64 106.2 65 110.5 67L586.2 286C599.5 292.1 608 305.4 608 320C608 334.6 599.5 347.9 586.2 354L110.5 573C106.2 575 101.5 576 96.8 576C78.7 576 64 561.2 64 543C64 538.4 65 533.8 66.8 529.6z"/></svg>`;
-    
+
     // Add hover effect to send button
     sendBtn.addEventListener('mouseenter', () => {
         sendBtn.style.transform = 'scale(1.1) rotate(-45deg)';
@@ -230,7 +230,7 @@ export function mountChatWidget(payload) {
         sendBtn.style.transform = 'scale(1) rotate(-45deg)';
         sendBtn.style.opacity = '1';
     });
-    inputWrap.appendChild(input); 
+    inputWrap.appendChild(input);
     inputWrap.appendChild(sendBtn);
     panel.appendChild(header);
     panel.appendChild(msgs);
@@ -239,16 +239,16 @@ export function mountChatWidget(payload) {
     const helpNinjaFooter = el('div', `padding:2px;margin-bottom:8px;font-size:12px;color:${styles.messagesColor};text-align:center;`);
     helpNinjaFooter.innerHTML = `<span>Powered by <a href="https://helpninja.ai" target="_blank" style="color:${styles.messagesColor};">helpNINJA</a></span>`;
     panel.appendChild(helpNinjaFooter);
-  
+
     // ---- Chat History Management ----
     function extractMessagesFromDOM() {
         if (!msgs || !msgs.children) return [];
-        
+
         return Array.from(msgs.children).map(row => {
             const isUser = row.style.justifyContent === 'flex-end';
             const bubble = row.querySelector('div:last-child');
             if (!bubble) return null;
-            
+
             return {
                 role: isUser ? 'user' : 'assistant',
                 content: isUser ? bubble.textContent || '' : bubble.innerHTML || '',
@@ -261,17 +261,17 @@ export function mountChatWidget(payload) {
         try {
             const messages = extractMessagesFromDOM();
             if (messages.length === 0) return; // Don't save empty history
-            
+
             const historyData = {
                 sessionId: sessionId,
                 messages: messages,
                 lastUpdated: new Date().toISOString(),
                 version: '1.0'
             };
-            
+
             const storageKey = `hn_chat_${sessionId}`;
             localStorage.setItem(storageKey, JSON.stringify(historyData));
-            
+
             // Clean up old sessions (keep last 5 sessions max)
             cleanupOldSessions();
         } catch (e) {
@@ -284,14 +284,14 @@ export function mountChatWidget(payload) {
         try {
             const storageKey = `hn_chat_${sessionId}`;
             const savedHistory = localStorage.getItem(storageKey);
-            
+
             if (!savedHistory) return false;
-            
+
             const historyData = JSON.parse(savedHistory);
-            
+
             // Validate session matches and data is recent (within 30 days)
             if (historyData.sessionId !== sessionId) return false;
-            
+
             const lastUpdated = new Date(historyData.lastUpdated);
             const thirtyDaysAgo = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000);
             if (lastUpdated < thirtyDaysAgo) {
@@ -299,7 +299,7 @@ export function mountChatWidget(payload) {
                 localStorage.removeItem(storageKey);
                 return false;
             }
-            
+
             // Restore messages
             if (historyData.messages && Array.isArray(historyData.messages)) {
                 historyData.messages.forEach(msg => {
@@ -309,14 +309,14 @@ export function mountChatWidget(payload) {
                 });
                 return true;
             }
-            
+
             return false;
         } catch (e) {
             console.warn('helpNINJA: Failed to restore chat history:', e.name);
             // Try to remove corrupted data
             try {
                 localStorage.removeItem(`hn_chat_${sessionId}`);
-            } catch {}
+            } catch { }
             return false;
         }
     }
@@ -330,7 +330,7 @@ export function mountChatWidget(payload) {
                     keys.push(key);
                 }
             }
-            
+
             // Keep only the 5 most recent sessions
             if (keys.length > 5) {
                 const sessions = keys.map(key => {
@@ -344,12 +344,12 @@ export function mountChatWidget(payload) {
                         return { key: key, lastUpdated: new Date(0) };
                     }
                 }).sort((a, b) => b.lastUpdated - a.lastUpdated);
-                
+
                 // Remove old sessions
                 sessions.slice(5).forEach(session => {
                     try {
                         localStorage.removeItem(session.key);
-                    } catch {}
+                    } catch { }
                 });
             }
         } catch (e) {
@@ -363,7 +363,7 @@ export function mountChatWidget(payload) {
         if (restoreChatHistory()) {
             return true;
         }
-        
+
         // Fallback to server if localStorage failed or is empty
         try {
             const response = await fetch(
@@ -375,14 +375,14 @@ export function mountChatWidget(payload) {
                     }
                 }
             );
-            
+
             if (!response.ok) {
                 console.warn('helpNINJA: Server history request failed:', response.status);
                 return false;
             }
-            
+
             const data = await response.json();
-            
+
             if (data.success && data.messages && Array.isArray(data.messages)) {
                 // Restore messages from server
                 data.messages.forEach(msg => {
@@ -390,7 +390,7 @@ export function mountChatWidget(payload) {
                         add(msg.role, msg.content, false); // false = don't save to avoid recursion
                     }
                 });
-                
+
                 // Save to localStorage for future use (if possible)
                 try {
                     saveChatHistory();
@@ -398,10 +398,10 @@ export function mountChatWidget(payload) {
                     // localStorage save failed, but we have the history displayed
                     console.warn('helpNINJA: Failed to cache server history locally:', e.name);
                 }
-                
+
                 return data.messages.length > 0;
             }
-            
+
             return false;
         } catch (e) {
             console.warn('helpNINJA: Failed to load server history:', e.name);
@@ -409,114 +409,113 @@ export function mountChatWidget(payload) {
         }
     }
 
-          // Helpers
-      function add(role, htmlOrText, shouldSave = true) {
-         const row = el('div', `display:flex;gap:8px;margin-bottom:12px;${role === 'user' ? 'justify-content:flex-end;' : 'justify-content:flex-start;'}`);
-         
-         // Create icon
-         const icon = el('div', `width:32px;height:32px;display:flex;align-items:center;justify-content:center;border-radius:50%;flex-shrink:0;${
-             role === 'user' 
-                 ? `background:${styles.userBubbleBackground};color:${styles.userBubbleColor};`
-                 : `background:${styles.assistantBubbleBackground};color:${styles.assistantBubbleColor};`
-         }`);
-         
-         // Set icon content
-         if (role === 'assistant') {
-             icon.innerHTML = `<div style="width:20px;height:20px;">${iconSvg}</div>`;
-         } else {
-             icon.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/></svg>';
-         }
-         
-         // Create bubble
-         const bub = el('div',
-             `white-space:pre-wrap;max-width:280px;border-radius:18px;` +
-             (role === 'user'
-                 ? `background:${styles.userBubbleBackground};color:${styles.userBubbleColor};border-top-right-radius:4px;padding:12px 16px;`
-                 : `background:${styles.assistantBubbleBackground};color:${styles.assistantBubbleColor};border-top-left-radius:4px;padding:12px 16px;`)
-         );
-         
-         // Set bubble content
-         if (role === 'assistant') {
-             bub.innerHTML = htmlOrText; 
-         } else {
-             bub.textContent = htmlOrText;
-         }
-         
-         // Append in correct order for alignment
-         if (role === 'user') {
-             // User: bubble first, then icon (right-aligned)
-             row.appendChild(bub);
-             row.appendChild(icon);
-         } else {
-             // Assistant: icon first, then bubble (left-aligned)
-             row.appendChild(icon);
-             row.appendChild(bub);
-         }
-         
-         msgs.appendChild(row);
-         
-         // Adjust panel size based on content after adding message
-         adjustPanelSize();
-         
-         // Save history if requested (skip for restoration to avoid recursion)
-         if (shouldSave) {
-             saveChatHistory();
-         }
-         
-         msgs.scrollTop = msgs.scrollHeight;
-      }
-  
-    async function send() {
-      const text = input.value.trim();
-      if (!text) return;
-      input.value = '';
-      add('user', text);
-  
-      const res = await fetch(`${baseOrigin}/api/chat`, {
-        method: 'POST',
-        headers: {'content-type': 'application/json'},
-        body: JSON.stringify({
-          tenantId,
-          sessionId,
-          message: text,
-          voice: voice || config.voice || 'friendly',
-          siteId: siteId || config.siteId || ''
-        })
-      }).catch(() => null);
-  
-      if (!res) return add('assistant', 'Network error. Try again.');
-      let j = null; try { j = await res.json(); } catch {}
-      if (!res.ok) return add('assistant', (j && (j.message || j.error)) || 'Sorry, something went wrong.');
-      return add('assistant', j?.html || j?.answer || 'I didn’t understand that—mind rephrasing?');
+    // Helpers
+    function add(role, htmlOrText, shouldSave = true) {
+        const row = el('div', `display:flex;gap:8px;margin-bottom:12px;${role === 'user' ? 'justify-content:flex-end;' : 'justify-content:flex-start;'}`);
+
+        // Create icon
+        const icon = el('div', `width:32px;height:32px;display:flex;align-items:center;justify-content:center;border-radius:50%;flex-shrink:0;${role === 'user'
+                ? `background:${styles.userBubbleBackground};color:${styles.userBubbleColor};`
+                : `background:${styles.assistantBubbleBackground};color:${styles.assistantBubbleColor};`
+            }`);
+
+        // Set icon content
+        if (role === 'assistant') {
+            icon.innerHTML = `<div style="width:20px;height:20px;">${iconSvg}</div>`;
+        } else {
+            icon.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/></svg>';
+        }
+
+        // Create bubble
+        const bub = el('div',
+            `white-space:pre-wrap;max-width:280px;border-radius:18px;` +
+            (role === 'user'
+                ? `background:${styles.userBubbleBackground};color:${styles.userBubbleColor};border-top-right-radius:4px;padding:12px 16px;`
+                : `background:${styles.assistantBubbleBackground};color:${styles.assistantBubbleColor};border-top-left-radius:4px;padding:12px 16px;`)
+        );
+
+        // Set bubble content
+        if (role === 'assistant') {
+            bub.innerHTML = htmlOrText;
+        } else {
+            bub.textContent = htmlOrText;
+        }
+
+        // Append in correct order for alignment
+        if (role === 'user') {
+            // User: bubble first, then icon (right-aligned)
+            row.appendChild(bub);
+            row.appendChild(icon);
+        } else {
+            // Assistant: icon first, then bubble (left-aligned)
+            row.appendChild(icon);
+            row.appendChild(bub);
+        }
+
+        msgs.appendChild(row);
+
+        // Adjust panel size based on content after adding message
+        adjustPanelSize();
+
+        // Save history if requested (skip for restoration to avoid recursion)
+        if (shouldSave) {
+            saveChatHistory();
+        }
+
+        msgs.scrollTop = msgs.scrollHeight;
     }
-  
+
+    async function send() {
+        const text = input.value.trim();
+        if (!text) return;
+        input.value = '';
+        add('user', text);
+
+        const res = await fetch(`${baseOrigin}/api/chat`, {
+            method: 'POST',
+            headers: { 'content-type': 'application/json' },
+            body: JSON.stringify({
+                tenantId,
+                sessionId,
+                message: text,
+                voice: voice || config.voice || 'friendly',
+                siteId: siteId || config.siteId || ''
+            })
+        }).catch(() => null);
+
+        if (!res) return add('assistant', 'Network error. Try again.');
+        let j = null; try { j = await res.json(); } catch { }
+        if (!res.ok) return add('assistant', (j && (j.message || j.error)) || 'Sorry, something went wrong.');
+        return add('assistant', j?.html || j?.answer || 'I didn’t understand that—mind rephrasing?');
+    }
+
     // Wire up
     const open = async () => {
-      panel.style.display = 'flex';
-      bubble.style.display = 'none';
-      
-      // Only show welcome message if no chat history exists
-      if (!msgs.children.length) {
-        // Try to load conversation history (localStorage first, then server)
-        const historyLoaded = await loadConversationHistory();
-        
-        // If no history was loaded, show welcome message
-        if (!historyLoaded) {
-          add('assistant', config.welcomeMessage || 'Hi there! How can I help?');
+        panel.style.display = 'flex';
+        bubble.style.display = 'none';
+
+        // Only show welcome message if no chat history exists
+        if (!msgs.children.length) {
+            // Try to load conversation history (localStorage first, then server)
+            const historyLoaded = await loadConversationHistory();
+
+            // If no history was loaded, show welcome message
+            if (!historyLoaded) {
+                add('assistant', config.welcomeMessage || 'Hi there! How can I help?');
+            }
         }
-      }
-      
-      // Adjust panel size when opening to fit existing content
-      setTimeout(() => {
-        adjustPanelSize();
-        input.focus();
-      }, 50);
+
+        // Adjust panel size when opening to fit existing content
+        setTimeout(() => {
+            adjustPanelSize();
+            input.focus();
+        }, 50);
     };
     bubble.onclick = () => (panel.style.display === 'none' ? open() : (panel.style.display = 'none', bubble.style.display = 'flex'));
     sendBtn.onclick = send;
     input.addEventListener('keydown', (e) => (e.key === 'Enter') && send());
-  
-        const auto = parseInt(config.autoOpenDelay || 0, 10);
+
+    const auto = parseInt(config.autoOpenDelay || 0, 10);
     if (auto > 0) setTimeout(open, auto);
 
     // ---- Feedback Modal ----
@@ -535,7 +534,7 @@ export function mountChatWidget(payload) {
     function validateFile(file) {
         const maxSize = 10 * 1024 * 1024; // 10MB
         const allowedTypes = ['image/jpeg', 'image/png', 'image/gif', 'image/webp', 'text/plain', 'application/pdf'];
-        
+
         if (file.size > maxSize) {
             return 'File size must be less than 10MB';
         }
@@ -556,33 +555,33 @@ export function mountChatWidget(payload) {
         const mutedTextColor = currentStyles.mutedTextColor || '#666666';
 
         container.innerHTML = '';
-        
+
         selectedFiles.forEach((file, index) => {
             const fileItem = el('div', `display:flex;align-items:center;justify-content:space-between;padding:8px 12px;background:rgba(0,0,0,0.05);border-radius:6px;margin-bottom:8px;`);
-            
+
             const fileInfo = el('div', `display:flex;align-items:center;gap:8px;flex:1;`);
             const fileIcon = el('div', `font-size:16px;`);
             fileIcon.textContent = '📎';
-            
+
             const fileDetails = el('div');
             const fileName = el('div', `font-size:13px;color:${textColor};font-weight:500;`);
             fileName.textContent = file.name;
             const fileSize = el('div', `font-size:11px;color:${mutedTextColor};`);
             fileSize.textContent = formatFileSize(file.size);
-            
+
             fileDetails.appendChild(fileName);
             fileDetails.appendChild(fileSize);
-            
+
             fileInfo.appendChild(fileIcon);
             fileInfo.appendChild(fileDetails);
-            
+
             const removeBtn = el('button', `background:none;border:none;color:#ef4444;cursor:pointer;padding:4px;font-size:16px;`);
             removeBtn.innerHTML = '×';
             removeBtn.onclick = () => {
                 selectedFiles.splice(index, 1);
                 updateFileList();
             };
-            
+
             fileItem.appendChild(fileInfo);
             fileItem.appendChild(removeBtn);
             container.appendChild(fileItem);
@@ -596,7 +595,7 @@ export function mountChatWidget(payload) {
                 alert(error);
                 return;
             }
-            
+
             // Check for duplicates
             if (!selectedFiles.find(f => f.name === file.name && f.size === file.size)) {
                 selectedFiles.push(file);
@@ -609,10 +608,10 @@ export function mountChatWidget(payload) {
         console.log("styles", styles.inputBorder);
         // Create modal backdrop
         const backdrop = el('div', `position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.5);z-index:1000000;display:flex;align-items:center;justify-content:center;`);
-        
+
         // Create modal content
         const modal = el('div', `background:${styles.panelBackground};font-family:${styles.fontFamily};border-radius:16px;max-width:600px;width:90%;max-height:90vh;overflow-y:auto;box-shadow:0 20px 25px -5px rgba(0,0,0,0.1);`);
-        
+
         // Modal header
         const modalHeader = el('div', `padding:20px 24px;border-bottom:1px solid ${styles.borderColor};display:flex;align-items:center;justify-content:space-between;background:${styles.panelHeaderBackground};color:${styles.panelHeaderColor};`);
         const modalTitle = el('h2', `margin:0;font-size:18px;font-weight:600;color:${styles.panelHeaderColor};`);
@@ -625,17 +624,17 @@ export function mountChatWidget(payload) {
             </div>
         </div>
         `;
-        
+
         const modalClose = el('button', `background:none;border:none;font-size:24px;color:${styles.panelHeaderColor};cursor:pointer;padding:4px;`);
         modalClose.innerHTML = '×';
         modalClose.onclick = closeFeedbackModal;
-        
+
         modalHeader.appendChild(modalTitle);
         modalHeader.appendChild(modalClose);
-        
+
         // Modal body
         const modalBody = el('div', `padding:24px;background:${styles.messagesBackground};color:${styles.messagesColor};`);
-        
+
         // Feedback form HTML (using the improved UX design)
         modalBody.innerHTML = `
             <form id="hn_feedback_form" style="display:flex;flex-direction:column;gap:20px;">
@@ -846,11 +845,11 @@ export function mountChatWidget(payload) {
                 </button>
             </form>
         `;
-        
+
         modal.appendChild(modalHeader);
         modal.appendChild(modalBody);
         backdrop.appendChild(modal);
-        
+
         return backdrop;
     }
 
@@ -883,11 +882,11 @@ export function mountChatWidget(payload) {
                         opt.style.borderColor = styles.inputBorder;
                         opt.style.background = styles.inputBackground;
                     });
-                    
+
                     // Add active state to clicked option
                     option.style.borderColor = styles.primaryColor;
                     option.style.background = styles.primaryColor + '16';
-                    
+
                     // Check the radio button
                     const radio = option.querySelector('input[type="radio"]');
                     if (radio) radio.checked = true;
@@ -1012,7 +1011,7 @@ export function mountChatWidget(payload) {
 
     async function submitFeedback(e) {
         e.preventDefault();
-        
+
         if (!validateForm()) {
             return;
         }
@@ -1051,7 +1050,7 @@ export function mountChatWidget(payload) {
                 const attachmentFormData = new FormData();
                 attachmentFormData.append('feedbackId', feedbackId);
                 attachmentFormData.append('tenantId', tenantId);
-                
+
                 selectedFiles.forEach(file => {
                     attachmentFormData.append('files', file);
                 });
@@ -1083,10 +1082,10 @@ export function mountChatWidget(payload) {
 
         feedbackModal = createFeedbackModal();
         document.body.appendChild(feedbackModal);
-        
+
         // Setup event listeners after modal is in DOM
         setTimeout(setupFeedbackModalEvents, 10);
-        
+
         // Close on backdrop click
         feedbackModal.addEventListener('click', (e) => {
             if (e.target === feedbackModal) {
@@ -1100,9 +1099,8 @@ export function mountChatWidget(payload) {
             feedbackModal.remove();
             feedbackModal = null;
         }
-        
+
         // Reset form state
         selectedFiles = [];
     }
 }
-  
