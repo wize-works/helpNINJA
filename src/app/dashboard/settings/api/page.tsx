@@ -5,7 +5,7 @@ import { useTenant } from "@/components/tenant-context";
 import { Breadcrumb } from "@/components/ui/breadcrumb";
 import { AnimatedPage, StaggerContainer, StaggerChild } from "@/components/ui/animated-page";
 import { toastUtils } from '@/lib/toast';
-import StatCard, { SimpleStatCard } from '@/components/ui/stat-card';
+import StatCard from '@/components/ui/stat-card';
 
 type ApiKey = {
     id: string;
@@ -600,14 +600,71 @@ export default function ApiKeysPage() {
                     <StaggerChild>
                         <div className="card bg-base-100 rounded-2xl shadow-sm">
                             <div className="p-6">
-                                <div className="flex items-center gap-3 mb-6">
-                                    <div className="w-12 h-12 bg-primary/10 rounded-2xl flex items-center justify-center">
-                                        <i className="fa-duotone fa-solid fa-book text-lg text-primary" aria-hidden />
+                                <div className="flex items-center justify-between mb-6">
+                                    <div className="flex items-center gap-3">
+                                        <div className="w-12 h-12 bg-primary/10 rounded-2xl flex items-center justify-center">
+                                            <i className="fa-duotone fa-solid fa-book text-lg text-primary" aria-hidden />
+                                        </div>
+                                        <div>
+                                            <h2 className="text-lg font-semibold text-base-content">API Documentation</h2>
+                                            <p className="text-base-content/60 text-sm">Complete guide and interactive docs for helpNINJA API integration</p>
+                                        </div>
                                     </div>
-                                    <div>
-                                        <h2 className="text-lg font-semibold text-base-content">Integration Guide</h2>
-                                        <p className="text-base-content/60 text-sm">Complete guide for helpNINJA API integration</p>
+                                    <div className="flex items-center gap-2">
+                                        <a
+                                            href="/api-docs.html"
+                                            target="_blank"
+                                            rel="noopener noreferrer"
+                                            className="btn btn-primary btn-sm rounded-lg"
+                                        >
+                                            <i className="fa-duotone fa-solid fa-external-link mr-1" aria-hidden />
+                                            Interactive API Docs
+                                        </a>
+                                        <a
+                                            href="/openapi.json"
+                                            target="_blank"
+                                            rel="noopener noreferrer"
+                                            className="btn btn-ghost btn-sm rounded-lg"
+                                            title="Download OpenAPI Specification"
+                                        >
+                                            <i className="fa-duotone fa-solid fa-download" aria-hidden />
+                                        </a>
                                     </div>
+                                </div>
+
+                                {/* Quick Links */}
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+                                    <a
+                                        href="/api-docs.html"
+                                        target="_blank"
+                                        rel="noopener noreferrer"
+                                        className="flex items-center gap-3 p-4 bg-primary/5 border border-primary/20 rounded-lg hover:bg-primary/10 transition-colors"
+                                    >
+                                        <div className="w-10 h-10 bg-primary/20 rounded-lg flex items-center justify-center">
+                                            <i className="fa-duotone fa-solid fa-browser text-primary" aria-hidden />
+                                        </div>
+                                        <div>
+                                            <div className="font-medium text-base-content">Interactive Documentation</div>
+                                            <div className="text-sm text-base-content/60">Try API endpoints with Swagger UI</div>
+                                        </div>
+                                        <i className="fa-duotone fa-solid fa-chevron-right text-base-content/40" aria-hidden />
+                                    </a>
+
+                                    <a
+                                        href="/openapi.json"
+                                        target="_blank"
+                                        rel="noopener noreferrer"
+                                        className="flex items-center gap-3 p-4 bg-secondary/5 border border-secondary/20 rounded-lg hover:bg-secondary/10 transition-colors"
+                                    >
+                                        <div className="w-10 h-10 bg-secondary/20 rounded-lg flex items-center justify-center">
+                                            <i className="fa-duotone fa-solid fa-file-code text-secondary" aria-hidden />
+                                        </div>
+                                        <div>
+                                            <div className="font-medium text-base-content">OpenAPI Specification</div>
+                                            <div className="text-sm text-base-content/60">Machine-readable API spec (JSON)</div>
+                                        </div>
+                                        <i className="fa-duotone fa-solid fa-chevron-right text-base-content/40" aria-hidden />
+                                    </a>
                                 </div>
 
                                 <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
@@ -615,7 +672,7 @@ export default function ApiKeysPage() {
                                     <div>
                                         <h3 className="font-semibold mb-3 flex items-center gap-2">
                                             <i className="fa-duotone fa-solid fa-code text-primary" aria-hidden />
-                                            API Endpoints
+                                            Core Endpoints
                                         </h3>
                                         <div className="space-y-3 text-sm">
                                             <div className="p-3 bg-base-200/30 rounded-lg">
@@ -639,12 +696,15 @@ export default function ApiKeysPage() {
                                                 </div>
                                                 <p className="text-base-content/70">Add new content to knowledge base</p>
                                             </div>
-                                            <div className="p-3 bg-base-200/30 rounded-lg">
-                                                <div className="flex items-center gap-2 mb-1">
-                                                    <span className="badge badge-info badge-sm">GET</span>
-                                                    <code className="text-xs">/api/conversations</code>
-                                                </div>
-                                                <p className="text-base-content/70">Retrieve chat conversation history</p>
+                                            <div className="text-center mt-4">
+                                                <a
+                                                    href="/api-docs.html"
+                                                    target="_blank"
+                                                    rel="noopener noreferrer"
+                                                    className="text-primary hover:text-primary/80 text-sm font-medium"
+                                                >
+                                                    View All Endpoints →
+                                                </a>
                                             </div>
                                         </div>
                                     </div>
@@ -666,6 +726,16 @@ export default function ApiKeysPage() {
                                             <div className="alert alert-warning alert-sm">
                                                 <i className="fa-duotone fa-solid fa-exclamation-triangle" aria-hidden />
                                                 <span className="text-xs">Never expose secret keys in client-side code</span>
+                                            </div>
+                                            <div className="text-center mt-4">
+                                                <a
+                                                    href="/api-docs.html#/Authentication"
+                                                    target="_blank"
+                                                    rel="noopener noreferrer"
+                                                    className="text-success hover:text-success/80 text-sm font-medium"
+                                                >
+                                                    Auth Guide →
+                                                </a>
                                             </div>
                                         </div>
                                     </div>
@@ -699,22 +769,69 @@ export default function ApiKeysPage() {
                                                     <span>Set rate limits to prevent abuse</span>
                                                 </div>
                                             </div>
+                                            <div className="text-center mt-4">
+                                                <a
+                                                    href="/api-docs.html#/Best%20Practices"
+                                                    target="_blank"
+                                                    rel="noopener noreferrer"
+                                                    className="text-warning hover:text-warning/80 text-sm font-medium"
+                                                >
+                                                    Security Guide →
+                                                </a>
+                                            </div>
                                         </div>
                                     </div>
                                 </div>
 
                                 {/* Quick Start */}
                                 <div className="mt-6 pt-6 border-t border-base-300">
-                                    <h3 className="font-semibold mb-3 flex items-center gap-2">
-                                        <i className="fa-duotone fa-solid fa-rocket text-info" aria-hidden />
-                                        Quick Start Example
-                                    </h3>
+                                    <div className="flex items-center justify-between mb-3">
+                                        <h3 className="font-semibold flex items-center gap-2">
+                                            <i className="fa-duotone fa-solid fa-rocket text-info" aria-hidden />
+                                            Quick Start Example
+                                        </h3>
+                                        <div className="flex items-center gap-2">
+                                            <a
+                                                href="/api-docs.html#/Chat/post_api_chat"
+                                                target="_blank"
+                                                rel="noopener noreferrer"
+                                                className="btn btn-ghost btn-xs rounded-lg text-info"
+                                            >
+                                                Try in Swagger →
+                                            </a>
+                                        </div>
+                                    </div>
                                     <div className="mockup-code text-xs">
                                         <pre><code># Send a message to the AI assistant</code></pre>
                                         <pre><code>curl -X POST https://yourdomain.com/api/chat \</code></pre>
                                         <pre><code>  -H &quot;Authorization: Bearer sk_your_secret_key&quot; \</code></pre>
                                         <pre><code>  -H &quot;Content-Type: application/json&quot; \</code></pre>
                                         <pre><code>  -d &apos;{`{`}&quot;message&quot;: &quot;Hello&quot;, &quot;sessionId&quot;: &quot;session_123&quot;{`}`}&apos;</code></pre>
+                                    </div>
+
+                                    <div className="grid grid-cols-2 gap-4 mt-4">
+                                        <a
+                                            href="/docs/ai-agent-integration-guide.md"
+                                            className="flex items-center gap-2 p-3 bg-info/5 border border-info/20 rounded-lg hover:bg-info/10 transition-colors text-sm"
+                                        >
+                                            <i className="fa-duotone fa-solid fa-robot text-info" aria-hidden />
+                                            <div>
+                                                <div className="font-medium">AI Agent Guide</div>
+                                                <div className="text-xs text-base-content/60">Complete integration guide</div>
+                                            </div>
+                                        </a>
+                                        <a
+                                            href="/api-docs.html#/SDK%20Examples"
+                                            target="_blank"
+                                            rel="noopener noreferrer"
+                                            className="flex items-center gap-2 p-3 bg-success/5 border border-success/20 rounded-lg hover:bg-success/10 transition-colors text-sm"
+                                        >
+                                            <i className="fa-duotone fa-solid fa-code text-success" aria-hidden />
+                                            <div>
+                                                <div className="font-medium">SDK Examples</div>
+                                                <div className="text-xs text-base-content/60">Node.js, Python, cURL</div>
+                                            </div>
+                                        </a>
                                     </div>
                                 </div>
                             </div>
