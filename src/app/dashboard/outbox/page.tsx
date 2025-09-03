@@ -1,13 +1,58 @@
+import { Suspense } from "react";
 import { getTenantIdStrict } from "@/lib/tenant-resolve";
-import OutboxTable from "@/components/outbox-table";
+import { query } from "@/lib/db";
+import OutboxContent from "./outbox-content";
+import FilterControls from "./filter-controls";
 import { Breadcrumb } from "@/components/ui/breadcrumb";
 import { AnimatedPage, StaggerContainer, StaggerChild } from "@/components/ui/animated-page";
 import Link from "next/link";
 
 export const runtime = 'nodejs';
 
-export default async function OutboxPage() {
-    await getTenantIdStrict();
+interface Filters {
+    search?: string;
+    status?: string;
+    provider?: string;
+    ruleId?: string;
+}
+
+interface RuleOption {
+    id: string;
+    name: string;
+}
+
+// Fetch escalation rules for filter dropdown
+async function fetchRules(tenantId: string): Promise<RuleOption[]> {
+    try {
+        const { rows } = await query<RuleOption>(
+            `SELECT id, name FROM public.escalation_rules 
+             WHERE tenant_id = $1 AND enabled = true 
+             ORDER BY name`,
+            [tenantId]
+        );
+        return rows;
+    } catch (error) {
+        console.error('Error fetching rules:', error);
+        return [];
+    }
+}
+
+export default async function OutboxPage({
+    searchParams
+}: {
+    searchParams: Promise<Record<string, string | string[] | undefined>>
+}) {
+    // Parse filters from URL search params
+    const params = await searchParams;
+    const filters: Filters = {
+        search: typeof params.search === 'string' ? params.search : undefined,
+        status: typeof params.status === 'string' ? params.status : undefined,
+        provider: typeof params.provider === 'string' ? params.provider : undefined,
+        ruleId: typeof params.ruleId === 'string' ? params.ruleId : undefined,
+    };
+
+    const tenantId = await getTenantIdStrict();
+    const rules = await fetchRules(tenantId);
 
     const breadcrumbItems = [
         { label: "Dashboard", href: "/dashboard", icon: "fa-gauge-high" },
@@ -35,17 +80,8 @@ export default async function OutboxPage() {
                                     Monitor escalation delivery attempts, retry failed deliveries, and track integration performance
                                 </p>
                             </div>
-                            <div className="flex-shrink-0">
-                                <div className="stats shadow">
-                                    <div className="stat">
-                                        <div className="stat-figure text-primary">
-                                            <i className="fa-duotone fa-solid fa-paper-plane text-2xl" aria-hidden />
-                                        </div>
-                                        <div className="stat-title">Delivery</div>
-                                        <div className="stat-value text-primary text-lg">Outbox</div>
-                                        <div className="stat-desc">Integration monitoring</div>
-                                    </div>
-                                </div>
+                            <div className="flex items-center gap-3">
+                                <FilterControls filters={filters} rules={rules} />
                             </div>
                         </div>
                     </StaggerChild>
@@ -54,7 +90,14 @@ export default async function OutboxPage() {
                 {/* Content */}
                 <StaggerContainer>
                     <StaggerChild>
-                        <OutboxTable />
+                        <Suspense fallback={
+                            <div className="space-y-6">
+                                <div className="animate-pulse bg-base-300/60 h-32 rounded-2xl"></div>
+                                <div className="animate-pulse bg-base-300/60 h-96 rounded-2xl"></div>
+                            </div>
+                        }>
+                            <OutboxContent />
+                        </Suspense>
                     </StaggerChild>
                 </StaggerContainer>
 

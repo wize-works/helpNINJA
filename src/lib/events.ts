@@ -8,7 +8,7 @@ export type EventName =
     | 'checkout_completed'
     | 'plan_updated'
     | 'ingest_started'
-    
+
     | 'ingest_completed'
     | 'ingest_failed'
     | 'integration_failed'
@@ -85,5 +85,90 @@ export async function logEvent(opts: LogEventOptions): Promise<void> {
     } catch (e) {
         // Non-critical; log but don\'t throw
         console.error('Failed to log event', name, e);
+    }
+}
+
+export interface Event {
+    id: number;
+    tenant_id: string;
+    name: EventName;
+    data: Record<string, unknown> | null;
+    created_at: string;
+}
+
+interface LoadEventsOptions {
+    search?: string;
+    event?: string;
+    dateRange?: string;
+    limit?: number;
+}
+
+/**
+ * Load events for a tenant with optional filtering
+ */
+export async function loadEvents(
+    tenantId: string,
+    options: LoadEventsOptions = {}
+): Promise<Event[]> {
+    const { search, event, dateRange, limit = 200 } = options;
+
+    let whereClause = 'WHERE tenant_id = $1';
+    const params: (string | number)[] = [tenantId];
+    let paramIndex = 2;
+
+    // Filter by event type
+    if (event) {
+        whereClause += ` AND name = $${paramIndex}`;
+        params.push(event);
+        paramIndex++;
+    }
+
+    // Filter by date range
+    if (dateRange) {
+        let interval = '';
+        switch (dateRange) {
+            case '1h':
+                interval = '1 hour';
+                break;
+            case '24h':
+                interval = '1 day';
+                break;
+            case '7d':
+                interval = '7 days';
+                break;
+            case '30d':
+                interval = '30 days';
+                break;
+        }
+        if (interval) {
+            whereClause += ` AND created_at >= NOW() - INTERVAL '${interval}'`;
+        }
+    }
+
+    // Search in event name or data (JSON text search)
+    if (search && search.trim()) {
+        whereClause += ` AND (
+            name ILIKE $${paramIndex} OR 
+            data::text ILIKE $${paramIndex}
+        )`;
+        params.push(`%${search.trim()}%`);
+        paramIndex++;
+    }
+
+    const sql = `
+        SELECT id, tenant_id, name, data, created_at
+        FROM public.events
+        ${whereClause}
+        ORDER BY created_at DESC
+        LIMIT $${paramIndex}
+    `;
+    params.push(limit);
+
+    try {
+        const result = await query(sql, params);
+        return result.rows as Event[];
+    } catch (error) {
+        console.error('Failed to load events:', error);
+        throw error;
     }
 }

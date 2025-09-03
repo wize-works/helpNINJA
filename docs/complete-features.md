@@ -92,6 +92,13 @@ Core features (present)
     - Site-specific feedback filtering allows isolation of feedback by verified tenant sites
     - Auto-escalation for urgent/high-priority feedback with centralized escalation service integration
     - Files: src/app/dashboard/feedback/page.tsx (server-side main page), src/app/dashboard/feedback/feedback-content.tsx (client component), src/app/dashboard/feedback/filter-controls.tsx (standardized filters), src/app/api/feedback/route.ts (enhanced with ILIKE search), src/components/feedback-table.tsx, src/components/feedback-analytics.tsx
+  - **Outbox (Delivery Status)**: Complete integration delivery monitoring with standardized filter implementation following filter-button-guide.md pattern
+    - Server-side filtering with URL persistence for search, status (pending/sent/failed), provider, and escalation rule association
+    - Search functionality across integration names, error messages, providers, and rule names for efficient troubleshooting
+    - Comprehensive delivery statistics with visual status cards showing sent, pending, and failed delivery counts
+    - Bulk retry operations with individual and mass retry capabilities for failed deliveries
+    - Real-time delivery status tracking with detailed error reporting and retry attempt logging
+    - Files: src/app/dashboard/outbox/page.tsx (server-side main page), src/app/dashboard/outbox/outbox-content.tsx (client component), src/app/dashboard/outbox/filter-controls.tsx (standardized filters), src/app/api/outbox/route.ts (enhanced with ILIKE search), src/components/outbox-table.tsx
   - Settings + Keys: src/app/dashboard/settings/page.tsx and scaffolded src/app/api/tenants/[id]/rotate-keys/route.ts
   - API Keys Management: src/app/dashboard/settings/api/page.tsx for advanced API key and webhook management
 - Webhook Event System (NEW - Production-ready implementation)

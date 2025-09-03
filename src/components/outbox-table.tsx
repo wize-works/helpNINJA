@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect, useCallback } from 'react';
+import { useSearchParams } from 'next/navigation';
 import { HoverScale } from './ui/animated-page';
 import { toastUtils } from '@/lib/toast';
 
@@ -29,15 +30,18 @@ export default function OutboxTable() {
     const [loading, setLoading] = useState(true);
     const [retrying, setRetrying] = useState<Set<string>>(new Set());
     const [selectedItems, setSelectedItems] = useState<Set<string>>(new Set());
-    const [filters, setFilters] = useState({
-        status: '',
-        provider: ''
-    });
     const [pagination, setPagination] = useState({
         limit: 50,
         offset: 0,
         hasMore: false
     });
+
+    const searchParams = useSearchParams();
+
+    const statusFilter = searchParams.get('status') || '';
+    const providerFilter = searchParams.get('provider') || '';
+    const ruleIdFilter = searchParams.get('ruleId') || '';
+    const searchFilter = searchParams.get('search') || '';
 
     const loadOutboxItems = useCallback(async () => {
         try {
@@ -46,8 +50,10 @@ export default function OutboxTable() {
                 offset: pagination.offset.toString()
             });
 
-            if (filters.status) params.set('status', filters.status);
-            if (filters.provider) params.set('provider', filters.provider);
+            if (statusFilter) params.set('status', statusFilter);
+            if (providerFilter) params.set('provider', providerFilter);
+            if (ruleIdFilter) params.set('ruleId', ruleIdFilter);
+            if (searchFilter) params.set('search', searchFilter);
 
             const response = await fetch(`/api/outbox?${params}`);
 
@@ -65,7 +71,7 @@ export default function OutboxTable() {
         } finally {
             setLoading(false);
         }
-    }, [filters, pagination.limit, pagination.offset]);
+    }, [statusFilter, providerFilter, ruleIdFilter, searchFilter, pagination.limit, pagination.offset]);
 
     useEffect(() => {
         loadOutboxItems();
@@ -231,42 +237,15 @@ export default function OutboxTable() {
                 </div>
             </div>
 
-            {/* Filters and Actions */}
+            {/* Actions */}
             <div className="card bg-base-100 shadow-xl rounded-2xl">
                 <div className="card-body">
                     <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                            <div className="form-control">
-                                <label className="label">
-                                    <span className="label-text">Status</span>
-                                </label>
-                                <select
-                                    className="select select-bordered"
-                                    value={filters.status}
-                                    onChange={(e) => setFilters(prev => ({ ...prev, status: e.target.value }))}
-                                >
-                                    <option value="">All statuses</option>
-                                    <option value="pending">Pending</option>
-                                    <option value="sent">Sent</option>
-                                    <option value="failed">Failed</option>
-                                </select>
-                            </div>
-
-                            <div className="form-control">
-                                <label className="label">
-                                    <span className="label-text">Provider</span>
-                                </label>
-                                <select
-                                    className="select select-bordered"
-                                    value={filters.provider}
-                                    onChange={(e) => setFilters(prev => ({ ...prev, provider: e.target.value }))}
-                                >
-                                    <option value="">All providers</option>
-                                    <option value="slack">Slack</option>
-                                    <option value="email">Email</option>
-                                    <option value="teams">Teams</option>
-                                </select>
-                            </div>
+                        <div>
+                            <h3 className="text-lg font-semibold text-base-content">Bulk Actions</h3>
+                            <p className="text-sm text-base-content/60">
+                                Select failed items to retry delivery attempts
+                            </p>
                         </div>
 
                         <div className="flex gap-3">
@@ -310,7 +289,7 @@ export default function OutboxTable() {
                             </div>
                             <h3 className="font-semibold text-lg mb-2">No delivery attempts found</h3>
                             <p className="text-base-content/60">
-                                {filters.status || filters.provider
+                                {statusFilter || providerFilter || ruleIdFilter || searchFilter
                                     ? 'No items match your current filters'
                                     : 'No escalations have been triggered yet'
                                 }

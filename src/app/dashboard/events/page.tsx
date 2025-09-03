@@ -1,27 +1,26 @@
+import { Suspense } from 'react';
 import { getTenantIdStrict } from '@/lib/tenant-resolve';
-import { query } from '@/lib/db';
 import { Breadcrumb } from '@/components/ui/breadcrumb';
 import { AnimatedPage, StaggerContainer, StaggerChild, HoverScale } from '@/components/ui/animated-page';
+import FilterControls from './filter-controls';
+import EventsContent from './events-content';
 
 export const runtime = 'nodejs';
 
-type EventRow = { id: string; name: string; data: unknown; created_at: string };
-
-async function loadEvents(tenantId: string): Promise<EventRow[]> {
-    const { rows } = await query<EventRow>(
-        `SELECT id::text, name, data, created_at::text
-     FROM public.events
-     WHERE tenant_id=$1
-     ORDER BY created_at DESC
-     LIMIT 200`,
-        [tenantId]
-    );
-    return rows;
+interface SearchParams {
+    search?: string;
+    event?: string;
+    dateRange?: string;
 }
 
-export default async function EventsPage() {
+interface Props {
+    searchParams: Promise<SearchParams>;
+}
+
+export default async function EventsPage({ searchParams }: Props) {
+    const params = await searchParams;
+    const { search, event, dateRange } = params;
     const tenantId = await getTenantIdStrict();
-    const events = await loadEvents(tenantId);
 
     const breadcrumbItems = [
         { label: 'Dashboard', href: '/dashboard', icon: 'fa-gauge-high' },
@@ -42,9 +41,10 @@ export default async function EventsPage() {
                         <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-6">
                             <div>
                                 <h1 className="text-3xl font-bold text-base-content">Event Stream</h1>
-                                <p className="text-base-content/60 mt-2">Recent analytics & audit events for your workspace (last 200)</p>
+                                <p className="text-base-content/60 mt-2">Recent analytics & audit events for your workspace</p>
                             </div>
                             <div className="flex items-center gap-3">
+                                <FilterControls filters={{ search, event, dateRange }} />
                                 <HoverScale scale={1.02}>
                                     <a href="/dashboard/analytics" className="btn btn-outline btn-sm rounded-lg">
                                         <i className="fa-duotone fa-solid fa-chart-line mr-2" aria-hidden />
@@ -59,53 +59,19 @@ export default async function EventsPage() {
                 <StaggerContainer>
                     <StaggerChild>
                         <div className="card bg-base-100 border border-base-300 rounded-2xl shadow-sm">
-                            <div className="card-body p-0 overflow-x-auto">
-                                <table className="table table-sm">
-                                    <thead>
-                                        <tr>
-                                            <th className="w-40">Time</th>
-                                            <th className="w-56">Event</th>
-                                            <th>Data</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody>
-                                        {events.length === 0 && (
-                                            <tr>
-                                                <td colSpan={3} className="text-center py-10 text-base-content/60">
-                                                    <div className="flex flex-col items-center gap-3">
-                                                        <div className="w-14 h-14 rounded-xl bg-base-200 flex items-center justify-center">
-                                                            <i className="fa-duotone fa-solid fa-waveform-lines text-xl text-base-content/40" aria-hidden />
-                                                        </div>
-                                                        <div>
-                                                            <p className="font-medium">No events yet</p>
-                                                            <p className="text-xs text-base-content/50">Events will appear as users interact & data ingests</p>
-                                                        </div>
-                                                    </div>
-                                                </td>
-                                            </tr>
-                                        )}
-                                        {events.map(ev => {
-                                            const ts = new Date(ev.created_at);
-                                            return (
-                                                <tr key={ev.id} className="hover">
-                                                    <td className="align-top whitespace-nowrap text-xs text-base-content/70">
-                                                        {ts.toLocaleString()}
-                                                    </td>
-                                                    <td className="align-top">
-                                                        <span className="badge badge-outline badge-sm font-mono uppercase tracking-wide">
-                                                            {ev.name}
-                                                        </span>
-                                                    </td>
-                                                    <td className="align-top font-mono text-xs whitespace-pre-wrap max-w-[0]">
-                                                        <pre className="m-0 p-0 leading-snug overflow-x-auto max-w-xl">
-                                                            {JSON.stringify(ev.data as Record<string, unknown>, null, 2)}
-                                                        </pre>
-                                                    </td>
-                                                </tr>
-                                            );
-                                        })}
-                                    </tbody>
-                                </table>
+                            <div className="card-body p-0">
+                                <Suspense fallback={
+                                    <div className="flex items-center justify-center py-12">
+                                        <div className="loading loading-spinner loading-md"></div>
+                                    </div>
+                                }>
+                                    <EventsContent
+                                        search={search}
+                                        event={event}
+                                        dateRange={dateRange}
+                                        tenantId={tenantId}
+                                    />
+                                </Suspense>
                             </div>
                         </div>
                     </StaggerChild>

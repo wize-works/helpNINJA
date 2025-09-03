@@ -11,6 +11,7 @@ export async function GET(req: NextRequest) {
         const status = searchParams.get('status');
         const provider = searchParams.get('provider');
         const ruleId = searchParams.get('ruleId');
+        const search = searchParams.get('search');
         const limit = parseInt(searchParams.get('limit') || '50');
         const offset = parseInt(searchParams.get('offset') || '0');
 
@@ -44,6 +45,17 @@ export async function GET(req: NextRequest) {
         if (ruleId) {
             queryText += ` AND io.rule_id = $${paramIndex++}`;
             params.push(ruleId);
+        }
+
+        if (search) {
+            queryText += ` AND (
+                i.name ILIKE $${paramIndex} OR 
+                er.name ILIKE $${paramIndex} OR 
+                io.last_error ILIKE $${paramIndex} OR
+                io.provider ILIKE $${paramIndex}
+            )`;
+            params.push(`%${search}%`);
+            paramIndex++;
         }
 
         queryText += ` ORDER BY io.created_at DESC LIMIT $${paramIndex++} OFFSET $${paramIndex++}`;
