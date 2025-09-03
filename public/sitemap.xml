@@ -151,4 +151,26 @@
     <changefreq>weekly</changefreq>
     <priority>0.4</priority>
   </url>
+
+  <!-- API Documentation -->
+  <url>
+    <loc>https://helpninja.app/api-docs.html</loc>
+    <lastmod>2025-09-03</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+  </url>
+
+  <url>
+    <loc>https://helpninja.app/openapi.json</loc>
+    <lastmod>2025-09-03</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.6</priority>
+  </url>
+
+  <url>
+    <loc>https://helpninja.app/openapi.yaml</loc>
+    <lastmod>2025-09-03</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.6</priority>
+  </url>
 </urlset>

@@ -1,0 +1,1014 @@
+{
+    "openapi": "3.0.3",
+    "info": {
+        "title": "helpNINJA API",
+        "description": "The helpNINJA API provides programmatic access to AI-powered customer support features including chat conversations, content management, webhooks, analytics, and team management.\n\n## Authentication\n\nThe helpNINJA API uses API keys for authentication:\n\n- **Bearer Token** (recommended): `Authorization: Bearer sk_your_api_key`\n- **API Key Header**: `X-API-Key: sk_your_api_key`\n- **Query Parameter**: `?api_key=sk_your_api_key` (less secure)\n\n## API Key Types\n\n- `pk_*` - Public keys (client-side safe, widget integration)\n- `sk_*` - Secret keys (server-side only, full API access)\n- `whk_*` - Webhook keys (webhook endpoint authentication)\n\n## Rate Limiting\n\n- Default: 1,000 requests per hour per API key\n- Rate limit headers included in responses\n\n## Webhooks\n\nhelpNINJA supports real-time webhooks for:\n- `conversation.started` - New conversation initiated\n- `message.sent` - Message sent (user or assistant)\n- `escalation.triggered` - AI escalated to human support\n- `document.ingested` - Content successfully indexed",
+        "version": "1.0.0",
+        "contact": {
+            "name": "helpNINJA API Support",
+            "url": "https://helpninja.app/support"
+        }
+    },
+    "servers": [
+        {
+            "url": "https://helpninja.app/api",
+            "description": "Production server"
+        },
+        {
+            "url": "http://localhost:3001/api",
+            "description": "Development server"
+        }
+    ],
+    "security": [
+        {
+            "BearerAuth": []
+        }
+    ],
+    "paths": {
+        "/chat": {
+            "post": {
+                "tags": [
+                    "Chat & Conversations"
+                ],
+                "summary": "Send chat message (Widget endpoint)",
+                "description": "Send a message to the AI assistant and receive a response. This is the primary endpoint used by the helpNINJA widget with RAG-powered responses, intent classification, and automatic escalation.",
+                "operationId": "sendChatMessage",
+                "security": [],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "type": "object",
+                                "required": [
+                                    "tenantId",
+                                    "sessionId",
+                                    "message"
+                                ],
+                                "properties": {
+                                    "tenantId": {
+                                        "type": "string",
+                                        "pattern": "^pk_[a-zA-Z0-9]{20,}$",
+                                        "description": "Your public tenant key (starts with pk_)",
+                                        "example": "pk_1234567890abcdefghij"
+                                    },
+                                    "sessionId": {
+                                        "type": "string",
+                                        "description": "Unique session identifier for this conversation",
+                                        "example": "user-session-123"
+                                    },
+                                    "message": {
+                                        "type": "string",
+                                        "description": "The user's message",
+                                        "example": "How do I reset my password?"
+                                    },
+                                    "voice": {
+                                        "type": "string",
+                                        "enum": [
+                                            "friendly",
+                                            "professional",
+                                            "casual",
+                                            "formal"
+                                        ],
+                                        "default": "friendly",
+                                        "description": "AI assistant's voice/tone"
+                                    },
+                                    "siteId": {
+                                        "type": "string",
+                                        "description": "Optional site identifier for multi-site tenants"
+                                    }
+                                }
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "AI response generated successfully",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "answer": {
+                                            "type": "string",
+                                            "description": "The AI assistant's response",
+                                            "example": "To reset your password, click the 'Forgot Password' link on the login page..."
+                                        },
+                                        "html": {
+                                            "type": "string",
+                                            "description": "HTML formatted version of the answer"
+                                        },
+                                        "refs": {
+                                            "type": "array",
+                                            "items": {
+                                                "type": "string",
+                                                "format": "uri"
+                                            },
+                                            "description": "Source URLs used to generate the response"
+                                        },
+                                        "confidence": {
+                                            "type": "number",
+                                            "format": "float",
+                                            "minimum": 0,
+                                            "maximum": 1,
+                                            "description": "Confidence score of the response (0-1)"
+                                        },
+                                        "source": {
+                                            "type": "string",
+                                            "enum": [
+                                                "ai",
+                                                "curated",
+                                                "system"
+                                            ],
+                                            "description": "Source of the response"
+                                        },
+                                        "intent": {
+                                            "type": "string",
+                                            "enum": [
+                                                "features",
+                                                "pricing",
+                                                "troubleshoot",
+                                                "general"
+                                            ],
+                                            "description": "Classified intent of the user's message"
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "$ref": "#/components/responses/BadRequest"
+                    },
+                    "402": {
+                        "$ref": "#/components/responses/UsageLimitExceeded"
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/Forbidden"
+                    },
+                    "500": {
+                        "$ref": "#/components/responses/InternalServerError"
+                    }
+                }
+            }
+        },
+        "/chat-api": {
+            "post": {
+                "tags": [
+                    "Chat & Conversations"
+                ],
+                "summary": "Send chat message via API",
+                "description": "Send a message via the authenticated API (requires API key with 'chat' permission).",
+                "operationId": "sendChatMessageAPI",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "type": "object",
+                                "required": [
+                                    "sessionId",
+                                    "message"
+                                ],
+                                "properties": {
+                                    "sessionId": {
+                                        "type": "string",
+                                        "description": "Unique session identifier"
+                                    },
+                                    "message": {
+                                        "type": "string",
+                                        "description": "The user's message"
+                                    },
+                                    "voice": {
+                                        "type": "string",
+                                        "enum": [
+                                            "friendly",
+                                            "professional",
+                                            "casual",
+                                            "formal"
+                                        ],
+                                        "default": "friendly"
+                                    },
+                                    "siteId": {
+                                        "type": "string",
+                                        "description": "Optional site identifier"
+                                    }
+                                }
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Message processed successfully",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "conversation_id": {
+                                            "type": "string",
+                                            "format": "uuid"
+                                        },
+                                        "message_id": {
+                                            "type": "string",
+                                            "format": "uuid"
+                                        },
+                                        "response": {
+                                            "type": "string"
+                                        },
+                                        "confidence": {
+                                            "type": "number",
+                                            "format": "float"
+                                        },
+                                        "sources": {
+                                            "type": "array",
+                                            "items": {
+                                                "type": "string",
+                                                "format": "uri"
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/Unauthorized"
+                    }
+                }
+            },
+            "get": {
+                "tags": [
+                    "Chat & Conversations"
+                ],
+                "summary": "Get conversation history",
+                "description": "Retrieve conversation history and messages",
+                "operationId": "getConversationHistory",
+                "parameters": [
+                    {
+                        "name": "conversation_id",
+                        "in": "query",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "format": "uuid"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Conversation history retrieved",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/Conversation"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/conversations": {
+            "post": {
+                "tags": [
+                    "Chat & Conversations"
+                ],
+                "summary": "Create conversation",
+                "description": "Create a new conversation",
+                "operationId": "createConversation",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "type": "object",
+                                "required": [
+                                    "session_id"
+                                ],
+                                "properties": {
+                                    "session_id": {
+                                        "type": "string",
+                                        "description": "Unique session identifier"
+                                    },
+                                    "metadata": {
+                                        "type": "object",
+                                        "additionalProperties": true,
+                                        "description": "Optional conversation metadata"
+                                    }
+                                }
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "201": {
+                        "description": "Conversation created successfully",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "conversation_id": {
+                                            "type": "string",
+                                            "format": "uuid"
+                                        },
+                                        "session_id": {
+                                            "type": "string"
+                                        },
+                                        "created_at": {
+                                            "type": "string",
+                                            "format": "date-time"
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            },
+            "get": {
+                "tags": [
+                    "Chat & Conversations"
+                ],
+                "summary": "List conversations",
+                "description": "Get paginated list of conversations",
+                "operationId": "getConversations",
+                "parameters": [
+                    {
+                        "name": "limit",
+                        "in": "query",
+                        "schema": {
+                            "type": "integer",
+                            "minimum": 1,
+                            "maximum": 100,
+                            "default": 20
+                        }
+                    },
+                    {
+                        "name": "offset",
+                        "in": "query",
+                        "schema": {
+                            "type": "integer",
+                            "minimum": 0,
+                            "default": 0
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "List of conversations",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "conversations": {
+                                            "type": "array",
+                                            "items": {
+                                                "$ref": "#/components/schemas/Conversation"
+                                            }
+                                        },
+                                        "pagination": {
+                                            "$ref": "#/components/schemas/Pagination"
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/ingest": {
+            "post": {
+                "tags": [
+                    "Content Management"
+                ],
+                "summary": "Ingest content",
+                "description": "Ingest content from URLs, sitemaps, or direct content for RAG search. The system crawls content, chunks it for optimal retrieval, generates embeddings, and stores in PostgreSQL with pgvector.",
+                "operationId": "ingestContent",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "type": "object",
+                                "required": [
+                                    "input"
+                                ],
+                                "properties": {
+                                    "input": {
+                                        "type": "string",
+                                        "description": "URL to crawl, sitemap URL, or direct content",
+                                        "example": "https://your-website.com/help"
+                                    },
+                                    "siteId": {
+                                        "type": "string",
+                                        "description": "Optional site identifier"
+                                    }
+                                }
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Ingestion completed successfully",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "message": {
+                                            "type": "string"
+                                        },
+                                        "documentsIngested": {
+                                            "type": "integer"
+                                        },
+                                        "chunksCreated": {
+                                            "type": "integer"
+                                        },
+                                        "tokensEmbedded": {
+                                            "type": "integer"
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/sources": {
+            "get": {
+                "tags": [
+                    "Content Management"
+                ],
+                "summary": "List documents",
+                "description": "Get list of ingested documents/sources",
+                "operationId": "getSources",
+                "responses": {
+                    "200": {
+                        "description": "List of document sources",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "sources": {
+                                            "type": "array",
+                                            "items": {
+                                                "$ref": "#/components/schemas/DocumentSource"
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/webhooks": {
+            "get": {
+                "tags": [
+                    "Webhooks"
+                ],
+                "summary": "List webhook endpoints",
+                "description": "Get all configured webhook endpoints",
+                "operationId": "getWebhooks",
+                "responses": {
+                    "200": {
+                        "description": "List of webhook endpoints",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "webhooks": {
+                                            "type": "array",
+                                            "items": {
+                                                "$ref": "#/components/schemas/WebhookEndpoint"
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            },
+            "post": {
+                "tags": [
+                    "Webhooks"
+                ],
+                "summary": "Create webhook endpoint",
+                "description": "Create a new webhook endpoint to receive real-time notifications for conversation events, message events, escalations, and content ingestion.",
+                "operationId": "createWebhook",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "type": "object",
+                                "required": [
+                                    "name",
+                                    "url",
+                                    "events"
+                                ],
+                                "properties": {
+                                    "name": {
+                                        "type": "string",
+                                        "example": "Slack Notifications"
+                                    },
+                                    "url": {
+                                        "type": "string",
+                                        "format": "uri",
+                                        "example": "https://your-app.com/webhooks/helpninja"
+                                    },
+                                    "events": {
+                                        "type": "array",
+                                        "items": {
+                                            "type": "string",
+                                            "enum": [
+                                                "conversation.started",
+                                                "message.sent",
+                                                "escalation.triggered",
+                                                "document.ingested"
+                                            ]
+                                        }
+                                    },
+                                    "secret": {
+                                        "type": "string"
+                                    }
+                                }
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "201": {
+                        "description": "Webhook endpoint created",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/WebhookEndpoint"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/usage": {
+            "get": {
+                "tags": [
+                    "Analytics"
+                ],
+                "summary": "Get usage statistics",
+                "description": "Retrieve current usage statistics including message count, plan limits, and billing period information.",
+                "operationId": "getUsage",
+                "responses": {
+                    "200": {
+                        "description": "Usage statistics",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "used": {
+                                            "type": "integer",
+                                            "example": 245
+                                        },
+                                        "limit": {
+                                            "type": "integer",
+                                            "example": 5000
+                                        },
+                                        "plan": {
+                                            "type": "string",
+                                            "enum": [
+                                                "starter",
+                                                "pro",
+                                                "agency"
+                                            ],
+                                            "example": "pro"
+                                        },
+                                        "period_start": {
+                                            "type": "string",
+                                            "format": "date-time"
+                                        },
+                                        "period_end": {
+                                            "type": "string",
+                                            "format": "date-time"
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/billing/checkout": {
+            "post": {
+                "tags": [
+                    "Billing"
+                ],
+                "summary": "Create Stripe checkout session",
+                "description": "Create a Stripe Checkout session for subscription signup or plan changes. Available plans: starter, pro, agency. Billing periods: monthly, yearly.",
+                "operationId": "createCheckoutSession",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "type": "object",
+                                "required": [
+                                    "plan",
+                                    "billingPeriod"
+                                ],
+                                "properties": {
+                                    "plan": {
+                                        "type": "string",
+                                        "enum": [
+                                            "starter",
+                                            "pro",
+                                            "agency"
+                                        ]
+                                    },
+                                    "billingPeriod": {
+                                        "type": "string",
+                                        "enum": [
+                                            "monthly",
+                                            "yearly"
+                                        ]
+                                    }
+                                }
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Checkout session created",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "checkout_url": {
+                                            "type": "string",
+                                            "format": "uri"
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/billing/portal": {
+            "post": {
+                "tags": [
+                    "Billing"
+                ],
+                "summary": "Create Stripe billing portal session",
+                "description": "Create a Stripe Customer Portal session for managing subscription, payment methods, and billing history.",
+                "operationId": "createPortalSession",
+                "responses": {
+                    "200": {
+                        "description": "Portal session created",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "url": {
+                                            "type": "string",
+                                            "format": "uri"
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/widget": {
+            "get": {
+                "tags": [
+                    "Widget"
+                ],
+                "summary": "Get widget script",
+                "description": "Returns the JavaScript code for the helpNINJA chat widget. Supports CORS for cross-domain usage.",
+                "operationId": "getWidgetScript",
+                "security": [],
+                "parameters": [
+                    {
+                        "name": "t",
+                        "in": "query",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "pattern": "^pk_[a-zA-Z0-9]{20,}$"
+                        },
+                        "description": "Tenant public key"
+                    },
+                    {
+                        "name": "s",
+                        "in": "query",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        },
+                        "description": "Site ID"
+                    },
+                    {
+                        "name": "k",
+                        "in": "query",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        },
+                        "description": "Site verification token"
+                    },
+                    {
+                        "name": "voice",
+                        "in": "query",
+                        "schema": {
+                            "type": "string",
+                            "enum": [
+                                "friendly",
+                                "professional",
+                                "casual",
+                                "formal"
+                            ],
+                            "default": "friendly"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Widget JavaScript code",
+                        "content": {
+                            "application/javascript": {
+                                "schema": {
+                                    "type": "string"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    },
+    "components": {
+        "securitySchemes": {
+            "BearerAuth": {
+                "type": "http",
+                "scheme": "bearer",
+                "bearerFormat": "API Key",
+                "description": "API key authentication using Bearer token"
+            }
+        },
+        "schemas": {
+            "Message": {
+                "type": "object",
+                "properties": {
+                    "id": {
+                        "type": "string",
+                        "format": "uuid"
+                    },
+                    "conversation_id": {
+                        "type": "string",
+                        "format": "uuid"
+                    },
+                    "role": {
+                        "type": "string",
+                        "enum": [
+                            "user",
+                            "assistant",
+                            "system"
+                        ]
+                    },
+                    "content": {
+                        "type": "string"
+                    },
+                    "confidence": {
+                        "type": "number",
+                        "format": "float"
+                    },
+                    "created_at": {
+                        "type": "string",
+                        "format": "date-time"
+                    }
+                }
+            },
+            "Conversation": {
+                "type": "object",
+                "properties": {
+                    "id": {
+                        "type": "string",
+                        "format": "uuid"
+                    },
+                    "session_id": {
+                        "type": "string"
+                    },
+                    "created_at": {
+                        "type": "string",
+                        "format": "date-time"
+                    },
+                    "message_count": {
+                        "type": "integer"
+                    },
+                    "messages": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/Message"
+                        }
+                    }
+                }
+            },
+            "DocumentSource": {
+                "type": "object",
+                "properties": {
+                    "id": {
+                        "type": "string",
+                        "format": "uuid"
+                    },
+                    "url": {
+                        "type": "string",
+                        "format": "uri"
+                    },
+                    "title": {
+                        "type": "string"
+                    },
+                    "chunk_count": {
+                        "type": "integer"
+                    },
+                    "created_at": {
+                        "type": "string",
+                        "format": "date-time"
+                    }
+                }
+            },
+            "WebhookEndpoint": {
+                "type": "object",
+                "properties": {
+                    "id": {
+                        "type": "string",
+                        "format": "uuid"
+                    },
+                    "name": {
+                        "type": "string"
+                    },
+                    "url": {
+                        "type": "string",
+                        "format": "uri"
+                    },
+                    "events": {
+                        "type": "array",
+                        "items": {
+                            "type": "string",
+                            "enum": [
+                                "conversation.started",
+                                "message.sent",
+                                "escalation.triggered",
+                                "document.ingested"
+                            ]
+                        }
+                    },
+                    "enabled": {
+                        "type": "boolean"
+                    },
+                    "created_at": {
+                        "type": "string",
+                        "format": "date-time"
+                    }
+                }
+            },
+            "Pagination": {
+                "type": "object",
+                "properties": {
+                    "limit": {
+                        "type": "integer"
+                    },
+                    "offset": {
+                        "type": "integer"
+                    },
+                    "total": {
+                        "type": "integer"
+                    }
+                }
+            },
+            "Error": {
+                "type": "object",
+                "properties": {
+                    "error": {
+                        "type": "string"
+                    },
+                    "message": {
+                        "type": "string"
+                    },
+                    "details": {
+                        "type": "object",
+                        "additionalProperties": true
+                    }
+                }
+            }
+        },
+        "responses": {
+            "BadRequest": {
+                "description": "Bad request - invalid parameters or missing required fields",
+                "content": {
+                    "application/json": {
+                        "schema": {
+                            "$ref": "#/components/schemas/Error"
+                        }
+                    }
+                }
+            },
+            "Unauthorized": {
+                "description": "Unauthorized - invalid or missing API key",
+                "content": {
+                    "application/json": {
+                        "schema": {
+                            "$ref": "#/components/schemas/Error"
+                        }
+                    }
+                }
+            },
+            "Forbidden": {
+                "description": "Forbidden - insufficient permissions or origin not allowed",
+                "content": {
+                    "application/json": {
+                        "schema": {
+                            "$ref": "#/components/schemas/Error"
+                        }
+                    }
+                }
+            },
+            "NotFound": {
+                "description": "Not found - resource does not exist",
+                "content": {
+                    "application/json": {
+                        "schema": {
+                            "$ref": "#/components/schemas/Error"
+                        }
+                    }
+                }
+            },
+            "UsageLimitExceeded": {
+                "description": "Payment required - usage limit exceeded",
+                "content": {
+                    "application/json": {
+                        "schema": {
+                            "$ref": "#/components/schemas/Error"
+                        }
+                    }
+                }
+            },
+            "InternalServerError": {
+                "description": "Internal server error",
+                "content": {
+                    "application/json": {
+                        "schema": {
+                            "$ref": "#/components/schemas/Error"
+                        }
+                    }
+                }
+            }
+        }
+    },
+    "tags": [
+        {
+            "name": "Chat & Conversations",
+            "description": "Send messages to the AI assistant and manage conversations with RAG-powered responses, intent classification, and automatic escalation."
+        },
+        {
+            "name": "Content Management",
+            "description": "Ingest and manage content for RAG search. Supports website crawling, sitemap processing, content chunking, and embedding generation."
+        },
+        {
+            "name": "Webhooks",
+            "description": "Real-time notifications for key events with signature verification, delivery monitoring, and retry mechanisms."
+        },
+        {
+            "name": "Analytics",
+            "description": "Usage statistics, conversation insights, response confidence tracking, and escalation rate monitoring."
+        },
+        {
+            "name": "Billing",
+            "description": "Stripe integration for subscription management including checkout sessions and customer portal access."
+        },
+        {
+            "name": "Widget",
+            "description": "Chat widget integration with JavaScript delivery, cross-domain CORS support, and site-specific configuration."
+        }
+    ]
+}

@@ -6,6 +6,9 @@ Allow: /about
 Allow: /contact
 Allow: /auth/signin
 Allow: /auth/signup
+Allow: /api-docs.html
+Allow: /openapi.json
+Allow: /openapi.yaml
 
 # Disallow dashboard and private areas
 Disallow: /dashboard/

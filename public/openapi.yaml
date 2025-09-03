@@ -1,0 +1,1945 @@
+openapi: 3.0.3
+info:
+  title: helpNINJA API
+  description: |
+    The helpNINJA API provides programmatic access to AI-powered customer support features including:
+    
+    - **Chat & Conversations**: Send messages and manage conversation flows
+    - **Content Management**: Ingest and manage knowledge base content  
+    - **Webhook System**: Real-time notifications for events
+    - **Team Management**: Manage team members and permissions
+    - **Analytics**: Usage statistics and conversation insights
+    - **Billing**: Stripe integration for subscription management
+    
+    ## Authentication
+    
+    The helpNINJA API uses API keys for authentication. Include your API key in requests using:
+    
+    - **Bearer Token** (recommended): `Authorization: Bearer sk_your_api_key`
+    - **API Key Header**: `X-API-Key: sk_your_api_key`
+    - **Query Parameter**: `?api_key=sk_your_api_key` (less secure)
+    
+    ## API Key Types
+    
+    - `pk_*` - Public keys (client-side safe, widget integration)
+    - `sk_*` - Secret keys (server-side only, full API access)
+    - `whk_*` - Webhook keys (webhook endpoint authentication)
+    
+    ## Rate Limiting
+    
+    - Default: 1,000 requests per hour per API key
+    - Rate limit headers included in all responses:
+      - `X-RateLimit-Limit`: Total requests allowed per hour
+      - `X-RateLimit-Remaining`: Requests remaining in current window
+      - `X-RateLimit-Reset`: Unix timestamp when limit resets
+    
+    ## Error Handling
+    
+    All errors return a consistent format:
+    ```json
+    {
+      "error": "error_code",
+      "message": "Human readable error message",
+      "details": {
+        "field": "field_name",
+        "code": "validation_code"
+      }
+    }
+    ```
+    
+    ## Webhooks
+    
+    helpNINJA supports real-time webhooks for key events:
+    - `conversation.started` - New conversation initiated
+    - `message.sent` - Message sent (user or assistant)
+    - `escalation.triggered` - AI escalated to human support
+    - `document.ingested` - Content successfully indexed
+    
+    Webhook signatures are verified using HMAC SHA-256 in the `X-helpNinja-Signature` header.
+    
+  version: 1.0.0
+  contact:
+    name: helpNINJA API Support
+    url: https://helpninja.app/support
+  license:
+    name: MIT
+    url: https://opensource.org/licenses/MIT
+
+servers:
+  - url: https://helpninja.app/api
+    description: Production server
+  - url: http://localhost:3001/api
+    description: Development server
+
+security:
+  - BearerAuth: []
+  - ApiKeyHeader: []
+  - ApiKeyQuery: []
+
+paths:
+  /chat:
+    post:
+      tags: [Chat & Conversations]
+      summary: Send chat message (Widget endpoint)
+      description: |
+        Send a message to the AI assistant and receive a response. This is the primary endpoint used by the helpNINJA widget.
+        
+        Features:
+        - RAG-powered responses using ingested content
+        - Intent classification (features, pricing, troubleshoot)
+        - Automatic escalation for low-confidence responses
+        - Voice/tone customization
+        - CORS enabled for cross-domain widget usage
+      operationId: sendChatMessage
+      security: [] # Public endpoint, uses tenantId in body
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [tenantId, sessionId, message]
+              properties:
+                tenantId:
+                  type: string
+                  pattern: '^pk_[a-zA-Z0-9]{20,}$'
+                  description: Your public tenant key (starts with pk_)
+                  example: pk_1234567890abcdefghij
+                sessionId:
+                  type: string
+                  description: Unique session identifier for this conversation
+                  example: user-session-123
+                message:
+                  type: string
+                  description: The user's message
+                  example: How do I reset my password?
+                voice:
+                  type: string
+                  enum: [friendly, professional, casual, formal]
+                  default: friendly
+                  description: AI assistant's voice/tone
+                siteId:
+                  type: string
+                  description: Optional site identifier for multi-site tenants
+                  example: site-uuid-123
+      responses:
+        '200':
+          description: AI response generated successfully
+          headers:
+            Access-Control-Allow-Origin:
+              schema:
+                type: string
+              description: CORS header
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  answer:
+                    type: string
+                    description: The AI assistant's response
+                    example: To reset your password, click the 'Forgot Password' link on the login page...
+                  html:
+                    type: string
+                    description: HTML formatted version of the answer
+                  refs:
+                    type: array
+                    items:
+                      type: string
+                      format: uri
+                    description: Source URLs used to generate the response
+                    example: ["https://your-site.com/help/password-reset"]
+                  confidence:
+                    type: number
+                    format: float
+                    minimum: 0
+                    maximum: 1
+                    description: Confidence score of the response (0-1)
+                    example: 0.85
+                  source:
+                    type: string
+                    enum: [ai, curated, system]
+                    description: Source of the response
+                    example: ai
+                  intent:
+                    type: string
+                    enum: [features, pricing, troubleshoot, general]
+                    description: Classified intent of the user's message
+                    example: troubleshoot
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '402':
+          $ref: '#/components/responses/UsageLimitExceeded'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  /chat-api:
+    post:
+      tags: [Chat & Conversations]
+      summary: Send chat message via API
+      description: |
+        Send a message via the authenticated API (requires API key with 'chat' permission).
+        Similar to /chat but requires authentication and provides additional features.
+      operationId: sendChatMessageAPI
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [sessionId, message]
+              properties:
+                sessionId:
+                  type: string
+                  description: Unique session identifier
+                  example: api-session-456
+                message:
+                  type: string
+                  description: The user's message
+                  example: What are your pricing plans?
+                voice:
+                  type: string
+                  enum: [friendly, professional, casual, formal]
+                  default: friendly
+                siteId:
+                  type: string
+                  description: Optional site identifier
+      responses:
+        '200':
+          description: Message processed successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  conversation_id:
+                    type: string
+                    format: uuid
+                    description: Unique conversation identifier
+                  message_id:
+                    type: string
+                    format: uuid
+                    description: Unique message identifier
+                  response:
+                    type: string
+                    description: AI assistant response
+                  confidence:
+                    type: number
+                    format: float
+                    minimum: 0
+                    maximum: 1
+                  sources:
+                    type: array
+                    items:
+                      type: string
+                      format: uri
+                    description: Source URLs
+                  answer_type:
+                    type: string
+                    enum: [curated, rag, escalated]
+                  session_id:
+                    type: string
+                    description: Session identifier
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '402':
+          $ref: '#/components/responses/UsageLimitExceeded'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+    
+    get:
+      tags: [Chat & Conversations]
+      summary: Get conversation history
+      description: Retrieve conversation history and messages
+      operationId: getConversationHistory
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: conversation_id
+          in: query
+          required: true
+          schema:
+            type: string
+            format: uuid
+          description: Conversation identifier
+      responses:
+        '200':
+          description: Conversation history retrieved
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  conversation_id:
+                    type: string
+                    format: uuid
+                  session_id:
+                    type: string
+                  created_at:
+                    type: string
+                    format: date-time
+                  metadata:
+                    type: object
+                    additionalProperties: true
+                  messages:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Message'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  /conversations:
+    post:
+      tags: [Chat & Conversations]
+      summary: Create conversation
+      description: Create a new conversation
+      operationId: createConversation
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [session_id]
+              properties:
+                session_id:
+                  type: string
+                  description: Unique session identifier
+                  example: user-session-789
+                metadata:
+                  type: object
+                  additionalProperties: true
+                  description: Optional conversation metadata
+                  example:
+                    user_name: John Doe
+                    user_email: john@example.com
+                site_id:
+                  type: string
+                  description: Optional site identifier
+      responses:
+        '201':
+          description: Conversation created successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  conversation_id:
+                    type: string
+                    format: uuid
+                  session_id:
+                    type: string
+                  created_at:
+                    type: string
+                    format: date-time
+                  status:
+                    type: string
+                    example: created
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+    get:
+      tags: [Chat & Conversations]
+      summary: List conversations
+      description: Get paginated list of conversations for the tenant
+      operationId: getConversations
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 100
+            default: 20
+          description: Number of conversations to return
+        - name: offset
+          in: query
+          schema:
+            type: integer
+            minimum: 0
+            default: 0
+          description: Number of conversations to skip
+      responses:
+        '200':
+          description: List of conversations
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  conversations:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Conversation'
+                  pagination:
+                    $ref: '#/components/schemas/Pagination'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+  /ingest:
+    post:
+      tags: [Content Management]
+      summary: Ingest content
+      description: |
+        Ingest content from URLs, sitemaps, or direct content for RAG search.
+        
+        Supported input types:
+        - Website URLs (crawls and extracts content)
+        - XML sitemaps (processes all URLs)
+        - Direct content (JSON with title, content, url)
+        
+        The ingestion process:
+        1. Crawls/extracts content
+        2. Chunks content for optimal retrieval
+        3. Generates embeddings using OpenAI
+        4. Stores in PostgreSQL with pgvector for similarity search
+      operationId: ingestContent
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [input]
+              properties:
+                input:
+                  type: string
+                  description: |
+                    Content input - can be:
+                    - URL to crawl (https://example.com/help)
+                    - Sitemap URL (https://example.com/sitemap.xml)
+                    - Direct content as JSON string
+                  example: https://your-website.com/help
+                siteId:
+                  type: string
+                  description: Optional site identifier to associate content with
+                  example: site-uuid-123
+      responses:
+        '200':
+          description: Ingestion completed successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: Ingestion started
+                  documentsIngested:
+                    type: integer
+                    description: Number of documents processed
+                    example: 15
+                  chunksCreated:
+                    type: integer
+                    description: Number of content chunks created
+                    example: 142
+                  tokensEmbedded:
+                    type: integer
+                    description: Total tokens processed for embeddings
+                    example: 28439
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  /sources:
+    get:
+      tags: [Content Management]
+      summary: List documents
+      description: Get list of ingested documents/sources
+      operationId: getSources
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 100
+            default: 20
+        - name: offset
+          in: query
+          schema:
+            type: integer
+            minimum: 0
+            default: 0
+      responses:
+        '200':
+          description: List of document sources
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  sources:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/DocumentSource'
+                  pagination:
+                    $ref: '#/components/schemas/Pagination'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+  /sources/{id}:
+    delete:
+      tags: [Content Management]
+      summary: Delete document source
+      description: Remove a document source and all associated chunks
+      operationId: deleteSource
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+          description: Source document ID
+      responses:
+        '200':
+          description: Source deleted successfully
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  /sources/{id}/crawl:
+    post:
+      tags: [Content Management]
+      summary: Re-crawl document source
+      description: Re-crawl and re-index a specific document source
+      operationId: recrawlSource
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Crawl initiated successfully
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  /webhooks:
+    get:
+      tags: [Webhooks]
+      summary: List webhook endpoints
+      description: Get all configured webhook endpoints for the tenant
+      operationId: getWebhooks
+      security:
+        - BearerAuth: []
+      responses:
+        '200':
+          description: List of webhook endpoints
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  webhooks:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/WebhookEndpoint'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+    post:
+      tags: [Webhooks]
+      summary: Create webhook endpoint
+      description: |
+        Create a new webhook endpoint to receive real-time notifications.
+        
+        Available events:
+        - `conversation.started` - New conversation initiated
+        - `message.sent` - Message sent (user or assistant)
+        - `escalation.triggered` - AI escalated to human support  
+        - `document.ingested` - Content successfully indexed
+        
+        Webhook payloads are signed using HMAC SHA-256 and included in the `X-helpNinja-Signature` header.
+      operationId: createWebhook
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [name, url, events]
+              properties:
+                name:
+                  type: string
+                  description: Human-readable name for the webhook
+                  example: Slack Notifications
+                url:
+                  type: string
+                  format: uri
+                  description: Webhook endpoint URL
+                  example: https://your-app.com/webhooks/helpninja
+                events:
+                  type: array
+                  items:
+                    type: string
+                    enum: [conversation.started, message.sent, escalation.triggered, document.ingested]
+                  description: Events to subscribe to
+                  example: [conversation.started, escalation.triggered]
+                secret:
+                  type: string
+                  description: Secret key for webhook signature verification
+                  example: your-webhook-secret-key
+                enabled:
+                  type: boolean
+                  default: true
+                  description: Whether webhook is active
+      responses:
+        '201':
+          description: Webhook endpoint created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/WebhookEndpoint'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+  /webhooks/{id}:
+    get:
+      tags: [Webhooks]
+      summary: Get webhook endpoint
+      description: Retrieve details of a specific webhook endpoint
+      operationId: getWebhook
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Webhook endpoint details
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/WebhookEndpoint'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+    put:
+      tags: [Webhooks]
+      summary: Update webhook endpoint
+      description: Update webhook endpoint configuration
+      operationId: updateWebhook
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                name:
+                  type: string
+                url:
+                  type: string
+                  format: uri
+                events:
+                  type: array
+                  items:
+                    type: string
+                    enum: [conversation.started, message.sent, escalation.triggered, document.ingested]
+                secret:
+                  type: string
+                enabled:
+                  type: boolean
+      responses:
+        '200':
+          description: Webhook updated successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/WebhookEndpoint'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+    delete:
+      tags: [Webhooks]
+      summary: Delete webhook endpoint
+      description: Remove a webhook endpoint
+      operationId: deleteWebhook
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Webhook deleted successfully
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  /webhooks/{id}/test:
+    post:
+      tags: [Webhooks]
+      summary: Test webhook endpoint
+      description: Send a test event to verify webhook endpoint functionality
+      operationId: testWebhook
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Test webhook sent successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  status_code:
+                    type: integer
+                  response_time:
+                    type: number
+                    description: Response time in milliseconds
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  /usage:
+    get:
+      tags: [Analytics]
+      summary: Get usage statistics
+      description: |
+        Retrieve current usage statistics for the tenant including message count, 
+        plan limits, and billing period information.
+      operationId: getUsage
+      security:
+        - BearerAuth: []
+      responses:
+        '200':
+          description: Usage statistics
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  used:
+                    type: integer
+                    description: Messages used in current billing period
+                    example: 245
+                  limit:
+                    type: integer
+                    description: Message limit for current plan
+                    example: 5000
+                  plan:
+                    type: string
+                    enum: [starter, pro, agency]
+                    description: Current subscription plan
+                    example: pro
+                  period_start:
+                    type: string
+                    format: date-time
+                    description: Start of current billing period
+                  period_end:
+                    type: string
+                    format: date-time
+                    description: End of current billing period
+                  overage:
+                    type: integer
+                    description: Messages over limit (if applicable)
+                    example: 0
+                  percentage_used:
+                    type: number
+                    format: float
+                    minimum: 0
+                    maximum: 100
+                    description: Percentage of limit used
+                    example: 4.9
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+  /usage-stats:
+    get:
+      tags: [Analytics]
+      summary: Get detailed analytics
+      description: Get comprehensive analytics including conversation metrics, response times, and trends
+      operationId: getAnalytics
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: period
+          in: query
+          schema:
+            type: string
+            enum: [day, week, month]
+            default: month
+          description: Time period for analytics
+        - name: site_id
+          in: query
+          schema:
+            type: string
+          description: Filter by specific site
+      responses:
+        '200':
+          description: Detailed analytics data
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Analytics'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+  /sites:
+    get:
+      tags: [Site Management]
+      summary: List sites
+      description: Get all sites configured for the tenant
+      operationId: getSites
+      security:
+        - BearerAuth: []
+      responses:
+        '200':
+          description: List of sites
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  sites:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Site'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+    post:
+      tags: [Site Management]
+      summary: Create site
+      description: Create a new site configuration
+      operationId: createSite
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [name, domain]
+              properties:
+                name:
+                  type: string
+                  description: Human-readable site name
+                  example: Main Website
+                domain:
+                  type: string
+                  description: Site domain
+                  example: example.com
+      responses:
+        '201':
+          description: Site created successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Site'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+  /sites/{id}:
+    get:
+      tags: [Site Management]
+      summary: Get site details
+      description: Retrieve details for a specific site
+      operationId: getSite
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Site details
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Site'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+    put:
+      tags: [Site Management]
+      summary: Update site
+      description: Update site configuration
+      operationId: updateSite
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                name:
+                  type: string
+                domain:
+                  type: string
+      responses:
+        '200':
+          description: Site updated successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Site'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+    delete:
+      tags: [Site Management]
+      summary: Delete site
+      description: Remove a site configuration
+      operationId: deleteSite
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Site deleted successfully
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  /sites/{id}/verify:
+    post:
+      tags: [Site Management]
+      summary: Verify site ownership
+      description: |
+        Verify ownership of a site using one of the supported methods:
+        - `meta_tag` - Add verification meta tag to site
+        - `html_file` - Upload verification HTML file
+        - `dns` - Add DNS TXT record
+      operationId: verifySite
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [method]
+              properties:
+                method:
+                  type: string
+                  enum: [meta_tag, html_file, dns]
+                  description: Verification method
+                  example: meta_tag
+      responses:
+        '200':
+          description: Site verification initiated
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  verification_token:
+                    type: string
+                    description: Token to use for verification
+                  verification_method:
+                    type: string
+                  instructions:
+                    type: string
+                    description: Step-by-step verification instructions
+                  status:
+                    type: string
+                    enum: [pending, verified, failed]
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  /sites/{id}/widget-config:
+    get:
+      tags: [Site Management]
+      summary: Get widget configuration
+      description: Get widget configuration for a specific site
+      operationId: getWidgetConfig
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Widget configuration
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/WidgetConfig'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+    put:
+      tags: [Site Management]
+      summary: Update widget configuration
+      description: Update widget appearance and behavior settings for a site
+      operationId: updateWidgetConfig
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/WidgetConfig'
+      responses:
+        '200':
+          description: Widget configuration updated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/WidgetConfig'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  /team:
+    get:
+      tags: [Team Management]
+      summary: List team members
+      description: Get all team members for the tenant
+      operationId: getTeamMembers
+      security:
+        - BearerAuth: []
+      responses:
+        '200':
+          description: List of team members
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  members:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/TeamMember'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+    post:
+      tags: [Team Management]
+      summary: Invite team member
+      description: Send invitation to join the team
+      operationId: inviteTeamMember
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [email, role]
+              properties:
+                email:
+                  type: string
+                  format: email
+                  description: Email address of person to invite
+                  example: new-member@example.com
+                role:
+                  type: string
+                  enum: [admin, support, viewer]
+                  description: Role to assign to team member
+                  example: support
+      responses:
+        '201':
+          description: Invitation sent successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  invitation_id:
+                    type: string
+                    format: uuid
+                  email:
+                    type: string
+                    format: email
+                  role:
+                    type: string
+                  status:
+                    type: string
+                    example: pending
+                  expires_at:
+                    type: string
+                    format: date-time
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+  /team/{userId}:
+    get:
+      tags: [Team Management]
+      summary: Get team member
+      description: Get details of a specific team member
+      operationId: getTeamMember
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: userId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Team member details
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TeamMember'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+    delete:
+      tags: [Team Management]
+      summary: Remove team member
+      description: Remove a team member from the tenant
+      operationId: removeTeamMember
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: userId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Team member removed successfully
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  /billing/checkout:
+    post:
+      tags: [Billing]
+      summary: Create Stripe checkout session
+      description: |
+        Create a Stripe Checkout session for subscription signup or plan changes.
+        
+        Available plans:
+        - `starter` - Basic plan with essential features
+        - `pro` - Advanced plan with more messages and features  
+        - `agency` - Enterprise plan with full API access and webhooks
+        
+        Billing periods:
+        - `monthly` - Monthly billing cycle
+        - `yearly` - Annual billing cycle (usually discounted)
+      operationId: createCheckoutSession
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [plan, billingPeriod]
+              properties:
+                plan:
+                  type: string
+                  enum: [starter, pro, agency]
+                  description: Subscription plan
+                  example: pro
+                billingPeriod:
+                  type: string
+                  enum: [monthly, yearly]
+                  description: Billing frequency
+                  example: monthly
+                successUrl:
+                  type: string
+                  format: uri
+                  description: URL to redirect after successful payment
+                cancelUrl:
+                  type: string
+                  format: uri
+                  description: URL to redirect if user cancels
+      responses:
+        '200':
+          description: Checkout session created
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  checkout_url:
+                    type: string
+                    format: uri
+                    description: Stripe Checkout URL
+                    example: https://checkout.stripe.com/pay/...
+                  session_id:
+                    type: string
+                    description: Stripe session identifier
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+  /billing/portal:
+    post:
+      tags: [Billing]
+      summary: Create Stripe billing portal session
+      description: |
+        Create a Stripe Customer Portal session for managing subscription, 
+        payment methods, and billing history.
+      operationId: createPortalSession
+      security:
+        - BearerAuth: []
+      responses:
+        '200':
+          description: Portal session created
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  url:
+                    type: string
+                    format: uri
+                    description: Stripe Customer Portal URL
+                    example: https://billing.stripe.com/p/session/...
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+  /escalate:
+    post:
+      tags: [Escalation]
+      summary: Manual escalation
+      description: |
+        Manually escalate a conversation to human support. This triggers
+        the escalation workflow including notifications to configured integrations.
+      operationId: escalateConversation
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [conversation_id, reason]
+              properties:
+                conversation_id:
+                  type: string
+                  format: uuid
+                  description: Conversation to escalate
+                reason:
+                  type: string
+                  enum: [low_confidence, user_request, manual, timeout]
+                  description: Reason for escalation
+                  example: user_request
+                notes:
+                  type: string
+                  description: Optional notes for support team
+                  example: Customer needs help with advanced configuration
+      responses:
+        '200':
+          description: Escalation initiated successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  escalation_id:
+                    type: string
+                    format: uuid
+                  status:
+                    type: string
+                    example: initiated
+                  notifications_sent:
+                    type: integer
+                    description: Number of notifications sent
+                    example: 2
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  /widget:
+    get:
+      tags: [Widget]
+      summary: Get widget script
+      description: |
+        Returns the JavaScript code for the helpNINJA chat widget. This endpoint
+        is used by the widget loader script and supports CORS for cross-domain usage.
+        
+        The widget script includes:
+        - Chat bubble UI
+        - Chat panel interface  
+        - Real-time messaging functionality
+        - Customization based on site configuration
+        - Auto-escalation handling
+      operationId: getWidgetScript
+      security: [] # Public endpoint
+      parameters:
+        - name: t
+          in: query
+          required: true
+          schema:
+            type: string
+            pattern: '^pk_[a-zA-Z0-9]{20,}$'
+          description: Tenant public key (starts with pk_)
+          example: pk_1234567890abcdefghij
+        - name: s
+          in: query
+          required: true
+          schema:
+            type: string
+          description: Site ID
+        - name: k
+          in: query
+          required: true
+          schema:
+            type: string
+          description: Site verification token
+        - name: voice
+          in: query
+          schema:
+            type: string
+            enum: [friendly, professional, casual, formal]
+            default: friendly
+          description: AI voice/tone
+      responses:
+        '200':
+          description: Widget JavaScript code
+          content:
+            application/javascript:
+              schema:
+                type: string
+              example: |
+                (function() {
+                  // helpNINJA Widget v1.0.0
+                  // Initializes chat widget with configuration
+                  window.HelpNinja = { ... };
+                })();
+          headers:
+            Access-Control-Allow-Origin:
+              schema:
+                type: string
+              description: CORS header for cross-domain access
+            Cache-Control:
+              schema:
+                type: string
+              description: Caching instructions
+              example: public, max-age=3600
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+
+  /health:
+    get:
+      tags: [System]
+      summary: Health check
+      description: Simple health check endpoint for monitoring
+      operationId: healthCheck
+      security: []
+      responses:
+        '200':
+          description: Service is healthy
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: ok
+                  timestamp:
+                    type: string
+                    format: date-time
+                  version:
+                    type: string
+                    example: 1.0.0
+
+components:
+  securitySchemes:
+    BearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: API Key
+      description: API key authentication using Bearer token (recommended)
+    ApiKeyHeader:
+      type: apiKey
+      in: header
+      name: X-API-Key
+      description: API key authentication using custom header
+    ApiKeyQuery:
+      type: apiKey
+      in: query
+      name: api_key
+      description: API key authentication using query parameter (less secure)
+
+  schemas:
+    Message:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        conversation_id:
+          type: string
+          format: uuid
+        role:
+          type: string
+          enum: [user, assistant, system]
+        content:
+          type: string
+        confidence:
+          type: number
+          format: float
+          minimum: 0
+          maximum: 1
+        sources:
+          type: array
+          items:
+            type: string
+            format: uri
+        created_at:
+          type: string
+          format: date-time
+        intent:
+          type: string
+          enum: [features, pricing, troubleshoot, general]
+
+    Conversation:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        tenant_id:
+          type: string
+          format: uuid
+        session_id:
+          type: string
+        site_id:
+          type: string
+          format: uuid
+        metadata:
+          type: object
+          additionalProperties: true
+        created_at:
+          type: string
+          format: date-time
+        updated_at:
+          type: string
+          format: date-time
+        message_count:
+          type: integer
+        last_message_at:
+          type: string
+          format: date-time
+
+    DocumentSource:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        url:
+          type: string
+          format: uri
+        title:
+          type: string
+        site_id:
+          type: string
+          format: uuid
+        chunk_count:
+          type: integer
+        token_count:
+          type: integer
+        last_crawled:
+          type: string
+          format: date-time
+        status:
+          type: string
+          enum: [active, error, processing]
+        created_at:
+          type: string
+          format: date-time
+
+    WebhookEndpoint:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        tenant_id:
+          type: string
+          format: uuid
+        name:
+          type: string
+        url:
+          type: string
+          format: uri
+        events:
+          type: array
+          items:
+            type: string
+            enum: [conversation.started, message.sent, escalation.triggered, document.ingested]
+        enabled:
+          type: boolean
+        secret:
+          type: string
+          writeOnly: true
+        created_at:
+          type: string
+          format: date-time
+        updated_at:
+          type: string
+          format: date-time
+        last_delivery:
+          type: string
+          format: date-time
+        delivery_success_rate:
+          type: number
+          format: float
+          minimum: 0
+          maximum: 100
+
+    Site:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        tenant_id:
+          type: string
+          format: uuid
+        name:
+          type: string
+        domain:
+          type: string
+        verification_token:
+          type: string
+        verification_method:
+          type: string
+          enum: [meta_tag, html_file, dns]
+        verification_status:
+          type: string
+          enum: [pending, verified, failed]
+        created_at:
+          type: string
+          format: date-time
+        verified_at:
+          type: string
+          format: date-time
+
+    WidgetConfig:
+      type: object
+      properties:
+        primary_color:
+          type: string
+          pattern: '^#[0-9A-Fa-f]{6}$'
+          default: '#7C3AED'
+          description: Primary color for widget UI
+          example: '#7C3AED'
+        position:
+          type: string
+          enum: [bottom-right, bottom-left, top-right, top-left]
+          default: bottom-right
+          description: Position of chat bubble
+        theme:
+          type: string
+          enum: [light, dark, auto]
+          default: auto
+          description: Widget color theme
+        welcome_message:
+          type: string
+          default: "👋 Hi there! How can I help you today?"
+          description: Initial message shown to users
+        ai_name:
+          type: string
+          default: "AI Assistant"
+          description: Name of the AI assistant
+        show_branding:
+          type: boolean
+          default: true
+          description: Whether to show helpNINJA branding
+        auto_open_delay:
+          type: integer
+          minimum: 0
+          default: 0
+          description: Delay in milliseconds before auto-opening (0 = disabled)
+        voice:
+          type: string
+          enum: [friendly, professional, casual, formal]
+          default: friendly
+          description: AI voice/tone style
+
+    TeamMember:
+      type: object
+      properties:
+        user_id:
+          type: string
+        email:
+          type: string
+          format: email
+        name:
+          type: string
+        role:
+          type: string
+          enum: [admin, support, viewer]
+        status:
+          type: string
+          enum: [active, pending, suspended]
+        joined_at:
+          type: string
+          format: date-time
+        last_active:
+          type: string
+          format: date-time
+
+    Analytics:
+      type: object
+      properties:
+        period:
+          type: string
+        total_conversations:
+          type: integer
+        total_messages:
+          type: integer
+        average_confidence:
+          type: number
+          format: float
+        escalation_rate:
+          type: number
+          format: float
+        response_times:
+          type: object
+          properties:
+            average:
+              type: number
+              format: float
+              description: Average response time in milliseconds
+            median:
+              type: number
+              format: float
+            p95:
+              type: number
+              format: float
+        top_intents:
+          type: array
+          items:
+            type: object
+            properties:
+              intent:
+                type: string
+              count:
+                type: integer
+        daily_stats:
+          type: array
+          items:
+            type: object
+            properties:
+              date:
+                type: string
+                format: date
+              conversations:
+                type: integer
+              messages:
+                type: integer
+
+    Pagination:
+      type: object
+      properties:
+        limit:
+          type: integer
+        offset:
+          type: integer
+        total:
+          type: integer
+        has_more:
+          type: boolean
+
+    Error:
+      type: object
+      properties:
+        error:
+          type: string
+          description: Error code
+        message:
+          type: string
+          description: Human-readable error message
+        details:
+          type: object
+          additionalProperties: true
+          description: Additional error details
+
+  responses:
+    BadRequest:
+      description: Bad request - invalid parameters or missing required fields
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+          example:
+            error: invalid_request
+            message: The session_id field is required
+            details:
+              field: session_id
+              code: missing_required_field
+
+    Unauthorized:
+      description: Unauthorized - invalid or missing API key
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+          example:
+            error: unauthorized
+            message: Invalid API key
+            details:
+              code: invalid_api_key
+
+    Forbidden:
+      description: Forbidden - insufficient permissions or origin not allowed
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+          example:
+            error: forbidden
+            message: Origin not allowed for widget access
+            details:
+              code: origin_not_allowed
+
+    NotFound:
+      description: Not found - resource does not exist
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+          example:
+            error: not_found
+            message: Resource not found
+            details:
+              code: resource_not_found
+
+    UsageLimitExceeded:
+      description: Payment required - usage limit exceeded
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+          example:
+            error: usage_limit_exceeded
+            message: Monthly message limit exceeded. Please upgrade your plan.
+            details:
+              used: 1000
+              limit: 1000
+              plan: starter
+
+    InternalServerError:
+      description: Internal server error
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+          example:
+            error: internal_server_error
+            message: An unexpected error occurred
+            details:
+              code: server_error
+
+tags:
+  - name: Chat & Conversations
+    description: |
+      Send messages to the AI assistant and manage conversations. The chat system includes:
+      - RAG-powered responses using your ingested content
+      - Intent classification for better responses  
+      - Automatic escalation for low-confidence answers
+      - Conversation persistence and history
+  
+  - name: Content Management
+    description: |
+      Ingest and manage content for RAG search. Supports:
+      - Website crawling and sitemap processing
+      - Content chunking and embedding generation
+      - Document lifecycle management
+      - Re-indexing and updates
+  
+  - name: Webhooks
+    description: |
+      Real-time notifications for key events. Features:
+      - Event-based notifications 
+      - Signature verification for security
+      - Delivery monitoring and retries
+      - Multiple endpoint support
+  
+  - name: Analytics
+    description: |
+      Usage statistics and conversation insights:
+      - Message usage and plan limits
+      - Conversation metrics and trends  
+      - Response confidence tracking
+      - Escalation rate monitoring
+  
+  - name: Site Management  
+    description: |
+      Manage sites and widget configurations:
+      - Domain verification and ownership
+      - Per-site widget customization
+      - Multi-site tenant support
+      - Configuration management
+  
+  - name: Team Management
+    description: |
+      Manage team members and permissions:
+      - Team member invitations
+      - Role-based access control
+      - User management and status tracking
+      - Invitation lifecycle
+  
+  - name: Billing
+    description: |
+      Stripe integration for subscription management:
+      - Checkout session creation
+      - Customer portal access
+      - Plan and billing period management
+      - Webhook handling for subscription events
+  
+  - name: Escalation
+    description: |
+      Manual and automatic escalation to human support:
+      - Rule-based escalation triggers
+      - Integration with external platforms
+      - Escalation tracking and management
+      - Notification workflows
+  
+  - name: Widget
+    description: |
+      Chat widget integration and customization:
+      - JavaScript widget delivery
+      - Cross-domain support with CORS
+      - Site-specific configuration
+      - Real-time chat functionality
+  
+  - name: System
+    description: |
+      System health and monitoring endpoints:
+      - Health checks for monitoring
+      - Service status information
+      - Version and build details
