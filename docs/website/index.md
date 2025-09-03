@@ -11,7 +11,6 @@
 - How helpNINJA Works
 - AI-Powered Customer Support
 - Use Cases & Industries
-- Success Stories & Case Studies
 
 ## Account Setup
 - Creating Your Account
