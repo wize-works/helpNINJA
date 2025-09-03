@@ -17,6 +17,8 @@ export async function GET(req: NextRequest) {
     const verificationToken = searchParams.get('k');
     const voice = searchParams.get('voice') || 'friendly';
 
+    console.log('Widget request:', { tenantPublicKey, siteId, verificationToken, voice });
+
     // Host info for robust preview-origin detection behind proxies
     const xfHost = req.headers.get('x-forwarded-host') || '';
     const host = xfHost || req.headers.get('host') || '';
@@ -322,12 +324,16 @@ export async function GET(req: NextRequest) {
     
       // Load the real widget module (cache-busted by version if you like)
       const script = document.createElement('script');
-      script.type = 'module';
       script.src = baseOrigin + '/api/widget/v1/client.js';
       script.onload = () => {
-        import(baseOrigin + '/api/widget/v1/client.js').then(mod => {
-          if (mod && typeof mod.mountChatWidget === 'function') mod.mountChatWidget(payload);
-        });
+        if (window.mountChatWidget && typeof window.mountChatWidget === 'function') {
+          window.mountChatWidget(payload);
+        } else {
+          console.error('helpNINJA: Failed to load widget module');
+        }
+      };
+      script.onerror = (err) => {
+        console.error('helpNINJA: Error loading widget:', err);
       };
       document.head.appendChild(script);
     })();`;

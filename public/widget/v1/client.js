@@ -1,5 +1,5 @@
-// public/widget/client.js
-export function mountChatWidget(payload) {
+// public/widget/v1/client.js
+function mountChatWidget(payload) {
     const {
         baseOrigin, // e.g. https://helpninja.app
         tenantId,
@@ -246,12 +246,15 @@ export function mountChatWidget(payload) {
 
         return Array.from(msgs.children).map(row => {
             const isUser = row.style.justifyContent === 'flex-end';
-            const bubble = row.querySelector('div:last-child');
+            
+            // For user messages: bubble is first child, icon is second child
+            // For assistant messages: icon is first child, bubble is second child
+            const bubble = isUser ? row.children[0] : row.children[1];
             if (!bubble) return null;
 
             return {
                 role: isUser ? 'user' : 'assistant',
-                content: isUser ? bubble.textContent || '' : bubble.innerHTML || '',
+                content: bubble.textContent || bubble.innerText || '',
                 timestamp: new Date().toISOString()
             };
         }).filter(msg => msg !== null);
@@ -415,8 +418,8 @@ export function mountChatWidget(payload) {
 
         // Create icon
         const icon = el('div', `width:32px;height:32px;display:flex;align-items:center;justify-content:center;border-radius:50%;flex-shrink:0;${role === 'user'
-                ? `background:${styles.userBubbleBackground};color:${styles.userBubbleColor};`
-                : `background:${styles.assistantBubbleBackground};color:${styles.assistantBubbleColor};`
+            ? `background:${styles.userBubbleBackground};color:${styles.userBubbleColor};`
+            : `background:${styles.assistantBubbleBackground};color:${styles.assistantBubbleColor};`
             }`);
 
         // Set icon content
@@ -1104,3 +1107,6 @@ export function mountChatWidget(payload) {
         selectedFiles = [];
     }
 }
+
+// Make mountChatWidget available globally for the main widget to use
+window.mountChatWidget = mountChatWidget;

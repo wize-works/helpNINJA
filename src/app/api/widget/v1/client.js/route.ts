@@ -18,7 +18,7 @@ export async function GET(req: NextRequest) {
         const response = new NextResponse(clientJsContent, {
             status: 200,
             headers: {
-                'Content-Type': 'application/javascript',
+                'Content-Type': 'application/javascript; charset=utf-8',
                 'Cache-Control': 'public, max-age=3600', // Cache for 1 hour
             }
         });

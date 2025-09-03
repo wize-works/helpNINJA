@@ -98,7 +98,7 @@ async function checkForContactInfoResponse(message: string, conversationId: stri
         await clearPendingEscalation(conversationId);
         return { isContactInfo: false };
     }
-    
+
     if (!pendingEscalation) {
         return { isContactInfo: false };
     }
@@ -106,7 +106,7 @@ async function checkForContactInfoResponse(message: string, conversationId: stri
     // Simple patterns to detect contact info
     const emailPattern = /\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Z|a-z]{2,}\b/;
     const phonePattern = /\b(?:\+?1[-.\s]?)?\(?([0-9]{3})\)?[-.\s]?([0-9]{3})[-.\s]?([0-9]{4})\b/;
-    
+
     // More flexible name patterns
     const namePatterns = [
         /(?:my name is|i'm|i am|name:|call me)\s+([a-zA-Z\s]+)/i,
@@ -116,18 +116,18 @@ async function checkForContactInfoResponse(message: string, conversationId: stri
 
     const hasEmail = emailPattern.test(message);
     const hasPhone = phonePattern.test(message);
-    
+
     // Check if it looks like contact info response (has email/phone + mentions preference or contact method)
     const mentionsContact = /\b(prefer|contact|email|phone|slack|reach|call|message)\b/i.test(message);
-    
+
     if ((hasEmail || hasPhone) && mentionsContact) {
         const emailMatch = message.match(emailPattern);
         const phoneMatch = message.match(phonePattern);
-        
+
         // Try to extract name using various patterns
         let name = '';
         let nameMatch = null;
-        
+
         for (const pattern of namePatterns) {
             nameMatch = message.match(pattern);
             if (nameMatch) {
@@ -135,7 +135,7 @@ async function checkForContactInfoResponse(message: string, conversationId: stri
                 break;
             }
         }
-        
+
         // If no specific pattern matched, try to extract a name from the beginning of the message
         if (!name) {
             const firstWordsMatch = message.match(/^([a-zA-Z]+(?:\s+[a-zA-Z]+)?)/);
@@ -143,7 +143,7 @@ async function checkForContactInfoResponse(message: string, conversationId: stri
                 name = firstWordsMatch[1].trim();
             }
         }
-        
+
         if (!name) return { isContactInfo: false };
         let contactMethod: 'email' | 'phone' | 'slack' = 'email';
         let contactValue = '';
@@ -203,7 +203,7 @@ async function getContactInfo(conversationId: string): Promise<ContactInfo | nul
          WHERE conversation_id = $1`,
         [conversationId]
     );
-    
+
     return result.rows[0] || null;
 }
 
@@ -267,24 +267,24 @@ async function getPendingEscalation(conversationId: string): Promise<PendingEsca
          WHERE conversation_id = $1`,
         [conversationId]
     );
-    
+
     if (!result.rows[0]) return null;
-    
+
     const row = result.rows[0];
-    
+
     // Helper function to safely parse JSON with fallback
     function safeJsonParse<T>(str: string | null | undefined, fallback: T): T {
         if (!str) return fallback;
-        
+
         try {
             // If it's already an object/array, return it
             if (typeof str === 'object') return str as T;
-            
+
             // Try to parse as JSON
             return JSON.parse(str);
         } catch {
             console.warn('Failed to parse JSON, using fallback. Input:', typeof str, str?.substring(0, 100) + '...');
-            
+
             // If it looks like an array but isn't valid JSON, try to handle it
             if (typeof str === 'string') {
                 // Handle array-like strings that aren't valid JSON
@@ -296,12 +296,12 @@ async function getPendingEscalation(conversationId: string): Promise<PendingEsca
                         return urls as T;
                     }
                 }
-                
+
                 // Handle object-like strings that aren't valid JSON
                 if (str.includes('{') && str.includes('}')) {
                     return fallback; // Just use fallback for complex objects
                 }
-                
+
                 // Handle simple arrays like keywords
                 if (str.includes(',') && Array.isArray(fallback)) {
                     try {
@@ -313,11 +313,11 @@ async function getPendingEscalation(conversationId: string): Promise<PendingEsca
                     }
                 }
             }
-            
+
             return fallback;
         }
     }
-    
+
     return {
         id: row.id,
         original_message: row.original_message,
@@ -620,11 +620,11 @@ ${contextText}`;
             console.error('❌ Error checking contact info response:', error);
             isContactInfoResponse = { isContactInfo: false };
         }
-        
+
         if (isContactInfoResponse.isContactInfo) {
             // Store the contact info and proceed with pending escalation
             await storeContactInfo(conversationId, tenantId, isContactInfoResponse.contactInfo!);
-            
+
             // Check for pending escalation
             let pendingEscalation: PendingEscalation | null = null;
             try {
@@ -633,12 +633,12 @@ ${contextText}`;
                 console.error('❌ Error getting pending escalation, clearing corrupted data:', error);
                 await clearPendingEscalation(conversationId);
             }
-            
+
             if (pendingEscalation) {
                 // Proceed with the escalation using stored context
                 text = "Thank you for providing your contact information. I'm connecting you with our support team now - they'll reach out to you shortly using your preferred method.";
                 confidence = 0.9;
-                
+
                 // Trigger the pending escalation
                 setTimeout(async () => {
                     try {
@@ -662,14 +662,14 @@ ${contextText}`;
                                 fromChat: true
                             }
                         });
-                        
+
                         // Clear the pending escalation
                         await clearPendingEscalation(conversationId);
                     } catch (error) {
                         console.error('❌ Failed to handle pending escalation:', error);
                     }
                 }, 100); // Small delay to ensure response is sent first
-                
+
                 // Skip normal escalation flow since we're handling it asynchronously
                 await incMessages(tenantId);
                 const formattedHtml = renderMarkdownLiteToHtml(text);
@@ -838,11 +838,11 @@ ${contextText}`;
             try {
                 // Check if we already have contact info for this conversation
                 const existingContactInfo = await getContactInfo(conversationId);
-                
+
                 if (!existingContactInfo) {
                     // We need contact info before escalating - ask the user
                     const contactPrompt = generateContactInfoPrompt();
-                    
+
                     // Store the escalation context so we can proceed after getting contact info
                     let matchedRuleDestinations: EscalationDestination[] | null = null;
                     if (matchedRuleId) {
@@ -858,7 +858,7 @@ ${contextText}`;
                             console.error('❌ Error fetching rule destinations:', error);
                         }
                     }
-                    
+
                     const escalationContext = {
                         original_message: message,
                         assistant_answer: text,
@@ -888,9 +888,9 @@ ${contextText}`;
                             intentMargin: margin
                         }
                     };
-                    
+
                     await storePendingEscalation(conversationId, escalationContext);
-                    
+
                     // Override the response to ask for contact info
                     text = contactPrompt;
                     confidence = 0.9; // High confidence in our system response
@@ -959,10 +959,10 @@ ${contextText}`;
         }
 
         await incMessages(tenantId);
-        
+
         // Ensure text is never undefined
         const finalText = text || "I'm sorry, I encountered an issue. Let me connect you with support.";
-        
+
         // Server-side lightweight formatting (widget can directly inject this HTML)
         const formattedHtml = renderMarkdownLiteToHtml(finalText);
         return NextResponse.json(
@@ -980,7 +980,7 @@ ${contextText}`;
         // Log the full error for debugging
         console.error('❌ CHAT API ERROR:', e);
         console.error('❌ CHAT API ERROR STACK:', (e as Error).stack);
-        
+
         // Don't leak internal errors; keep message generic in production
         const dev = process.env.NODE_ENV !== 'production';
         const errorHeaders = headersOut || corsHeaders(req);
