@@ -5,12 +5,12 @@ Scope
 - Multi-tenant SaaS with an embeddable chat widget, RAG answers, usage gating, and human escalation
 
 What's partial or pending
+- **Widget Chat History Persistence**: Chat history persistence across page navigations (comprehensive implementation plan documented in docs/development/widget-chat-history-persistence.md)
 - Conversation detail transcript page (optional)
 - Tests: unit/integration for usage gating, RAG, escalation, billing.
 - Auth model: Strict for admin/dashboard via Clerk org → tenant (getTenantIdStrict). Legacy header/env resolver remains only for public/widget contexts.
 - Rate limiting beyond plan gates.
 - RLS policies if using Supabase auth directly.
-- Email system: Comprehensive HTML email template system with responsive design, consistent branding, and support for all email types (team invitations, escalations, notifications)
 
 Big picture
 - Embeddable widget calls /api/chat with tenant/session

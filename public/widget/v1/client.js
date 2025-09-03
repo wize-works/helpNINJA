@@ -240,8 +240,177 @@ export function mountChatWidget(payload) {
     helpNinjaFooter.innerHTML = `<span>Powered by <a href="https://helpninja.ai" target="_blank" style="color:${styles.messagesColor};">helpNINJA</a></span>`;
     panel.appendChild(helpNinjaFooter);
   
+    // ---- Chat History Management ----
+    function extractMessagesFromDOM() {
+        if (!msgs || !msgs.children) return [];
+        
+        return Array.from(msgs.children).map(row => {
+            const isUser = row.style.justifyContent === 'flex-end';
+            const bubble = row.querySelector('div:last-child');
+            if (!bubble) return null;
+            
+            return {
+                role: isUser ? 'user' : 'assistant',
+                content: isUser ? bubble.textContent || '' : bubble.innerHTML || '',
+                timestamp: new Date().toISOString()
+            };
+        }).filter(msg => msg !== null);
+    }
+
+    function saveChatHistory() {
+        try {
+            const messages = extractMessagesFromDOM();
+            if (messages.length === 0) return; // Don't save empty history
+            
+            const historyData = {
+                sessionId: sessionId,
+                messages: messages,
+                lastUpdated: new Date().toISOString(),
+                version: '1.0'
+            };
+            
+            const storageKey = `hn_chat_${sessionId}`;
+            localStorage.setItem(storageKey, JSON.stringify(historyData));
+            
+            // Clean up old sessions (keep last 5 sessions max)
+            cleanupOldSessions();
+        } catch (e) {
+            console.warn('helpNINJA: Failed to save chat history:', e.name);
+            // Silently fail - don't break the user experience
+        }
+    }
+
+    function restoreChatHistory() {
+        try {
+            const storageKey = `hn_chat_${sessionId}`;
+            const savedHistory = localStorage.getItem(storageKey);
+            
+            if (!savedHistory) return false;
+            
+            const historyData = JSON.parse(savedHistory);
+            
+            // Validate session matches and data is recent (within 30 days)
+            if (historyData.sessionId !== sessionId) return false;
+            
+            const lastUpdated = new Date(historyData.lastUpdated);
+            const thirtyDaysAgo = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000);
+            if (lastUpdated < thirtyDaysAgo) {
+                // Remove stale data
+                localStorage.removeItem(storageKey);
+                return false;
+            }
+            
+            // Restore messages
+            if (historyData.messages && Array.isArray(historyData.messages)) {
+                historyData.messages.forEach(msg => {
+                    if (msg.role && msg.content) {
+                        add(msg.role, msg.content, false); // false = don't save to avoid recursion
+                    }
+                });
+                return true;
+            }
+            
+            return false;
+        } catch (e) {
+            console.warn('helpNINJA: Failed to restore chat history:', e.name);
+            // Try to remove corrupted data
+            try {
+                localStorage.removeItem(`hn_chat_${sessionId}`);
+            } catch {}
+            return false;
+        }
+    }
+
+    function cleanupOldSessions() {
+        try {
+            const keys = [];
+            for (let i = 0; i < localStorage.length; i++) {
+                const key = localStorage.key(i);
+                if (key && key.startsWith('hn_chat_')) {
+                    keys.push(key);
+                }
+            }
+            
+            // Keep only the 5 most recent sessions
+            if (keys.length > 5) {
+                const sessions = keys.map(key => {
+                    try {
+                        const data = JSON.parse(localStorage.getItem(key) || '{}');
+                        return {
+                            key: key,
+                            lastUpdated: new Date(data.lastUpdated || 0)
+                        };
+                    } catch {
+                        return { key: key, lastUpdated: new Date(0) };
+                    }
+                }).sort((a, b) => b.lastUpdated - a.lastUpdated);
+                
+                // Remove old sessions
+                sessions.slice(5).forEach(session => {
+                    try {
+                        localStorage.removeItem(session.key);
+                    } catch {}
+                });
+            }
+        } catch (e) {
+            // Cleanup failed, but don't break functionality
+            console.warn('helpNINJA: Failed to cleanup old chat sessions:', e.name);
+        }
+    }
+
+    async function loadConversationHistory() {
+        // Try localStorage first (faster)
+        if (restoreChatHistory()) {
+            return true;
+        }
+        
+        // Fallback to server if localStorage failed or is empty
+        try {
+            const response = await fetch(
+                `${baseOrigin}/api/chat/history?sessionId=${encodeURIComponent(sessionId)}&tenantId=${encodeURIComponent(tenantId)}&limit=50`,
+                {
+                    method: 'GET',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    }
+                }
+            );
+            
+            if (!response.ok) {
+                console.warn('helpNINJA: Server history request failed:', response.status);
+                return false;
+            }
+            
+            const data = await response.json();
+            
+            if (data.success && data.messages && Array.isArray(data.messages)) {
+                // Restore messages from server
+                data.messages.forEach(msg => {
+                    if (msg.role && msg.content) {
+                        add(msg.role, msg.content, false); // false = don't save to avoid recursion
+                    }
+                });
+                
+                // Save to localStorage for future use (if possible)
+                try {
+                    saveChatHistory();
+                } catch (e) {
+                    // localStorage save failed, but we have the history displayed
+                    console.warn('helpNINJA: Failed to cache server history locally:', e.name);
+                }
+                
+                return data.messages.length > 0;
+            }
+            
+            return false;
+        } catch (e) {
+            console.warn('helpNINJA: Failed to load server history:', e.name);
+            return false;
+        }
+    }
+
           // Helpers
-      function add(role, htmlOrText) {
+      function add(role, htmlOrText, shouldSave = true) {
          const row = el('div', `display:flex;gap:8px;margin-bottom:12px;${role === 'user' ? 'justify-content:flex-end;' : 'justify-content:flex-start;'}`);
          
          // Create icon
@@ -289,6 +458,11 @@ export function mountChatWidget(payload) {
          // Adjust panel size based on content after adding message
          adjustPanelSize();
          
+         // Save history if requested (skip for restoration to avoid recursion)
+         if (shouldSave) {
+             saveChatHistory();
+         }
+         
          msgs.scrollTop = msgs.scrollHeight;
       }
   
@@ -317,10 +491,20 @@ export function mountChatWidget(payload) {
     }
   
     // Wire up
-    const open = () => {
+    const open = async () => {
       panel.style.display = 'flex';
       bubble.style.display = 'none';
-      if (!msgs.children.length) add('assistant', config.welcomeMessage || 'Hi there! How can I help?');
+      
+      // Only show welcome message if no chat history exists
+      if (!msgs.children.length) {
+        // Try to load conversation history (localStorage first, then server)
+        const historyLoaded = await loadConversationHistory();
+        
+        // If no history was loaded, show welcome message
+        if (!historyLoaded) {
+          add('assistant', config.welcomeMessage || 'Hi there! How can I help?');
+        }
+      }
       
       // Adjust panel size when opening to fit existing content
       setTimeout(() => {
