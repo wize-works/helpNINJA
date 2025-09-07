@@ -836,4 +836,4 @@ Payment Support Excellence:
 
 **Need payment assistance?** Our payment specialists are available 24/7 to help resolve any payment issues and optimize your billing experience. Start with our [payment troubleshooting guide](billing-account-management-overview.md) or contact our payment support team at payments@helpninja.com.
 
-**Ready to set up payments?** Explore our [subscription plans](subscription-plans-pricing.md) and configure your secure payment methods in the [helpNINJA billing center](https://app.helpninja.com/billing).
+**Ready to set up payments?** Explore our [subscription plans](subscription-plans-pricing.md) and configure your secure payment methods in the [helpNINJA billing center](https://helpninja.app/billing).

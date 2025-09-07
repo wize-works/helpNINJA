@@ -113,7 +113,7 @@ Site: yoursite.com
 Conversation ID: conv_abc123
 
 Quick Actions:
-• View Full Conversation: https://app.helpninja.com/conversations/conv_abc123
+• View Full Conversation: https://helpninja.app/conversations/conv_abc123
 • Respond Directly: Click to join conversation
 • Escalation Rules: Triggered by low confidence
 ```
@@ -403,7 +403,7 @@ Quick Actions:
         {
           "type": "button",
           "text": {"type": "plain_text", "text": "View Conversation"},
-          "url": "https://app.helpninja.com/conversations/123"
+          "url": "https://helpninja.app/conversations/123"
         },
         {
           "type": "button", 

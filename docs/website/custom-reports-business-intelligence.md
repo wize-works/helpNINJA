@@ -623,6 +623,6 @@ Report Troubleshooting Dashboard:
 
 ---
 
-**Ready to unlock advanced business intelligence?** Start creating custom reports in the [helpNINJA report builder](https://app.helpninja.com/reports/custom) or explore [data visualization](data-visualization-insights.md) for deeper insights.
+**Ready to unlock advanced business intelligence?** Start creating custom reports in the [helpNINJA report builder](https://helpninja.app/reports/custom) or explore [data visualization](data-visualization-insights.md) for deeper insights.
 
 **Need expert BI strategy guidance?** Our business intelligence specialists can help you transform data into competitive advantage. Contact us at bi@helpninja.com or [schedule a BI consultation](mailto:bi@helpninja.com).

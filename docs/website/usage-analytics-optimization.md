@@ -649,6 +649,6 @@ Performance Optimization Excellence:
 
 ---
 
-**Ready to optimize your usage?** Explore detailed usage analytics in your [helpNINJA dashboard](https://app.helpninja.com/analytics) or review [billing optimization strategies](billing-account-management-overview.md) for comprehensive cost management.
+**Ready to optimize your usage?** Explore detailed usage analytics in your [helpNINJA dashboard](https://helpninja.app/analytics) or review [billing optimization strategies](billing-account-management-overview.md) for comprehensive cost management.
 
 **Need analytics expertise?** Our usage analytics specialists can help you maximize efficiency and optimize costs through data-driven insights. Contact our analytics team at analytics@helpninja.com or [schedule an optimization consultation](mailto:analytics@helpninja.com).

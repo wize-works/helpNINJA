@@ -758,6 +758,6 @@ Billing Troubleshooting Performance:
 
 ---
 
-**Ready to optimize your billing and account management?** Start managing your subscription in the [helpNINJA billing dashboard](https://app.helpninja.com/billing) or explore [usage analytics](usage-analytics-optimization.md) for cost optimization.
+**Ready to optimize your billing and account management?** Start managing your subscription in the [helpNINJA billing dashboard](https://helpninja.app/billing) or explore [usage analytics](usage-analytics-optimization.md) for cost optimization.
 
 **Need expert billing guidance?** Our billing specialists can help you optimize costs and manage your account effectively. Contact us at billing@helpninja.com or [schedule a billing consultation](mailto:billing@helpninja.com).

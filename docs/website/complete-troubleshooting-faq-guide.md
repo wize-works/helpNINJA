@@ -7,7 +7,7 @@ This comprehensive guide addresses the most common questions, issues, and challe
 ### 🚨 Emergency Issues (Service Down/Critical Problems)
 
 **Widget completely not working:**
-1. **Check status**: Visit status.helpninja.com for service status
+1. **Check status**: Visit helpninja.ai/status for service status
 2. **Verify installation**: Ensure widget script is properly embedded
 3. **Clear cache**: Hard refresh your website (Ctrl+F5 or Cmd+Shift+R)
 4. **Contact support**: Use our status page contact for immediate help

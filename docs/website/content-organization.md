@@ -616,6 +616,6 @@ Performance Metrics:
 
 ---
 
-**Ready to organize your content effectively?** Start structuring your knowledge base in the [helpNINJA dashboard](https://app.helpninja.com/content/organize) or learn about [updating your content](updating-your-content.md) next.
+**Ready to organize your content effectively?** Start structuring your knowledge base in the [helpNINJA dashboard](https://helpninja.app/content/organize) or learn about [updating your content](updating-your-content.md) next.
 
 **Need organization strategy help?** Our content organization specialists can help you create a structure that maximizes AI performance. Contact us at organization@helpninja.com or [schedule a consultation](mailto:organization@helpninja.com).

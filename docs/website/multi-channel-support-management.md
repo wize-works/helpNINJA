@@ -492,8 +492,8 @@ Multi-Channel Analytics Excellence:
 
 ---
 
-**Ready to optimize your multi-channel support?** Explore our comprehensive [multi-channel management platform](https://app.helpninja.com/multi-channel-support) or start with our [channel integration guide](../getting-started/quick-start-guide.md) for unified customer experience management.
+**Ready to optimize your multi-channel support?** Explore our comprehensive [multi-channel management platform](https://helpninja.app/multi-channel-support) or start with our [channel integration guide](../getting-started/quick-start-guide.md) for unified customer experience management.
 
-**Need multi-channel assistance?** Our customer experience specialists provide expert multi-channel strategy and implementation support. Contact multichannel@helpninja.com or join our [support community](https://community.helpninja.com) for best practices and peer collaboration.
+**Need multi-channel assistance?** Our customer experience specialists provide expert multi-channel strategy and implementation support. Contact multichannel@helpninja.com or join our [support community](https://helpninja.ai/docs) for best practices and peer collaboration.
 
 **Looking for enterprise multi-channel solutions?** Our professional services team delivers comprehensive multi-channel architectures with omnichannel excellence and customer journey optimization. Learn more about [enterprise support solutions](../advanced-features/enterprise-solutions.md) or contact our multi-channel specialists.

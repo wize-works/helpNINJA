@@ -1202,7 +1202,7 @@ Query: "How do escalation topics change over customer lifecycle"
 **API Integration Examples:**
 ```javascript
 // Real-time escalation monitoring
-const escalationWebSocket = new WebSocket('wss://api.helpninja.com/v1/escalations/stream');
+const escalationWebSocket = new WebSocket('wss://helpninja.app/v1/escalations/stream');
 
 escalationWebSocket.on('message', (data) => {
   const escalation = JSON.parse(data);

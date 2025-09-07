@@ -695,6 +695,6 @@ Visualization Troubleshooting Dashboard:
 
 ---
 
-**Ready to create compelling visual insights?** Start visualizing your data in the [helpNINJA visualization studio](https://app.helpninja.com/visualizations) or explore [real-time dashboards](performance-monitoring-dashboards.md) for live monitoring.
+**Ready to create compelling visual insights?** Start visualizing your data in the [helpNINJA visualization studio](https://helpninja.app/visualizations) or explore [real-time dashboards](performance-monitoring-dashboards.md) for live monitoring.
 
 **Need expert visualization guidance?** Our data visualization specialists can help you create professional, compelling visual stories. Contact us at visualization@helpninja.com or [schedule a visualization consultation](mailto:visualization@helpninja.com).

@@ -683,6 +683,6 @@ Billing Cycle Performance Dashboard:
 
 ---
 
-**Ready to choose your optimal plan?** Compare plans and start your subscription in the [helpNINJA pricing center](https://app.helpninja.com/pricing) or explore [usage analytics](usage-analytics-optimization.md) for optimization insights.
+**Ready to choose your optimal plan?** Compare plans and start your subscription in the [helpNINJA pricing center](https://helpninja.app/pricing) or explore [usage analytics](usage-analytics-optimization.md) for optimization insights.
 
 **Need expert pricing guidance?** Our pricing specialists can help you select the perfect plan and maximize your investment value. Contact us at pricing@helpninja.com or [schedule a pricing consultation](mailto:pricing@helpninja.com).

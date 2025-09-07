@@ -826,6 +826,6 @@ Expert Diagnostic Tools:
 
 ---
 
-**Ready to leverage advanced analytics?** Start exploring insights in the [helpNINJA analytics dashboard](https://app.helpninja.com/analytics) or learn about [customization features](customization-overview.md) next.
+**Ready to leverage advanced analytics?** Start exploring insights in the [helpNINJA analytics dashboard](https://helpninja.app/analytics) or learn about [customization features](customization-overview.md) next.
 
 **Need expert analytics optimization help?** Our analytics specialists can help you maximize the value of your support data. Contact us at analytics@helpninja.com or [schedule an analytics consultation](mailto:analytics@helpninja.com).

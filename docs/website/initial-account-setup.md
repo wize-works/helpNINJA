@@ -37,7 +37,7 @@ For comprehensive configuration and customization:
 #### Standard Registration Process
 1. **Visit Registration Page**
    ```
-   URL: https://app.helpninja.com/signup
+   URL: https://helpninja.app/signup
    ```
 
 2. **Complete Registration Form**

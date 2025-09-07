@@ -870,6 +870,6 @@ Enterprise Support Performance:
 
 ---
 
-**Ready to implement advanced customization?** Start exploring enterprise features in the [helpNINJA advanced customization dashboard](https://app.helpninja.com/customize/advanced) or learn about [mobile and responsive design](mobile-responsive-design.md) optimization next.
+**Ready to implement advanced customization?** Start exploring enterprise features in the [helpNINJA advanced customization dashboard](https://helpninja.app/customize/advanced) or learn about [mobile and responsive design](mobile-responsive-design.md) optimization next.
 
 **Need enterprise-level customization expertise?** Our advanced customization specialists and development team can help you implement sophisticated solutions. Contact us at advanced@helpninja.com or [schedule an enterprise consultation](mailto:advanced@helpninja.com).

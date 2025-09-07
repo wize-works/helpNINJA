@@ -344,7 +344,7 @@ Very secure - we use encryption, support two-factor authentication, and maintain
 
 ---
 
-**Ready to build your support team?** Start by [inviting your first team member](https://app.helpninja.com/team/invite) or [contact our team](mailto:team@helpninja.com) for help setting up a larger team structure.
+**Ready to build your support team?** Start by [inviting your first team member](https://helpninja.app/team/invite) or [contact our team](mailto:team@helpninja.com) for help setting up a larger team structure.
 
 **Next Steps:**
 - **[Set up your chat widget](../widget-setup/adding-chat-widget-to-website.md)** - Get helpNINJA running on your website

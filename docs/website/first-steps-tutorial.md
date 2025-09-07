@@ -401,7 +401,7 @@ After completing this tutorial, you should have:
 ### Support Channels
 - **Live Chat**: Use our widget (we practice what we preach!)
 - **Email**: support@helpninja.com  
-- **Knowledge Base**: Full documentation at docs.helpninja.com
+- **Knowledge Base**: Full documentation at helpninja.ai/docs
 - **Video Tutorials**: Step-by-step video guides
 - **Community Forum**: Connect with other users
 

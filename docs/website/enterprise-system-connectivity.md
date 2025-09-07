@@ -674,8 +674,8 @@ Compliance and Audit Excellence:
 
 ---
 
-**Ready to integrate enterprise systems?** Explore our comprehensive [enterprise integration platform](https://app.helpninja.com/enterprise-integration) or start with our [ERP integration guide](../advanced-features/enterprise-solutions.md) for seamless business process automation.
+**Ready to integrate enterprise systems?** Explore our comprehensive [enterprise integration platform](https://helpninja.app/enterprise-integration) or start with our [ERP integration guide](../advanced-features/enterprise-solutions.md) for seamless business process automation.
 
-**Need enterprise integration support?** Our enterprise integration specialists provide expert consultation and implementation services. Contact enterprise@helpninja.com or schedule a [consultation](https://app.helpninja.com/consultation) with our integration architects.
+**Need enterprise integration support?** Our enterprise integration specialists provide expert consultation and implementation services. Contact enterprise@helpninja.com or schedule a [consultation](https://helpninja.app/consultation) with our integration architects.
 
 **Looking for custom enterprise solutions?** Our professional services team delivers tailored enterprise integration architectures with mission-critical reliability and security. Learn more about [enterprise services](../advanced-features/enterprise-solutions.md) or contact our enterprise team.

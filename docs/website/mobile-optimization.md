@@ -332,6 +332,6 @@ Ensure your helpNINJA chat widget provides an excellent experience on mobile dev
 
 ---
 
-**Ready to optimize for mobile?** Configure your mobile settings in the [helpNINJA dashboard](https://app.helpninja.com/widget/mobile) or learn about [managing your content](../content-management/adding-knowledge-base-content.md) next.
+**Ready to optimize for mobile?** Configure your mobile settings in the [helpNINJA dashboard](https://helpninja.app/widget/mobile) or learn about [managing your content](../content-management/adding-knowledge-base-content.md) next.
 
 **Need mobile optimization help?** Contact our mobile specialists at mobile@helpninja.com or [schedule a mobile optimization consultation](mailto:mobile@helpninja.com) to ensure your widget works perfectly on all devices.

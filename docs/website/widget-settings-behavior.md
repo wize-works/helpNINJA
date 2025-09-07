@@ -188,7 +188,7 @@ Enterprise customers → enterprise-support@company.com
 ```javascript
 window.helpNinjaConfig = {
   tenantId: 'your-tenant-id',
-  apiUrl: 'https://api.helpninja.com',
+  apiUrl: 'https://helpninja.app',
   
   // Behavior settings
   behavior: {
@@ -352,6 +352,6 @@ if (!localStorage.getItem('helpninja_visited')) {
 
 ---
 
-**Ready to optimize your widget behavior?** Configure your settings in the [helpNINJA dashboard](https://app.helpninja.com/widget/settings) or learn about [testing your widget](testing-your-widget.md) to ensure everything works perfectly.
+**Ready to optimize your widget behavior?** Configure your settings in the [helpNINJA dashboard](https://helpninja.app/widget/settings) or learn about [testing your widget](testing-your-widget.md) to ensure everything works perfectly.
 
 **Need help with settings?** Contact our support team at settings@helpninja.com or [schedule a consultation](mailto:settings@helpninja.com) to get professional assistance optimizing your widget behavior.

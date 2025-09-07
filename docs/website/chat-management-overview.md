@@ -654,6 +654,6 @@ Quality Improvement Actions:
 
 ---
 
-**Ready to master chat management?** Explore the detailed features in your [helpNINJA dashboard](https://app.helpninja.com/chat/manage) or learn about [managing conversations in real-time](managing-conversations.md) next.
+**Ready to master chat management?** Explore the detailed features in your [helpNINJA dashboard](https://helpninja.app/chat/manage) or learn about [managing conversations in real-time](managing-conversations.md) next.
 
 **Need help optimizing your chat management?** Our chat management specialists can help you implement these best practices. Contact us at chat-support@helpninja.com or [schedule a chat management consultation](mailto:chat-support@helpninja.com).

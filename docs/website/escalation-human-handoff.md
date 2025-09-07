@@ -769,6 +769,6 @@ Quality Service Recovery:
 
 ---
 
-**Ready to optimize your escalation process?** Start improving your handoffs in the [helpNINJA dashboard](https://app.helpninja.com/escalation/manage) or learn about [chat analytics and reporting](chat-analytics-reporting.md) next.
+**Ready to optimize your escalation process?** Start improving your handoffs in the [helpNINJA dashboard](https://helpninja.app/escalation/manage) or learn about [chat analytics and reporting](chat-analytics-reporting.md) next.
 
 **Need expert help with escalation optimization?** Our escalation specialists can help you create seamless AI-to-human handoffs. Contact us at escalation@helpninja.com or [schedule an escalation management consultation](mailto:escalation@helpninja.com).

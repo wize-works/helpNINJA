@@ -666,6 +666,6 @@ Update Rollback Procedure:
 
 ---
 
-**Ready to start updating your content?** Begin maintaining your knowledge base in the [helpNINJA dashboard](https://app.helpninja.com/content/update) or learn about [content best practices](content-best-practices.md) next.
+**Ready to start updating your content?** Begin maintaining your knowledge base in the [helpNINJA dashboard](https://helpninja.app/content/update) or learn about [content best practices](content-best-practices.md) next.
 
 **Need help with content maintenance strategy?** Our content specialists can help you develop an efficient, effective update process. Contact us at updates@helpninja.com or [schedule an update planning session](mailto:updates@helpninja.com).

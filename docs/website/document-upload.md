@@ -527,6 +527,6 @@ Solutions:
 
 ---
 
-**Ready to upload your documents?** Start uploading in the [helpNINJA dashboard](https://app.helpninja.com/content/upload) or learn about [content organization strategies](content-organization.md) next.
+**Ready to upload your documents?** Start uploading in the [helpNINJA dashboard](https://helpninja.app/content/upload) or learn about [content organization strategies](content-organization.md) next.
 
 **Need help with document optimization?** Our content specialists can help prepare your documents for optimal AI performance. Contact us at upload-help@helpninja.com or [request document preparation assistance](mailto:upload-help@helpninja.com).

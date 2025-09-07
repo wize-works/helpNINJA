@@ -734,6 +734,6 @@ Escalation Recovery:
 
 ---
 
-**Ready to optimize your AI responses?** Start improving your AI performance in the [helpNINJA dashboard](https://app.helpninja.com/ai/responses) or learn about [escalation and human handoff management](escalation-human-handoff.md) next.
+**Ready to optimize your AI responses?** Start improving your AI performance in the [helpNINJA dashboard](https://helpninja.app/ai/responses) or learn about [escalation and human handoff management](escalation-human-handoff.md) next.
 
 **Need expert help with AI response optimization?** Our AI specialists can help you maximize response quality and customer satisfaction. Contact us at responses@helpninja.com or [schedule an AI optimization consultation](mailto:responses@helpninja.com).

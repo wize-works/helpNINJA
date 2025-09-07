@@ -439,8 +439,8 @@ Configuration Resolution Process:
 
 ---
 
-**Need immediate troubleshooting assistance?** Access our comprehensive [troubleshooting center](https://app.helpninja.com/troubleshooting) or start with our [quick diagnostic tool](../troubleshooting/diagnostic-tools.md) for instant issue identification and resolution.
+**Need immediate troubleshooting assistance?** Access our comprehensive [troubleshooting center](https://helpninja.app/troubleshooting) or start with our [quick diagnostic tool](../troubleshooting/diagnostic-tools.md) for instant issue identification and resolution.
 
-**Looking for expert troubleshooting support?** Our technical specialists provide professional troubleshooting assistance and optimization services. Contact support@helpninja.com or join our [technical community](https://community.helpninja.com) for peer support and expert guidance.
+**Looking for expert troubleshooting support?** Our technical specialists provide professional troubleshooting assistance and optimization services. Contact support@helpninja.com or join our [technical community](https://helpninja.ai/docs) for peer support and expert guidance.
 
 **Require enterprise troubleshooting solutions?** Our professional services team delivers comprehensive troubleshooting frameworks with advanced monitoring and automated resolution. Learn more about [enterprise support services](../advanced-features/enterprise-solutions.md) or contact our troubleshooting specialists.

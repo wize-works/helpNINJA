@@ -778,6 +778,6 @@ Visual Issue Resolution Guide:
 
 ---
 
-**Ready to transform your chat widget's appearance?** Start customizing your visual design in the [helpNINJA visual customization dashboard](https://app.helpninja.com/customize/visual) or learn about [behavior and functionality settings](behavior-functionality-settings.md) next.
+**Ready to transform your chat widget's appearance?** Start customizing your visual design in the [helpNINJA visual customization dashboard](https://helpninja.app/customize/visual) or learn about [behavior and functionality settings](behavior-functionality-settings.md) next.
 
 **Need professional design expertise?** Our visual design specialists can help you create the perfect branded chat experience. Contact us at visual@helpninja.com or [schedule a design consultation](mailto:visual@helpninja.com).

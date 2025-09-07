@@ -601,6 +601,6 @@ Template Performance and Usage:
 
 ---
 
-**Ready to unlock your analytics potential?** Start exploring insights in the [helpNINJA analytics dashboard](https://app.helpninja.com/analytics) or dive deeper into [performance monitoring](performance-monitoring-dashboards.md).
+**Ready to unlock your analytics potential?** Start exploring insights in the [helpNINJA analytics dashboard](https://helpninja.app/analytics) or dive deeper into [performance monitoring](performance-monitoring-dashboards.md).
 
 **Need expert analytics guidance?** Our analytics specialists can help you optimize your data strategy for maximum business impact. Contact us at analytics@helpninja.com or [schedule an analytics consultation](mailto:analytics@helpninja.com).

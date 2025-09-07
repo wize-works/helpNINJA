@@ -379,7 +379,7 @@ Response Headers:
 
 Example Usage:
 curl -H "Authorization: Bearer hnja_live_..." \
-     "https://api.helpninja.com/v1/export/conversations?start_date=2025-08-01&end_date=2025-08-31&format=csv&compression=gzip" \
+     "https://helpninja.app/v1/export/conversations?start_date=2025-08-01&end_date=2025-08-31&format=csv&compression=gzip" \
      --output conversations_august_2025.csv.gz
 ```
 
@@ -425,7 +425,7 @@ Response Format (JSON):
 
 **Real-Time Streaming API:**
 ```
-WebSocket: wss://api.helpninja.com/v1/stream/export
+WebSocket: wss://helpninja.app/v1/stream/export
 
 Connection Authentication:
 {

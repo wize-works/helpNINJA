@@ -216,7 +216,7 @@ Choose the method that works best for your website setup:
 ### Get Support
 - **Live Chat**: Use the widget on our website (yes, we eat our own dog food!)
 - **Email Support**: support@helpninja.com
-- **Knowledge Base**: Full documentation at docs.helpninja.com
+- **Knowledge Base**: Full documentation at helpninja.ai/docs
 - **Community Forum**: Connect with other helpNINJA users
 
 ---

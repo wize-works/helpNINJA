@@ -645,4 +645,4 @@ Social Media Integration Excellence:
 
 **Need integration assistance?** Our integration specialists provide comprehensive support for connecting your favorite platforms and automating your workflows. Start with our [integration setup guide](../getting-started/quick-start-guide.md) or contact our integration team at integrations@helpninja.com.
 
-**Ready to connect your platforms?** Explore available integrations and configure your connections in the [helpNINJA integrations center](https://app.helpninja.com/integrations) or review [workflow automation options](../advanced-features/automation-workflows.md) for enhanced productivity.
+**Ready to connect your platforms?** Explore available integrations and configure your connections in the [helpNINJA integrations center](https://helpninja.app/integrations) or review [workflow automation options](../advanced-features/automation-workflows.md) for enhanced productivity.

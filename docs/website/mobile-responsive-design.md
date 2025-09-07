@@ -861,6 +861,6 @@ Mobile Troubleshooting Dashboard:
 
 ---
 
-**Ready to optimize your mobile experience?** Start improving mobile performance in the [helpNINJA mobile optimization dashboard](https://app.helpninja.com/customize/mobile) or explore [analytics and reports](analytics-reports-overview.md) to measure your success.
+**Ready to optimize your mobile experience?** Start improving mobile performance in the [helpNINJA mobile optimization dashboard](https://helpninja.app/customize/mobile) or explore [analytics and reports](analytics-reports-overview.md) to measure your success.
 
 **Need professional mobile optimization expertise?** Our mobile experience specialists can help you create exceptional cross-device experiences. Contact us at mobile@helpninja.com or [schedule a mobile optimization consultation](mailto:mobile@helpninja.com).

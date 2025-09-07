@@ -674,7 +674,7 @@ Technical Support Excellence:
 
 ---
 
-**Ready to build with helpNINJA APIs?** Explore our comprehensive API platform and start integrating with our [API documentation](https://api.helpninja.com/docs) or get started with our [JavaScript SDK](https://www.npmjs.com/package/@helpninja/javascript-sdk).
+**Ready to build with helpNINJA APIs?** Explore our comprehensive API platform and start integrating with our [API documentation](https://helpninja.app/docs) or get started with our [JavaScript SDK](https://www.npmjs.com/package/@helpninja/javascript-sdk).
 
 **Need development support?** Our technical team provides expert assistance for integration, custom development, and enterprise solutions. Contact developers@helpninja.com or join our [developer community](https://discord.gg/helpninja-devs) for peer support and collaboration.
 

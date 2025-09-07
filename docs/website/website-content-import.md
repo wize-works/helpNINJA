@@ -488,6 +488,6 @@ Solutions:
 
 ---
 
-**Ready to import your website content?** Start your import in the [helpNINJA dashboard](https://app.helpninja.com/content/import) or learn about [organizing your content](content-organization.md) next.
+**Ready to import your website content?** Start your import in the [helpNINJA dashboard](https://helpninja.app/content/import) or learn about [organizing your content](content-organization.md) next.
 
 **Need import help?** Our import specialists can help you get the most out of your existing content. Contact us at import-help@helpninja.com or [schedule a consultation](mailto:import-help@helpninja.com).

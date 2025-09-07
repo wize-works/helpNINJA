@@ -432,8 +432,8 @@ Holistic Quality Management Excellence:
 
 ---
 
-**Ready to achieve quality excellence?** Explore our comprehensive [quality assurance platform](https://app.helpninja.com/quality-assurance) or start with our [feedback management guide](../analytics-reports/customer-feedback-analysis.md) for systematic quality improvement.
+**Ready to achieve quality excellence?** Explore our comprehensive [quality assurance platform](https://helpninja.app/quality-assurance) or start with our [feedback management guide](../analytics-reports/customer-feedback-analysis.md) for systematic quality improvement.
 
-**Need quality assurance expertise?** Our quality specialists provide expert quality management strategy and implementation support. Contact quality@helpninja.com or join our [support community](https://community.helpninja.com) for best practices and peer collaboration.
+**Need quality assurance expertise?** Our quality specialists provide expert quality management strategy and implementation support. Contact quality@helpninja.com or join our [support community](https://helpninja.ai/docs) for best practices and peer collaboration.
 
 **Looking for enterprise quality solutions?** Our professional services team delivers comprehensive quality frameworks with advanced analytics and continuous improvement. Learn more about [enterprise quality management](../advanced-features/enterprise-solutions.md) or contact our quality assurance specialists.

@@ -707,4 +707,4 @@ Shared Knowledge Base Excellence:
 
 **Need administrative assistance?** Our account administration specialists provide comprehensive support for organizational setup, user management, and enterprise configuration. Start with our [account management guide](billing-account-management-overview.md) or contact our admin team at admin@helpninja.com.
 
-**Ready to set up your organization?** Configure your team structure and permissions in the [helpNINJA admin center](https://app.helpninja.com/admin) or explore [team collaboration features](../chat-management/conversation-management.md) for enhanced productivity.
+**Ready to set up your organization?** Configure your team structure and permissions in the [helpNINJA admin center](https://helpninja.app/admin) or explore [team collaboration features](../chat-management/conversation-management.md) for enhanced productivity.

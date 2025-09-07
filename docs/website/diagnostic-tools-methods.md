@@ -432,8 +432,8 @@ Testing Automation Excellence:
 
 ---
 
-**Need advanced diagnostic assistance?** Access our comprehensive [diagnostic center](https://app.helpninja.com/diagnostics) or start with our [system health checker](../troubleshooting/system-health-monitoring.md) for instant system analysis and optimization.
+**Need advanced diagnostic assistance?** Access our comprehensive [diagnostic center](https://helpninja.app/diagnostics) or start with our [system health checker](../troubleshooting/system-health-monitoring.md) for instant system analysis and optimization.
 
-**Looking for expert diagnostic support?** Our technical specialists provide professional diagnostic services and advanced troubleshooting assistance. Contact diagnostics@helpninja.com or join our [technical community](https://community.helpninja.com) for expert guidance and peer support.
+**Looking for expert diagnostic support?** Our technical specialists provide professional diagnostic services and advanced troubleshooting assistance. Contact diagnostics@helpninja.com or join our [technical community](https://helpninja.ai/docs) for expert guidance and peer support.
 
 **Require enterprise diagnostic solutions?** Our professional services team delivers comprehensive diagnostic frameworks with advanced monitoring and automated analysis. Learn more about [enterprise diagnostic services](../advanced-features/enterprise-solutions.md) or contact our diagnostic specialists.

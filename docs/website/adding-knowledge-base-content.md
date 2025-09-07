@@ -393,6 +393,6 @@ Your next billing cycle will use the new payment method automatically.
 
 ---
 
-**Ready to build your knowledge base?** Start adding content in the [helpNINJA dashboard](https://app.helpninja.com/content/add) or learn about [importing website content](website-content-import.md) next.
+**Ready to build your knowledge base?** Start adding content in the [helpNINJA dashboard](https://helpninja.app/content/add) or learn about [importing website content](website-content-import.md) next.
 
 **Need content strategy help?** Contact our content specialists at content@helpninja.com or [schedule a consultation](mailto:content@helpninja.com) to get professional assistance organizing and optimizing your knowledge base.

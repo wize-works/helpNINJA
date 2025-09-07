@@ -439,8 +439,8 @@ UI Error Resolution Steps:
 
 ---
 
-**Need immediate error resolution?** Access our comprehensive [error resolution center](https://app.helpninja.com/error-resolution) or use our [diagnostic tool](../troubleshooting/diagnostic-tools-methods.md) for instant error identification and automated fixes.
+**Need immediate error resolution?** Access our comprehensive [error resolution center](https://helpninja.app/error-resolution) or use our [diagnostic tool](../troubleshooting/diagnostic-tools-methods.md) for instant error identification and automated fixes.
 
-**Looking for expert error support?** Our technical specialists provide professional error analysis and resolution services. Contact errors@helpninja.com or join our [technical community](https://community.helpninja.com) for expert guidance and peer assistance.
+**Looking for expert error support?** Our technical specialists provide professional error analysis and resolution services. Contact errors@helpninja.com or join our [technical community](https://helpninja.ai/docs) for expert guidance and peer assistance.
 
 **Require enterprise error management?** Our professional services team delivers comprehensive error handling frameworks with advanced monitoring and automated resolution. Learn more about [enterprise error solutions](../advanced-features/enterprise-solutions.md) or contact our error management specialists.

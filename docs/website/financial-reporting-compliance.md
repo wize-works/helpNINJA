@@ -647,4 +647,4 @@ External Auditor Support Excellence:
 
 **Need financial reporting assistance?** Our financial specialists provide comprehensive support for reporting, compliance, and strategic financial management. Start with our [billing overview guide](billing-account-management-overview.md) or contact our finance team at finance@helpninja.com.
 
-**Ready to optimize your financial management?** Configure your financial reporting and compliance settings in the [helpNINJA finance center](https://app.helpninja.com/finance) or explore [usage analytics](usage-analytics-optimization.md) for comprehensive financial insights.
+**Ready to optimize your financial management?** Configure your financial reporting and compliance settings in the [helpNINJA finance center](https://helpninja.app/finance) or explore [usage analytics](usage-analytics-optimization.md) for comprehensive financial insights.

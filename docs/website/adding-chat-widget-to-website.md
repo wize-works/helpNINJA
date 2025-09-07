@@ -28,10 +28,10 @@ Getting your helpNINJA chat widget live on your website is quick and easy. This 
 <script>
   window.helpNinjaConfig = {
     tenantId: 'your-unique-tenant-id',
-    apiUrl: 'https://api.helpninja.com'
+    apiUrl: 'https://helpninja.app'
   };
 </script>
-<script async src="https://widget.helpninja.com/widget.js"></script>
+<script async src="https://helpninja.app/widget.js"></script>
 ```
 
 ### Understanding the Code
@@ -76,10 +76,10 @@ Getting your helpNINJA chat widget live on your website is quick and easy. This 
     <script>
       window.helpNinjaConfig = {
         tenantId: 'your-unique-tenant-id',
-        apiUrl: 'https://api.helpninja.com'
+        apiUrl: 'https://helpninja.app'
       };
     </script>
-    <script async src="https://widget.helpninja.com/widget.js"></script>
+    <script async src="https://helpninja.app/widget.js"></script>
 </body>
 </html>
 ```
@@ -109,10 +109,10 @@ function add_helpninja_widget() {
     <script>
       window.helpNinjaConfig = {
         tenantId: 'your-unique-tenant-id',
-        apiUrl: 'https://api.helpninja.com'
+        apiUrl: 'https://helpninja.app'
       };
     </script>
-    <script async src="https://widget.helpninja.com/widget.js"></script>
+    <script async src="https://helpninja.app/widget.js"></script>
     <?php
 }
 add_action('wp_footer', 'add_helpninja_widget');
@@ -153,11 +153,11 @@ function App() {
   useEffect(() => {
     window.helpNinjaConfig = {
       tenantId: 'your-unique-tenant-id',
-      apiUrl: 'https://api.helpninja.com'
+      apiUrl: 'https://helpninja.app'
     };
     
     const script = document.createElement('script');
-    script.src = 'https://widget.helpninja.com/widget.js';
+    script.src = 'https://helpninja.app/widget.js';
     script.async = true;
     document.body.appendChild(script);
   }, []);
@@ -177,10 +177,10 @@ function App() {
 <script>
   window.helpNinjaConfig = {
     tenantId: 'your-unique-tenant-id',
-    apiUrl: 'https://api.helpninja.com'
+    apiUrl: 'https://helpninja.app'
   };
 </script>
-<script async src="https://widget.helpninja.com/widget.js"></script>
+<script async src="https://helpninja.app/widget.js"></script>
 ```
 
 ## Testing Your Installation
@@ -239,7 +239,7 @@ function App() {
 ```javascript
 window.helpNinjaConfig = {
   tenantId: 'your-unique-tenant-id',
-  apiUrl: 'https://api.helpninja.com',
+  apiUrl: 'https://helpninja.app',
   siteId: 'website-identifier', // Optional: for site-specific tracking
   customization: {
     theme: 'light', // or 'dark'
@@ -256,7 +256,7 @@ window.helpNinjaConfig = {
 ```javascript
 window.helpNinjaConfig = {
   tenantId: 'your-unique-tenant-id',
-  apiUrl: 'https://api.helpninja.com',
+  apiUrl: 'https://helpninja.app',
   position: 'bottom-left', // bottom-right (default), bottom-left, top-right, top-left
   offset: {
     x: 20, // horizontal offset in pixels
@@ -273,11 +273,11 @@ if (window.location.pathname.includes('/support/') ||
     window.location.pathname.includes('/contact/')) {
   window.helpNinjaConfig = {
     tenantId: 'your-unique-tenant-id',
-    apiUrl: 'https://api.helpninja.com'
+    apiUrl: 'https://helpninja.app'
   };
   
   const script = document.createElement('script');
-  script.src = 'https://widget.helpninja.com/widget.js';
+  script.src = 'https://helpninja.app/widget.js';
   script.async = true;
   document.body.appendChild(script);
 }
@@ -291,11 +291,11 @@ window.addEventListener('load', function() {
   setTimeout(function() {
     window.helpNinjaConfig = {
       tenantId: 'your-unique-tenant-id',
-      apiUrl: 'https://api.helpninja.com'
+      apiUrl: 'https://helpninja.app'
     };
     
     const script = document.createElement('script');
-    script.src = 'https://widget.helpninja.com/widget.js';
+    script.src = 'https://helpninja.app/widget.js';
     script.async = true;
     document.body.appendChild(script);
   }, 2000);
@@ -314,9 +314,9 @@ window.addEventListener('load', function() {
 ### Content Security Policy (CSP)
 **If Your Site Uses CSP, Add These Directives:**
 ```
-script-src 'unsafe-inline' https://widget.helpninja.com;
-connect-src https://api.helpninja.com wss://api.helpninja.com;
-frame-src https://widget.helpninja.com;
+script-src 'unsafe-inline' https://helpninja.app;
+connect-src https://helpninja.app wss://helpninja.app;
+frame-src https://helpninja.app;
 ```
 
 ## Performance Impact

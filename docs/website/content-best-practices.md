@@ -305,9 +305,9 @@ Advanced Level: "Use the JavaScript API to programmatically control widget behav
 Context and Explanation:
 "This code creates a chat widget on your website that connects to your helpNINJA AI assistant. The widget appears as a small chat bubble that customers can click to start a conversation."
 
-Before: "<script src='https://widget.helpninja.com/widget.js'></script>"
+Before: "<script src='https://helpninja.app/widget.js'></script>"
 After: "This script loads the helpNINJA widget on your website:
-<script src='https://widget.helpninja.com/widget.js'></script>"
+<script src='https://helpninja.app/widget.js'></script>"
 ```
 
 ### Troubleshooting Content
@@ -734,6 +734,6 @@ Phase 4: Mastery (Month 3+)
 
 ---
 
-**Ready to implement content best practices?** Start optimizing your content in the [helpNINJA dashboard](https://app.helpninja.com/content/optimize) or learn about [chat management features](chat-management-overview.md) next.
+**Ready to implement content best practices?** Start optimizing your content in the [helpNINJA dashboard](https://helpninja.app/content/optimize) or learn about [chat management features](chat-management-overview.md) next.
 
 **Need expert guidance on content strategy?** Our content specialists can help you implement these best practices effectively. Contact us at content@helpninja.com or [schedule a content strategy consultation](mailto:content@helpninja.com).

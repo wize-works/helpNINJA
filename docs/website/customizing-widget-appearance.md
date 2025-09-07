@@ -326,6 +326,6 @@ Make your helpNINJA chat widget match your brand perfectly. This guide covers al
 
 ---
 
-**Ready to make your widget uniquely yours?** Start customizing your appearance in the [helpNINJA dashboard](https://app.helpninja.com/widget/appearance) or [learn about widget settings and behavior](widget-settings-behavior.md) next.
+**Ready to make your widget uniquely yours?** Start customizing your appearance in the [helpNINJA dashboard](https://helpninja.app/widget/appearance) or [learn about widget settings and behavior](widget-settings-behavior.md) next.
 
 **Need design help?** Contact our design team at design@helpninja.com or [schedule a consultation](mailto:design@helpninja.com) to get professional assistance with your widget customization.

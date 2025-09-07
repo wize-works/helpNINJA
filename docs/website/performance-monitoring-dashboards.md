@@ -622,6 +622,6 @@ Performance Issue Resolution Dashboard:
 
 ---
 
-**Ready to optimize your performance monitoring?** Start tracking performance in the [helpNINJA performance dashboard](https://app.helpninja.com/performance) or explore [advanced analytics](custom-reports-business-intelligence.md) for deeper insights.
+**Ready to optimize your performance monitoring?** Start tracking performance in the [helpNINJA performance dashboard](https://helpninja.app/performance) or explore [advanced analytics](custom-reports-business-intelligence.md) for deeper insights.
 
 **Need expert performance optimization?** Our performance specialists can help you achieve exceptional performance results. Contact us at performance@helpninja.com or [schedule a performance consultation](mailto:performance@helpninja.com).

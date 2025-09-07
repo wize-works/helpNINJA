@@ -698,6 +698,6 @@ Maintenance Schedule:
 
 ---
 
-**Ready to customize your chat experience?** Start personalizing your widget in the [helpNINJA customization dashboard](https://app.helpninja.com/customize) or learn about [visual customization and branding](visual-customization-branding.md) specifics next.
+**Ready to customize your chat experience?** Start personalizing your widget in the [helpNINJA customization dashboard](https://helpninja.app/customize) or learn about [visual customization and branding](visual-customization-branding.md) specifics next.
 
 **Need professional customization help?** Our design and development specialists can help you create the perfect chat experience for your brand. Contact us at customization@helpninja.com or [schedule a customization consultation](mailto:customization@helpninja.com).

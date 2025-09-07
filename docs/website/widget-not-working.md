@@ -10,7 +10,7 @@ If your helpNINJA chat widget isn't appearing or working properly, follow these 
 1. **Open your website** in a web browser
 2. **Right-click on the page** and select "View Page Source" or "Inspect"
 3. **Search for "helpninja"** in the page source (Ctrl+F or Cmd+F)
-4. **Look for the widget script** - should see something like `<script src="https://widget.helpninja.com/..."`
+4. **Look for the widget script** - should see something like `<script src="https://helpninja.app/..."`
 
 **If script is missing:**
 - Widget code wasn't installed correctly

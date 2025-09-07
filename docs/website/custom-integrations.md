@@ -31,7 +31,7 @@ Custom integrations with helpNINJA enable:
 
 **RESTful Design:**
 ```
-API Base URL: https://api.helpninja.com/v1/
+API Base URL: https://helpninja.app/v1/
 Authentication: Bearer token (API key)
 Response Format: JSON
 Request Methods: GET, POST, PUT, DELETE
@@ -284,7 +284,7 @@ app.post('/webhooks/helpninja', (req, res) => {
 
 async function createSupportTicket(conversationData) {
   // Get full conversation details
-  const conversation = await fetch(`https://api.helpninja.com/v1/conversations/${conversationData.conversation_id}`, {
+  const conversation = await fetch(`https://helpninja.app/v1/conversations/${conversationData.conversation_id}`, {
     headers: {
       'Authorization': `Bearer ${process.env.HELPNINJA_API_KEY}`,
       'X-Tenant-ID': conversationData.tenant_id
@@ -307,7 +307,7 @@ async function createSupportTicket(conversationData) {
   });
   
   // Update helpNINJA with ticket reference
-  await fetch(`https://api.helpninja.com/v1/conversations/${conversation.id}/metadata`, {
+  await fetch(`https://helpninja.app/v1/conversations/${conversation.id}/metadata`, {
     method: 'PUT',
     headers: {
       'Authorization': `Bearer ${process.env.HELPNINJA_API_KEY}`,
@@ -367,7 +367,7 @@ async function processQualifiedLead(leadData) {
   // Send notification to sales team
   await notifySalesTeam({
     lead_id: leadId,
-    conversation_url: `https://app.helpninja.com/conversations/${conversation.id}`,
+    conversation_url: `https://helpninja.app/conversations/${conversation.id}`,
     priority: leadScore > 75 ? 'high' : 'normal'
   });
 }
@@ -922,7 +922,7 @@ describe('helpNINJA Integration', () => {
   
   beforeEach(() => {
     // Mock helpNINJA API responses
-    nock('https://api.helpninja.com')
+    nock('https://helpninja.app')
       .get(`/v1/conversations/${mockConversationId}`)
       .reply(200, mockConversationData);
   });
@@ -976,7 +976,7 @@ describe('helpNINJA Integration', () => {
   
   test('should handle API errors gracefully', async () => {
     // Mock API failure
-    nock('https://api.helpninja.com')
+    nock('https://helpninja.app')
       .get('/v1/conversations/conv_test123')
       .reply(500, { error: 'Internal server error' });
     
@@ -1293,7 +1293,7 @@ class SlackIntegration {
                 type: "plain_text",
                 text: "View Conversation"
               },
-              url: `https://app.helpninja.com/conversations/${eventData.conversation_id}`,
+              url: `https://helpninja.app/conversations/${eventData.conversation_id}`,
               style: "primary"
             },
             {
@@ -1302,7 +1302,7 @@ class SlackIntegration {
                 type: "plain_text",
                 text: "Take Over Chat"
               },
-              url: `https://app.helpninja.com/conversations/${eventData.conversation_id}/respond`
+              url: `https://helpninja.app/conversations/${eventData.conversation_id}/respond`
             }
           ]
         }

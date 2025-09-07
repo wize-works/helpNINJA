@@ -172,7 +172,7 @@ const templateData = {
   ],
   callToAction: {
     text: 'Get Started',
-    url: 'https://app.helpninja.com/onboarding',
+    url: 'https://helpninja.app/onboarding',
     style: 'primary'
   },
   tenantName: 'Your Company'

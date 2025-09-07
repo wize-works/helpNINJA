@@ -808,6 +808,6 @@ Issue Resolution Guide:
 
 ---
 
-**Ready to optimize your chat behavior?** Start configuring intelligent automation in the [helpNINJA behavior settings dashboard](https://app.helpninja.com/customize/behavior) or learn about [advanced customization options](advanced-customization-options.md) next.
+**Ready to optimize your chat behavior?** Start configuring intelligent automation in the [helpNINJA behavior settings dashboard](https://helpninja.app/customize/behavior) or learn about [advanced customization options](advanced-customization-options.md) next.
 
 **Need expert behavior optimization help?** Our automation specialists can help you create intelligent, efficient chat experiences. Contact us at behavior@helpninja.com or [schedule a behavior optimization consultation](mailto:behavior@helpninja.com).

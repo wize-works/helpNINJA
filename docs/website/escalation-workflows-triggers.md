@@ -492,8 +492,8 @@ Continuous Improvement Excellence:
 
 ---
 
-**Ready to optimize your escalation workflows?** Explore our comprehensive [escalation management platform](https://app.helpninja.com/escalation-management) or start with our [escalation setup guide](../getting-started/quick-start-guide.md) for intelligent customer support automation.
+**Ready to optimize your escalation workflows?** Explore our comprehensive [escalation management platform](https://helpninja.app/escalation-management) or start with our [escalation setup guide](../getting-started/quick-start-guide.md) for intelligent customer support automation.
 
-**Need escalation assistance?** Our customer success specialists provide expert escalation workflow configuration and optimization support. Contact support@helpninja.com or join our [customer community](https://community.helpninja.com) for peer support and best practices.
+**Need escalation assistance?** Our customer success specialists provide expert escalation workflow configuration and optimization support. Contact support@helpninja.com or join our [customer community](https://helpninja.ai/docs) for peer support and best practices.
 
 **Looking for advanced escalation solutions?** Our professional services team delivers custom escalation architectures with enterprise-grade intelligence and automation. Learn more about [enterprise escalation services](../advanced-features/enterprise-solutions.md) or contact our escalation specialists.

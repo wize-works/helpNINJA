@@ -432,8 +432,8 @@ Community Content Excellence:
 
 ---
 
-**Ready to maximize self-service success?** Explore our comprehensive [self-service platform](https://app.helpninja.com/self-service-center) or start with our [knowledge base guide](../content-management/knowledge-base-setup.md) for intelligent customer empowerment.
+**Ready to maximize self-service success?** Explore our comprehensive [self-service platform](https://helpninja.app/self-service-center) or start with our [knowledge base guide](../content-management/knowledge-base-setup.md) for intelligent customer empowerment.
 
-**Need self-service optimization assistance?** Our customer success specialists provide expert self-service strategy and implementation support. Contact selfservice@helpninja.com or join our [support community](https://community.helpninja.com) for best practices and peer collaboration.
+**Need self-service optimization assistance?** Our customer success specialists provide expert self-service strategy and implementation support. Contact selfservice@helpninja.com or join our [support community](https://helpninja.ai/docs) for best practices and peer collaboration.
 
 **Looking for enterprise self-service solutions?** Our professional services team delivers comprehensive self-service architectures with advanced analytics and community management. Learn more about [enterprise knowledge solutions](../advanced-features/enterprise-solutions.md) or contact our self-service specialists.

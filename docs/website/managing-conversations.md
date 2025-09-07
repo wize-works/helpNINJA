@@ -751,6 +751,6 @@ Follow-Through Actions:
 
 ---
 
-**Ready to master conversation management?** Start optimizing your customer interactions in the [helpNINJA dashboard](https://app.helpninja.com/conversations/manage) or learn about [AI response management](ai-response-management.md) next.
+**Ready to master conversation management?** Start optimizing your customer interactions in the [helpNINJA dashboard](https://helpninja.app/conversations/manage) or learn about [AI response management](ai-response-management.md) next.
 
 **Need help with conversation optimization?** Our conversation management experts can help you implement these strategies effectively. Contact us at conversations@helpninja.com or [schedule a conversation management consultation](mailto:conversations@helpninja.com).
