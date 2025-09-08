@@ -5,6 +5,7 @@ import Titlebar from "@/components/titlebar";
 import { ClerkProvider } from "@clerk/nextjs";
 import { Toaster } from "react-hot-toast";
 import Clarity from "@/components/clarity";
+import ConditionalFooter from "@/components/conditional-footer";
 
 export { metadata } from "./metadata";
 
@@ -26,26 +27,29 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
                     <Suspense fallback={null}>
                         <main>{children}</main>
                     </Suspense>
+                    <Suspense fallback={null}>
+                        <ConditionalFooter />
+                    </Suspense>
                 </ClerkProvider>
                 <Toaster
                     position="top-right"
                     toastOptions={{
                         duration: 4000,
                         style: {
-                            background: 'hsl(var(--b1))',
-                            color: 'hsl(var(--bc))',
-                            border: '1px solid hsl(var(--b3))',
+                            background: 'hsl(var(--color-base-100))',
+                            color: 'hsl(var(--color-base-content))',
+                            border: '1px solid hsl(var(--color-base-300))',
                         },
                         success: {
                             iconTheme: {
-                                primary: 'hsl(var(--su))',
-                                secondary: 'hsl(var(--suc))',
+                                primary: 'hsl(var(--color-success))',
+                                secondary: 'hsl(var(--color-success-content))',
                             },
                         },
                         error: {
                             iconTheme: {
-                                primary: 'hsl(var(--er))',
-                                secondary: 'hsl(var(--erc))',
+                                primary: 'hsl(var(--color-error))',
+                                secondary: 'hsl(var(--color-error-content))',
                             },
                         },
                     }}
