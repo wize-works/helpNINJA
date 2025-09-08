@@ -21,7 +21,7 @@ Get helpNINJA up and running on your website in under 10 minutes! This guide wil
 
 ### Sign Up (2 minutes)
 
-1. **Visit the helpNINJA Dashboard**: Go to [your-helpninja-domain.com/signup]
+1. **Visit the helpNINJA Dashboard**: Go to [https://helpninja.app/signup]
 2. **Enter Your Details**:
    - Email address
    - Company name
@@ -37,16 +37,49 @@ Get helpNINJA up and running on your website in under 10 minutes! This guide wil
 
 ---
 
-## Step 2: Add Your Website Content
+## Step 2: Register and Verify Your Website
+
+Before you can use the widget, you need to register your website domain and verify ownership.
+
+### Add Your Website (1 minute)
+
+1. **Go to Sites → Manage Sites** in your dashboard
+2. **Click "Add Site"** button
+3. **Enter Your Website Details**:
+   - Site name (e.g., "My Company Website")
+   - Domain (e.g., `yoursite.com` - without http/https)
+4. **Click "Create Site"**
+
+### Verify Domain Ownership (2 minutes)
+
+After creating your site, you'll need to verify you own the domain:
+
+1. **Choose Verification Method**:
+   - **Meta Tag** (easiest): Add a meta tag to your website's head section
+   - **DNS TXT Record**: Add a TXT record to your domain's DNS
+2. **Follow the Instructions**: Copy the provided verification code
+3. **Add to Your Website**: Place the code where instructed
+4. **Click "Verify"**: helpNINJA will check for the verification code
+
+### Verification Tips
+- ✅ Meta tag method is usually fastest for most websites
+- ✅ Make sure the verification code is in the `<head>` section
+- ✅ Changes may take a few minutes to propagate
+- ✅ Contact support if verification fails after 10 minutes
+
+---
+
+## Step 3: Add Your Website Content
 
 helpNINJA needs to learn about your business to provide helpful answers. The fastest way is to let it crawl your website.
 
 ### Automatic Website Crawling (1 minute)
 
 1. **Go to Content → Ingestion** in your dashboard
-2. **Enter Your Website URL**: Use your main domain (e.g., `https://yoursite.com`)
-3. **Click "Start Crawling"**
-4. **Wait for Processing**: This usually takes 2-5 minutes depending on your site size
+2. **Select Your Verified Site**: Choose from your verified sites dropdown
+3. **Enter Your Website URL**: Use your main domain (e.g., `https://yoursite.com`)
+4. **Click "Start Crawling"**
+5. **Wait for Processing**: This usually takes 2-5 minutes depending on your site size
 
 ### What Gets Crawled
 - ✅ All public pages on your website
@@ -62,25 +95,29 @@ helpNINJA needs to learn about your business to provide helpful answers. The fas
 
 ---
 
-## Step 3: Get Your Widget Code
+## Step 4: Get Your Widget Code
 
 ### Generate Widget Code (30 seconds)
 
-1. **Navigate to Widget → Integration** in your dashboard
-2. **Copy the Widget Code**: It looks like this:
+1. **Go to Sites → Manage Sites** in your dashboard
+2. **Find Your Verified Site** in the sites list
+3. **Click "Setup"** button next to your site
+4. **Choose Your Framework**: Select HTML, React, WordPress, etc.
+5. **Copy the Widget Code**: It will look like this:
    ```html
-   <script src="https://your-domain.com/api/widget?tenant=your-tenant-id"></script>
+   <script src="https://helpninja.app/api/widget?t=YOUR_TENANT_KEY&s=YOUR_SITE_ID&k=YOUR_VERIFICATION_TOKEN&voice=friendly"></script>
    ```
-3. **Note Your Tenant ID**: You'll see it in the URL - save it for later
 
 ### Widget Code Explained
-- This single line of code adds the chat widget to your site
-- It's lightweight and won't slow down your website
-- It automatically matches your website's style
+- **`t` parameter**: Your tenant public key (identifies your account)
+- **`s` parameter**: Your specific site ID (identifies which site)
+- **`k` parameter**: Verification token (ensures the widget can only be used on your verified domain)
+- **`voice` parameter**: AI personality (friendly, professional, helpful, etc.)
+- Each site gets a unique code to prevent unauthorized use
 
 ---
 
-## Step 4: Add Widget to Your Website
+## Step 5: Add Widget to Your Website
 
 Choose the method that works best for your website setup:
 
@@ -118,7 +155,7 @@ Choose the method that works best for your website setup:
 
 ---
 
-## Step 5: Test Your Widget
+## Step 6: Test Your Widget
 
 ### Verify Installation (1 minute)
 
@@ -140,20 +177,25 @@ Choose the method that works best for your website setup:
 
 ---
 
-## Step 6: Customize Your Widget (Optional)
+## Step 7: Customize Your Widget (Optional)
 
 ### Basic Customization (2 minutes)
 
-1. **Go to Widget → Appearance** in your dashboard
-2. **Choose Your Colors**: Match your brand colors
-3. **Set Your Welcome Message**: Customize the first message users see
-4. **Upload Your Logo**: Brand the chat experience
-5. **Preview Changes**: See how it looks before publishing
+1. **Go to Sites → Manage Sites** in your dashboard
+2. **Click "Widget"** button next to your site
+3. **Customize Appearance**:
+   - Choose your colors to match your brand
+   - Set your welcome message
+   - Upload your logo
+   - Adjust the AI's voice/tone
+4. **Preview Changes**: See how it looks before publishing
+5. **Save Settings**: Changes apply immediately
 
 ### Quick Branding Tips
 - Use your primary brand color for the chat bubble
 - Keep welcome messages friendly but professional
 - Logo should be square and at least 40x40 pixels
+- Match the AI's voice to your brand personality
 
 ---
 
@@ -183,18 +225,21 @@ Choose the method that works best for your website setup:
 ### Widget Not Showing Up?
 
 **Check These Common Issues:**
-1. **Clear Browser Cache**: Hard refresh your website (Ctrl+F5)
-2. **Verify Code Placement**: Ensure the script is before the closing `</body>` tag
-3. **Check Console Errors**: Press F12 and look for JavaScript errors
-4. **Test Incognito Mode**: Rule out browser extension conflicts
+1. **Site Not Verified**: Make sure your domain is verified in the Sites section
+2. **Wrong Widget Code**: Ensure you're using the code for the correct site
+3. **Clear Browser Cache**: Hard refresh your website (Ctrl+F5)
+4. **Verify Code Placement**: Ensure the script is before the closing `</body>` tag
+5. **Check Console Errors**: Press F12 and look for JavaScript errors
+6. **Test Incognito Mode**: Rule out browser extension conflicts
 
 ### Chat Not Responding?
 
 **Possible Solutions:**
 1. **Content Still Processing**: Wait 5-10 minutes after crawling
 2. **No Content Found**: Check if your website was crawled successfully
-3. **Connectivity Issues**: Test on different devices/networks
-4. **Plan Limitations**: Verify you haven't exceeded message limits
+3. **Site Not Selected**: Make sure content ingestion was done for the correct site
+4. **Connectivity Issues**: Test on different devices/networks
+5. **Plan Limitations**: Verify you haven't exceeded message limits
 
 ### Widget Looks Wrong?
 
@@ -203,6 +248,15 @@ Choose the method that works best for your website setup:
 2. **Mobile Issues**: Test on different screen sizes
 3. **Custom Styling**: Check the widget customization options
 4. **Browser Compatibility**: Test on different browsers
+
+### Domain Verification Issues?
+
+**Common Solutions:**
+1. **Wait for Propagation**: DNS changes can take up to 24 hours
+2. **Check Code Placement**: Meta tags must be in the `<head>` section
+3. **Remove Extra Characters**: Copy/paste might add invisible characters
+4. **Check Domain Format**: Use just the domain without http:// or www
+5. **Contact Support**: We can help verify manually if needed
 
 ---
 

@@ -5,17 +5,81 @@ import { buildDynamicRenderer } from './dynamic-renderer';
 export type CrawledDoc = { url: string; title?: string; content: string };
 
 // User-agent & headers to reduce chance of anti-bot minimal responses
-async function fetchHtml(url: string): Promise<string> {
-    const res = await fetch(url, {
-        redirect: 'follow',
-        headers: {
-            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) helpNINJA-bot/1.0 (+https://helpninja.ai)',
-            'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8',
-            'Accept-Language': 'en-US,en;q=0.9'
+async function fetchHtml(url: string, retries = 3): Promise<string> {
+    for (let attempt = 0; attempt <= retries; attempt++) {
+        try {
+            const res = await fetch(url, {
+                redirect: 'follow',
+                headers: {
+                    'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) helpNINJA-bot/1.0 (+https://helpninja.ai)',
+                    'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8',
+                    'Accept-Language': 'en-US,en;q=0.9'
+                }
+            });
+            if (!res.ok) throw new Error(`fetch ${url} -> ${res.status}`);
+            return await res.text();
+        } catch (error) {
+            const isRedirectError = error instanceof Error &&
+                (error.message.includes('redirect count exceeded') ||
+                    error.cause?.toString().includes('redirect count exceeded'));
+
+            if (isRedirectError) {
+                console.warn(`[crawler] Redirect limit exceeded for ${url}, attempting manual redirect handling`);
+                try {
+                    // Try with manual redirect handling
+                    const res = await fetch(url, {
+                        redirect: 'manual',
+                        headers: {
+                            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) helpNINJA-bot/1.0 (+https://helpninja.ai)',
+                            'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8',
+                            'Accept-Language': 'en-US,en;q=0.9'
+                        }
+                    });
+
+                    // Handle manual redirects with a limit
+                    let finalUrl = url;
+                    let response = res;
+                    let redirectCount = 0;
+                    const maxRedirects = 5;
+
+                    while (response.status >= 300 && response.status < 400 && redirectCount < maxRedirects) {
+                        const location = response.headers.get('location');
+                        if (!location) break;
+
+                        finalUrl = new URL(location, finalUrl).href;
+                        redirectCount++;
+
+                        response = await fetch(finalUrl, {
+                            redirect: 'manual',
+                            headers: {
+                                'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) helpNINJA-bot/1.0 (+https://helpninja.ai)',
+                                'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8',
+                                'Accept-Language': 'en-US,en;q=0.9'
+                            }
+                        });
+                    }
+
+                    if (response.ok) {
+                        return await response.text();
+                    } else {
+                        throw new Error(`fetch ${finalUrl} -> ${response.status}`);
+                    }
+                } catch (manualError) {
+                    if (attempt === retries) {
+                        throw new Error(`Failed to fetch ${url} after ${retries + 1} attempts. Last error: ${manualError instanceof Error ? manualError.message : 'Unknown error'}`);
+                    }
+                }
+            } else {
+                if (attempt === retries) {
+                    throw error;
+                }
+                // Wait before retrying (exponential backoff)
+                const delay = Math.pow(2, attempt) * 1000; // 1s, 2s, 4s
+                await new Promise(resolve => setTimeout(resolve, delay));
+            }
         }
-    });
-    if (!res.ok) throw new Error(`fetch ${url} -> ${res.status}`);
-    return await res.text();
+    }
+    throw new Error(`Failed to fetch ${url} after ${retries + 1} attempts`);
 }
 
 const dynamicRenderer = buildDynamicRenderer();
