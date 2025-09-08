@@ -30,8 +30,19 @@ spec:
   tls:
   - hosts:
     - helpninja.app
+    - www.helpninja.app
     secretName: helpninja-tls
   rules:
+  - host: www.helpninja.app
+    http:
+      paths: 
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: helpninja-service
+            port:
+              number: 80
   - host: helpninja.app
     http:
       paths:
