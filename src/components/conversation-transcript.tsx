@@ -3,7 +3,7 @@ import React, { useEffect, useRef, useState, useCallback, useMemo } from 'react'
 import { renderMarkdown } from '@/lib/render-markdown';
 import { HoverScale } from '@/components/ui/animated-page';
 
-interface Message { id: string; role: string; content: string; created_at: string; confidence: number | null }
+interface Message { id: string; role: string; content: string; created_at: string; confidence: number | null; is_human_response: boolean }
 interface Escalation { id: string; reason: string; confidence: number | null; rule_id: string | null; created_at: string }
 
 interface Props { conversationId: string; initialMessages: Message[]; total: number; escalations?: Escalation[] }
@@ -93,12 +93,27 @@ export default function ConversationTranscript({ conversationId, initialMessages
                     return (
                         <div key={m.id} className="space-y-1">
                             <div className={`chat ${m.role === 'user' ? 'chat-start' : 'chat-end'}`}>
-                                <div className={`chat-bubble whitespace-pre-wrap break-words max-w-[640px] ${m.role === 'user' ? 'bg-base-200 text-base-content' : 'bg-primary text-primary-content'}`}>
+                                {m.role === 'assistant' && (
+                                    <div className="chat-header mb-1">
+                                        {m.is_human_response ? (
+                                            <span className="inline-flex items-center gap-1 text-xs bg-success/20 text-success px-2 py-1 rounded-md">
+                                                <i className="fa-duotone fa-solid fa-user-headset" />
+                                                Human Agent
+                                            </span>
+                                        ) : (
+                                            <span className="inline-flex items-center gap-1 text-xs bg-primary/20 text-primary px-2 py-1 rounded-md">
+                                                <i className="fa-duotone fa-solid fa-robot" />
+                                                AI Assistant
+                                            </span>
+                                        )}
+                                    </div>
+                                )}
+                                <div className={`chat-bubble whitespace-pre-wrap break-words max-w-[640px] ${m.role === 'user' ? 'bg-base-200 text-base-content' : m.is_human_response ? 'bg-success text-success-content' : 'bg-primary text-primary-content'}`}>
                                     {m.role === 'assistant' ? renderMarkdown(m.content) : highlight(m.content)}
                                 </div>
                                 <div className="text-[10px] opacity-60 mt-1 flex items-center gap-1">
                                     {new Date(m.created_at).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' })}
-                                    {m.role !== 'user' && typeof m.confidence === 'number' && isFinite(m.confidence) && (
+                                    {m.role !== 'user' && typeof m.confidence === 'number' && isFinite(m.confidence) && !m.is_human_response && (
                                         <span className={`badge badge-xs ${m.confidence < 0.55 ? 'badge-warning' : 'badge-ghost'}`} title="Model confidence score">{m.confidence.toFixed(2)}</span>
                                     )}
                                 </div>

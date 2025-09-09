@@ -246,7 +246,7 @@ function mountChatWidget(payload) {
 
         return Array.from(msgs.children).map(row => {
             const isUser = row.style.justifyContent === 'flex-end';
-            
+
             // For user messages: bubble is first child, icon is second child
             // For assistant messages: icon is first child, bubble is second child
             const bubble = isUser ? row.children[0] : row.children[1];
@@ -520,6 +520,93 @@ function mountChatWidget(payload) {
 
     const auto = parseInt(config.autoOpenDelay || 0, 10);
     if (auto > 0) setTimeout(open, auto);
+
+    // ---- Agent Message Polling ----
+    let lastMessageTime = null;
+    let pollInterval = null;
+
+    // Function to poll for new agent messages
+    async function pollForAgentMessages() {
+        if (!sessionId) return;
+
+        try {
+            const url = `${baseOrigin}/api/conversations/session/${encodeURIComponent(sessionId)}/messages${lastMessageTime ? `?since=${encodeURIComponent(lastMessageTime)}` : ''}`;
+            const response = await fetch(url);
+
+            if (!response.ok) return;
+
+            const data = await response.json();
+            if (data.messages?.length) {
+                data.messages.forEach(msg => {
+                    // Only show new human agent messages (skip AI messages as they're already handled by send())
+                    if (msg.role === 'assistant' && msg.is_human_response) {
+                        add('assistant', msg.content, false); // false = don't save to history to avoid duplication
+                        lastMessageTime = msg.created_at;
+
+                        // Flash the bubble if chat is closed to indicate new message
+                        if (panel.style.display === 'none') {
+                            flashBubble();
+                        }
+                    } else if (msg.role === 'assistant' || msg.role === 'user') {
+                        // Update timestamp for all messages to track polling position
+                        lastMessageTime = msg.created_at;
+                    }
+                });
+            }
+        } catch (error) {
+            console.error('Error polling for agent messages:', error);
+        }
+    }
+
+    // Function to flash the bubble to indicate new message
+    function flashBubble() {
+        let flashCount = 0;
+        const originalBackground = bubble.style.background;
+
+        const flashInterval = setInterval(() => {
+            bubble.style.background = flashCount % 2 === 0 ? '#10b981' : originalBackground; // Green flash
+            flashCount++;
+
+            if (flashCount >= 6) { // Flash 3 times
+                clearInterval(flashInterval);
+                bubble.style.background = originalBackground;
+            }
+        }, 300);
+    }
+
+    // Start polling when conversation becomes active (after first message)
+    function startPolling() {
+        if (pollInterval) return; // Already polling
+
+        // Set initial timestamp to now to only catch new messages
+        if (!lastMessageTime) {
+            lastMessageTime = new Date().toISOString();
+        }
+
+        // Poll every 3 seconds for human agent responses
+        pollInterval = setInterval(pollForAgentMessages, 3000);
+    }
+
+    // Stop polling (for cleanup)
+    function stopPolling() {
+        if (pollInterval) {
+            clearInterval(pollInterval);
+            pollInterval = null;
+        }
+    }
+
+    // Start polling after first user interaction
+    const originalSend = send;
+    send = async function () {
+        const result = await originalSend();
+
+        // Start polling after first message is sent
+        if (!pollInterval) {
+            startPolling();
+        }
+
+        return result;
+    };
 
     // ---- Feedback Modal ----
     let selectedFiles = [];

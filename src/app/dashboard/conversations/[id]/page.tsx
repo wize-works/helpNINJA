@@ -4,6 +4,7 @@ import { Breadcrumb } from '@/components/ui/breadcrumb';
 import { AnimatedPage, StaggerContainer, StaggerChild, HoverScale } from '@/components/ui/animated-page';
 import CopySessionIdButton from '@/components/copy-session-id-button';
 import ConversationTranscript from '@/components/conversation-transcript';
+import AgentResponseBox from '@/components/agent-response-box';
 import Link from 'next/link';
 import React from 'react';
 
@@ -20,9 +21,9 @@ async function getConversation(tenantId: string, id: string) {
     if (!convoRow) return { convo: null, messages: [], total: 0, kpis: null, sources: [] as { url: string; title: string | null }[], escalations: [] as { id: string; reason: string; confidence: number | null; rule_id: string | null; created_at: string }[] };
     // initial messages
     const messages = await query<{
-        id: string; role: string; content: string; created_at: string; confidence: number | null;
+        id: string; role: string; content: string; created_at: string; confidence: number | null; is_human_response: boolean;
     }>(
-        `select id, role, content, created_at, confidence
+        `select id, role, content, created_at, confidence, COALESCE(is_human_response, false) as is_human_response
          from public.messages where tenant_id=$1 and conversation_id=$2
          order by created_at asc limit 50`,
         [tenantId, id]
@@ -162,7 +163,7 @@ export default async function ConversationDetailPage({ params }: { params: Promi
                 {convo && kpis && (
                     <StaggerContainer>
                         <StaggerChild>
-                            <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 xl:grid-cols-4 gap-6">
+                            <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-6">
                                 <HoverScale scale={1.01}>
                                     <div className="stats shadow hover:shadow-md transition-all duration-300 w-full rounded-2xl overflow-hidden">
                                         <div className="stat bg-base-100 rounded-2xl">
@@ -304,6 +305,24 @@ export default async function ConversationDetailPage({ params }: { params: Promi
                                             </div>
                                         </div>
                                         <ConversationTranscript conversationId={convo.id} initialMessages={messages} total={total} escalations={escalations} />
+                                    </div>
+                                </div>
+                            </StaggerChild>
+
+                            {/* Agent Response Section */}
+                            <StaggerChild className="xl:col-span-2">
+                                <div className="card bg-base-100 rounded-2xl shadow-sm hover:shadow-md transition-all duration-300">
+                                    <div className="p-6">
+                                        <div className="flex items-center justify-between mb-4">
+                                            <div>
+                                                <h3 className="text-lg font-semibold text-base-content">Send Response</h3>
+                                                <p className="text-sm text-base-content/60">Reply as a human agent to this conversation</p>
+                                            </div>
+                                            <div className="w-8 h-8 bg-success/20 rounded-lg flex items-center justify-center">
+                                                <i className="fa-duotone fa-solid fa-reply text-sm text-success" />
+                                            </div>
+                                        </div>
+                                        <AgentResponseBox conversationId={convo.id} />
                                     </div>
                                 </div>
                             </StaggerChild>

@@ -25,9 +25,9 @@ export async function GET(req: NextRequest, ctx: Context) {
         const totalRes = await query<{ count: number }>(`select count(*)::int as count from public.messages where tenant_id=$1 and conversation_id=$2${filter}`, baseParams);
         const total = totalRes.rows[0]?.count || 0;
         const messagesRes = await query<{
-            id: string; role: string; content: string; created_at: string; confidence: number | null;
+            id: string; role: string; content: string; created_at: string; confidence: number | null; is_human_response: boolean;
         }>(
-            `select id, role, content, created_at, confidence
+            `select id, role, content, created_at, confidence, COALESCE(is_human_response, false) as is_human_response
        from public.messages
        where tenant_id=$1 and conversation_id=$2${filter}
        order by created_at asc
