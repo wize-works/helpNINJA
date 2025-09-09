@@ -169,22 +169,89 @@ function mountChatWidget(payload) {
             <span>${config.aiName || 'helpNINJA'}</span>
         </div>
     `;
-    const titleButtons = el('div', `display:flex;align-items:end;justify-content:end;gap:8px;`);
-    const feedback = el('button', `background:${styles.buttonBackground};color:${styles.buttonColor};border:none;cursor:pointer;padding:8px;border-radius:50%;height:40px;width:40px;transition:all .2s ease;`);
-    feedback.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 640" fill="currentColor"><path d="M115.9 448.9C83.3 408.6 64 358.4 64 304C64 171.5 178.6 64 320 64C461.4 64 576 171.5 576 304C576 436.5 461.4 544 320 544C283.5 544 248.8 536.8 217.4 524L101 573.9C97.3 575.5 93.5 576 89.5 576C75.4 576 64 564.6 64 550.5C64 546.2 65.1 542 67.1 538.3L115.9 448.9zM153.2 418.7C165.4 433.8 167.3 454.8 158 471.9L140 505L198.5 479.9C210.3 474.8 223.7 474.7 235.6 479.6C261.3 490.1 289.8 496 319.9 496C437.7 496 527.9 407.2 527.9 304C527.9 200.8 437.8 112 320 112C202.2 112 112 200.8 112 304C112 346.8 127.1 386.4 153.2 418.7z"/></svg>';
-    feedback.onclick = () => {
-        openFeedbackModal();
+    const titleButtons = el('div', `display:flex;align-items:end;justify-content:end;gap:8px;position:relative;`);
+
+    // Create dropdown container
+    const dropdownContainer = el('div', `position:relative;`);
+
+    // Menu button (3 dots)
+    const menuButton = el('button', `background:${styles.buttonBackground};color:${styles.buttonColor};border:none;cursor:pointer;padding:8px;border-radius:50%;height:40px;width:40px;transition:all .2s ease;display:flex;align-items:center;justify-content:center;`);
+    menuButton.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 640" fill="currentColor"><circle cx="320" cy="160" r="48"/><circle cx="320" cy="320" r="48"/><circle cx="320" cy="480" r="48"/></svg>';
+
+    // Dropdown menu
+    const dropdownMenu = el('div', `position:absolute;top:45px;right:0;background:${styles.panelBackground};border:1px solid ${styles.borderColor};border-radius:8px;box-shadow:0 4px 12px rgba(0,0,0,0.15);z-index:1000;min-width:180px;display:none;overflow:hidden;`);
+
+    // Menu items
+    const menuItems = [
+        {
+            icon: '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 640" fill="currentColor"><path d="M115.9 448.9C83.3 408.6 64 358.4 64 304C64 171.5 178.6 64 320 64C461.4 64 576 171.5 576 304C576 436.5 461.4 544 320 544C283.5 544 248.8 536.8 217.4 524L101 573.9C97.3 575.5 93.5 576 89.5 576C75.4 576 64 564.6 64 550.5C64 546.2 65.1 542 67.1 538.3L115.9 448.9zM153.2 418.7C165.4 433.8 167.3 454.8 158 471.9L140 505L198.5 479.9C210.3 474.8 223.7 474.7 235.6 479.6C261.3 490.1 289.8 496 319.9 496C437.7 496 527.9 407.2 527.9 304C527.9 200.8 437.8 112 320 112C202.2 112 112 200.8 112 304C112 346.8 127.1 386.4 153.2 418.7z"/></svg>',
+            text: 'Send Feedback',
+            action: 'feedback'
+        },
+        {
+            icon: '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 640" fill="currentColor"><path d="M320 48C339.4 48 356.4 58.1 365.3 74.7L394.7 124.6C399.1 133.1 409.5 137.6 419.2 135.2L476.1 120.1C494.9 115.3 513.9 126.3 518.7 145.1L533.8 202C536.2 211.7 544.9 218.4 555.4 218.4H608C632.8 218.4 652.8 238.4 652.8 263.2V376.8C652.8 401.6 632.8 421.6 608 421.6H555.4C544.9 421.6 536.2 428.3 533.8 438L518.7 494.9C513.9 513.7 494.9 524.7 476.1 519.9L419.2 504.8C409.5 502.4 399.1 506.9 394.7 515.4L365.3 565.3C356.4 581.9 339.4 592 320 592C300.6 592 283.6 581.9 274.7 565.3L245.3 515.4C240.9 506.9 230.5 502.4 220.8 504.8L163.9 519.9C145.1 524.7 126.1 513.7 121.3 494.9L106.2 438C103.8 428.3 95.1 421.6 84.6 421.6H32C7.2 421.6 -12.8 401.6 -12.8 376.8V263.2C-12.8 238.4 7.2 218.4 32 218.4H84.6C95.1 218.4 103.8 211.7 106.2 202L121.3 145.1C126.1 126.3 145.1 115.3 163.9 120.1L220.8 135.2C230.5 137.6 240.9 133.1 245.3 124.6L274.7 74.7C283.6 58.1 300.6 48 320 48zM320 272C337.7 272 352 286.3 352 304V424C352 441.7 337.7 456 320 456C302.3 456 288 441.7 288 424V304C288 286.3 302.3 272 320 272zM320 144C302.3 144 288 158.3 288 176V208C288 225.7 302.3 240 320 240C337.7 240 352 225.7 352 208V176C352 158.3 337.7 144 320 144z"/></svg>',
+            text: 'Clear Chat',
+            action: 'clear'
+        },
+        {
+            icon: '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 640" fill="currentColor"><path d="M320 200C340.9 200 356.4 215.5 356.4 236.4V356.4H476.4C497.3 356.4 512.8 371.9 512.8 392.8C512.8 413.7 497.3 429.2 476.4 429.2H356.4V549.2C356.4 570.1 340.9 585.6 320 585.6C299.1 585.6 283.6 570.1 283.6 549.2V429.2H163.6C142.7 429.2 127.2 413.7 127.2 392.8C127.2 371.9 142.7 356.4 163.6 356.4H283.6V236.4C283.6 215.5 299.1 200 320 200zM96 64C60.7 64 32 92.7 32 128V512C32 547.3 60.7 576 96 576H544C579.3 576 608 547.3 608 512V128C608 92.7 579.3 64 544 64H96zM96 32H544C597.0 32 640 75.0 640 128V512C640 565.0 597.0 608 544 608H96C43.0 608 0 565.0 0 512V128C0 75.0 43.0 32 96 32z"/></svg>',
+            text: 'Export Chat',
+            action: 'export'
+        }
+    ];
+
+    menuItems.forEach(item => {
+        const menuItem = el('div', `padding:12px 16px;cursor:pointer;display:flex;align-items:center;gap:12px;color:${styles.messagesColor};transition:background-color 0.2s ease;border-bottom:1px solid ${styles.borderColor};`);
+        menuItem.innerHTML = `
+            <div style="width:18px;height:18px;flex-shrink:0;">${item.icon}</div>
+            <span style="font-size:14px;">${item.text}</span>
+        `;
+
+        // Hover effect
+        menuItem.addEventListener('mouseenter', () => {
+            menuItem.style.backgroundColor = styles.primaryColor + '16';
+        });
+        menuItem.addEventListener('mouseleave', () => {
+            menuItem.style.backgroundColor = 'transparent';
+        });
+
+        // Click handler
+        menuItem.addEventListener('click', () => {
+            dropdownMenu.style.display = 'none';
+            handleMenuAction(item.action);
+        });
+
+        dropdownMenu.appendChild(menuItem);
+    });
+
+    // Remove border from last item
+    const lastItem = dropdownMenu.lastElementChild;
+    if (lastItem) lastItem.style.borderBottom = 'none';
+
+    // Menu button click handler
+    menuButton.onclick = (e) => {
+        e.stopPropagation();
+        const isVisible = dropdownMenu.style.display === 'block';
+        dropdownMenu.style.display = isVisible ? 'none' : 'block';
     };
 
-    // Add hover effect to feedback button
-    feedback.addEventListener('mouseenter', () => {
-        feedback.style.transform = 'scale(1.1)';
-        feedback.style.opacity = '0.8';
+    // Close dropdown when clicking outside
+    document.addEventListener('click', () => {
+        dropdownMenu.style.display = 'none';
     });
-    feedback.addEventListener('mouseleave', () => {
-        feedback.style.transform = 'scale(1)';
-        feedback.style.opacity = '1';
+
+    // Menu button hover effects
+    menuButton.addEventListener('mouseenter', () => {
+        menuButton.style.transform = 'scale(1.1)';
+        menuButton.style.opacity = '0.8';
     });
+    menuButton.addEventListener('mouseleave', () => {
+        menuButton.style.transform = 'scale(1)';
+        menuButton.style.opacity = '1';
+    });
+
+    dropdownContainer.appendChild(menuButton);
+    dropdownContainer.appendChild(dropdownMenu);
     const close = el('button', `background:${styles.buttonBackground};color:${styles.buttonColor};border:none;cursor:pointer;padding:6px;border-radius:50%;height:40px;width:40px;transition:all .2s ease;`);
     close.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 640" fill="currentColor"><path d="M506.4 135.4C514.9 125.3 513.6 110.1 503.5 101.6C493.4 93.1 478.2 94.4 469.7 104.5L320 282.7L170.4 104.6C161.9 94.4 146.7 93.1 136.6 101.6C126.5 110.1 125.1 125.3 133.6 135.4L288.7 320L133.6 504.6C125.1 514.8 126.4 529.9 136.5 538.4C146.6 546.9 161.8 545.6 170.3 535.5L320 357.3L469.6 535.4C478.1 545.6 493.3 546.9 503.4 538.3C513.5 529.7 514.9 514.6 506.3 504.5L351.3 320L506.4 135.4z"/></svg>';
     close.onclick = () => { panel.style.display = 'none'; bubble.style.display = 'flex'; };
@@ -198,8 +265,109 @@ function mountChatWidget(payload) {
         close.style.transform = 'scale(1)';
         close.style.opacity = '1';
     });
+    // Handle menu actions
+    function handleMenuAction(action) {
+        switch (action) {
+            case 'feedback':
+                openFeedbackModal();
+                break;
+            case 'clear':
+                clearChat();
+                break;
+            case 'export':
+                exportChat();
+                break;
+        }
+    }
+
+    // Clear chat function
+    async function clearChat() {
+        if (confirm('Are you sure you want to clear this chat? This will start a new conversation.')) {
+            try {
+                // Call API to clear conversation on server
+                const response = await fetch(`${baseOrigin}/api/conversations/clear`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        sessionId: sessionId,
+                        tenantId: tenantId
+                    })
+                });
+
+                if (!response.ok) {
+                    console.warn('Failed to clear conversation on server:', response.status);
+                }
+            } catch (error) {
+                console.warn('Error clearing conversation on server:', error);
+            }
+
+            // Clear messages display
+            msgs.innerHTML = '';
+
+            // Generate new session ID
+            sessionId = crypto.randomUUID ? crypto.randomUUID() : 'sid_' + Math.random().toString(36).slice(2);
+            localStorage.setItem('hn_sid', sessionId);
+
+            // Clear chat history from storage
+            const oldStorageKey = `hn_chat_${sessionId}`;
+            localStorage.removeItem(oldStorageKey);
+
+            // Reset polling state
+            latestMessageTime = null;
+
+            // Show initial message if configured
+            if (config.initialMessage) {
+                addMessage('assistant', config.initialMessage, false);
+            }
+
+            // Restart polling with new session
+            if (typeof pollForAgentMessages === 'function') {
+                pollForAgentMessages();
+            }
+        }
+    }
+
+    // Export chat function
+    function exportChat() {
+        const messages = Array.from(msgs.querySelectorAll('[data-role]')).map(msgEl => {
+            const role = msgEl.getAttribute('data-role');
+            const content = msgEl.querySelector('.message-content')?.textContent || '';
+            const timestamp = msgEl.getAttribute('data-timestamp') || new Date().toISOString();
+            return { role, content, timestamp };
+        });
+
+        if (messages.length === 0) {
+            alert('No messages to export.');
+            return;
+        }
+
+        const exportData = {
+            conversation: {
+                sessionId: sessionId,
+                tenantId: tenantId,
+                aiName: config.aiName || 'helpNINJA',
+                exportedAt: new Date().toISOString(),
+                messages: messages
+            }
+        };
+
+        // Create downloadable file
+        const dataStr = JSON.stringify(exportData, null, 2);
+        const dataBlob = new Blob([dataStr], { type: 'application/json' });
+        const url = URL.createObjectURL(dataBlob);
+
+        const downloadLink = document.createElement('a');
+        downloadLink.href = url;
+        downloadLink.download = `helpninja-chat-${sessionId.slice(-8)}-${new Date().toISOString().slice(0, 10)}.json`;
+        document.body.appendChild(downloadLink);
+        downloadLink.click();
+        document.body.removeChild(downloadLink);
+
+        URL.revokeObjectURL(url);
+    }
+
     header.appendChild(title);
-    titleButtons.appendChild(feedback);
+    titleButtons.appendChild(dropdownContainer);
     titleButtons.appendChild(close);
     header.appendChild(titleButtons);
 
@@ -414,7 +582,12 @@ function mountChatWidget(payload) {
 
     // Helpers
     function add(role, htmlOrText, shouldSave = true) {
+        const timestamp = new Date().toISOString();
         const row = el('div', `display:flex;gap:8px;margin-bottom:12px;${role === 'user' ? 'justify-content:flex-end;' : 'justify-content:flex-start;'}`);
+
+        // Add data attributes for export functionality
+        row.setAttribute('data-role', role);
+        row.setAttribute('data-timestamp', timestamp);
 
         // Create icon
         const icon = el('div', `width:32px;height:32px;display:flex;align-items:center;justify-content:center;border-radius:50%;flex-shrink:0;${role === 'user'
@@ -436,6 +609,9 @@ function mountChatWidget(payload) {
                 ? `background:${styles.userBubbleBackground};color:${styles.userBubbleColor};border-top-right-radius:4px;padding:12px 16px;`
                 : `background:${styles.assistantBubbleBackground};color:${styles.assistantBubbleColor};border-top-left-radius:4px;padding:12px 16px;`)
         );
+
+        // Add class for easy content extraction during export
+        bub.className = 'message-content';
 
         // Set bubble content
         if (role === 'assistant') {
@@ -524,6 +700,7 @@ function mountChatWidget(payload) {
     // ---- Agent Message Polling ----
     let lastMessageTime = null;
     let pollInterval = null;
+    let displayedMessageIds = new Set(); // Track displayed messages to prevent duplicates
 
     // Function to poll for new agent messages
     async function pollForAgentMessages() {
@@ -537,21 +714,30 @@ function mountChatWidget(payload) {
 
             const data = await response.json();
             if (data.messages?.length) {
-                data.messages.forEach(msg => {
-                    // Only show new human agent messages (skip AI messages as they're already handled by send())
-                    if (msg.role === 'assistant' && msg.is_human_response) {
-                        add('assistant', msg.content, false); // false = don't save to history to avoid duplication
-                        lastMessageTime = msg.created_at;
+                let latestMessageTime = lastMessageTime;
+                let hasNewAgentMessage = false;
 
-                        // Flash the bubble if chat is closed to indicate new message
-                        if (panel.style.display === 'none') {
-                            flashBubble();
-                        }
-                    } else if (msg.role === 'assistant' || msg.role === 'user') {
-                        // Update timestamp for all messages to track polling position
-                        lastMessageTime = msg.created_at;
+                data.messages.forEach(msg => {
+                    // Update to the latest message timestamp
+                    if (!latestMessageTime || msg.created_at > latestMessageTime) {
+                        latestMessageTime = msg.created_at;
+                    }
+
+                    // Only show new human agent messages (skip AI messages as they're already handled by send())
+                    if (msg.role === 'assistant' && msg.is_human_response && !displayedMessageIds.has(msg.id)) {
+                        add('assistant', msg.content, false); // false = don't save to history to avoid duplication
+                        displayedMessageIds.add(msg.id); // Mark as displayed
+                        hasNewAgentMessage = true;
                     }
                 });
+
+                // Update lastMessageTime to prevent re-polling the same messages
+                lastMessageTime = latestMessageTime;
+
+                // Flash the bubble if chat is closed and there was a new agent message
+                if (hasNewAgentMessage && panel.style.display === 'none') {
+                    flashBubble();
+                }
             }
         } catch (error) {
             console.error('Error polling for agent messages:', error);

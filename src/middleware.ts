@@ -14,6 +14,7 @@ const isPublicRoute = createRouteMatcher([
     '/api/chat(.*)',
     '/api/escalate(.*)',
     '/api/feedback(.*)',
+    '/api/conversations/session/(.*)', // Allow widgets to poll for agent responses
 
     // Authentication endpoints
     '/api/signup(.*)',

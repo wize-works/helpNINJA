@@ -345,7 +345,7 @@ async function clearPendingEscalation(conversationId: string): Promise<void> {
 
 async function ensureConversation(tenantId: string, sessionId: string, siteId?: string | null) {
     const existing = await query<{ id: string }>(
-        'select id from public.conversations where tenant_id=$1 and session_id=$2 and site_id=$3 limit 1',
+        'select id from public.conversations where tenant_id=$1 and session_id=$2 and site_id=$3 order by created_at desc limit 1',
         [tenantId, sessionId, siteId]
     );
     if (existing.rows[0]?.id) return existing.rows[0].id;

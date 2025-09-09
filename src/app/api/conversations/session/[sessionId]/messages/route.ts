@@ -16,8 +16,30 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ sess
     const { sessionId } = await params;
 
     try {
-        let whereClause = 'session_id = $1';
-        const queryParams: (string | null)[] = [sessionId];
+        // First, find the conversation_id using the session_id (get the most recent one)
+        const conversation = await query<{ id: string }>(
+            'SELECT id FROM public.conversations WHERE session_id = $1 ORDER BY created_at DESC LIMIT 1',
+            [sessionId]
+        );
+
+        if (!conversation.rows[0]) {
+            const errorResponse = NextResponse.json({
+                error: 'Conversation not found',
+                messages: []
+            }, { status: 404 });
+
+            Object.entries(corsHeaders).forEach(([key, value]) => {
+                errorResponse.headers.set(key, value);
+            });
+
+            return errorResponse;
+        }
+
+        const conversationId = conversation.rows[0].id;
+
+        // Now fetch messages using conversation_id (this gets ALL messages, regardless of session_id population)
+        let whereClause = 'conversation_id = $1';
+        const queryParams: (string | null)[] = [conversationId];
 
         if (since) {
             whereClause += ' AND created_at > $2';
