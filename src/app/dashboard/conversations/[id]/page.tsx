@@ -304,7 +304,12 @@ export default async function ConversationDetailPage({ params }: { params: Promi
                                                 <i className="fa-duotone fa-solid fa-messages text-sm text-primary" />
                                             </div>
                                         </div>
-                                        <ConversationTranscript conversationId={convo.id} initialMessages={messages} total={total} escalations={escalations} />
+                                        <ConversationTranscript
+                                            conversationId={convo.id}
+                                            initialMessages={messages}
+                                            total={total}
+                                            escalations={escalations}
+                                        />
                                     </div>
                                 </div>
                             </StaggerChild>

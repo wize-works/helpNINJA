@@ -5,9 +5,10 @@ import { HoverScale } from '@/components/ui/animated-page';
 
 interface AgentResponseBoxProps {
     conversationId: string;
+    onResponseSent?: () => void;
 }
 
-export default function AgentResponseBox({ conversationId }: AgentResponseBoxProps) {
+export default function AgentResponseBox({ conversationId, onResponseSent }: AgentResponseBoxProps) {
     const [message, setMessage] = useState('');
     const [isLoading, setIsLoading] = useState(false);
     const [success, setSuccess] = useState(false);
@@ -33,8 +34,8 @@ export default function AgentResponseBox({ conversationId }: AgentResponseBoxPro
                 setMessage('');
                 setSuccess(true);
                 setTimeout(() => setSuccess(false), 3000);
-                // Refresh the page to show new message
-                window.location.reload();
+                // Notify parent component to refresh
+                onResponseSent?.();
             } else {
                 throw new Error(data.error || 'Failed to send response');
             }

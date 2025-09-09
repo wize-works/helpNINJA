@@ -13,13 +13,18 @@ export async function GET(req: NextRequest, ctx: Context) {
     const offset = parseInt(searchParams.get('offset') || '0', 10);
     const limit = Math.min(parseInt(searchParams.get('limit') || '50', 10), 200);
     const q = searchParams.get('q'); // optional server-side search (simple ILIKE)
+    const since = searchParams.get('since'); // for real-time polling
     if (!id) return NextResponse.json({ error: 'missing id' }, { status: 400 });
     try {
         const baseParams: unknown[] = [tenantId, id];
         let filter = '';
         if (q) {
             baseParams.push(`%${q}%`);
-            filter = ` AND content ILIKE $${baseParams.length}`;
+            filter += ` AND content ILIKE $${baseParams.length}`;
+        }
+        if (since) {
+            baseParams.push(since);
+            filter += ` AND created_at > $${baseParams.length}`;
         }
         // total count
         const totalRes = await query<{ count: number }>(`select count(*)::int as count from public.messages where tenant_id=$1 and conversation_id=$2${filter}`, baseParams);
