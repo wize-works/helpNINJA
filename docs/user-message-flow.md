@@ -1,7 +1,7 @@
 ````markdown
-# User Message Flow
+# User Message Flow (2023 Update)
 
-This document outlines the complete flow of a user message in the helpNINJA system, from initial submission in the widget through processing, RAG search, response generation, and potential escalation paths.
+This document outlines the complete flow of a user message in the helpNINJA system, from initial submission in the widget through processing, RAG search, response generation, and potential escalation paths. This version reflects the 2023 architectural updates with the centralized escalation service.
 
 ## Message Flow Diagram
 
@@ -25,26 +25,34 @@ flowchart TD
     M -->|Score < threshold| N["Trigger escalation\n(src/app/api/chat/route.ts)"]
     M -->|Score >= threshold| O["Return response to user\n(src/app/api/chat/route.ts)"]
     
-    N --> P["API: escalate endpoint\n(src/app/api/escalate/route.ts)"]
-    P --> Q{"Fetch active rules\n(src/app/api/escalate/route.ts)"}
+    %% Updated escalation flow with centralized service
+    N --> ESC["Centralized Escalation Service\n(src/lib/escalation-service.ts)"]
+    
+    %% The escalate API now uses the service
+    P["API: escalate endpoint\n(src/app/api/escalate/route.ts)"] --> ESC
+    
+    %% Escalation service handles rule evaluation
+    ESC --> Q{"Fetch active rules"}
     Q --> R{"Evaluate rules against message\n(src/lib/rule-engine.ts)"}
     
-    R -->|Rule matches| S["Trigger rule.matched webhook\n(src/lib/webhooks.ts)"]
-    R -->|No match| T["Use default integrations\n(src/app/api/escalate/route.ts)"]
+    R -->|Rule matches| S["Log rule match and fetch destinations"]
+    R -->|No match| T["Use default integrations"]
     
-    S --> U["Use rule destinations\n(src/app/api/escalate/route.ts)"]
-    U & T --> V["dispatchEscalation\n(src/lib/integrations/dispatch.ts)"]
+    %% Escalation service triggers webhooks as needed
+    ESC --> AD["Trigger escalation.triggered webhook\n(src/lib/webhooks.ts)"]
     
-    V --> W{"Integration type\n(src/lib/integrations/registry.ts)"}
+    %% Escalation service dispatches to integrations
+    S --> ESC2["Continue escalation processing"]
+    T --> ESC2
+    
+    ESC2 --> W{"Integration type\n(src/lib/integrations/registry.ts)"}
     W -->|Email| X["Send via Email provider\n(src/lib/integrations/providers/email.ts)"]
     W -->|Slack| Y["Send via Slack provider\n(src/lib/integrations/providers/slack.ts)"]
     W -->|Other| Z["Send via custom provider\n(src/lib/integrations/providers/*.ts)"]
     
-    X & Y & Z --> AA{"Success?\n(src/lib/integrations/dispatch.ts)"}
-    AA -->|Yes| AB["Update integration stats\n(src/lib/integrations/dispatch.ts)"]
-    AA -->|No| AC["Write to integration_outbox\n(src/app/api/integrations/outbox/process/route.ts)"]
-    
-    P --> AD["Trigger escalation.triggered webhook\n(src/lib/webhooks.ts)"]
+    X & Y & Z --> AA{"Success?\n(handled by escalation service)"}
+    AA -->|Yes| AB["Update integration stats"]
+    AA -->|No| AC["Write to integration_outbox\n(for retry later)"]
     
     O --> AE["Trigger message.sent webhook\n(src/lib/webhooks.ts)"]
     AE & AB & AC --> AF[End of flow]
@@ -71,28 +79,34 @@ flowchart TD
 
 ### Confidence Assessment
 10. **Threshold Check**: Evaluates if the confidence score meets minimum threshold (0.55) (`src/app/api/chat/route.ts`)
-11. **Below Threshold**: If confidence is low, triggers escalation flow (`src/app/api/chat/route.ts`)
+11. **Below Threshold**: If confidence is low, triggers escalation flow via the escalation service (`src/app/api/chat/route.ts`)
 12. **Above Threshold**: If confidence is acceptable, returns response to user (`src/app/api/chat/route.ts`)
 
-### Escalation Flow
-13. **Rule Evaluation** (`src/app/api/escalate/route.ts`): 
+### Escalation Flow (Updated Architecture)
+13. **Centralized Service**: All escalation handling is now managed by a centralized service (`src/lib/escalation-service.ts`)
+14. **Entry Points**: The service can be called from:
+    - Chat API when confidence is low or rule matches (`src/app/api/chat/route.ts`)
+    - Escalate API for direct escalation requests (`src/app/api/escalate/route.ts`)
+    - Webhooks system when processing webhook events (`src/lib/webhooks.ts`)
+15. **Rule Evaluation**: The service handles fetching and evaluation of rules:
     - Fetches active escalation rules for the tenant
-    - Evaluates each rule against the message context (`src/lib/rule-engine.ts`)
+    - Evaluates rules against the message context (`src/lib/rule-engine.ts`)
     - Rules are checked in priority order (highest first)
-14. **Webhooks**: Triggers `escalation.triggered` webhook event (`src/lib/webhooks.ts`)
-15. **Rule Matching**:
-    - If a rule matches, triggers `rule.matched` webhook (`src/lib/webhooks.ts`)
-    - Uses the rule's configured destinations for escalation
+16. **Webhooks Management**: The service manages webhook triggering to prevent duplicates
+17. **Destination Resolution**: The service resolves destinations from:
+    - Matched rule destinations
+    - Direct integration specification
+    - Tenant default integrations
 
 ### Integration Dispatch
-16. **Provider Selection**: Routes to appropriate integration provider (`src/lib/integrations/registry.ts`)
-17. **Delivery Attempt**: Attempts to deliver the escalation via selected provider (`src/lib/integrations/providers/*.ts`)
-18. **Outcome Tracking** (`src/lib/integrations/dispatch.ts`):
+18. **Provider Selection**: Routes to appropriate integration provider (`src/lib/integrations/registry.ts`)
+19. **Delivery Attempt**: Attempts to deliver the escalation via selected provider (`src/lib/integrations/providers/*.ts`)
+20. **Outcome Tracking**:
     - Success: Updates integration statistics
-    - Failure: Writes to integration_outbox for retry (`src/app/api/integrations/outbox/process/route.ts`)
+    - Failure: Writes to integration_outbox for retry
 
 ### Final Webhook Events
-19. **Event Notifications**: Triggers appropriate webhooks for the entire process (`src/lib/webhooks.ts`):
+21. **Event Notifications**: Triggers appropriate webhooks for the entire process (`src/lib/webhooks.ts`):
     - `message.sent` when assistant responds
     - `escalation.triggered` when escalation begins
     - `rule.matched` when a specific rule matches
@@ -103,5 +117,5 @@ flowchart TD
 - **Rule Matching Problems**: Verify rule conditions are correctly formatted
 - **Integration Format Mismatch**: Ensure destination format uses the expected field names (`integration_id` not `integrationId`)
 
-This diagram and explanation cover the complete lifecycle of a user message in the helpNINJA system.
+This diagram and explanation cover the complete lifecycle of a user message in the helpNINJA system with the centralized escalation service architecture.
 ````

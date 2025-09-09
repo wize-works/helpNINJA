@@ -1,77 +1,117 @@
-# helpNINJA API Documentation
+# helpNINJA Documentation Hub
 
-This directory contains comprehensive API documentation for the helpNINJA platform.
+*Complete documentation for the helpNINJA AI customer support platform*
 
-## Files
+## 🚀 Quick Start
 
-### OpenAPI Specifications
-- **`../public/openapi.yaml`** - Complete OpenAPI 3.0 specification in YAML format
-- **`../public/openapi.json`** - Complete OpenAPI 3.0 specification in JSON format  
-- **`../public/api-docs.html`** - Interactive HTML documentation using Swagger UI
+### For Developers & Integrators
+- **[Widget Integration Guide](widget-comprehensive-guide.md)** - Complete widget setup and customization
+- **[AI Agent Integration Guide](ai-agent-integration-guide.md)** - For AI assistants and agents
+- **[Developer API Reference](developer-api-specification.md)** - Detailed API documentation
+- **[Interactive API Docs](api-docs.html)** - Swagger UI interface
 
-### Integration Guides
-- **`ai-agent-integration-guide.md`** - Comprehensive guide for AI assistants and developers
-- **`developer-api-specification.md`** - Detailed API reference with examples
+### For System Architecture
+- **[User Message Flow](user-message-flow.md)** - Complete system message processing flow
+- **[Complete Features Inventory](complete-features.md)** - All implemented features
+- **[Development Documentation](development/)** - Technical implementation details
 
-## Quick Start
+---
 
-### Interactive Documentation
-Access the interactive API documentation at:
-- **Production**: https://helpninja.app/api-docs.html
-- **Development**: http://localhost:3001/api-docs.html
+## 📚 Documentation Categories
 
-Or download the OpenAPI specifications:
-- **JSON Format**: https://helpninja.app/openapi.json
-- **YAML Format**: https://helpninja.app/openapi.yaml
+### 🔌 Integration & Setup
+| Document | Purpose | Audience |
+|----------|---------|----------|
+| [**Widget Comprehensive Guide**](widget-comprehensive-guide.md) | Complete widget integration for all platforms | Developers, Web Admins |
+| [**AI Agent Integration**](ai-agent-integration-guide.md) | AI assistant integration patterns | AI Engineers, Developers |
+| [**Developer API Specification**](developer-api-specification.md) | Detailed API reference and examples | Backend Developers |
 
-### Import into Tools
-Use the OpenAPI specs with your favorite API tools:
+### 🏗️ System Architecture  
+| Document | Purpose | Audience |
+|----------|---------|----------|
+| [**User Message Flow**](user-message-flow.md) | Complete message processing pipeline | Developers, System Architects |
+| [**Complete Features**](complete-features.md) | Feature inventory and implementation status | Product, Engineering |
+| [**Development Documentation**](development/) | Technical implementation details | Engineering Team |
 
-- **Postman**: Import `openapi.json` to generate a collection
-- **Insomnia**: Import `openapi.yaml` for request templates  
-- **VS Code REST Client**: Use with OpenAPI extensions
-- **curl**: Generate curl commands from the spec
+### 📋 Product & Business
+| Document | Purpose | Audience |
+|----------|---------|----------|
+| [**PRD (Product Requirements)**](prd.md) | Product requirements and scope | Product, Engineering |
+| [**Marketing Content**](marketing-content.md) | Marketing copy and messaging | Marketing Team |
+| [**Pricing Strategy**](pricing.md) | Pricing model and plans | Business, Sales |
 
-## API Overview
+### 🎨 Design & UX
+| Document | Purpose | Audience |
+|----------|---------|----------|
+| [**UI Recommendations**](ui-recommendations.md) | Interface design guidelines | Design, Frontend |
+| [**Screenshot Capture Guide**](screenshot-capture-guide.md) | Documentation asset creation | Content, Marketing |
+| [**Sitemap**](sitemap.md) | Site structure and navigation | Product, UX |
 
-The helpNINJA API provides access to:
+---
+
+## 🔗 Interactive Resources
+
+### Live API Documentation
+- **[Interactive API Docs](https://helpninja.app/api-docs.html)** - Swagger UI with live testing
+- **[OpenAPI JSON](openapi.json)** - Machine-readable API specification  
+- **[OpenAPI YAML](openapi.yaml)** - Human-readable API specification
+
+### Import into Development Tools
+- **Postman**: Import [`openapi.json`](openapi.json) to generate request collection
+- **Insomnia**: Import [`openapi.yaml`](openapi.yaml) for request templates
+- **VS Code**: Use with REST Client and OpenAPI extensions
+- **curl**: Generate curl commands from the specifications
+
+---
+
+## 📖 API Overview & Usage
+
+The helpNINJA API provides comprehensive functionality for AI customer support:
 
 ### 🤖 **Chat & Conversations**
 - Send messages to AI assistant (`/chat`, `/chat-api`)
-- Create and manage conversations (`/conversations`)
-- RAG-powered responses with intent classification
+- RAG-powered responses with intent classification  
 - Automatic escalation for low-confidence answers
+- Conversation management and persistence
 
-### 📄 **Content Management**  
-- Ingest content from URLs, sitemaps (`/ingest`)
-- Manage document sources (`/sources`)
-- Content chunking and embedding generation
-- PostgreSQL + pgvector storage
+### 📄 **Content Management**
+- Ingest content from URLs and sitemaps (`/ingest`) 
+- Document chunking and embedding generation
+- PostgreSQL + pgvector hybrid search
+- Source management and analytics
 
-### 🔔 **Webhooks**
+### 🔔 **Webhooks & Events**
 - Real-time event notifications (`/webhooks`)
-- Signature verification with HMAC SHA-256
-- Events: conversation.started, message.sent, escalation.triggered, document.ingested
+- HMAC SHA-256 signature verification
+- Events: conversation.started, message.sent, escalation.triggered
 
-### 📊 **Analytics**
-- Usage statistics and limits (`/usage`)
-- Conversation metrics and trends (`/usage-stats`)
-- Response confidence tracking
+### 📊 **Usage & Analytics**
+- Usage limits and tracking (`/usage`)
+- Conversation metrics (`/usage-stats`)
+- Response confidence analytics
 
-### 💰 **Billing**
+### 💰 **Billing & Plans**
 - Stripe checkout sessions (`/billing/checkout`)
 - Customer portal access (`/billing/portal`)
-- Plan management (starter, pro, agency)
+- Multi-tier plan management
 
-### 🎨 **Widget**
+### 🎨 **Widget Delivery**
 - JavaScript widget delivery (`/widget`)
-- Cross-domain CORS support
 - Site-specific configuration
+- Cross-domain CORS support
 
-## Authentication
+---
 
-The API uses API keys for authentication:
+## 🔐 Authentication & Security
 
+### API Key Types
+```bash
+pk_*  # Public keys (client-side safe, widget integration)
+sk_*  # Secret keys (server-side only, full API access)  
+whk_* # Webhook keys (webhook endpoint authentication)
+```
+
+### Authentication Methods
 ```bash
 # Bearer Token (recommended)
 curl -H "Authorization: Bearer sk_your_api_key" \
@@ -80,94 +120,18 @@ curl -H "Authorization: Bearer sk_your_api_key" \
 # API Key Header
 curl -H "X-API-Key: sk_your_api_key" \
   "https://helpninja.app/api/conversations"
-
-# Query Parameter (less secure)
-curl "https://helpninja.app/api/usage?api_key=sk_your_api_key"
 ```
 
-### API Key Types
-- `pk_*` - Public keys (client-side safe, widget integration)
-- `sk_*` - Secret keys (server-side only, full API access)
-- `whk_*` - Webhook keys (webhook endpoint authentication)
-
-## Rate Limiting
-
-- **Default**: 1,000 requests per hour per API key
+### Rate Limiting
+- **Limit**: 1,000 requests per hour per API key
 - **Headers**: Rate limit info in `X-RateLimit-*` headers
-- **429 Response**: When limit exceeded with retry information
+- **Response**: 429 when exceeded with retry information
 
-## Error Handling
+---
 
-All errors use consistent JSON format:
+## 🚀 Quick Integration Examples
 
-```json
-{
-  "error": "error_code",
-  "message": "Human readable error message",
-  "details": {
-    "field": "field_name", 
-    "code": "validation_code"
-  }
-}
-```
-
-### Common HTTP Status Codes
-- `400` - Bad Request (invalid parameters)
-- `401` - Unauthorized (invalid/missing API key)
-- `402` - Payment Required (usage limit exceeded)
-- `403` - Forbidden (insufficient permissions)
-- `404` - Not Found (resource doesn't exist)
-- `429` - Rate Limited (too many requests)
-- `500` - Internal Server Error
-
-## Webhooks
-
-helpNINJA supports real-time webhooks for key events:
-
-### Available Events
-- `conversation.started` - New conversation initiated
-- `message.sent` - Message sent (user or assistant)
-- `escalation.triggered` - AI escalated to human support
-- `document.ingested` - Content successfully indexed
-
-### Signature Verification
-Webhooks are signed using HMAC SHA-256:
-
-```javascript
-const crypto = require('crypto');
-
-function verifyWebhookSignature(payload, signature, secret) {
-  const computedSignature = crypto
-    .createHmac('sha256', secret)
-    .update(payload, 'utf8')
-    .digest('hex');
-    
-  return `sha256=${computedSignature}` === signature;
-}
-```
-
-### Example Webhook Payload
-
-```json
-{
-  "event": "escalation.triggered",
-  "timestamp": "2025-08-13T10:32:00Z",
-  "tenant_id": "tenant-uuid",
-  "data": {
-    "conversation_id": "conv-uuid",
-    "reason": "low_confidence",
-    "confidence": 0.45,
-    "user_message": "How do I configure the flux capacitor?",
-    "assistant_response": "I'm not sure about that. Let me connect you with support."
-  }
-}
-```
-
-## Widget Integration
-
-### Quick Setup
-Add to any website:
-
+### Widget Integration
 ```html
 <script>
   window.helpNINJAConfig = {
@@ -176,87 +140,62 @@ Add to any website:
     verificationToken: "your_verification_token",
     voice: "friendly"
   };
-  var s = document.createElement("script");
-  s.src = "https://helpninja.app/api/widget?t=pk_your_tenant_key&s=your_site_id&k=your_verification_token";
-  s.async = true;
-  document.head.appendChild(s);
 </script>
+<script src="https://helpninja.app/api/widget?t=pk_your_tenant_key&s=your_site_id&k=your_verification_token" async></script>
 ```
 
-### Configuration Options
-- **Voice**: friendly, professional, casual, formal
-- **Theme**: light, dark, auto
-- **Position**: bottom-right, bottom-left, top-right, top-left
-- **Colors**: Custom primary color and branding
-- **Behavior**: Auto-open delay, welcome message
-
-## SDKs and Examples
-
-### JavaScript/Node.js
+### API Usage (JavaScript)
 ```javascript
-class HelpNinjaSDK {
-  constructor(apiKey) {
-    this.apiKey = apiKey;
-    this.baseUrl = 'https://helpninja.app/api';
-  }
-  
-  async chat(tenantId, sessionId, message) {
-    const response = await fetch(`${this.baseUrl}/chat`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ tenantId, sessionId, message })
-    });
-    return response.json();
-  }
-}
+// Send a chat message
+const response = await fetch('https://helpninja.app/api/chat', {
+  method: 'POST',
+  headers: {
+    'Authorization': 'Bearer sk_your_api_key',
+    'Content-Type': 'application/json'
+  },
+  body: JSON.stringify({
+    tenantId: 'your_tenant_id',
+    sessionId: 'session_uuid',
+    message: 'How can I help?'
+  })
+});
 ```
 
-### Python
+### Python SDK Example
 ```python
 import requests
 
-class HelpNinjaSDK:
-    def __init__(self, api_key):
-        self.api_key = api_key
-        self.base_url = 'https://helpninja.app/api'
-        self.headers = {
-            'Authorization': f'Bearer {api_key}',
-            'Content-Type': 'application/json'
-        }
-    
-    def get_usage(self):
-        response = requests.get(
-            f'{self.base_url}/usage',
-            headers=self.headers
-        )
-        return response.json()
+headers = {'Authorization': 'Bearer sk_your_api_key'}
+usage = requests.get('https://helpninja.app/api/usage', headers=headers)
+print(usage.json())
 ```
 
-## Development
+---
 
-### Local Testing
-```bash
-# Test against local development server
-curl -H "Authorization: Bearer sk_test_key" \
-  "http://localhost:3001/api/usage"
-```
+## 🌐 Environment & Deployment
 
-### Environment URLs
+### API Endpoints
 - **Production**: `https://helpninja.app/api`
 - **Development**: `http://localhost:3001/api`
 
-## Support
+### Status & Monitoring
+- **Status Page**: [status.helpninja.app](https://status.helpninja.app)
+- **Health Check**: `GET /api/health`
 
-For API support or questions:
-- **Documentation**: Full API reference in `developer-api-specification.md`
-- **Integration Guide**: AI-friendly guide in `ai-agent-integration-guide.md`
-- **Support**: Contact via https://helpninja.app/support
+---
 
-## Version History
+## 📞 Support & Resources
 
-- **v1.0.0** - Initial API release with core functionality
-  - Chat and conversation management
-  - Content ingestion and RAG search
-  - Webhook system
-  - Widget integration
-  - Stripe billing integration
+### Documentation Links
+- **[Complete Widget Guide](widget-comprehensive-guide.md)** - Comprehensive widget integration
+- **[API Reference](developer-api-specification.md)** - Detailed endpoint documentation
+- **[Message Flow](user-message-flow.md)** - System architecture overview
+
+### Getting Help
+- **Support Portal**: [helpninja.app/support](https://helpninja.app/support)
+- **Status Updates**: [status.helpninja.app](https://status.helpninja.app)
+- **Developer Community**: [GitHub Discussions](https://github.com/wize-works/helpNINJA/discussions)
+
+---
+
+*Last updated: September 2025 | Version: 1.0.0*
