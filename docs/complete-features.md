@@ -41,6 +41,18 @@ Core features (present)
 - Chat + RAG + escalation
   - /api/chat (CORS enabled) resolves tenant, gates usage, performs searchHybrid, calls OpenAI, persists messages, enqueues escalation under a confidence threshold using the centralized escalation service.
   - Files: src/app/api/chat/route.ts, src/lib/rag.ts, src/lib/usage.ts, src/lib/escalation-service.ts
+- **Human Agent Response System (NEW - Complete implementation)**
+  - **Real-time human takeover**: Dashboard agents can respond directly to customer conversations with immediate widget delivery
+  - **Dashboard real-time polling**: Conversation pages update every 2 seconds to show new customer messages automatically
+  - **Widget real-time polling**: Widget polls every 3 seconds for human agent responses with visual flash notifications
+  - **Message distinction**: Clear visual badges distinguish AI responses from human agent responses in both dashboard and widget
+  - **Database schema**: Added is_human_response, agent_id, session_id columns to messages table for proper tracking
+  - **Conversation status tracking**: Conversations automatically marked as 'human_handling' when agents respond
+  - **CORS support**: Cross-origin widget polling works across different domains with proper CORS headers
+  - **Deduplication**: Smart message deduplication prevents duplicate keys and ensures smooth real-time updates
+  - **Authentication**: Uses Clerk session-based authentication for dashboard agents with tenant validation
+  - **Auto-scroll**: Dashboard and widget automatically scroll to new messages for optimal UX
+  - Files: src/app/api/conversations/[id]/respond/route.ts (agent response API), src/app/api/conversations/session/[sessionId]/messages/route.ts (widget polling), src/components/agent-response-box.tsx (response UI), src/components/conversation-transcript.tsx (real-time updates), src/app/dashboard/conversations/[id]/page.tsx (conversation detail), src/sql/069_human_agent_support.sql (database migration)
 - Hybrid RAG search
   - Vector: pgvector similarity on chunks.embedding; Lexical: tsvector rank; merged and deduped.
   - Files: src/lib/rag.ts; relies on public.chunks(url, content, embedding vector, tsv tsvector, tenant_id)
