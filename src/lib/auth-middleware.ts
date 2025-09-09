@@ -211,14 +211,14 @@ export async function authenticateRequest(
     // Fall back to session-based authentication if allowed
     if (allowSessionAuth) {
         try {
-            // Use strict tenant resolver tied to authenticated session/org mapping
-            const { getTenantIdStrict } = await import('@/lib/tenant-resolve');
-            const tenantId = await getTenantIdStrict();
+            // Use the real user resolver to get both userId and tenantId
+            const { resolveUserAndTenant } = await import('@/lib/notifications');
+            const { userId, tenantId } = await resolveUserAndTenant();
 
             return {
                 success: true,
                 tenantId,
-                userId: 'session-user' // Placeholder - in real app this would come from session
+                userId
             };
         } catch {
             return {

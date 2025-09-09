@@ -6,22 +6,22 @@ export const runtime = 'nodejs';
 
 interface RespondRequest {
     message: string;
-    agentId?: string; // From auth when implemented
 }
 
 async function handleRespond(req: AuthenticatedRequest, ...args: unknown[]) {
     const { params } = args[0] as { params: Promise<{ id: string }> };
     try {
         const { id: conversationId } = await params;
-        const { message, agentId } = await req.json() as RespondRequest;
+        const { message } = await req.json() as RespondRequest;
 
         // Validate inputs
         if (!message?.trim()) {
             return NextResponse.json({ error: 'Message is required' }, { status: 400 });
         }
 
-        // Get tenant ID from authenticated request
+        // Get tenant ID and user ID from authenticated request
         const tenantId = req.tenantId;
+        const agentId = req.userId; // Use the authenticated user's ID as the agent ID
 
         // Get conversation and validate tenant access
         const convo = await query<{ tenant_id: string; session_id: string; site_id: string | null }>(
