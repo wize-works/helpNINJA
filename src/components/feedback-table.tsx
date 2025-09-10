@@ -54,17 +54,17 @@ const STATUS_STYLES = {
     duplicate: { badge: 'badge-ghost', text: 'text-base-content/60' }
 };
 
-export function FeedbackTable({ tenantId }: FeedbackTableProps) {
+export function FeedbackTable({ }: FeedbackTableProps) {
     const [feedback, setFeedback] = useState<FeedbackItem[]>([]);
     const [loading, setLoading] = useState(true);
     const [selectedItem, setSelectedItem] = useState<FeedbackItem | null>(null);
     const [page, setPage] = useState(1);
     const [totalPages, setTotalPages] = useState(1);
     const [total, setTotal] = useState(0);
-    
+
     const searchParams = useSearchParams();
     const router = useRouter();
-    
+
     const typeFilter = searchParams.get('type') || '';
     const statusFilter = searchParams.get('status') || '';
     const priorityFilter = searchParams.get('priority') || '';
@@ -77,7 +77,7 @@ export function FeedbackTable({ tenantId }: FeedbackTableProps) {
                 page: page.toString(),
                 limit: '10'
             });
-            
+
             if (typeFilter) params.append('type', typeFilter);
             if (statusFilter) params.append('status', statusFilter);
             if (priorityFilter) params.append('priority', priorityFilter);
@@ -186,110 +186,232 @@ export function FeedbackTable({ tenantId }: FeedbackTableProps) {
 
     return (
         <div className="space-y-4">
-            {/* Feedback List */}
-            <div className="space-y-3">
-                {feedback.map((item) => {
-                    const typeInfo = FEEDBACK_TYPES[item.type];
-                    const priorityStyle = PRIORITY_STYLES[item.priority];
-                    const statusStyle = STATUS_STYLES[item.status];
+            {/* Desktop Table */}
+            <div className="hidden lg:block card bg-base-100 rounded-2xl shadow-sm hover:shadow-md transition-all duration-300">
+                <div className="p-6">
+                    <div className="flex items-center justify-between mb-6">
+                        <div>
+                            <h3 className="text-lg font-semibold text-base-content">Feedback Management</h3>
+                            <p className="text-sm text-base-content/60">User feedback submissions and requests</p>
+                        </div>
+                        <div className="flex items-center gap-2 text-sm text-base-content/60">
+                            <i className="fa-duotone fa-solid fa-comments text-xs" aria-hidden />
+                            <span>{feedback.length} items</span>
+                        </div>
+                    </div>
+                    <div className="overflow-hidden rounded-xl border border-base-200/60">
+                        <table className="w-full">
+                            <thead className="bg-base-200/40">
+                                <tr>
+                                    <th className="text-left p-4 text-sm font-semibold text-base-content/80">Feedback</th>
+                                    <th className="text-left p-4 text-sm font-semibold text-base-content/80">Type</th>
+                                    <th className="text-left p-4 text-sm font-semibold text-base-content/80">Priority</th>
+                                    <th className="text-left p-4 text-sm font-semibold text-base-content/80">Status</th>
+                                    <th className="text-left p-4 text-sm font-semibold text-base-content/80">Submitted</th>
+                                    <th className="text-right p-4 text-sm font-semibold text-base-content/80">Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody className="divide-y divide-base-200/60">
+                                {feedback.map((item) => {
+                                    const typeInfo = FEEDBACK_TYPES[item.type];
+                                    const priorityStyle = PRIORITY_STYLES[item.priority];
+                                    const statusStyle = STATUS_STYLES[item.status];
 
-                    return (
-                        <div
-                            key={item.id}
-                            className="border border-base-300 rounded-xl p-4 hover:border-primary/30 hover:shadow-sm transition-all duration-200 cursor-pointer"
-                            onClick={() => setSelectedItem(item)}
-                        >
-                            <div className="flex items-start gap-4">
-                                {/* Type Icon */}
-                                <div className="w-10 h-10 rounded-lg bg-base-200 flex items-center justify-center flex-shrink-0">
-                                    <i className={`fa-duotone fa-solid ${typeInfo.icon} ${typeInfo.color}`} />
-                                </div>
-
-                                {/* Content */}
-                                <div className="flex-1 min-w-0">
-                                    <div className="flex items-start justify-between gap-4">
-                                        <div className="flex-1 min-w-0">
-                                            <h4 className="font-medium text-base-content truncate mb-1">
-                                                {item.title}
-                                            </h4>
-                                            <p className="text-sm text-base-content/70 line-clamp-2 mb-2">
-                                                {item.description}
-                                            </p>
-                                            
-                                            {/* Metadata */}
-                                            <div className="flex items-center gap-4 text-xs text-base-content/60">
-                                                <span>{getTimeAgo(item.created_at)}</span>
-                                                {item.user_name && (
-                                                    <span className="flex items-center gap-1">
-                                                        <i className="fa-duotone fa-solid fa-user" />
-                                                        {item.user_name}
-                                                    </span>
-                                                )}
-                                                {item.site_domain && (
-                                                    <span className="flex items-center gap-1">
-                                                        <i className="fa-duotone fa-solid fa-globe" />
-                                                        {item.site_domain}
-                                                    </span>
-                                                )}
-                                                {item.escalated_at && (
-                                                    <span className="flex items-center gap-1 text-warning">
-                                                        <i className="fa-duotone fa-solid fa-bolt" />
-                                                        Escalated
-                                                    </span>
-                                                )}
-                                            </div>
-                                        </div>
-
-                                        {/* Status and Priority */}
-                                        <div className="flex flex-col items-end gap-2 flex-shrink-0">
-                                            <div className="flex items-center gap-2">
-                                                <div className={`badge badge-sm ${priorityStyle.badge}`}>
-                                                    {item.priority}
+                                    return (
+                                        <tr key={item.id} className="hover:bg-base-200/30 hover:scale-[1.002] transition-all duration-200">
+                                            <td className="p-4">
+                                                <div className="flex items-start gap-3">
+                                                    <div className="w-8 h-8 bg-base-200/60 rounded-lg flex items-center justify-center flex-shrink-0">
+                                                        <i className={`fa-duotone fa-solid ${typeInfo.icon} text-sm ${typeInfo.color}`} />
+                                                    </div>
+                                                    <div className="min-w-0 flex-1">
+                                                        <div className="font-medium text-base-content truncate mb-1" title={item.title}>
+                                                            {item.title}
+                                                        </div>
+                                                        <div className="text-sm text-base-content/60 line-clamp-2 mb-2">
+                                                            {item.description}
+                                                        </div>
+                                                        <div className="flex items-center gap-3 text-xs text-base-content/50">
+                                                            {item.user_name && (
+                                                                <span className="flex items-center gap-1">
+                                                                    <i className="fa-duotone fa-solid fa-user text-[10px]" />
+                                                                    {item.user_name}
+                                                                </span>
+                                                            )}
+                                                            {item.site_domain && (
+                                                                <span className="flex items-center gap-1">
+                                                                    <i className="fa-duotone fa-solid fa-globe text-[10px]" />
+                                                                    {item.site_domain}
+                                                                </span>
+                                                            )}
+                                                            {item.escalated_at && (
+                                                                <span className="flex items-center gap-1 text-warning">
+                                                                    <i className="fa-duotone fa-solid fa-bolt text-[10px]" />
+                                                                    Escalated
+                                                                </span>
+                                                            )}
+                                                        </div>
+                                                    </div>
                                                 </div>
-                                                <div className={`badge badge-sm ${statusStyle.badge}`}>
-                                                    {item.status.replace('_', ' ')}
+                                            </td>
+                                            <td className="p-4">
+                                                <div className="flex items-center gap-2 px-2 py-1 bg-base-200/60 text-base-content/80 rounded-md w-fit">
+                                                    <i className={`fa-duotone fa-solid ${typeInfo.icon} text-xs ${typeInfo.color}`} />
+                                                    <span className="text-sm font-medium">{typeInfo.label}</span>
                                                 </div>
-                                            </div>
-                                            
-                                            {/* Quick actions */}
-                                            <div className="flex items-center gap-1">
+                                            </td>
+                                            <td className="p-4">
+                                                <div className={`inline-flex items-center gap-1 px-2 py-1 rounded-md text-xs font-medium ${priorityStyle.badge}`}>
+                                                    {item.priority === 'urgent' && <i className="fa-duotone fa-solid fa-exclamation text-[10px]" />}
+                                                    {item.priority === 'high' && <i className="fa-duotone fa-solid fa-arrow-up text-[10px]" />}
+                                                    {item.priority === 'medium' && <i className="fa-duotone fa-solid fa-minus text-[10px]" />}
+                                                    {item.priority === 'low' && <i className="fa-duotone fa-solid fa-arrow-down text-[10px]" />}
+                                                    <span className="capitalize">{item.priority}</span>
+                                                </div>
+                                            </td>
+                                            <td className="p-4">
+                                                <div className={`inline-flex items-center gap-1 px-2 py-1 rounded-md text-xs font-medium ${statusStyle.badge}`}>
+                                                    {item.status === 'completed' && <i className="fa-duotone fa-solid fa-check text-[10px]" />}
+                                                    {item.status === 'in_progress' && <i className="fa-duotone fa-solid fa-spinner text-[10px]" />}
+                                                    {item.status === 'rejected' && <i className="fa-duotone fa-solid fa-times text-[10px]" />}
+                                                    <span className="capitalize">{item.status.replace('_', ' ')}</span>
+                                                </div>
+                                            </td>
+                                            <td className="p-4">
+                                                <div className="text-sm text-base-content">
+                                                    {new Date(item.created_at).toLocaleDateString('en-US', {
+                                                        month: 'short',
+                                                        day: 'numeric',
+                                                        year: 'numeric'
+                                                    })}
+                                                </div>
+                                                <div className="text-xs text-base-content/60 mt-0.5">
+                                                    {getTimeAgo(item.created_at)}
+                                                </div>
+                                            </td>
+                                            <td className="p-4 text-right space-x-2 whitespace-nowrap">
+                                                <button
+                                                    onClick={() => setSelectedItem(item)}
+                                                    className="inline-flex items-center gap-1 px-2 py-1 bg-primary/10 hover:bg-primary/20 text-primary rounded-md text-xs font-medium transition-colors"
+                                                >
+                                                    <i className="fa-duotone fa-solid fa-eye text-[10px]" /> View
+                                                </button>
                                                 {item.status === 'open' && (
                                                     <button
                                                         onClick={(e) => {
                                                             e.stopPropagation();
                                                             updateFeedbackStatus(item.id, 'in_review');
                                                         }}
-                                                        className="btn btn-xs btn-ghost"
-                                                        title="Mark as in review"
+                                                        className="inline-flex items-center gap-1 px-2 py-1 bg-info/10 hover:bg-info/20 text-info rounded-md text-xs font-medium transition-colors"
                                                     >
-                                                        <i className="fa-duotone fa-solid fa-eye" />
+                                                        <i className="fa-duotone fa-solid fa-eye text-[10px]" /> Review
                                                     </button>
                                                 )}
-                                                
                                                 {(item.status === 'in_review' || item.status === 'in_progress') && (
                                                     <button
                                                         onClick={(e) => {
                                                             e.stopPropagation();
                                                             updateFeedbackStatus(item.id, 'completed');
                                                         }}
-                                                        className="btn btn-xs btn-success"
-                                                        title="Mark as completed"
+                                                        className="inline-flex items-center gap-1 px-2 py-1 bg-success/10 hover:bg-success/20 text-success rounded-md text-xs font-medium transition-colors"
                                                     >
-                                                        <i className="fa-duotone fa-solid fa-check" />
+                                                        <i className="fa-duotone fa-solid fa-check text-[10px]" /> Complete
                                                     </button>
                                                 )}
+                                            </td>
+                                        </tr>
+                                    );
+                                })}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            {/* Mobile/Tablet Cards */}
+            <div className="lg:hidden space-y-4">
+                {feedback.map((item) => {
+                    const typeInfo = FEEDBACK_TYPES[item.type];
+                    const priorityStyle = PRIORITY_STYLES[item.priority];
+                    const statusStyle = STATUS_STYLES[item.status];
+
+                    return (
+                        <div key={item.id} className="card bg-base-100 rounded-2xl shadow-sm hover:shadow-md transition-all duration-300 cursor-pointer">
+                            <div className="p-6">
+                                <div className="flex items-start justify-between mb-4">
+                                    <div className="flex items-center gap-3 flex-1 min-w-0">
+                                        <div className="w-10 h-10 bg-base-200/60 rounded-xl flex items-center justify-center flex-shrink-0">
+                                            <i className={`fa-duotone fa-solid ${typeInfo.icon} text-lg ${typeInfo.color}`} />
+                                        </div>
+                                        <div className="min-w-0 flex-1">
+                                            <h3 className="font-semibold text-base-content mb-1 truncate" title={item.title}>
+                                                {item.title}
+                                            </h3>
+                                            <div className="flex items-center gap-2">
+                                                <span className={`badge badge-xs ${statusStyle.badge}`}>
+                                                    {item.status.replace('_', ' ')}
+                                                </span>
+                                                <span className={`badge badge-xs ${priorityStyle.badge}`}>
+                                                    {item.priority}
+                                                </span>
                                             </div>
+                                        </div>
+                                    </div>
+                                    <div className="text-xs text-base-content/60 text-right">
+                                        {getTimeAgo(item.created_at)}
+                                    </div>
+                                </div>
+
+                                <div className="space-y-3">
+                                    <div className="bg-base-200/40 rounded-xl p-3 border border-base-300/40">
+                                        <div className="flex items-center gap-2 mb-2">
+                                            <i className="fa-duotone fa-solid fa-quote-left text-xs text-base-content/60" />
+                                            <span className="text-xs font-medium text-base-content/60 uppercase tracking-wide">Description</span>
+                                        </div>
+                                        <div className="text-sm text-base-content/80 line-clamp-3">
+                                            {item.description}
+                                        </div>
+                                    </div>
+
+                                    <div className="flex items-center justify-between">
+                                        <div className="flex items-center gap-3">
+                                            <div className="flex items-center gap-2 px-3 py-2 bg-base-200/60 text-base-content/70 rounded-lg">
+                                                <i className={`fa-duotone fa-solid ${typeInfo.icon} text-xs ${typeInfo.color}`} />
+                                                <span className="text-xs font-medium">{typeInfo.label}</span>
+                                            </div>
+                                            {item.user_name && (
+                                                <div className="flex items-center gap-1 px-3 py-2 bg-info/10 text-info rounded-lg">
+                                                    <i className="fa-duotone fa-solid fa-user text-xs" />
+                                                    <span className="text-xs font-medium truncate max-w-[100px]">
+                                                        {item.user_name}
+                                                    </span>
+                                                </div>
+                                            )}
+                                            {item.site_domain && (
+                                                <div className="flex items-center gap-1 px-3 py-2 bg-base-200/60 text-base-content/70 rounded-lg">
+                                                    <i className="fa-duotone fa-solid fa-globe text-xs" />
+                                                    <span className="text-xs font-medium truncate max-w-[100px]">
+                                                        {item.site_domain}
+                                                    </span>
+                                                </div>
+                                            )}
+                                        </div>
+                                        <div className="flex items-center gap-2">
+                                            <button
+                                                onClick={() => setSelectedItem(item)}
+                                                className="flex items-center gap-2 px-3 py-2 bg-primary/10 hover:bg-primary/20 text-primary rounded-lg text-sm font-medium transition-colors"
+                                            >
+                                                <i className="fa-duotone fa-solid fa-eye text-xs" />
+                                                View
+                                            </button>
                                         </div>
                                     </div>
 
                                     {/* Tags */}
                                     {item.tags && item.tags.length > 0 && (
-                                        <div className="flex items-center gap-1 mt-2">
-                                            {item.tags.slice(0, 3).map((tag, index) => (
-                                                <span
-                                                    key={index}
-                                                    className="badge badge-outline badge-xs"
-                                                >
+                                        <div className="flex flex-wrap gap-1 pt-2 border-t border-base-300/40">
+                                            {item.tags.slice(0, 3).map((tag, tagIndex) => (
+                                                <span key={tagIndex} className="badge badge-outline badge-xs">
                                                     {tag}
                                                 </span>
                                             ))}
@@ -313,7 +435,7 @@ export function FeedbackTable({ tenantId }: FeedbackTableProps) {
                     <div className="text-sm text-base-content/60">
                         Showing {((page - 1) * 10) + 1} to {Math.min(page * 10, total)} of {total} items
                     </div>
-                    
+
                     <div className="join">
                         <button
                             className="join-item btn btn-sm"
@@ -322,11 +444,11 @@ export function FeedbackTable({ tenantId }: FeedbackTableProps) {
                         >
                             <i className="fa-duotone fa-solid fa-chevron-left" />
                         </button>
-                        
+
                         {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
                             const pageNum = Math.max(1, Math.min(totalPages - 4, page - 2)) + i;
                             if (pageNum > totalPages) return null;
-                            
+
                             return (
                                 <button
                                     key={pageNum}
@@ -337,7 +459,7 @@ export function FeedbackTable({ tenantId }: FeedbackTableProps) {
                                 </button>
                             );
                         })}
-                        
+
                         <button
                             className="join-item btn btn-sm"
                             disabled={page >= totalPages}
@@ -455,8 +577,8 @@ function FeedbackDetailModal({ feedback, onClose, onUpdate }: FeedbackDetailModa
                                     )}
                                     {feedback.user_email && (
                                         <p className="text-sm">
-                                            <span className="font-medium">Email:</span> 
-                                            <a 
+                                            <span className="font-medium">Email:</span>
+                                            <a
                                                 href={`mailto:${feedback.user_email}`}
                                                 className="text-primary hover:underline ml-1"
                                             >
@@ -521,7 +643,7 @@ function FeedbackDetailModal({ feedback, onClose, onUpdate }: FeedbackDetailModa
                         <div className="text-sm text-base-content/60">
                             ID: {feedback.id.slice(-8)}
                         </div>
-                        
+
                         <div className="flex items-center gap-2">
                             <select
                                 className="select select-bordered select-sm"
@@ -537,7 +659,7 @@ function FeedbackDetailModal({ feedback, onClose, onUpdate }: FeedbackDetailModa
                                 <option value="rejected">Rejected</option>
                                 <option value="duplicate">Duplicate</option>
                             </select>
-                            
+
                             <button
                                 onClick={onClose}
                                 className="btn btn-ghost btn-sm"

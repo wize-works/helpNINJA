@@ -5,6 +5,7 @@ import { AnimatedPage, StaggerContainer, StaggerChild } from '@/components/ui/an
 import StatCard from '@/components/ui/stat-card';
 import { DashboardFeedbackButton } from '@/components/feedback-button';
 import FeedbackContent from './feedback-content';
+import FilterControls from './filter-controls';
 
 interface Filters {
     type?: string;
@@ -193,12 +194,13 @@ export default async function FeedbackPage({
                                 </p>
                             </div>
                             <div className="flex items-center gap-3">
+                                <FilterControls filters={filters} sites={sites} />
                                 <DashboardFeedbackButton
                                     tenantId={tenantId}
                                     variant="outline"
-                                    className="btn-sm rounded-lg"
+                                    className="rounded-xl"
                                 />
-                                <button className="btn btn-primary btn-sm rounded-lg">
+                                <button className="btn btn-primary rounded-xl">
                                     <i className="fa-duotone fa-solid fa-download" />
                                     Export CSV
                                 </button>
