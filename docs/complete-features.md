@@ -159,8 +159,13 @@ Core features (present)
   - Files: src/lib/emails/templates/base.ts (core engine), src/lib/emails/templates/builders.ts (email builders), src/lib/emails/notification-sender.ts (notification helpers), src/lib/emails/team-invitation.ts (updated), src/lib/integrations/providers/email.ts (updated), src/lib/emails/demo.ts (examples), docs/development/email-templates.md (documentation)
 - Site management (NEW - Phase 1 completed)
   - Multi-site registration and domain verification system for tenants
+  - **Optional domain verification**: Users can skip verification during setup and complete it later for enhanced security
+  - **Flexible workflow**: Site setup wizard allows progression through all steps without requiring immediate verification
+  - **Skip verification benefits**: Users can delegate verification to team members or complete setup when verification isn't immediately possible
+  - **Clear security indicators**: Unverified sites display appropriate warnings and status badges throughout the interface
+  - **Verification reminders**: Strategic placement of verification benefits and calls-to-action for unverified sites
   - API routes: src/app/api/sites/route.ts, src/app/api/sites/[id]/route.ts, src/app/api/sites/[id]/verify/route.ts
-  - Components: src/components/site-manager.tsx, src/components/site-selector.tsx, src/components/domain-verification.tsx
+  - Components: src/components/site-manager.tsx, src/components/site-selector.tsx, src/components/domain-verification.tsx, src/components/site-wizard-modal.tsx (updated)
   - Database: tenant_sites table with verification tokens and status tracking
   - Domain validation: Widget validates allowed origins per tenant (updated src/app/api/widget/route.ts)
   - Script key enforcement: Each site has a unique script_key returned by POST /api/sites; widget requires t (tenant public key) + s (site id) + k (site key), preventing cross-tenant snippet reuse
@@ -168,12 +173,15 @@ Core features (present)
   - Site-specific content: Documents and chunks associated with specific tenant sites (updated src/app/api/ingest/route.ts)
 - Onboarding experience (NEW - Phase 2 completed)
   - Complete 3-step onboarding flow: account setup → site registration → widget installation
+  - **Flexible verification flow**: Domain verification is optional during setup, allowing users to complete wizard without delays
+  - **Skip and continue**: Users can skip verification to delegate to team members or complete when convenient
+  - **Security awareness**: Clear messaging about verification benefits with appropriate UI indicators for unverified sites
   - Pages: src/app/(pages)/onboarding/step-1/page.tsx, step-2/page.tsx, step-3/page.tsx
   - Components: src/components/onboarding-progress.tsx, src/components/onboarding-navigation.tsx
-  - Features: Progress tracking, site registration with verification, live widget preview, installation guide
+  - Features: Progress tracking, site registration with optional verification, live widget preview, installation guide
   - Layout: Custom onboarding layout with branded header and streamlined UX
   - Dashboard-embedded modal: Site onboarding wizard is available directly from the dashboard Quick Start banner and opens as a modal, not a separate page
-    - Files: src/components/site-wizard-modal.tsx (modal), src/components/quickstart-actions.tsx (launcher), wired in src/app/dashboard/page.tsx
+    - Files: src/components/site-wizard-modal.tsx (modal with skip functionality), src/components/quickstart-actions.tsx (launcher), wired in src/app/dashboard/page.tsx
 - DB access
   - pg Pool with Supabase-friendly SSL (cloud: no-verify; local: no SSL); parameterized queries.
   - Files: src/lib/db.ts

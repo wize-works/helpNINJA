@@ -227,7 +227,7 @@ export default function SiteWizardModal({
 
     const stepTitles = ["Domain & Validation", "Add Sources", "Widget Installation"];
     const stepDescriptions = [
-        "Register your domain and verify ownership to secure your chat widget",
+        "Register your domain and optionally verify ownership for enhanced security",
         "Add content sources like sitemaps, documents, or web pages for AI training",
         "Install the widget code on your website to start helping customers"
     ];
@@ -382,10 +382,10 @@ export default function SiteWizardModal({
                                                         <div className="flex-1">
                                                             <h3 className="font-semibold text-warning mb-2">Verify Domain Ownership</h3>
                                                             <p className="text-sm text-base-content/70 mb-4">
-                                                                To ensure security, you must verify that you own this domain. Choose one of the three verification methods below.
+                                                                To ensure security, we recommend verifying that you own this domain. You can verify now or skip and complete this later.
                                                             </p>
                                                             <div className="text-xs text-base-content/60 bg-base-200/30 p-3 rounded-lg">
-                                                                <p className="font-medium">Why verify? This prevents unauthorized use of your domain by others.</p>
+                                                                <p className="font-medium">Why verify? This prevents unauthorized use of your domain by others and enables full security features.</p>
                                                             </div>
                                                         </div>
                                                     </div>
@@ -404,6 +404,39 @@ export default function SiteWizardModal({
                                                         }
                                                     }}
                                                 />
+
+                                                {/* Skip Verification Option */}
+                                                {!currentSite.verified && (
+                                                    <div className="bg-info/10 border border-info/20 rounded-2xl p-4 mt-6">
+                                                        <div className="flex items-start gap-3">
+                                                            <div className="w-8 h-8 bg-info/20 rounded-lg flex items-center justify-center flex-shrink-0">
+                                                                <i className="fa-duotone fa-solid fa-clock text-sm text-info" aria-hidden />
+                                                            </div>
+                                                            <div className="flex-1">
+                                                                <h4 className="font-semibold text-info mb-2">Need More Time?</h4>
+                                                                <p className="text-sm text-base-content/70 mb-4">
+                                                                    You can skip verification now and complete it later. Your widget will work, but some security features will be limited until verification is complete.
+                                                                </p>
+                                                                <div className="text-xs text-base-content/60 bg-base-200/30 p-3 rounded-lg mb-4">
+                                                                    <p className="font-medium mb-1">After skipping, you can:</p>
+                                                                    <p>• Continue setting up your widget and content</p>
+                                                                    <p>• Complete verification from your dashboard later</p>
+                                                                    <p>• Hand verification responsibilities to your team</p>
+                                                                </div>
+                                                                <button
+                                                                    onClick={() => {
+                                                                        toast.success("Verification skipped. You can complete this later from your dashboard.");
+                                                                        setStep(2);
+                                                                    }}
+                                                                    className="btn btn-outline btn-info rounded-xl"
+                                                                >
+                                                                    <i className="fa-duotone fa-solid fa-forward mr-2" aria-hidden />
+                                                                    Skip Verification for Now
+                                                                </button>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                )}
                                             </div>
                                         </div>
                                     )}
@@ -411,7 +444,7 @@ export default function SiteWizardModal({
                                     <div className="flex items-center justify-between pt-6 border-t border-base-200/60">
                                         <div className="text-sm text-base-content/60">
                                             {currentSite ? (
-                                                currentSite.verified ? "✅ Domain verified and ready!" : "⏳ Waiting for domain verification"
+                                                currentSite.verified ? "✅ Domain verified and ready!" : "💡 Domain verification is optional - you can skip and continue"
                                             ) : "Complete the form to create your site"}
                                         </div>
                                         <div className="flex items-center gap-3">
@@ -438,18 +471,13 @@ export default function SiteWizardModal({
                                                         )}
                                                     </button>
                                                 </HoverScale>
-                                            ) : currentSite.verified ? (
+                                            ) : (
                                                 <HoverScale scale={1.02}>
                                                     <button onClick={() => setStep(2)} className="btn btn-primary rounded-xl">
                                                         <i className="fa-duotone fa-solid fa-arrow-right mr-2" aria-hidden />
                                                         Continue to Sources
                                                     </button>
                                                 </HoverScale>
-                                            ) : (
-                                                <button disabled className="btn btn-primary btn-disabled min-w-32 rounded-xl">
-                                                    <i className="fa-duotone fa-solid fa-lock mr-2" aria-hidden />
-                                                    Verify domain to continue
-                                                </button>
                                             )}
                                         </div>
                                     </div>
@@ -481,15 +509,25 @@ export default function SiteWizardModal({
                                         <div className="card bg-base-100 rounded-2xl shadow-sm">
                                             <div className="p-4">
                                                 <div className="flex items-center gap-4">
-                                                    <div className="w-12 h-12 bg-success/10 rounded-2xl flex items-center justify-center group-hover:scale-105 transition-transform duration-200 flex-shrink-0">
-                                                        <i className="fa-duotone fa-solid fa-check-circle text-lg text-success" aria-hidden />
+                                                    <div className={`w-12 h-12 ${currentSite.verified ? 'bg-success/10' : 'bg-warning/10'} rounded-2xl flex items-center justify-center group-hover:scale-105 transition-transform duration-200 flex-shrink-0`}>
+                                                        <i className={`fa-duotone fa-solid ${currentSite.verified ? 'fa-check-circle text-success' : 'fa-clock text-warning'} text-lg`} aria-hidden />
                                                     </div>
                                                     <div className="flex-1">
                                                         <h4 className="font-semibold text-base-content">{currentSite.name}</h4>
                                                         <p className="text-sm text-base-content/60">{currentSite.domain}</p>
                                                     </div>
-                                                    <div className="badge badge-success">Verified</div>
+                                                    <div className={`badge ${currentSite.verified ? 'badge-success' : 'badge-warning'}`}>
+                                                        {currentSite.verified ? 'Verified' : 'Verification Pending'}
+                                                    </div>
                                                 </div>
+                                                {!currentSite.verified && (
+                                                    <div className="mt-3 p-3 bg-warning/10 border border-warning/20 rounded-lg">
+                                                        <p className="text-xs text-base-content/70">
+                                                            <i className="fa-duotone fa-solid fa-info-circle mr-1" aria-hidden />
+                                                            Domain verification is pending. You can complete this later from your dashboard for enhanced security features.
+                                                        </p>
+                                                    </div>
+                                                )}
                                             </div>
                                         </div>
                                     )}
@@ -730,20 +768,30 @@ export default function SiteWizardModal({
                                     </div>
 
                                     {currentSite && (
-                                        <div className="card bg-base-100 rounded-2xl shadow-sm border border-success/20">
+                                        <div className={`card bg-base-100 rounded-2xl shadow-sm border ${currentSite.verified ? 'border-success/20' : 'border-warning/20'}`}>
                                             <div className="p-4">
                                                 <div className="flex items-center justify-between">
                                                     <div className="flex items-center gap-4">
-                                                        <div className="w-12 h-12 bg-success/10 rounded-2xl flex items-center justify-center group-hover:scale-105 transition-transform duration-200 flex-shrink-0">
-                                                            <i className="fa-duotone fa-solid fa-check-circle text-lg text-success" aria-hidden />
+                                                        <div className={`w-12 h-12 ${currentSite.verified ? 'bg-success/10' : 'bg-warning/10'} rounded-2xl flex items-center justify-center group-hover:scale-105 transition-transform duration-200 flex-shrink-0`}>
+                                                            <i className={`fa-duotone fa-solid ${currentSite.verified ? 'fa-check-circle text-success' : 'fa-clock text-warning'} text-lg`} aria-hidden />
                                                         </div>
                                                         <div>
                                                             <h4 className="font-semibold text-base-content">{currentSite.name}</h4>
                                                             <p className="text-sm text-base-content/60">{currentSite.domain}</p>
                                                         </div>
                                                     </div>
-                                                    <div className="badge badge-success">Verified & Ready</div>
+                                                    <div className={`badge ${currentSite.verified ? 'badge-success' : 'badge-warning'}`}>
+                                                        {currentSite.verified ? 'Verified & Ready' : 'Ready (Verification Pending)'}
+                                                    </div>
                                                 </div>
+                                                {!currentSite.verified && (
+                                                    <div className="mt-3 p-3 bg-warning/10 border border-warning/20 rounded-lg">
+                                                        <p className="text-xs text-base-content/70">
+                                                            <i className="fa-duotone fa-solid fa-info-circle mr-1" aria-hidden />
+                                                            Your widget will work without verification, but completing domain verification adds security features and prevents unauthorized usage.
+                                                        </p>
+                                                    </div>
+                                                )}
                                             </div>
                                         </div>
                                     )}
@@ -794,6 +842,25 @@ export default function SiteWizardModal({
                                                     </div>
                                                     <h4 className="text-base font-semibold text-base-content">Widget Configuration</h4>
                                                 </div>
+
+                                                {/* Verification reminder for unverified sites */}
+                                                {!currentSite.verified && (
+                                                    <div className="bg-warning/10 border border-warning/20 rounded-xl p-4 mb-6">
+                                                        <div className="flex items-start gap-3">
+                                                            <i className="fa-duotone fa-solid fa-shield-exclamation text-warning mt-0.5" aria-hidden />
+                                                            <div>
+                                                                <p className="text-sm text-base-content/80 mb-2">
+                                                                    <strong>Security Notice:</strong> Your domain verification is still pending. Your widget will work, but you should complete verification from your dashboard to:
+                                                                </p>
+                                                                <ul className="text-xs text-base-content/70 space-y-1 list-disc list-inside ml-2">
+                                                                    <li>Prevent unauthorized usage of your widget on other domains</li>
+                                                                    <li>Enable enhanced security features and monitoring</li>
+                                                                    <li>Ensure accurate analytics and usage tracking</li>
+                                                                </ul>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                )}
 
                                                 <div className="space-y-6">
                                                     {/* Voice Selection */}
