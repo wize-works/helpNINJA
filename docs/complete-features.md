@@ -52,7 +52,9 @@ Core features (present)
   - **Deduplication**: Smart message deduplication prevents duplicate keys and ensures smooth real-time updates
   - **Authentication**: Uses Clerk session-based authentication for dashboard agents with tenant validation
   - **Auto-scroll**: Dashboard and widget automatically scroll to new messages for optimal UX
-  - Files: src/app/api/conversations/[id]/respond/route.ts (agent response API), src/app/api/conversations/session/[sessionId]/messages/route.ts (widget polling), src/components/agent-response-box.tsx (response UI), src/components/conversation-transcript.tsx (real-time updates), src/app/dashboard/conversations/[id]/page.tsx (conversation detail), src/sql/069_human_agent_support.sql (database migration)
+  - **Manual escalation**: Dashboard agents can manually escalate conversations with instant integration dispatch
+  - **Conversation sharing**: Generate secure, expiring links to share conversation transcripts with stakeholders
+  - Files: src/app/api/conversations/[id]/respond/route.ts (agent response API), src/app/api/conversations/session/[sessionId]/messages/route.ts (widget polling), src/components/agent-response-box.tsx (response UI), src/components/conversation-transcript.tsx (real-time updates), src/app/dashboard/conversations/[id]/page.tsx (conversation detail), src/components/manual-escalation-button.tsx (manual escalation), src/components/share-conversation-button.tsx (conversation sharing), src/app/api/conversations/share/route.ts (share API), src/app/shared/conversation/[token]/page.tsx (shared viewer), src/sql/069_human_agent_support.sql, src/sql/070_conversation_shares.sql (database migrations)
 - Hybrid RAG search
   - Vector: pgvector similarity on chunks.embedding; Lexical: tsvector rank; merged and deduped.
   - Files: src/lib/rag.ts; relies on public.chunks(url, content, embedding vector, tsv tsvector, tenant_id)

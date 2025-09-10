@@ -5,6 +5,8 @@ import { AnimatedPage, StaggerContainer, StaggerChild, HoverScale } from '@/comp
 import CopySessionIdButton from '@/components/copy-session-id-button';
 import ConversationTranscript from '@/components/conversation-transcript';
 import AgentResponseBox from '@/components/agent-response-box';
+import ManualEscalationButton from '@/components/manual-escalation-button';
+import ShareConversationButton from '@/components/share-conversation-button';
 import Link from 'next/link';
 import React from 'react';
 
@@ -89,7 +91,7 @@ export default async function ConversationDetailPage({ params }: { params: Promi
 
     return (
         <AnimatedPage>
-            <div className="space-y-8">
+            <div className="space-y-6">
                 {/* Breadcrumb */}
                 <StaggerContainer>
                     <StaggerChild>
@@ -122,33 +124,39 @@ export default async function ConversationDetailPage({ params }: { params: Promi
                 {convo && (
                     <StaggerContainer>
                         <StaggerChild>
-                            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-                                <div>
-                                    <h1 className="text-3xl font-bold text-base-content flex items-center gap-3">
-                                        <i className="fa-duotone fa-solid fa-messages text-primary" />
-                                        Conversation Details
-                                        {kpis?.escalations ? (
-                                            <span className="inline-flex items-center gap-2 px-3 py-1.5 rounded-lg text-sm font-medium bg-warning/10 text-warning border border-warning/20 shadow-sm">
-                                                <i className="fa-duotone fa-solid fa-fire text-xs" />
-                                                Escalated
-                                            </span>
-                                        ) : null}
-                                    </h1>
-                                    <p className="text-base-content/60 mt-1">
-                                        Session {convo.session_id.slice(0, 12)}... • Started {new Date(convo.created_at).toLocaleDateString()}
+                            <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
+                                <div className="flex-1">
+                                    <div className="flex items-center gap-3 mb-2">
+                                        <div className="w-10 h-10 bg-primary/10 rounded-xl flex items-center justify-center">
+                                            <i className="fa-duotone fa-solid fa-messages text-lg text-primary" />
+                                        </div>
+                                        <div>
+                                            <h1 className="text-2xl font-bold text-base-content">
+                                                Conversation Details
+                                            </h1>
+                                            {kpis?.escalations ? (
+                                                <span className="inline-flex items-center gap-2 px-2 py-1 rounded-lg text-xs font-medium bg-warning/10 text-warning border border-warning/20 mt-1">
+                                                    <i className="fa-duotone fa-solid fa-fire text-[10px]" />
+                                                    Escalated
+                                                </span>
+                                            ) : null}
+                                        </div>
+                                    </div>
+                                    <p className="text-sm text-base-content/60">
+                                        Session {convo.session_id} • Started {new Date(convo.created_at).toLocaleDateString()}
                                         {kpis?.last_ts && <span> • Last activity {new Date(kpis.last_ts).toLocaleTimeString()}</span>}
                                     </p>
                                 </div>
-                                <div className="flex items-center gap-3">
+                                <div className="flex items-center gap-2">
                                     <HoverScale scale={1.02}>
-                                        <Link href="/dashboard/conversations" className="flex items-center gap-2 px-4 py-2 bg-base-200/60 hover:bg-base-200 border border-base-300/40 rounded-xl text-sm font-medium transition-all duration-200">
+                                        <Link href="/dashboard/conversations" className="btn btn-ghost btn-sm rounded-lg">
                                             <i className="fa-duotone fa-solid fa-arrow-left text-xs" />
                                             Back
                                         </Link>
                                     </HoverScale>
                                     <CopySessionIdButton sessionId={convo.session_id} />
                                     <HoverScale scale={1.02}>
-                                        <button className="flex items-center gap-2 px-4 py-2 bg-primary text-primary-content rounded-xl font-medium text-sm shadow-sm hover:shadow-md transition-all duration-200">
+                                        <button className="btn btn-outline btn-sm rounded-lg">
                                             <i className="fa-duotone fa-solid fa-download text-xs" />
                                             Export
                                         </button>
@@ -159,151 +167,121 @@ export default async function ConversationDetailPage({ params }: { params: Promi
                     </StaggerContainer>
                 )}
 
-                {/* KPIs Grid */}
+                {/* Quick Stats Bar */}
                 {convo && kpis && (
                     <StaggerContainer>
                         <StaggerChild>
-                            <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-6">
-                                <HoverScale scale={1.01}>
-                                    <div className="stats shadow hover:shadow-md transition-all duration-300 w-full rounded-2xl overflow-hidden">
-                                        <div className="stat bg-base-100 rounded-2xl">
-                                            <div className="stat-figure">
-                                                <div className="bg-primary/20 rounded-2xl h-12 w-12 flex items-center justify-center group-hover:scale-105 transition-transform duration-200 flex-shrink-0">
-                                                    <i className="fa-duotone fa-solid fa-message-lines text-lg text-primary" aria-hidden />
-                                                </div>
-                                            </div>
-                                            <div className="stat-title">Messages</div>
-                                            <div className="stat-value text-primary">{total}</div>
+                            <div className="card bg-base-100 border border-base-300/40 rounded-xl p-4">
+                                <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-8 gap-4">
+                                    <div className="flex items-center gap-2">
+                                        <div className="w-8 h-8 bg-primary/10 rounded-lg flex items-center justify-center">
+                                            <i className="fa-duotone fa-solid fa-message-lines text-xs text-primary" />
+                                        </div>
+                                        <div>
+                                            <div className="text-lg font-bold text-primary">{total}</div>
+                                            <div className="text-[10px] text-base-content/60 uppercase tracking-wide">Messages</div>
                                         </div>
                                     </div>
-                                </HoverScale>
-                                <HoverScale scale={1.01}>
-                                    <div className="stats shadow hover:shadow-md transition-all duration-300 w-full rounded-2xl overflow-hidden">
-                                        <div className="stat bg-base-100 rounded-2xl">
-                                            <div className="stat-title">User Messages</div>
-                                            <div className="stat-figure">
-                                                <div className="bg-info/20 rounded-2xl h-12 w-12 flex items-center justify-center group-hover:scale-105 transition-transform duration-200 flex-shrink-0">
-                                                    <i className="fa-duotone fa-solid fa-user text-lg text-info" aria-hidden />
-                                                </div>
-                                            </div>
-                                            <div className="stat-value text-info">{kpis.user_msgs}</div>
+                                    <div className="flex items-center gap-2">
+                                        <div className="w-8 h-8 bg-info/10 rounded-lg flex items-center justify-center">
+                                            <i className="fa-duotone fa-solid fa-user text-xs text-info" />
+                                        </div>
+                                        <div>
+                                            <div className="text-lg font-bold text-info">{kpis.user_msgs}</div>
+                                            <div className="text-[10px] text-base-content/60 uppercase tracking-wide">User</div>
                                         </div>
                                     </div>
-                                </HoverScale>
-                                <HoverScale scale={1.01}>
-                                    <div className="stats shadow hover:shadow-md transition-all duration-300 w-full rounded-2xl overflow-hidden">
-                                        <div className="stat bg-base-100 rounded-2xl">
-                                            <div className="stat-title">Assistant Messages</div>
-                                            <div className="stat-figure">
-                                                <div className="bg-secondary/20 rounded-2xl h-12 w-12 flex items-center justify-center group-hover:scale-105 transition-transform duration-200 flex-shrink-0">
-                                                    <i className="fa-duotone fa-solid fa-robot text-lg text-secondary" aria-hidden />
-                                                </div>
-                                            </div>
-                                            <div className="stat-value text-secondary">{kpis.assistant_msgs}</div>
+                                    <div className="flex items-center gap-2">
+                                        <div className="w-8 h-8 bg-secondary/10 rounded-lg flex items-center justify-center">
+                                            <i className="fa-duotone fa-solid fa-robot text-xs text-secondary" />
+                                        </div>
+                                        <div>
+                                            <div className="text-lg font-bold text-secondary">{kpis.assistant_msgs}</div>
+                                            <div className="text-[10px] text-base-content/60 uppercase tracking-wide">AI</div>
                                         </div>
                                     </div>
-                                </HoverScale>
-                                <HoverScale scale={1.01}>
-                                    <div className="stats shadow hover:shadow-md transition-all duration-300 w-full rounded-2xl overflow-hidden">
-                                        <div className="stat bg-base-100 rounded-2xl">
-                                            <div className="stat-title">Avg Confidence</div>
-                                            <div className="stat-figure">
-                                                <div className={`${kpis.avg_conf && kpis.avg_conf < 0.55 ? 'bg-warning/20' : 'bg-success/20'} rounded-2xl h-12 w-12 flex items-center justify-center group-hover:scale-105 transition-transform duration-200 flex-shrink-0`}>
-                                                    <i className={`fa-duotone fa-solid fa-chart-line text-lg ${kpis.avg_conf && kpis.avg_conf < 0.55 ? 'text-warning' : 'text-success'}`} aria-hidden />
-                                                </div>
-                                            </div>
-                                            <div className={`stat-value ${kpis.avg_conf && kpis.avg_conf < 0.55 ? 'text-warning' : 'text-success'}`}>
+                                    <div className="flex items-center gap-2">
+                                        <div className={`w-8 h-8 ${kpis.avg_conf && kpis.avg_conf < 0.55 ? 'bg-warning/10' : 'bg-success/10'} rounded-lg flex items-center justify-center`}>
+                                            <i className={`fa-duotone fa-solid fa-chart-line text-xs ${kpis.avg_conf && kpis.avg_conf < 0.55 ? 'text-warning' : 'text-success'}`} />
+                                        </div>
+                                        <div>
+                                            <div className={`text-lg font-bold ${kpis.avg_conf && kpis.avg_conf < 0.55 ? 'text-warning' : 'text-success'}`}>
                                                 {kpis.avg_conf?.toFixed(2) || '—'}
                                             </div>
+                                            <div className="text-[10px] text-base-content/60 uppercase tracking-wide">Confidence</div>
                                         </div>
                                     </div>
-                                </HoverScale>
-                                <HoverScale scale={1.01}>
-                                    <div className="stats shadow hover:shadow-md transition-all duration-300 w-full rounded-2xl overflow-hidden">
-                                        <div className="stat bg-base-100 rounded-2xl">
-                                            <div className="stat-title">Low Confidence</div>
-                                            <div className="stat-figure">
-                                                <div className={`${kpis.low_conf ? (kpis.low_conf > 3 ? 'bg-error/20' : 'bg-warning/20') : 'bg-base-200/60'} rounded-2xl h-12 w-12 flex items-center justify-center group-hover:scale-105 transition-transform duration-200 flex-shrink-0`}>
-                                                    <i className={`fa-duotone fa-solid fa-triangle-exclamation text-lg ${kpis.low_conf ? (kpis.low_conf > 3 ? 'text-error' : 'text-warning') : 'text-base-content/70'}`} aria-hidden />
-                                                </div>
-                                            </div>
-                                            <div className={`stat-value ${kpis.low_conf ? (kpis.low_conf > 3 ? 'text-error' : 'text-warning') : 'text-base-content'}`}>
-                                                {kpis.low_conf}
-                                            </div>
-                                            {kpis.low_conf > 0 && (
-                                                <div className="stat-desc">Messages need attention</div>
-                                            )}
+                                    <div className="flex items-center gap-2">
+                                        <div className={`w-8 h-8 ${kpis.low_conf ? 'bg-warning/10' : 'bg-base-200/60'} rounded-lg flex items-center justify-center`}>
+                                            <i className={`fa-duotone fa-solid fa-triangle-exclamation text-xs ${kpis.low_conf ? 'text-warning' : 'text-base-content/40'}`} />
+                                        </div>
+                                        <div>
+                                            <div className={`text-lg font-bold ${kpis.low_conf ? 'text-warning' : 'text-base-content/60'}`}>{kpis.low_conf}</div>
+                                            <div className="text-[10px] text-base-content/60 uppercase tracking-wide">Low Conf</div>
                                         </div>
                                     </div>
-                                </HoverScale>
-                                <HoverScale scale={1.01}>
-                                    <div className="stats shadow hover:shadow-md transition-all duration-300 w-full rounded-2xl overflow-hidden">
-                                        <div className="stat bg-base-100 rounded-2xl">
-                                            <div className="stat-title">Escalations</div>
-                                            <div className="stat-figure">
-                                                <div className={`${kpis.escalations ? 'bg-warning/20' : 'bg-base-200/60'} rounded-2xl h-12 w-12 flex items-center justify-center group-hover:scale-105 transition-transform duration-200 flex-shrink-0`}>
-                                                    <i className={`fa-duotone fa-solid fa-fire text-lg ${kpis.escalations ? 'text-warning' : 'text-base-content/70'}`} aria-hidden />
-                                                </div>
-                                            </div>
-                                            <div className={`stat-value ${kpis.escalations ? 'text-warning' : 'text-base-content'}`}>
-                                                {kpis.escalations}
-                                            </div>
-                                            {kpis.escalations > 0 && (
-                                                <div className="stat-desc">Human intervention needed</div>
-                                            )}
+                                    <div className="flex items-center gap-2">
+                                        <div className={`w-8 h-8 ${kpis.escalations ? 'bg-error/10' : 'bg-base-200/60'} rounded-lg flex items-center justify-center`}>
+                                            <i className={`fa-duotone fa-solid fa-fire text-xs ${kpis.escalations ? 'text-error' : 'text-base-content/40'}`} />
+                                        </div>
+                                        <div>
+                                            <div className={`text-lg font-bold ${kpis.escalations ? 'text-error' : 'text-base-content/60'}`}>{kpis.escalations}</div>
+                                            <div className="text-[10px] text-base-content/60 uppercase tracking-wide">Escalations</div>
                                         </div>
                                     </div>
-                                </HoverScale>
-                                <HoverScale scale={1.01}>
-                                    <div className="stats shadow hover:shadow-md transition-all duration-300 w-full rounded-2xl overflow-hidden">
-                                        <div className="stat bg-base-100 rounded-2xl">
-                                            <div className="stat-title">Duration</div>
-                                            <div className="stat-figure">
-                                                <div className="bg-base-200/60 rounded-2xl h-12 w-12 flex items-center justify-center group-hover:scale-105 transition-transform duration-200 flex-shrink-0">
-                                                    <i className="fa-duotone fa-solid fa-hourglass-half text-lg text-base-content/70" aria-hidden />
-                                                </div>
+                                    <div className="flex items-center gap-2">
+                                        <div className="w-8 h-8 bg-base-200/60 rounded-lg flex items-center justify-center">
+                                            <i className="fa-duotone fa-solid fa-hourglass-half text-xs text-base-content/60" />
+                                        </div>
+                                        <div>
+                                            <div className="text-lg font-bold text-base-content">
+                                                {kpis.first_ts && kpis.last_ts ? humanDuration(kpis.first_ts, kpis.last_ts) : '—'}
                                             </div>
-                                            <div className="stat-value text-base-content">{kpis.first_ts && kpis.last_ts ? humanDuration(kpis.first_ts, kpis.last_ts) : '—'}</div>
-                                            {kpis.first_ts && kpis.last_ts && <div className="stat-desc">active window</div>}
+                                            <div className="text-[10px] text-base-content/60 uppercase tracking-wide">Duration</div>
                                         </div>
                                     </div>
-                                </HoverScale>
-                                <HoverScale scale={1.01}>
-                                    <div className="stats shadow hover:shadow-md transition-all duration-300 w-full rounded-2xl overflow-hidden">
-                                        <div className="stat bg-base-100 rounded-2xl">
-                                            <div className="stat-title">Sources</div>
-                                            <div className="stat-figure">
-                                                <div className={`${sources.length ? 'bg-accent/20' : 'bg-base-200/60'} rounded-2xl h-12 w-12 flex items-center justify-center group-hover:scale-105 transition-transform duration-200 flex-shrink-0`}>
-                                                    <i className={`fa-duotone fa-solid fa-link text-lg ${sources.length ? 'text-accent' : 'text-base-content/70'}`} aria-hidden />
-                                                </div>
-                                            </div>
-                                            <div className={`${sources.length ? 'text-accent' : 'text-base-content'} stat-value`}>{sources.length}</div>
-                                            {sources.length > 0 && <div className="stat-desc">referenced</div>}
+                                    <div className="flex items-center gap-2">
+                                        <div className={`w-8 h-8 ${sources.length ? 'bg-accent/10' : 'bg-base-200/60'} rounded-lg flex items-center justify-center`}>
+                                            <i className={`fa-duotone fa-solid fa-link text-xs ${sources.length ? 'text-accent' : 'text-base-content/40'}`} />
+                                        </div>
+                                        <div>
+                                            <div className={`text-lg font-bold ${sources.length ? 'text-accent' : 'text-base-content/60'}`}>{sources.length}</div>
+                                            <div className="text-[10px] text-base-content/60 uppercase tracking-wide">Sources</div>
                                         </div>
                                     </div>
-                                </HoverScale>
+                                </div>
                             </div>
                         </StaggerChild>
                     </StaggerContainer>
                 )}
 
-                {/* Main Content Section */}
+                {/* Main Content - Better Layout */}
                 {convo && (
                     <StaggerContainer>
-                        <div className="grid grid-cols-1 xl:grid-cols-3 gap-6">
-                            {/* Transcript - Takes 2/3 width */}
-                            <StaggerChild className="xl:col-span-2">
-                                <div className="card bg-base-100 rounded-2xl shadow-sm hover:shadow-md transition-all duration-300">
-                                    <div className="p-6">
-                                        <div className="flex items-center justify-between mb-6">
-                                            <div>
-                                                <h3 className="text-lg font-semibold text-base-content">Conversation Transcript</h3>
-                                                <p className="text-sm text-base-content/60">{total} messages in this conversation</p>
+                        <div className="grid grid-cols-1 xl:grid-cols-4 gap-6">
+                            {/* Transcript - Takes majority of space but better proportioned */}
+                            <StaggerChild className="xl:col-span-3">
+                                <div className="card bg-base-100 rounded-xl shadow-sm border border-base-300/40">
+                                    <div className="border-b border-base-300/40 p-4">
+                                        <div className="flex items-center justify-between">
+                                            <div className="flex items-center gap-3">
+                                                <div className="w-8 h-8 bg-primary/10 rounded-lg flex items-center justify-center">
+                                                    <i className="fa-duotone fa-solid fa-messages text-sm text-primary" />
+                                                </div>
+                                                <div>
+                                                    <h3 className="font-semibold text-base-content">Conversation Transcript</h3>
+                                                    <p className="text-xs text-base-content/60">{total} messages • Live updates enabled</p>
+                                                </div>
                                             </div>
-                                            <div className="w-8 h-8 bg-primary/20 rounded-lg flex items-center justify-center">
-                                                <i className="fa-duotone fa-solid fa-messages text-sm text-primary" />
+                                            <div className="flex items-center gap-2">
+                                                <div className="badge badge-success badge-sm gap-1">
+                                                    <div className="w-1 h-1 bg-success rounded-full"></div>
+                                                    Live
+                                                </div>
                                             </div>
                                         </div>
+                                    </div>
+                                    <div className="p-4">
                                         <ConversationTranscript
                                             conversationId={convo.id}
                                             initialMessages={messages}
@@ -314,99 +292,99 @@ export default async function ConversationDetailPage({ params }: { params: Promi
                                 </div>
                             </StaggerChild>
 
-                            {/* Agent Response Section */}
-                            <StaggerChild className="xl:col-span-2">
-                                <div className="card bg-base-100 rounded-2xl shadow-sm hover:shadow-md transition-all duration-300">
-                                    <div className="p-6">
-                                        <div className="flex items-center justify-between mb-4">
-                                            <div>
-                                                <h3 className="text-lg font-semibold text-base-content">Send Response</h3>
-                                                <p className="text-sm text-base-content/60">Reply as a human agent to this conversation</p>
-                                            </div>
-                                            <div className="w-8 h-8 bg-success/20 rounded-lg flex items-center justify-center">
-                                                <i className="fa-duotone fa-solid fa-reply text-sm text-success" />
+                            {/* Sidebar with Agent Response at Top */}
+                            <StaggerChild className="xl:col-span-1">
+                                <div className="space-y-4 sticky top-24 max-h-[calc(100vh-8rem)] overflow-y-auto ">
+                                    {/* Agent Response - MOVED TO TOP OF SIDEBAR */}
+                                    <div className="card bg-gradient-to-br from-success/5 to-success/10 rounded-xl shadow-sm border border-success/20">
+                                        <div className="border-b border-success/20 p-4">
+                                            <div className="flex items-center gap-2">
+                                                <div className="w-8 h-8 bg-success/20 rounded-lg flex items-center justify-center">
+                                                    <i className="fa-duotone fa-solid fa-reply text-sm text-success" />
+                                                </div>
+                                                <div>
+                                                    <h3 className="font-semibold text-base-content text-sm">Quick Response</h3>
+                                                    <p className="text-xs text-base-content/60">Reply as human agent</p>
+                                                </div>
                                             </div>
                                         </div>
-                                        <AgentResponseBox conversationId={convo.id} />
+                                        <div className="p-4">
+                                            <AgentResponseBox conversationId={convo.id} />
+                                        </div>
                                     </div>
-                                </div>
-                            </StaggerChild>
 
-                            {/* Sidebar */}
-                            <StaggerChild>
-                                <div className="space-y-6">
-                                    {/* Metadata Card */}
-                                    <div className="card bg-base-100 rounded-2xl shadow-sm hover:shadow-md transition-all duration-300">
-                                        <div className="p-6">
-                                            <div className="flex items-center justify-between mb-4">
-                                                <div>
-                                                    <h3 className="text-lg font-semibold text-base-content">Metadata</h3>
-                                                    <p className="text-sm text-base-content/60">Conversation details</p>
+                                    {/* Conversation Actions */}
+                                    <div className="card bg-base-100 rounded-xl shadow-sm border border-base-300/40">
+                                        <div className="border-b border-base-300/40 p-4">
+                                            <h3 className="font-semibold text-base-content text-sm">Actions</h3>
+                                        </div>
+                                        <div className="p-4 space-y-2">
+                                            <ManualEscalationButton
+                                                conversationId={convo.id}
+                                                sessionId={convo.session_id}
+                                                userMessage={messages.length > 0 ? messages[messages.length - 1].content : undefined}
+                                            />
+                                            <ShareConversationButton
+                                                conversationId={convo.id}
+                                            />
+                                        </div>
+                                    </div>
+
+                                    {/* Metadata - Condensed */}
+                                    <div className="card bg-base-100 rounded-xl shadow-sm border border-base-300/40">
+                                        <div className="border-b border-base-300/40 p-4">
+                                            <div className="flex items-center gap-2">
+                                                <div className="w-6 h-6 bg-info/10 rounded-md flex items-center justify-center">
+                                                    <i className="fa-duotone fa-solid fa-circle-info text-xs text-info" />
                                                 </div>
-                                                <div className="w-8 h-8 bg-info/20 rounded-lg flex items-center justify-center">
-                                                    <i className="fa-duotone fa-solid fa-circle-info text-sm text-info" />
-                                                </div>
+                                                <h3 className="font-semibold text-base-content text-sm">Details</h3>
                                             </div>
+                                        </div>
+                                        <div className="p-4">
                                             <dl className="space-y-3">
-                                                <div className="flex items-center justify-between p-3 bg-base-200/40 rounded-xl border border-base-300/40">
-                                                    <dt className="text-sm font-medium text-base-content/70">ID</dt>
-                                                    <dd className="font-mono text-xs text-base-content truncate max-w-[120px]" title={convo.id}>{convo.id.slice(0, 8)}...</dd>
-                                                </div>
-                                                <div className="flex items-center justify-between p-3 bg-base-200/40 rounded-xl border border-base-300/40">
-                                                    <dt className="text-sm font-medium text-base-content/70">Session</dt>
-                                                    <dd className="font-mono text-xs text-base-content truncate max-w-[120px]" title={convo.session_id}>{convo.session_id.slice(0, 8)}...</dd>
+                                                <div className="flex items-center justify-between text-xs">
+                                                    <dt className="text-base-content/60">Session ID</dt>
+                                                    <dd className="font-mono text-base-content truncate max-w-[80px]" title={convo.session_id}>
+                                                        {convo.session_id.slice(0, 8)}...
+                                                    </dd>
                                                 </div>
                                                 {kpis?.first_ts && (
-                                                    <div className="flex items-center justify-between p-3 bg-base-200/40 rounded-xl border border-base-300/40">
-                                                        <dt className="text-sm font-medium text-base-content/70">Started</dt>
-                                                        <dd className="text-xs text-base-content">{new Date(kpis.first_ts).toLocaleTimeString()}</dd>
+                                                    <div className="flex items-center justify-between text-xs">
+                                                        <dt className="text-base-content/60">Started</dt>
+                                                        <dd className="text-base-content">{new Date(kpis.first_ts).toLocaleTimeString()}</dd>
                                                     </div>
                                                 )}
                                                 {kpis?.last_ts && (
-                                                    <div className="flex items-center justify-between p-3 bg-base-200/40 rounded-xl border border-base-300/40">
-                                                        <dt className="text-sm font-medium text-base-content/70">Last</dt>
-                                                        <dd className="text-xs text-base-content">{new Date(kpis.last_ts).toLocaleTimeString()}</dd>
-                                                    </div>
-                                                )}
-                                                {kpis?.first_ts && kpis?.last_ts && (
-                                                    <div className="flex items-center justify-between p-3 bg-base-200/40 rounded-xl border border-base-300/40">
-                                                        <dt className="text-sm font-medium text-base-content/70">Duration</dt>
-                                                        <dd className="text-xs text-base-content font-medium">{humanDuration(kpis.first_ts, kpis.last_ts)}</dd>
+                                                    <div className="flex items-center justify-between text-xs">
+                                                        <dt className="text-base-content/60">Last Activity</dt>
+                                                        <dd className="text-base-content">{new Date(kpis.last_ts).toLocaleTimeString()}</dd>
                                                     </div>
                                                 )}
                                             </dl>
                                         </div>
                                     </div>
 
-                                    {/* Sources Card */}
-                                    <div className="card bg-base-100 rounded-2xl shadow-sm hover:shadow-md transition-all duration-300">
-                                        <div className="p-6">
-                                            <div className="flex items-center justify-between mb-4">
-                                                <div>
-                                                    <h3 className="text-lg font-semibold text-base-content">Knowledge Sources</h3>
-                                                    <p className="text-sm text-base-content/60">Referenced content</p>
-                                                </div>
-                                                <div className="w-8 h-8 bg-secondary/20 rounded-lg flex items-center justify-center">
-                                                    <i className="fa-duotone fa-solid fa-link text-sm text-secondary" />
+                                    {/* Sources - Condensed */}
+                                    {sources.length > 0 && (
+                                        <div className="card bg-base-100 rounded-xl shadow-sm border border-base-300/40">
+                                            <div className="border-b border-base-300/40 p-4">
+                                                <div className="flex items-center gap-2">
+                                                    <div className="w-6 h-6 bg-accent/10 rounded-md flex items-center justify-center">
+                                                        <i className="fa-duotone fa-solid fa-link text-xs text-accent" />
+                                                    </div>
+                                                    <h3 className="font-semibold text-base-content text-sm">Sources ({sources.length})</h3>
                                                 </div>
                                             </div>
-                                            {sources.length === 0 ? (
-                                                <div className="text-center py-6">
-                                                    <div className="w-12 h-12 bg-base-200/60 rounded-xl flex items-center justify-center mx-auto mb-3">
-                                                        <i className="fa-duotone fa-solid fa-link-slash text-xl text-base-content/40" />
-                                                    </div>
-                                                    <p className="text-sm text-base-content/60">No sources referenced</p>
-                                                </div>
-                                            ) : (
-                                                <div className="space-y-2 max-h-[300px] overflow-y-auto">
-                                                    {sources.map(s => (
-                                                        <div key={s.url} className="flex items-center gap-3 p-3 bg-base-200/40 rounded-xl border border-base-300/40 hover:bg-base-200/60 transition-colors">
-                                                            <div className="w-6 h-6 bg-accent/20 rounded-md flex items-center justify-center flex-shrink-0">
-                                                                <i className="fa-duotone fa-solid fa-external-link text-xs text-accent" />
+                                            <div className="p-4">
+                                                <div className="space-y-2 max-h-[200px] overflow-y-auto">
+                                                    {sources.slice(0, 5).map(s => (
+                                                        <div key={s.url} className="flex items-center gap-2 p-2 bg-base-200/40 rounded-lg border border-base-300/20 hover:bg-base-200/60 transition-colors">
+                                                            <div className="w-4 h-4 bg-accent/20 rounded flex items-center justify-center flex-shrink-0">
+                                                                <i className="fa-duotone fa-solid fa-external-link text-[8px] text-accent" />
                                                             </div>
                                                             <div className="flex-1 min-w-0">
                                                                 <a
-                                                                    className="text-sm font-medium text-base-content hover:text-primary transition-colors truncate block"
+                                                                    className="text-xs font-medium text-base-content hover:text-primary transition-colors truncate block"
                                                                     href={s.url}
                                                                     target="_blank"
                                                                     rel="noopener noreferrer"
@@ -414,14 +392,18 @@ export default async function ConversationDetailPage({ params }: { params: Promi
                                                                 >
                                                                     {s.title || new URL(s.url).hostname}
                                                                 </a>
-                                                                <p className="text-xs text-base-content/60 truncate">{new URL(s.url).hostname}</p>
                                                             </div>
                                                         </div>
                                                     ))}
+                                                    {sources.length > 5 && (
+                                                        <div className="text-xs text-base-content/60 text-center py-2">
+                                                            +{sources.length - 5} more sources
+                                                        </div>
+                                                    )}
                                                 </div>
-                                            )}
+                                            </div>
                                         </div>
-                                    </div>
+                                    )}
                                 </div>
                             </StaggerChild>
                         </div>

@@ -80,11 +80,7 @@ export default function AgentResponseBox({ conversationId, onResponseSent }: Age
                 </div>
             </div>
 
-            <div className="flex items-center justify-between">
-                <div className="flex items-center gap-2 text-sm text-base-content/60">
-                    <i className="fa-duotone fa-solid fa-info-circle" />
-                    This will be sent directly to the user in their chat widget
-                </div>
+            <div className="flex flex-col items-center justify-between">
                 <HoverScale scale={1.02}>
                     <button
                         type="submit"
@@ -104,6 +100,10 @@ export default function AgentResponseBox({ conversationId, onResponseSent }: Age
                         )}
                     </button>
                 </HoverScale>
+                <div className="flex items-center gap-2 text-sm text-base-content/60">
+                    <i className="fa-duotone fa-solid fa-info-circle" />
+                    This will be sent directly to the user in their chat widget
+                </div>
             </div>
         </form>
     );
