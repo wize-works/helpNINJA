@@ -14,6 +14,8 @@ type Row = {
     id: string;
     session_id: string;
     created_at: string;
+    updated_at: string;
+    status: string;
     messages: number;
     escalations: number;
     last_escalation_reason: string | null;
@@ -21,6 +23,8 @@ type Row = {
     site_id: string | null;
     site_domain: string | null;
     site_name: string | null;
+    has_human_agent: boolean;
+    agent_names: string | null;
 }
 
 type KPI = {
@@ -75,18 +79,24 @@ function buildConditions(tenantId: string, filters: Filters) {
 async function list(tenantId: string, filters: Filters) {
     const { where, params } = buildConditions(tenantId, filters);
     const { rows } = await query<Row>(
-        `select c.id, c.session_id, c.created_at,
+        `select c.id, c.session_id, c.created_at, 
+            COALESCE(c.updated_at, c.created_at) as updated_at,
+            COALESCE(c.status, 'active') as status,
             (select count(*) from public.messages m where m.conversation_id=c.id)::int as messages,
             (select count(*) from public.escalations e where e.conversation_id=c.id)::int as escalations,
             (select e.reason from public.escalations e where e.conversation_id=c.id order by e.created_at desc limit 1) as last_escalation_reason,
             (select e.status from public.escalations e where e.conversation_id=c.id order by e.created_at desc limit 1) as last_escalation_status,
             c.site_id,
             ts.domain as site_domain,
-            ts.name as site_name
+            ts.name as site_name,
+            (select count(*) > 0 from public.messages m where m.conversation_id=c.id and m.is_human_response=true) as has_human_agent,
+            (select string_agg(distinct COALESCE(u.first_name || ' ' || u.last_name, u.email), ', ') from public.messages m 
+             join public.users u on u.id = m.agent_id 
+             where m.conversation_id=c.id and m.is_human_response=true and m.agent_id is not null) as agent_names
          from public.conversations c
          left join public.tenant_sites ts on ts.id = c.site_id
          where ${where}
-         order by c.created_at desc
+         order by COALESCE(c.updated_at, c.created_at) desc
          limit 100`,
         params
     );
@@ -171,10 +181,10 @@ function ConversationsTable({ conversations }: { conversations: Row[] }) {
                                     <tr>
                                         <th className="text-left p-4 text-sm font-semibold text-base-content/80">Session</th>
                                         <th className="text-left p-4 text-sm font-semibold text-base-content/80">Site</th>
-                                        <th className="text-left p-4 text-sm font-semibold text-base-content/80">Activity</th>
-                                        <th className="text-left p-4 text-sm font-semibold text-base-content/80">Started</th>
-                                        <th className="text-left p-4 text-sm font-semibold text-base-content/80">Escalations</th>
-                                        <th className="text-right p-4 text-sm font-semibold text-base-content/80">Status</th>
+                                        <th className="text-left p-4 text-sm font-semibold text-base-content/80">Messages</th>
+                                        <th className="text-left p-4 text-sm font-semibold text-base-content/80">Last Updated</th>
+                                        <th className="text-left p-4 text-sm font-semibold text-base-content/80">Agent</th>
+                                        <th className="text-right p-4 text-sm font-semibold text-base-content/80">Actions</th>
                                     </tr>
                                 </thead>
                                 <tbody className="divide-y divide-base-200/60">
@@ -216,47 +226,72 @@ function ConversationsTable({ conversations }: { conversations: Row[] }) {
                                             </td>
                                             <td className="p-4">
                                                 <div className="text-sm text-base-content">
-                                                    {new Date(r.created_at).toLocaleDateString('en-US', {
+                                                    {new Date(r.updated_at).toLocaleDateString('en-US', {
                                                         month: 'short',
                                                         day: 'numeric',
                                                         year: 'numeric'
                                                     })}
                                                 </div>
                                                 <div className="text-xs text-base-content/60 mt-0.5">
-                                                    {new Date(r.created_at).toLocaleTimeString('en-US', {
+                                                    {new Date(r.updated_at).toLocaleTimeString('en-US', {
                                                         hour: '2-digit',
                                                         minute: '2-digit'
                                                     })}
                                                 </div>
                                             </td>
                                             <td className="p-4">
-                                                {r.escalations > 0 ? (
+                                                {r.has_human_agent ? (
                                                     <div className="flex items-center gap-2">
-                                                        <div className="flex items-center gap-2 px-2 py-1 bg-warning/10 text-warning rounded-md" title={r.last_escalation_reason || undefined}>
-                                                            <i className="fa-duotone fa-solid fa-fire text-xs" aria-hidden />
-                                                            <span className="text-sm font-medium">{r.escalations}</span>
+                                                        <div className="flex items-center gap-2 px-2 py-1 bg-success/10 text-success rounded-md">
+                                                            <i className="fa-duotone fa-solid fa-headset text-xs" aria-hidden />
+                                                            <span className="text-sm font-medium">Human</span>
                                                         </div>
-                                                        <span className="text-xs text-base-content/60">
-                                                            {r.last_escalation_reason ? r.last_escalation_reason.replace(/_/g, ' ') : 'escalations'}
-                                                        </span>
+                                                        {r.agent_names && (
+                                                            <span className="text-xs text-base-content/60 truncate max-w-[100px]" title={r.agent_names}>
+                                                                {r.agent_names}
+                                                            </span>
+                                                        )}
+                                                    </div>
+                                                ) : r.status === 'human_handling' ? (
+                                                    <div className="flex items-center gap-2">
+                                                        <div className="flex items-center gap-2 px-2 py-1 bg-warning/10 text-warning rounded-md">
+                                                            <i className="fa-duotone fa-solid fa-hand text-xs" aria-hidden />
+                                                            <span className="text-sm font-medium">Escalated</span>
+                                                        </div>
                                                     </div>
                                                 ) : (
-                                                    <span className="text-sm text-base-content/40">—</span>
+                                                    <div className="flex items-center gap-2">
+                                                        <div className="flex items-center gap-2 px-2 py-1 bg-primary/10 text-primary rounded-md">
+                                                            <i className="fa-duotone fa-solid fa-robot text-xs" aria-hidden />
+                                                            <span className="text-sm font-medium">AI</span>
+                                                        </div>
+                                                        {r.escalations > 0 && (
+                                                            <div className="flex items-center gap-1 px-1 py-0.5 bg-warning/10 text-warning rounded text-xs">
+                                                                <i className="fa-duotone fa-solid fa-fire text-[10px]" aria-hidden />
+                                                                {r.escalations}
+                                                            </div>
+                                                        )}
+                                                    </div>
                                                 )}
                                             </td>
                                             <td className="p-4 text-right space-x-2 whitespace-nowrap">
-                                                <Link href={`/dashboard/conversations/${r.id}`} className="inline-flex items-center gap-1 px-2 py-1 bg-base-200/60 hover:bg-base-200 rounded-md text-xs font-medium text-base-content/80 transition-colors">
+                                                <Link href={`/dashboard/conversations/${r.id}`} className="inline-flex items-center gap-1 px-2 py-1 bg-primary/10 hover:bg-primary/20 text-primary rounded-md text-xs font-medium transition-colors">
                                                     <i className="fa-duotone fa-solid fa-eye text-[10px]" aria-hidden /> View
                                                 </Link>
-                                                {r.escalations > 0 ? (
-                                                    <span className="inline-flex items-center gap-2 px-2 py-1 bg-warning/10 text-warning rounded-md text-xs font-medium" title={r.last_escalation_status || undefined}>
-                                                        <div className="w-1.5 h-1.5 bg-warning rounded-full"></div>
+                                                {r.status === 'human_handling' ? (
+                                                    <span className="inline-flex items-center gap-1 px-2 py-1 bg-success/10 text-success rounded-md text-xs font-medium">
+                                                        <div className="w-1.5 h-1.5 bg-success rounded-full animate-pulse"></div>
+                                                        Active
+                                                    </span>
+                                                ) : r.escalations > 0 ? (
+                                                    <span className="inline-flex items-center gap-1 px-2 py-1 bg-warning/10 text-warning rounded-md text-xs font-medium" title={r.last_escalation_reason || undefined}>
+                                                        <i className="fa-duotone fa-solid fa-fire text-[10px]" />
                                                         Escalated
                                                     </span>
                                                 ) : (
-                                                    <span className="inline-flex items-center gap-2 px-2 py-1 bg-success/10 text-success rounded-md text-xs font-medium">
-                                                        <div className="w-1.5 h-1.5 bg-success rounded-full"></div>
-                                                        Completed
+                                                    <span className="inline-flex items-center gap-1 px-2 py-1 bg-base-200/60 text-base-content/60 rounded-md text-xs font-medium">
+                                                        <div className="w-1.5 h-1.5 bg-base-content/40 rounded-full"></div>
+                                                        Complete
                                                     </span>
                                                 )}
                                             </td>
@@ -286,10 +321,10 @@ function ConversationsTable({ conversations }: { conversations: Row[] }) {
                                                     Session #{index + 1}
                                                 </h3>
                                                 <div className="text-sm text-base-content/60">
-                                                    Started {new Date(r.created_at).toLocaleDateString('en-US', {
+                                                    Last updated {new Date(r.updated_at).toLocaleDateString('en-US', {
                                                         month: 'short',
                                                         day: 'numeric'
-                                                    })} at {new Date(r.created_at).toLocaleTimeString('en-US', {
+                                                    })} at {new Date(r.updated_at).toLocaleTimeString('en-US', {
                                                         hour: '2-digit',
                                                         minute: '2-digit'
                                                     })}
@@ -328,11 +363,15 @@ function ConversationsTable({ conversations }: { conversations: Row[] }) {
                                                         </span>
                                                     </div>
                                                 )}
-                                                {r.escalations > 0 && (
-                                                    <div className="flex items-center gap-2 px-3 py-2 bg-warning/10 text-warning rounded-lg" title={r.last_escalation_reason || undefined}>
-                                                        <i className="fa-duotone fa-solid fa-fire text-xs" aria-hidden />
-                                                        <span className="text-sm font-semibold">{r.escalations}</span>
-                                                        <span className="text-xs opacity-80">esc</span>
+                                                {r.has_human_agent ? (
+                                                    <div className="flex items-center gap-2 px-3 py-2 bg-warning/10 text-warning rounded-lg" title={r.agent_names || "Human agent involved"}>
+                                                        <i className="fa-duotone fa-solid fa-user-headset text-xs" aria-hidden />
+                                                        <span className="text-xs opacity-80">Agent</span>
+                                                    </div>
+                                                ) : (
+                                                    <div className="flex items-center gap-2 px-3 py-2 bg-base-200/60 text-base-content/70 rounded-lg">
+                                                        <i className="fa-duotone fa-solid fa-robot text-xs" aria-hidden />
+                                                        <span className="text-xs opacity-80">AI Only</span>
                                                     </div>
                                                 )}
                                                 <HoverScale scale={1.05}>
@@ -436,7 +475,7 @@ async function ConversationsContent({ tenantId, filters }: { tenantId: string; f
             {/* KPI Cards */}
             <StaggerContainer>
                 <StaggerChild>
-                    <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 xl:grid-cols-4 gap-6">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-6">
                         <HoverScale scale={1.01}>
                             <StatCard
                                 title="Conversations"
