@@ -4,67 +4,67 @@
  */
 
 export interface EmailTemplateData {
-  // Header content
-  title: string;
-  preheader?: string; // Text shown in email client preview
-  
-  // Brand customization
-  brandName?: string;
-  brandColor?: string;
-  logoUrl?: string;
-  
-  // Content sections
-  greeting?: string;
-  body: string | string[]; // HTML string or array of paragraphs
-  callToAction?: {
-    text: string;
-    url: string;
-    style?: 'primary' | 'secondary';
-  };
-  
-  // Footer content
-  footerText?: string;
-  unsubscribeUrl?: string;
-  supportEmail?: string;
-  supportToEmail?: string;
-  
-  // Meta
-  tenantName?: string;
-  siteUrl?: string;
+    // Header content
+    title: string;
+    preheader?: string; // Text shown in email client preview
+
+    // Brand customization
+    brandName?: string;
+    brandColor?: string;
+    logoUrl?: string;
+
+    // Content sections
+    greeting?: string;
+    body: string | string[]; // HTML string or array of paragraphs
+    callToAction?: {
+        text: string;
+        url: string;
+        style?: 'primary' | 'secondary';
+    };
+
+    // Footer content
+    footerText?: string;
+    unsubscribeUrl?: string;
+    supportEmail?: string;
+    supportToEmail?: string;
+
+    // Meta
+    tenantName?: string;
+    siteUrl?: string;
 }
 
 export interface EmailColors {
-  primary: string;
-  secondary: string;
-  success: string;
-  warning: string;
-  error: string;
-  text: string;
-  textLight: string;
-  background: string;
-  surface: string;
-  border: string;
+    primary: string;
+    secondary: string;
+    success: string;
+    warning: string;
+    error: string;
+    text: string;
+    textLight: string;
+    background: string;
+    surface: string;
+    border: string;
 }
 
 // helpNINJA brand colors
 const defaultColors: EmailColors = {
-  primary: '#4DA8DA',
-  secondary: '#22C55E',
-  success: '#22C55E',
-  warning: '#FACC15',
-  error: '#DC2626',
-  text: '#1f2937',
-  textLight: '#ffffff',
-  background: '#ffffff',
-  surface: '#f8fafc',
-  border: '#e2e8f0'
+    primary: '#4DA8DA',
+    secondary: '#22C55E',
+    success: '#22C55E',
+    warning: '#FACC15',
+    error: '#DC2626',
+    text: '#1f2937',
+    textLight: '#ffffff',
+    background: '#ffffff',
+    surface: '#f8fafc',
+    border: '#e2e8f0'
 };
 
 /**
  * Generate CSS styles for email template
  */
 function generateStyles(colors: EmailColors = defaultColors): string {
-  return `
+    return `
     <style>
       /* Reset and base styles */
       body, table, td, a { -webkit-text-size-adjust: 100%; -ms-text-size-adjust: 100%; }
@@ -289,30 +289,30 @@ function generateStyles(colors: EmailColors = defaultColors): string {
  * Generate the base HTML email template
  */
 export function generateEmailTemplate(data: EmailTemplateData, customColors?: Partial<EmailColors>): string {
-  const colors = { ...defaultColors, ...customColors };
-  const styles = generateStyles(colors);
-  
-  const {
-    title,
-    preheader,
-    brandName = 'helpNINJA',
-    greeting = 'Hi there!',
-    body,
-    callToAction,
-    footerText,
-    supportEmail = process.env.SUPPORT_FROM_EMAIL || 'support@contact.helpninja.app',
-    supportToEmail = process.env.SUPPORT_TO_EMAIL || 'support@helpninja.ai',
-    siteUrl = process.env.SITE_URL || 'https://helpninja.app',
-    tenantName
-  } = data;
+    const colors = { ...defaultColors, ...customColors };
+    const styles = generateStyles(colors);
 
-  // Convert body to HTML if it's an array
-  const bodyHtml = Array.isArray(body) 
-    ? body.map(paragraph => `<p>${paragraph}</p>`).join('\n')
-    : body;
+    const {
+        title,
+        preheader,
+        brandName = 'helpNINJA',
+        greeting = 'Hi there!',
+        body,
+        callToAction,
+        footerText,
+        supportEmail = process.env.SUPPORT_FROM_EMAIL || 'support@contact.helpninja.app',
+        supportToEmail = process.env.SUPPORT_TO_EMAIL || 'support@helpninja.ai',
+        siteUrl = process.env.SITE_URL || 'https://helpninja.app',
+        tenantName
+    } = data;
 
-  // Generate call-to-action button
-  const ctaHtml = callToAction ? `
+    // Convert body to HTML if it's an array
+    const bodyHtml = Array.isArray(body)
+        ? body.map(paragraph => `<p>${paragraph}</p>`).join('\n')
+        : body;
+
+    // Generate call-to-action button
+    const ctaHtml = callToAction ? `
     <div class="text-center">
       <a href="${callToAction.url}" class="cta-button ${callToAction.style === 'secondary' ? 'cta-secondary' : ''}">
         ${callToAction.text}
@@ -320,7 +320,7 @@ export function generateEmailTemplate(data: EmailTemplateData, customColors?: Pa
     </div>
   ` : '';
 
-  return `
+    return `
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -373,7 +373,7 @@ export function generateEmailTemplate(data: EmailTemplateData, customColors?: Pa
       
       <p class="footer-text text-xs">
         This email was sent by ${tenantName ? `${tenantName} via ` : ''}helpNINJA.<br>
-        Questions? Reply to this email or contact us at ${supportToEmail}
+        Questions? Contact us at ${supportToEmail}
       </p>
     </div>
   </div>
@@ -386,28 +386,28 @@ export function generateEmailTemplate(data: EmailTemplateData, customColors?: Pa
  * Generate plain text version of email
  */
 export function generateTextTemplate(data: EmailTemplateData): string {
-  const {
-    title,
-    greeting = 'Hi there!',
-    body,
-    callToAction,
-    footerText,
-    supportEmail = process.env.SUPPORT_FROM_EMAIL || 'support@helpninja.ai',
-    supportToEmail = process.env.SUPPORT_TO_EMAIL || 'support@helpninja.ai',
-    siteUrl = process.env.SITE_URL || 'https://helpninja.app',
-    tenantName
-  } = data;
+    const {
+        title,
+        greeting = 'Hi there!',
+        body,
+        callToAction,
+        footerText,
+        supportEmail = process.env.SUPPORT_FROM_EMAIL || 'support@contact.helpninja.ai',
+        supportToEmail = process.env.SUPPORT_TO_EMAIL || 'support@helpninja.ai',
+        siteUrl = process.env.SITE_URL || 'https://helpninja.app',
+        tenantName
+    } = data;
 
-  // Convert body to text if it's an array
-  const bodyText = Array.isArray(body) 
-    ? body.join('\n\n')
-    : body.replace(/<[^>]*>/g, ''); // Strip HTML tags
+    // Convert body to text if it's an array
+    const bodyText = Array.isArray(body)
+        ? body.join('\n\n')
+        : body.replace(/<[^>]*>/g, ''); // Strip HTML tags
 
-  const ctaText = callToAction ? `
+    const ctaText = callToAction ? `
 ${callToAction.text}: ${callToAction.url}
 ` : '';
 
-  return `
+    return `
 ${title}
 
 ${greeting}
@@ -421,7 +421,7 @@ ${footerText ? `${footerText}\n` : ''}
 ---
 
 This email was sent by ${tenantName ? `${tenantName} via ` : ''}helpNINJA.
-Questions? Reply to this email or contact us at ${supportToEmail}
+Questions? Contact us at ${supportToEmail}
 
 helpNINJA: ${siteUrl}
   `.trim();

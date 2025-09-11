@@ -46,7 +46,7 @@ export default function SignInPage() {
                                 <div className="grid grid-cols-3 gap-3">
                                     <Clerk.Connection name="google" className="btn btn-outline rounded-xl"><Clerk.Icon />Google</Clerk.Connection>
                                     <Clerk.Connection name="facebook" className="btn btn-outline rounded-xl"><Clerk.Icon />Facebook</Clerk.Connection>
-                                    <Clerk.Connection name="microsoft" className="btn btn-outline rounded-xl"><Clerk.Icon />Microsoft</Clerk.Connection>
+                                    {/* <Clerk.Connection name="microsoft" className="btn btn-outline rounded-xl"><Clerk.Icon />Microsoft</Clerk.Connection> */}
                                 </div>
                                 <div className="text-sm text-base-content/60 text-center">
                                     New here? <a className="link link-primary" href="/auth/signup">Create an account</a>
