@@ -99,6 +99,18 @@ export async function POST(req: NextRequest) {
             }
         }
 
+        // Handle selected integrations for manual escalations
+        if (payload.selectedIntegrations && Array.isArray(payload.selectedIntegrations)) {
+            // Convert selected integration IDs to destination format
+            matchedRuleDestinations = payload.selectedIntegrations.map((integrationId: string) => ({
+                type: 'integration',
+                integration_id: integrationId
+            }));
+
+            // For selected integrations, we don't want fallback behavior
+            // This ensures only the selected integrations are used
+        }
+
         const result = await handleEscalation({
             tenantId: payload.tenantId,
             conversationId: payload.conversationId,
@@ -121,7 +133,8 @@ export async function POST(req: NextRequest) {
                 sessionDuration: payload.sessionDuration,
                 isOffHours: payload.isOffHours,
                 conversationLength: payload.conversationLength,
-                customFields: payload.customFields || {}
+                customFields: payload.customFields || {},
+                selectedIntegrations: payload.selectedIntegrations // Track which were selected
             }
         });
 

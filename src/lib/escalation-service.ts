@@ -108,6 +108,10 @@ export interface EscalationResult {
 
 /**
  * Central escalation service that handles all escalation logic
+ * 
+ * Supports both automatic escalations (low confidence, rules) and manual escalations
+ * with integration selection. Manual escalations can now specify which integrations
+ * to use via matchedRuleDestinations, preventing "spam all integrations" behavior.
  */
 /**
  * Loads integration configuration by ID
@@ -298,26 +302,26 @@ export async function handleEscalation({
         }
     }
 
-            // 4. If webhooks are requested, dispatch them before integration handling
-        if (triggerWebhooks) {
-            try {
-                // Triggering webhooks for escalation with rule context
-                await webhookEvents.escalationTriggered(
-                    tenantId,
-                    conversationId,
-                    reason,
-                    confidence,
-                    userMessage,
-                    ruleId || undefined,
-                    matchedRuleDestinations || undefined
-                );
-                // Webhooks triggered successfully
-            } catch (error) {
-                console.error('❌ ESCALATION SERVICE: Failed to trigger webhooks:', error);
-            }
-        } else {
-            // Webhooks skipped as requested
+    // 4. If webhooks are requested, dispatch them before integration handling
+    if (triggerWebhooks) {
+        try {
+            // Triggering webhooks for escalation with rule context
+            await webhookEvents.escalationTriggered(
+                tenantId,
+                conversationId,
+                reason,
+                confidence,
+                userMessage,
+                ruleId || undefined,
+                matchedRuleDestinations || undefined
+            );
+            // Webhooks triggered successfully
+        } catch (error) {
+            console.error('❌ ESCALATION SERVICE: Failed to trigger webhooks:', error);
         }
+    } else {
+        // Webhooks skipped as requested
+    }
 
     // 5. Prepare the escalation event
     const event: EscalationEvent = {
@@ -368,9 +372,9 @@ export async function handleEscalation({
         // Determine if this is a rule-based escalation that should skip fallback
         const isRuleBased = Boolean(ruleId || (matchedRuleDestinations && matchedRuleDestinations.length > 0));
         const skipFallback = isRuleBased;
-        
+
         console.log(`📨 Dispatching ${isRuleBased ? 'rule-based' : 'automatic'} escalation (skipFallback: ${skipFallback})`);
-        
+
         const dispatchResult = await dispatchEscalation(event, undefined, skipFallback);
         // Dispatch complete
 
