@@ -164,7 +164,7 @@ const PLAN_LIMITS = {
 
 **Missing Plan Restrictions**:
 - Advanced analytics (usage by source, performance metrics)
-- Premium integrations (Slack, custom webhooks)
+- Integration marketplace access (starter = email only, pro/agency = full marketplace)
 - Advanced escalation rules
 - Conversation management features
 - API access (starter plans should have limited API access)
@@ -231,8 +231,8 @@ const PLAN_LIMITS = {
    // Add to limits.ts
    export const PLAN_FEATURES = {
      starter: ['basic_analytics', 'email_escalation'],
-     pro: ['advanced_analytics', 'slack_integration', 'api_access'],
-     agency: ['custom_integrations', 'priority_support', 'advanced_rules']
+     pro: ['advanced_analytics', 'integration_marketplace', 'api_access'],
+     agency: ['custom_integrations', 'priority_support', 'advanced_rules', 'integration_marketplace']
    };
    ```
 

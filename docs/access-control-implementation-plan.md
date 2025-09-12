@@ -86,7 +86,8 @@ export type PlanFeature =
   | 'basic_analytics' 
   | 'advanced_analytics'
   | 'api_access'
-  | 'slack_integration'
+  | 'email_escalation'
+  | 'integration_marketplace'
   | 'custom_integrations'
   | 'priority_support'
   | 'advanced_rules'
@@ -95,9 +96,9 @@ export type PlanFeature =
 
 export const PLAN_FEATURES: Record<Plan, PlanFeature[]> = {
   none: ['basic_analytics'],
-  starter: ['basic_analytics', 'api_access'],
-  pro: ['basic_analytics', 'advanced_analytics', 'api_access', 'slack_integration', 'conversation_management'],
-  agency: ['basic_analytics', 'advanced_analytics', 'api_access', 'slack_integration', 'custom_integrations', 'priority_support', 'advanced_rules', 'conversation_management', 'webhook_management']
+  starter: ['basic_analytics', 'email_escalation', 'api_access'],
+  pro: ['basic_analytics', 'advanced_analytics', 'api_access', 'integration_marketplace', 'conversation_management'],
+  agency: ['basic_analytics', 'advanced_analytics', 'api_access', 'integration_marketplace', 'custom_integrations', 'priority_support', 'advanced_rules', 'conversation_management', 'webhook_management']
 };
 
 export async function hasFeature(tenantId: string, feature: PlanFeature): Promise<boolean> {
@@ -116,7 +117,7 @@ export function requireFeature(feature: PlanFeature) {
 ```
 
 2. **Apply Feature Gates to APIs**:
-   - `/api/webhooks` - Require `webhook_management` feature
+   - `/api/integrations` - Require `integration_marketplace` feature for pro/agency plans
    - `/api/escalation-rules` - Require `advanced_rules` for complex rules
    - `/api/analytics/advanced` - Require `advanced_analytics` feature
 
