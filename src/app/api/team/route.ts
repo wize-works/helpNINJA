@@ -1,15 +1,36 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { query } from '@/lib/db';
 import { getTenantIdStrict } from '@/lib/tenant-resolve';
+import { hasRole } from '@/lib/rbac';
+import { logAuditEvent, extractRequestInfo } from '@/lib/audit-log';
+import { auth } from '@clerk/nextjs/server';
 
 export const runtime = 'nodejs';
 
-export async function GET() {
+export async function GET(request: NextRequest) {
     try {
+        const { userId } = await auth();
+        if (!userId) {
+            return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+        }
+
         const tenantId = await getTenantIdStrict();
 
-        // Get current user's role for permission checking
-        // For now, we'll assume they have permission - this should be enhanced with proper auth
+        // Require admin or owner role to view team members
+        const roleCheck = await hasRole(userId, tenantId, ['admin', 'owner']);
+        if (!roleCheck.hasAccess) {
+            return NextResponse.json({ error: roleCheck.reason || 'Insufficient permissions' }, { status: 403 });
+        }
+
+        // Log audit event
+        await logAuditEvent({
+            tenantId,
+            userId,
+            action: 'team_member_viewed',
+            resourceType: 'team',
+            resourceId: tenantId,
+            metadata: extractRequestInfo(request)
+        });
 
         const { rows } = await query(`
             SELECT 
@@ -71,7 +92,19 @@ export async function GET() {
 
 export async function POST(req: NextRequest) {
     try {
+        const { userId: currentUserId } = await auth();
+        if (!currentUserId) {
+            return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+        }
+
         const tenantId = await getTenantIdStrict();
+
+        // Require admin or owner role to add team members
+        const roleCheck = await hasRole(currentUserId, tenantId, ['admin', 'owner']);
+        if (!roleCheck.hasAccess) {
+            return NextResponse.json({ error: roleCheck.reason || 'Insufficient permissions' }, { status: 403 });
+        }
+
         const body = await req.json();
         const { email, role, firstName, lastName } = body;
 
@@ -155,8 +188,25 @@ export async function POST(req: NextRequest) {
         await query(
             `INSERT INTO public.team_activity (tenant_id, user_id, action, resource_type, resource_id, details)
              VALUES ($1, $2, 'user_added', 'user', $3, $4)`,
-            [tenantId, null, userId, JSON.stringify({ email, role, method: 'direct_add' })]
+            [tenantId, currentUserId, userId, JSON.stringify({ email, role, method: 'direct_add' })]
         );
+
+        // Log audit event
+        await logAuditEvent({
+            tenantId,
+            userId: currentUserId,
+            action: 'team_member_invited',
+            resourceType: 'team_member',
+            resourceId: userId,
+            metadata: {
+                email,
+                role,
+                firstName,
+                lastName,
+                method: 'direct_add',
+                ...extractRequestInfo(req)
+            }
+        });
 
         return NextResponse.json({
             message: 'Team member added successfully',

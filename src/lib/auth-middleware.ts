@@ -1,5 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { query } from '@/lib/db';
+import { getUserRole, hasRole, type UserRole, type RolePermission, hasPermission as hasRolePermission } from '@/lib/rbac';
+import { hasFeature, type PlanFeature } from '@/lib/plan-features';
 
 export type AuthenticatedRequest = NextRequest & {
     tenantId: string;
@@ -289,4 +291,147 @@ export function requireApiKey(permissions: string[] = []) {
         requiredPermissions: permissions,
         allowSessionAuth: false
     });
+}
+
+/**
+ * Enhanced auth wrapper with role and feature checking
+ */
+export function withRoleAndFeatureAuth(
+    handler: (req: AuthenticatedRequest, ...args: unknown[]) => Promise<NextResponse>,
+    options: {
+        requiredPermissions?: string[];
+        requiredRoles?: UserRole[];
+        requiredFeatures?: PlanFeature[];
+        allowSessionAuth?: boolean;
+    } = {}
+) {
+    return async (req: NextRequest, ...args: unknown[]): Promise<NextResponse> => {
+        // First, handle basic authentication
+        const authResult = await authenticateRequest(
+            req,
+            options.requiredPermissions || [],
+            options.allowSessionAuth !== false
+        );
+
+        if (!authResult.success) {
+            return NextResponse.json(
+                { error: authResult.error },
+                { status: authResult.status }
+            );
+        }
+
+        const { tenantId, userId } = authResult;
+
+        // Check role requirements if specified and we have a userId
+        if (options.requiredRoles && userId) {
+            try {
+                const userRole = await getUserRole(userId, tenantId);
+                if (!userRole || !options.requiredRoles.includes(userRole)) {
+                    return NextResponse.json(
+                        {
+                            error: 'Insufficient role permissions',
+                            details: {
+                                required: options.requiredRoles,
+                                current: userRole || 'none'
+                            }
+                        },
+                        { status: 403 }
+                    );
+                }
+            } catch (error) {
+                console.error('Role check error:', error);
+                return NextResponse.json(
+                    { error: 'Role verification failed' },
+                    { status: 500 }
+                );
+            }
+        }
+
+        // Check feature requirements if specified
+        if (options.requiredFeatures) {
+            try {
+                for (const feature of options.requiredFeatures) {
+                    const featureCheck = await hasFeature(tenantId, feature);
+                    if (!featureCheck.hasAccess) {
+                        return NextResponse.json(
+                            {
+                                error: 'Feature not available',
+                                details: {
+                                    feature,
+                                    currentPlan: featureCheck.currentPlan,
+                                    suggestedPlan: featureCheck.suggestedPlan,
+                                    reason: featureCheck.reason
+                                }
+                            },
+                            { status: 402 } // Payment required
+                        );
+                    }
+                }
+            } catch (error) {
+                console.error('Feature check error:', error);
+                return NextResponse.json(
+                    { error: 'Feature verification failed' },
+                    { status: 500 }
+                );
+            }
+        }
+
+        // Augment request with auth info
+        const authenticatedReq = req as AuthenticatedRequest;
+        authenticatedReq.tenantId = tenantId;
+        authenticatedReq.apiKey = authResult.apiKey;
+        authenticatedReq.userId = userId;
+
+        return handler(authenticatedReq, ...args);
+    };
+}
+
+/**
+ * Middleware requiring specific roles
+ */
+export function requireRoles(roles: UserRole[]) {
+    return (
+        handler: (req: AuthenticatedRequest, ...args: unknown[]) => Promise<NextResponse>
+    ) => withRoleAndFeatureAuth(handler, {
+        requiredRoles: roles,
+        allowSessionAuth: true
+    });
+}
+
+/**
+ * Middleware requiring specific plan features
+ */
+export function requireFeatures(features: PlanFeature[]) {
+    return (
+        handler: (req: AuthenticatedRequest, ...args: unknown[]) => Promise<NextResponse>
+    ) => withRoleAndFeatureAuth(handler, {
+        requiredFeatures: features
+    });
+}
+
+/**
+ * Middleware requiring both roles and features
+ */
+export function requireRolesAndFeatures(roles: UserRole[], features: PlanFeature[]) {
+    return (
+        handler: (req: AuthenticatedRequest, ...args: unknown[]) => Promise<NextResponse>
+    ) => withRoleAndFeatureAuth(handler, {
+        requiredRoles: roles,
+        requiredFeatures: features,
+        allowSessionAuth: true
+    });
+}
+
+/**
+ * Convenience middleware for admin-only routes
+ */
+export function requireAdmin() {
+    return requireRoles(['owner', 'admin']);
+}
+
+/**
+ * Convenience middleware for owner-only routes
+ */
+export function requireOwner() {
+    return requireRoles(['owner']);
 }

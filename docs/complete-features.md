@@ -12,6 +12,66 @@ What's partial or pending
 - Rate limiting beyond plan gates.
 - RLS policies if using Supabase auth directly.
 
+## ✅ SECURITY & ACCESS CONTROL (NEW - Enterprise-grade implementation)
+
+### Role-Based Access Control (RBAC) - **COMPLETE**
+**Location:** `src/lib/rbac.ts`
+**Features:**
+- Complete role hierarchy: owner > admin > analyst > support > viewer
+- User role checking: `getUserRole()`, `hasRole()`, `roleHierarchyCheck()`
+- Permission system with role-based permissions
+- Team member management controls: `canManageUser()`
+- Database integration with `public.tenant_members` table
+
+### Plan-Based Feature Gating - **COMPLETE**
+**Location:** `src/lib/plan-features.ts`
+**Features:**
+- Plan feature mapping for starter/pro/agency plans
+- Feature checking: `hasFeature()`, `requireFeature()`
+- Integration marketplace access (pro/agency plans get open access)
+- Upgrade suggestions with plan comparisons
+- Usage limit enforcement
+
+**Current Plan Features:**
+- **Starter**: Basic chat, limited integrations, standard analytics
+- **Pro**: Advanced analytics, integration marketplace access, priority support
+- **Agency**: All features, white-label options, custom integrations
+
+### Enhanced Authentication Middleware - **COMPLETE**
+**Location:** `src/lib/auth-middleware.ts`
+**Features:**
+- API key authentication with permissions
+- Session-based authentication with Clerk
+- Role requirement middleware: `requireRoles()`, `requireAdmin()`, `requireOwner()`
+- Feature requirement middleware: `requireFeatures()`
+- Combined role + feature checking: `requireRolesAndFeatures()`
+
+### Comprehensive Audit Logging - **COMPLETE**
+**Location:** `src/lib/audit-log.ts`
+**Database:** `public.audit_logs` table (see `sql/audit_logs_migration.sql`)
+**Features:**
+- Security events (login, unauthorized access)
+- Team management events (member added/removed/role changed/viewed)
+- Billing events (plan changes, subscription updates, portal access)
+- Integration events (added/removed/configured)
+- API key events (created/deleted/rotated)
+- Request metadata capture (IP, user agent, etc.)
+
+### Protected API Routes - **IMPLEMENTED**
+**Team Management API** (`src/app/api/team/route.ts`):
+- GET: Requires admin/owner role to view team members
+- POST: Requires admin/owner role to add team members
+- Audit logging for all team operations
+
+**Billing API** (`src/app/api/billing/checkout/route.ts`, `src/app/api/billing/portal/route.ts`):
+- Requires admin/owner role for all billing operations
+- Audit logging for subscription creation and portal access
+- Customer ID validation and security checks
+
+**Integration Access Model:**
+- **Starter Plan**: Limited to basic integrations (Slack via env fallback)
+- **Pro/Agency Plans**: Full integration marketplace access + custom integrations
+
 Big picture
 - Embeddable widget calls /api/chat with tenant/session
 - Chat pipeline: usage gate → hybrid RAG (vector + lexical) → OpenAI → persist → optional escalation → usage increment

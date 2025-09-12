@@ -2,6 +2,9 @@ import { NextRequest, NextResponse } from 'next/server';
 import { stripe, Plan } from '@/lib/stripe';
 import { transaction } from '@/lib/db';
 import { getTenantIdStrict } from '@/lib/tenant-resolve';
+import { hasRole } from '@/lib/rbac';
+import { logAuditEvent, extractRequestInfo } from '@/lib/audit-log';
+import { auth } from '@clerk/nextjs/server';
 import { QueryResult } from 'pg';
 
 export const runtime = 'nodejs';
@@ -26,15 +29,20 @@ function getStripePriceId(plan: Exclude<Plan, 'none'>, billingPeriod: 'monthly' 
 
 export async function POST(req: NextRequest) {
     try {
-        const { plan, billingPeriod = 'monthly' } = (await req.json()) as { 
-            plan: Plan; 
+        const { userId } = await auth();
+        if (!userId) {
+            return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+        }
+
+        const { plan, billingPeriod = 'monthly' } = (await req.json()) as {
+            plan: Plan;
             billingPeriod?: 'monthly' | 'yearly';
         };
-        
+
         if (!plan || !(plan in { starter: true, pro: true, agency: true })) {
             return NextResponse.json({ error: 'Valid plan required' }, { status: 400 });
         }
-        
+
         if (billingPeriod && !['monthly', 'yearly'].includes(billingPeriod)) {
             return NextResponse.json({ error: 'Invalid billing period' }, { status: 400 });
         }
@@ -42,6 +50,12 @@ export async function POST(req: NextRequest) {
         const tenantId = await getTenantIdStrict();
         if (!tenantId) {
             return NextResponse.json({ error: 'tenantId required' }, { status: 400 });
+        }
+
+        // Require admin or owner role to manage billing
+        const roleCheck = await hasRole(userId, tenantId, ['admin', 'owner']);
+        if (!roleCheck.hasAccess) {
+            return NextResponse.json({ error: roleCheck.reason || 'Insufficient permissions to manage billing' }, { status: 403 });
         }
 
         const siteUrl = process.env.SITE_URL || 'http://localhost:3000';
@@ -79,8 +93,8 @@ export async function POST(req: NextRequest) {
                 agency_monthly: process.env.STRIPE_PRICE_AGENCY_MONTHLY,
                 agency_yearly: process.env.STRIPE_PRICE_AGENCY_YEARLY,
             });
-            return NextResponse.json({ 
-                error: `Price not available for ${plan} plan with ${billingPeriod} billing. Please contact support.` 
+            return NextResponse.json({
+                error: `Price not available for ${plan} plan with ${billingPeriod} billing. Please contact support.`
             }, { status: 400 });
         }
 
@@ -95,6 +109,22 @@ export async function POST(req: NextRequest) {
                 metadata: { tenantId, plan, billingPeriod },
             },
             metadata: { tenantId, plan, billingPeriod },
+        });
+
+        // Log audit event
+        await logAuditEvent({
+            tenantId,
+            userId,
+            action: 'subscription_created',
+            resourceType: 'subscription',
+            resourceId: session.id,
+            metadata: {
+                plan,
+                billingPeriod,
+                stripeSessionId: session.id,
+                customerId,
+                ...extractRequestInfo(req)
+            }
         });
 
         return NextResponse.json({ url: session.url });
