@@ -16,6 +16,25 @@ type InvitationData = {
 
 type InvitationStatus = 'loading' | 'valid' | 'not_found' | 'expired' | 'already_accepted' | 'error';
 
+interface AcceptanceResponse {
+    success: boolean;
+    message: string;
+    user: {
+        id: string;
+        email: string;
+        first_name: string;
+        last_name: string;
+        clerk_user_id: string;
+    };
+    tenant: {
+        id: string;
+        name: string;
+        role: string;
+    };
+    next_action: 'redirect_to_signin';
+    signin_url: string;
+}
+
 export default function InvitationPage() {
     const params = useParams();
     const router = useRouter();
@@ -26,8 +45,10 @@ export default function InvitationPage() {
     const [accepting, setAccepting] = useState(false);
     const [formData, setFormData] = useState({
         firstName: '',
-        lastName: ''
+        lastName: '',
+        password: ''
     });
+    console.log('InvitationPage render with token:', token);
 
     useEffect(() => {
         const fetchInvitation = async () => {
@@ -68,25 +89,37 @@ export default function InvitationPage() {
         e.preventDefault();
         if (!invitation) return;
 
+        // Validate required fields
+        if (!formData.firstName.trim() || !formData.lastName.trim() || !formData.password.trim()) {
+            toastUtils.error('Please fill in all required fields');
+            return;
+        }
+
+        if (formData.password.length < 8) {
+            toastUtils.error('Password must be at least 8 characters long');
+            return;
+        }
+
         setAccepting(true);
         try {
-            const response = await fetch(`/api/invitations/${token}`, {
+            const response = await fetch(`/api/invitations/${token}/accept`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
                 },
                 body: JSON.stringify({
-                    firstName: formData.firstName.trim() || undefined,
-                    lastName: formData.lastName.trim() || undefined,
+                    firstName: formData.firstName.trim(),
+                    lastName: formData.lastName.trim(),
+                    password: formData.password,
                 }),
             });
 
-            const data = await response.json();
+            const data: AcceptanceResponse = await response.json();
 
             if (response.ok) {
-                toastUtils.success('Welcome to the team! Redirecting to dashboard...');
+                toastUtils.success(`Welcome ${data.user.first_name}! Your account has been created and you've been added to ${data.tenant.name}.`);
                 setTimeout(() => {
-                    router.push('/dashboard');
+                    window.location.href = data.signin_url;
                 }, 2000);
             } else {
                 toastUtils.apiError(data, 'Failed to accept invitation');
@@ -186,7 +219,7 @@ export default function InvitationPage() {
                         <div className="w-16 h-16 bg-primary/20 text-primary rounded-full mx-auto mb-4 flex items-center justify-center">
                             <i className="fa-duotone fa-solid fa-user-plus text-2xl" aria-hidden />
                         </div>
-                        <h1 className="text-2xl font-bold">You&apos;re Invited!</h1>
+                        <h1 className="text-2xl font-bold">Create Your Account</h1>
                         <p className="text-base-content/70">Join {invitation.tenant_name} on helpNINJA</p>
                     </div>
 
@@ -223,35 +256,47 @@ export default function InvitationPage() {
 
                     <form onSubmit={handleAccept} className="space-y-4">
                         <div className="grid grid-cols-2 gap-4">
-                            <label className="form-control">
-                                <div className="label">
-                                    <span className="label-text">First Name</span>
-                                </div>
+                            <fieldset className="fieldset">
+                                <legend className="fieldset-legend">First Name <span className="text-error">*</span></legend>
                                 <input
                                     type="text"
-                                    className="input input-bordered"
+                                    className="input"
                                     placeholder="John"
                                     value={formData.firstName}
                                     onChange={(e) => setFormData(prev => ({ ...prev, firstName: e.target.value }))}
+                                    required
                                 />
-                            </label>
+                            </fieldset>
 
-                            <label className="form-control">
-                                <div className="label">
-                                    <span className="label-text">Last Name</span>
-                                </div>
+                            <fieldset className="fieldset">
+                                <legend className="fieldset-legend">Last Name <span className="text-error">*</span></legend>
                                 <input
                                     type="text"
-                                    className="input input-bordered"
+                                    className="input"
                                     placeholder="Doe"
                                     value={formData.lastName}
                                     onChange={(e) => setFormData(prev => ({ ...prev, lastName: e.target.value }))}
+                                    required
                                 />
-                            </label>
+                            </fieldset>
                         </div>
 
+                        <fieldset className="fieldset">
+                            <legend className="fieldset-legend">Password <span className="text-error">*</span></legend>
+                            <input
+                                type="password"
+                                className="input w-full"
+                                placeholder="Create a secure password (min 8 characters)"
+                                value={formData.password}
+                                onChange={(e) => setFormData(prev => ({ ...prev, password: e.target.value }))}
+                                minLength={8}
+                                required
+                            />
+                        </fieldset>
+
                         <div className="text-xs text-base-content/60 bg-base-200/30 p-3 rounded-lg">
-                            Your name will help team members identify you in the dashboard.
+                            <i className="fa-duotone fa-solid fa-info-circle mr-2" aria-hidden />
+                            Your account will be created and you&apos;ll be automatically added to {invitation.tenant_name} with {invitation.role} permissions.
                         </div>
 
                         <HoverScale scale={1.02}>
@@ -263,12 +308,12 @@ export default function InvitationPage() {
                                 {accepting ? (
                                     <>
                                         <span className="loading loading-spinner loading-sm"></span>
-                                        Accepting...
+                                        Creating Account...
                                     </>
                                 ) : (
                                     <>
-                                        <i className="fa-duotone fa-solid fa-check mr-2" aria-hidden />
-                                        Accept Invitation
+                                        <i className="fa-duotone fa-solid fa-user-plus mr-2" aria-hidden />
+                                        Create Account & Join Team
                                     </>
                                 )}
                             </button>
@@ -276,7 +321,7 @@ export default function InvitationPage() {
                     </form>
 
                     <div className="text-center text-xs text-base-content/50 mt-4">
-                        By accepting, you agree to join {invitation.tenant_name} with {invitation.role} permissions.
+                        By creating your account, you agree to join {invitation.tenant_name} with {invitation.role} permissions.
                     </div>
                 </div>
             </div>

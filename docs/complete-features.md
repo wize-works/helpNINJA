@@ -14,6 +14,61 @@ What's partial or pending
 
 ## ✅ SECURITY & ACCESS CONTROL (NEW - Enterprise-grade implementation)
 
+### User Invitation System - **COMPLETE** ✅
+**Location:** Team management APIs, components, and Clerk integration
+**Status:** Fully implemented and build-tested with proper client/server code separation
+
+**Features:**
+- **Complete invitation flow**: Create, send, accept, resend, and cancel invitations with proper Clerk authentication integration
+- **Role-based permissions**: Users can only invite roles they're authorized to assign (owners > admins > analysts > support > viewers)
+- **Secure token system**: Cryptographically secure invitation tokens with 7-day expiry and automatic cleanup
+- **Clerk integration**: Automatic Clerk user creation and organization membership during invitation acceptance
+- **Email delivery**: Professional email templates with fallback handling for delivery failures
+- **Real-time management**: Live team member management with role editing, status updates, and removal
+- **Permission validation**: Comprehensive security preventing role escalation attacks and unauthorized actions
+- **Transaction safety**: Database operations use transactions with rollback on failures for data consistency
+- **Audit logging**: Complete activity tracking for all team management operations
+- **Build optimization**: Proper separation of client-safe utilities from server-only database operations for webpack compatibility
+
+**Components:**
+- `src/components/add-team-member-form.tsx` - Invitation creation with role validation (client-safe)
+- `src/components/team-member-card.tsx` - Individual member management with permissions
+- `src/components/team-invitations.tsx` - Pending invitations with resend/cancel actions
+- `src/app/dashboard/team/page.tsx` - Complete team management interface
+- `src/app/(pages)/invite/[token]/page.tsx` - Invitation acceptance with Clerk flow
+
+**API Endpoints:**
+- `POST /api/team/invitations` - Create invitation with permission validation
+- `PUT /api/team/invitations` - Resend invitation with new token
+- `DELETE /api/team/invitations` - Cancel pending invitation
+- `GET /api/team/invitations` - List pending invitations
+- `GET /api/team` - List team members with role filtering
+- `PUT /api/team/[userId]` - Update member role/status with permission checks
+- `DELETE /api/team/[userId]` - Remove team member with validation
+- `GET /api/invitations/[token]` - Get invitation details for acceptance
+- `POST /api/invitations/[token]/accept` - Accept invitation (consolidated flow: creates Clerk user if needed, adds to Clerk org when available, creates internal user, adds tenant membership, completes invite, returns signin URL)
+- `POST /api/invitations/[token]` - DEPRECATED (returns 410). Use `/api/invitations/[token]/accept` instead.
+
+**Security Features:**
+- Role hierarchy enforcement with assignable role validation
+- Owner role protection (cannot be modified, assigned, or removed)
+- Last admin protection (cannot remove the last admin from a team)
+- Self-modification prevention (users cannot modify their own roles)
+- Input validation and comprehensive error handling with user-friendly messages
+- Graceful Clerk integration with fallback handling for API failures
+
+**Database Integration:**
+- `tenant_member_invitations` - Secure invitation storage with expiry tracking
+- `public.tenant_members` - Team membership with role and status management
+- `public.team_activity` - Complete audit trail for team operations
+- Clerk organizations mapped to tenants for authentication integration
+
+**Technical Implementation:**
+- `src/lib/team-permissions.ts` - Server-side permission validation (database operations)
+- `src/lib/role-utils.ts` - Client-safe role hierarchy utilities (no database imports)
+- Proper client/server separation prevents webpack build errors with Node.js modules
+- Role utilities safely imported in client components without triggering database imports
+
 ### Role-Based Access Control (RBAC) - **COMPLETE**
 **Location:** `src/lib/rbac.ts`
 **Features:**

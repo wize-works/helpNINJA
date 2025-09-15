@@ -1,6 +1,6 @@
 "use client";
 
-import { Suspense, useEffect, useState } from "react";
+import { Suspense, useEffect, useState, useCallback } from "react";
 import * as Clerk from "@clerk/elements/common";
 import * as SignUp from "@clerk/elements/sign-up";
 import { useUser, useOrganization, useOrganizationList } from "@clerk/nextjs";
@@ -23,11 +23,14 @@ export default function SignUpPage() {
     const [planError, setPlanError] = useState<string | null>(null);
     const [selectedPlanData, setSelectedPlanData] = useState<{ plan: Plan; billingPeriod: 'monthly' | 'yearly' } | null>(null);
     const [planCompleted, setPlanCompleted] = useState(false); // Track if plan selection is completed
+    const [checkingInvitations, setCheckingInvitations] = useState(false);
+    const [invitationProcessed, setInvitationProcessed] = useState(false);
 
     // Check for payment success/cancel in URL params
     useEffect(() => {
         const paymentSuccess = searchParams.get('payment_success');
         const paymentCanceled = searchParams.get('payment_canceled');
+        const emailParam = searchParams.get('email');
 
         if (paymentSuccess === '1') {
             // Payment succeeded, mark as completed
@@ -45,7 +48,47 @@ export default function SignUpPage() {
             url.searchParams.delete('payment_canceled');
             window.history.replaceState({}, '', url.toString());
         }
+
+        // If there's an email parameter from invitation, we'll show a helpful message
+        if (emailParam) {
+            // The email will be pre-filled by Clerk if we set it correctly
+            console.log('Pre-filling email from invitation:', emailParam);
+        }
     }, [searchParams]);
+
+    // Check for accepted invitations and process them
+    const checkAndProcessInvitations = useCallback(async () => {
+        if (checkingInvitations) return;
+
+        setCheckingInvitations(true);
+        try {
+            const response = await fetch('/api/invitations/process', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+            });
+
+            if (response.ok) {
+                const result = await response.json();
+                if (result.processed && result.processed > 0) {
+                    console.log(`Processed ${result.processed} invitations, redirecting to dashboard`);
+                    // Invitations were processed, redirect to dashboard
+                    router.replace("/dashboard");
+                    return;
+                }
+            }
+
+            // No invitations processed, continue with normal org creation flow
+            setInvitationProcessed(true);
+        } catch (error) {
+            console.error('Failed to check invitations:', error);
+            // Continue with normal flow on error
+            setInvitationProcessed(true);
+        } finally {
+            setCheckingInvitations(false);
+        }
+    }, [checkingInvitations, router]);
 
     useEffect(() => {
         // Only redirect to onboarding if user has organization AND has completed payment
@@ -56,7 +99,11 @@ export default function SignUpPage() {
         else if (isSignedIn && orgLoaded && organization && step === 'org') {
             setStep('plan');
         }
-    }, [isSignedIn, orgLoaded, organization, planCompleted, step, router]);
+        // If user is signed in but has no organization, check for invitations first
+        else if (isSignedIn && orgLoaded && !organization && !invitationProcessed) {
+            checkAndProcessInvitations();
+        }
+    }, [isSignedIn, orgLoaded, organization, planCompleted, step, router, invitationProcessed, checkAndProcessInvitations]);
 
     async function handleSelectPlan(plan: Plan, billingPeriod: 'monthly' | 'yearly') {
         setPlanSelecting(true);
@@ -123,6 +170,14 @@ export default function SignUpPage() {
                         <SignUp.Root>
                             <SignUp.Step name="start" className="space-y-4">
                                 <div className="card bg-base-100 shadow-xl rounded-2xl p-6">
+                                    {searchParams.get('email') && (
+                                        <div className="alert alert-info mb-4">
+                                            <div className="flex items-center gap-2">
+                                                <i className="fa-duotone fa-solid fa-info-circle text-info" aria-hidden />
+                                                <span>Complete your account setup to join the team!</span>
+                                            </div>
+                                        </div>
+                                    )}
                                     <h1 className="text-2xl font-bold mb-1">Create your account</h1>
                                     <p className="text-base-content/60 mb-6">Fast with Google or Microsoft. Email works too.</p>
                                     <Clerk.GlobalError />
@@ -193,35 +248,44 @@ export default function SignUpPage() {
                     {isSignedIn && orgLoaded && !organization && step === 'org' && (
                         <div className="mt-6">
                             <div className="card bg-base-100 shadow-xl rounded-2xl p-6">
-                                <h1 className="text-2xl font-bold mb-1">Setup your organization</h1>
-                                <p className="text-base-content/60 mb-6">Fast with Google or Microsoft. Email works too.</p>
-                                <div className="divider">
-                                    <span>Create your workspace</span>
-                                </div>
-                                <form onSubmit={handleCreateOrg} className="space-y-4">
-                                    {orgError && (
-                                        <div className="alert alert-error text-sm">{orgError}</div>
-                                    )}
-                                    <div className="fieldset">
-                                        <label className="label" htmlFor="org-name">Workspace name</label>
-                                        <input
-                                            id="org-name"
-                                            className="input w-full"
-                                            placeholder="Acme Inc."
-                                            value={orgName}
-                                            onChange={(e) => setOrgName(e.target.value)}
-                                            required
-                                        />
-                                        <div className="text-xs text-base-content/60">We&apos;ll create a unique workspace URL for you.</div>
+                                {checkingInvitations ? (
+                                    <div className="text-center py-8">
+                                        <div className="loading loading-spinner loading-lg mb-4"></div>
+                                        <h2 className="text-xl font-semibold mb-2">Checking your invitations...</h2>
+                                        <p className="text-base-content/60">We&apos;re setting up your account based on your team invitation.</p>
                                     </div>
-                                    <button type="submit" className="btn btn-primary rounded-xl w-full" disabled={creating || !orgListLoaded}>
-                                        {creating ? "Creating..." : "Create workspace"}
-                                    </button>
-                                </form>
+                                ) : (
+                                    <>
+                                        <h1 className="text-2xl font-bold mb-1">Setup your organization</h1>
+                                        <p className="text-base-content/60 mb-6">Create your workspace to get started.</p>
+                                        <div className="divider">
+                                            <span>Create your workspace</span>
+                                        </div>
+                                        <form onSubmit={handleCreateOrg} className="space-y-4">
+                                            {orgError && (
+                                                <div className="alert alert-error text-sm">{orgError}</div>
+                                            )}
+                                            <div className="fieldset">
+                                                <label className="label" htmlFor="org-name">Workspace name</label>
+                                                <input
+                                                    id="org-name"
+                                                    className="input w-full"
+                                                    placeholder="Acme Inc."
+                                                    value={orgName}
+                                                    onChange={(e) => setOrgName(e.target.value)}
+                                                    required
+                                                />
+                                                <div className="text-xs text-base-content/60">We&apos;ll create a unique workspace URL for you.</div>
+                                            </div>
+                                            <button type="submit" className="btn btn-primary rounded-xl w-full" disabled={creating || !orgListLoaded}>
+                                                {creating ? "Creating..." : "Create workspace"}
+                                            </button>
+                                        </form>
+                                    </>
+                                )}
                             </div>
                         </div>
-                    )
-                    }
+                    )}
 
                     {
                         isSignedIn && orgLoaded && organization && step === 'plan' && (

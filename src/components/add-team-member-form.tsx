@@ -1,7 +1,8 @@
 "use client";
 
 import { useState } from 'react';
-import { getAssignableRoles, getRoleInfo, type Role } from '@/lib/permissions';
+import { getRoleInfo, type Role } from '@/lib/permissions';
+import { getAssignableRoles } from '@/lib/role-utils';
 import { HoverScale } from './ui/animated-page';
 import { toastUtils } from '@/lib/toast';
 
@@ -63,7 +64,8 @@ export default function AddTeamMemberForm({
                 email: formData.email.trim(),
                 role: formData.role,
                 firstName: formData.firstName.trim() || undefined,
-                lastName: formData.lastName.trim() || undefined
+                lastName: formData.lastName.trim() || undefined,
+                message: formData.method === 'invitation' ? formData.message.trim() || undefined : undefined
             };
 
             const response = await fetch(endpoint, {

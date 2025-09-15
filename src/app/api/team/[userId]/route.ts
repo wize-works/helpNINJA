@@ -1,6 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { query } from '@/lib/db';
 import { getTenantIdStrict } from '@/lib/tenant-resolve';
+import { canModifyUserRole, canRemoveUser } from '@/lib/team-permissions';
+import { resolveCurrentUserId } from '@/lib/user-mapping';
+import { auth } from '@clerk/nextjs/server';
 
 export const runtime = 'nodejs';
 
@@ -68,6 +71,13 @@ export async function GET(req: NextRequest, ctx: Context) {
 
 export async function PUT(req: NextRequest, ctx: Context) {
     try {
+        const { userId: clerkUserId } = await auth();
+        if (!clerkUserId) {
+            return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+        }
+
+        // Resolve Clerk user ID to internal UUID
+        const currentUserId = await resolveCurrentUserId(clerkUserId);
         const tenantId = await getTenantIdStrict();
         const { userId } = await ctx.params;
         const body = await req.json();
@@ -93,8 +103,21 @@ export async function PUT(req: NextRequest, ctx: Context) {
         // Prevent changing owner role or changing to owner
         if (current.role === 'owner' || role === 'owner') {
             return NextResponse.json({
-                error: 'Cannot modify owner role'
+                error: 'Cannot modify owner role',
+                code: 'OWNER_ROLE_PROTECTED'
             }, { status: 403 });
+        }
+
+        // Check permissions for role change
+        if (role !== undefined && role !== current.role) {
+            const permissionCheck = await canModifyUserRole(currentUserId, tenantId, userId, role);
+            if (!permissionCheck.allowed) {
+                return NextResponse.json({
+                    error: permissionCheck.reason,
+                    code: 'INSUFFICIENT_PERMISSIONS',
+                    max_assignable_role: permissionCheck.maxRole
+                }, { status: 403 });
+            }
         }
 
         // Update tenant member
@@ -175,6 +198,13 @@ export async function PUT(req: NextRequest, ctx: Context) {
 
 export async function DELETE(req: NextRequest, ctx: Context) {
     try {
+        const { userId: clerkUserId } = await auth();
+        if (!clerkUserId) {
+            return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+        }
+
+        // Resolve Clerk user ID to internal UUID
+        const currentUserId = await resolveCurrentUserId(clerkUserId);
         const tenantId = await getTenantIdStrict();
         const { userId } = await ctx.params;
 
@@ -194,25 +224,13 @@ export async function DELETE(req: NextRequest, ctx: Context) {
 
         const member = memberResult.rows[0];
 
-        // Prevent removing owner
-        if (member.role === 'owner') {
+        // Check permissions for removal
+        const permissionCheck = await canRemoveUser(currentUserId, tenantId, userId);
+        if (!permissionCheck.allowed) {
             return NextResponse.json({
-                error: 'Cannot remove owner from team'
+                error: permissionCheck.reason,
+                code: 'INSUFFICIENT_PERMISSIONS'
             }, { status: 403 });
-        }
-
-        // Check if this is the last admin (if removing an admin)
-        if (member.role === 'admin') {
-            const adminCount = await query(
-                'SELECT COUNT(*) as count FROM public.tenant_members WHERE tenant_id = $1 AND role IN ($2, $3) AND status = $4',
-                [tenantId, 'owner', 'admin', 'active']
-            );
-
-            if (parseInt(adminCount.rows[0].count) <= 1) {
-                return NextResponse.json({
-                    error: 'Cannot remove the last admin from the team'
-                }, { status: 403 });
-            }
         }
 
         // Remove member
@@ -225,7 +243,7 @@ export async function DELETE(req: NextRequest, ctx: Context) {
         await query(
             `INSERT INTO public.team_activity (tenant_id, user_id, action, resource_type, resource_id, details)
              VALUES ($1, $2, 'user_removed', 'user', $3, $4)`,
-            [tenantId, null, userId, JSON.stringify({ role: member.role, status: member.status })]
+            [tenantId, currentUserId, userId, JSON.stringify({ role: member.role, status: member.status })]
         );
 
         return NextResponse.json({ message: 'Team member removed successfully' });

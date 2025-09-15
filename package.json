@@ -10,9 +10,11 @@
         "screenshots": "node scripts/capture-screenshots.mjs",
         "screenshots:debug": "node scripts/capture-screenshots-debug.mjs",
         "screenshots:test": "playwright test tests/screenshot-capture.spec.ts",
-        "screenshots:install": "playwright install chromium"
+        "screenshots:install": "playwright install chromium",
+        "sql:pack": "node scripts/pack-sql.mjs"
     },
     "dependencies": {
+        "@clerk/backend": "^2.14.0",
         "@clerk/elements": "^0.23.54",
         "@clerk/nextjs": "^6.31.1",
         "@stripe/react-stripe-js": "^3.9.0",

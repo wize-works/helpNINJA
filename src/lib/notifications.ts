@@ -233,6 +233,8 @@ export async function resolveUserAndTenant(): Promise<{ userId: string; tenantId
             const first = cu?.firstName || null;
             const last = cu?.lastName || null;
             const avatar = cu?.imageUrl || null;
+
+            // Try to insert/update by clerk_user_id first
             const insert = await query<{ id: string }>(
                 `insert into public.users (id, email, first_name, last_name, avatar_url, clerk_user_id)
                  values (gen_random_uuid(), $1,$2,$3,$4,$5)
@@ -246,9 +248,34 @@ export async function resolveUserAndTenant(): Promise<{ userId: string; tenantId
                 [email, first, last, avatar, clerkUserId]
             );
             internalUserId = insert.rows[0]?.id;
-        } catch (err) {
-            console.error('Lazy user insert failed:', err);
-            throw new Error('user_mapping_failed');
+        } catch (insertErr: unknown) {
+            // If we get a duplicate email error, try to update the existing user with this clerk_user_id
+            const err = insertErr as { code?: string; constraint?: string };
+            if (err?.code === '23505' && err?.constraint === 'users_email_key') {
+                console.log('User email already exists, updating clerk_user_id mapping');
+                try {
+                    const cu = await currentUser();
+                    const email = (cu?.primaryEmailAddress?.emailAddress || cu?.emailAddresses?.[0]?.emailAddress || `${clerkUserId}@placeholder.local`).toLowerCase();
+                    const first = cu?.firstName || null;
+                    const last = cu?.lastName || null;
+                    const avatar = cu?.imageUrl || null;
+
+                    const updateResult = await query<{ id: string }>(
+                        `update public.users 
+                         set clerk_user_id = $1, first_name = $2, last_name = $3, avatar_url = $4, updated_at = now()
+                         where email = $5
+                         returning id`,
+                        [clerkUserId, first, last, avatar, email]
+                    );
+                    internalUserId = updateResult.rows[0]?.id;
+                } catch (updateErr) {
+                    console.error('Failed to update existing user with clerk_user_id:', updateErr);
+                    throw new Error('user_mapping_failed');
+                }
+            } else {
+                console.error('Lazy user insert failed:', insertErr);
+                throw new Error('user_mapping_failed');
+            }
         }
     }
 

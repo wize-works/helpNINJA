@@ -28,6 +28,7 @@ export default function TeamInvitations({ onInvitationCancelled }: TeamInvitatio
     const [invitations, setInvitations] = useState<Invitation[]>([]);
     const [loading, setLoading] = useState(true);
     const [cancelling, setCancelling] = useState<Set<string>>(new Set());
+    const [resending, setResending] = useState<Set<string>>(new Set());
 
     useEffect(() => {
         loadInvitations();
@@ -45,6 +46,46 @@ export default function TeamInvitations({ onInvitationCancelled }: TeamInvitatio
             console.error('Error loading invitations:', error);
         } finally {
             setLoading(false);
+        }
+    };
+
+    const resendInvitation = async (invitationId: string) => {
+        setResending(prev => new Set([...prev, invitationId]));
+
+        try {
+            const response = await fetch('/api/team/invitations', {
+                method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    invitationId,
+                    action: 'resend'
+                })
+            });
+
+            if (response.ok) {
+                const data = await response.json();
+                loadInvitations(); // Refresh the list
+
+                if (data.email_sent) {
+                    toastUtils.success('Invitation resent successfully');
+                } else {
+                    toastUtils.info('Invitation updated but email delivery failed');
+                }
+            } else {
+                const error = await response.json();
+                toastUtils.apiError(error, 'Failed to resend invitation');
+            }
+        } catch (error) {
+            console.error('Error resending invitation:', error);
+            toastUtils.error('Failed to resend invitation');
+        } finally {
+            setResending(prev => {
+                const newSet = new Set(prev);
+                newSet.delete(invitationId);
+                return newSet;
+            });
         }
     };
 
@@ -174,15 +215,27 @@ export default function TeamInvitations({ onInvitationCancelled }: TeamInvitatio
 
                                 <div className="flex items-center gap-2">
                                     {!invitation.is_expired && (
-                                        <HoverScale scale={1.05}>
-                                            <button
-                                                className="btn btn-ghost btn-sm rounded-lg"
-                                                onClick={() => copyInvitationLink(invitation.token)}
-                                                title="Copy invitation link"
-                                            >
-                                                <i className="fa-duotone fa-solid fa-copy" aria-hidden />
-                                            </button>
-                                        </HoverScale>
+                                        <>
+                                            <HoverScale scale={1.05}>
+                                                <button
+                                                    className={`btn btn-ghost btn-sm rounded-lg ${resending.has(invitation.id) ? 'loading' : ''}`}
+                                                    onClick={() => resendInvitation(invitation.id)}
+                                                    disabled={resending.has(invitation.id)}
+                                                    title="Resend invitation"
+                                                >
+                                                    <i className="fa-duotone fa-solid fa-paper-plane" aria-hidden />
+                                                </button>
+                                            </HoverScale>
+                                            <HoverScale scale={1.05}>
+                                                <button
+                                                    className="btn btn-ghost btn-sm rounded-lg"
+                                                    onClick={() => copyInvitationLink(invitation.token)}
+                                                    title="Copy invitation link"
+                                                >
+                                                    <i className="fa-duotone fa-solid fa-copy" aria-hidden />
+                                                </button>
+                                            </HoverScale>
+                                        </>
                                     )}
 
                                     <HoverScale scale={1.05}>

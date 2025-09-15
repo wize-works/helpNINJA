@@ -1,6 +1,8 @@
 import { query } from '@/lib/db';
+import { type Role } from '@/lib/permissions';
 
-export type UserRole = 'owner' | 'admin' | 'member';
+// Use the unified role type from permissions.ts
+export type UserRole = Role;
 
 export interface RoleCheckResult {
     hasAccess: boolean;
@@ -55,13 +57,15 @@ export async function hasRole(
 
 /**
  * Role hierarchy - check if user role has sufficient permissions
- * owner > admin > member
+ * owner > admin > analyst > support > viewer
  */
 export function roleHierarchyCheck(userRole: UserRole, minimumRole: UserRole): boolean {
     const hierarchy: Record<UserRole, number> = {
-        owner: 3,
-        admin: 2,
-        member: 1
+        owner: 5,
+        admin: 4,
+        analyst: 3,
+        support: 2,
+        viewer: 1
     };
 
     return hierarchy[userRole] >= hierarchy[minimumRole];
@@ -75,7 +79,7 @@ export async function hasMinimumRole(
     tenantId: string,
     minimumRole: UserRole
 ): Promise<RoleCheckResult> {
-    const roleResult = await hasRole(userId, tenantId, ['owner', 'admin', 'member']);
+    const roleResult = await hasRole(userId, tenantId, ['owner', 'admin', 'analyst', 'support', 'viewer']);
 
     if (!roleResult.hasAccess || !roleResult.userRole) {
         return roleResult;
@@ -151,7 +155,9 @@ export async function getTeamMembers(tenantId: string) {
         CASE tm.role 
           WHEN 'owner' THEN 1 
           WHEN 'admin' THEN 2 
-          WHEN 'member' THEN 3 
+          WHEN 'analyst' THEN 3 
+          WHEN 'support' THEN 4 
+          WHEN 'viewer' THEN 5 
         END,
         tm.joined_at ASC`,
             [tenantId]
@@ -185,19 +191,24 @@ export async function canManageUser(
         return { canManage: false, reason: 'Target user not found in tenant' };
     }
 
-    // Owners can manage everyone
-    if (managerRole === 'owner') {
+    // Owners can manage everyone except other owners
+    if (managerRole === 'owner' && targetRole !== 'owner') {
         return { canManage: true };
     }
 
-    // Admins can manage members but not other admins or owners
-    if (managerRole === 'admin' && targetRole === 'member') {
+    // Admins can manage analyst, support, viewer (but not other admins or owners)
+    if (managerRole === 'admin' && ['analyst', 'support', 'viewer'].includes(targetRole)) {
         return { canManage: true };
     }
 
-    // Members cannot manage anyone
-    if (managerRole === 'member') {
-        return { canManage: false, reason: 'Members cannot manage other users' };
+    // Analysts can manage support and viewer (if needed)
+    if (managerRole === 'analyst' && ['support', 'viewer'].includes(targetRole)) {
+        return { canManage: true };
+    }
+
+    // Support and viewer cannot manage anyone
+    if (['support', 'viewer'].includes(managerRole)) {
+        return { canManage: false, reason: `Role '${managerRole}' cannot manage other users` };
     }
 
     return {
@@ -207,7 +218,7 @@ export async function canManageUser(
 }
 
 /**
- * Role-based feature matrix
+ * Role-based feature matrix - aligned with permissions.ts
  */
 export const ROLE_PERMISSIONS = {
     owner: [
@@ -230,9 +241,24 @@ export const ROLE_PERMISSIONS = {
         'analytics.view',
         'conversations.manage'
     ],
-    member: [
+    analyst: [
+        'team.view',
+        'analytics.view',
+        'data.export',
+        'conversations.view',
+        'documents.view'
+    ],
+    support: [
+        'team.view',
+        'conversations.manage',
         'conversations.view',
         'analytics.basic',
+        'documents.view'
+    ],
+    viewer: [
+        'team.view',
+        'analytics.basic',
+        'conversations.view',
         'documents.view'
     ]
 } as const;

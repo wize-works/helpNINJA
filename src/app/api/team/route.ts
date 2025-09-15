@@ -3,17 +3,20 @@ import { query } from '@/lib/db';
 import { getTenantIdStrict } from '@/lib/tenant-resolve';
 import { hasRole } from '@/lib/rbac';
 import { logAuditEvent, extractRequestInfo } from '@/lib/audit-log';
+import { resolveCurrentUserId } from '@/lib/user-mapping';
 import { auth } from '@clerk/nextjs/server';
 
 export const runtime = 'nodejs';
 
 export async function GET(request: NextRequest) {
     try {
-        const { userId } = await auth();
-        if (!userId) {
+        const { userId: clerkUserId } = await auth();
+        if (!clerkUserId) {
             return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
         }
 
+        // Resolve Clerk user ID to internal UUID
+        const userId = await resolveCurrentUserId(clerkUserId);
         const tenantId = await getTenantIdStrict();
 
         // Require admin or owner role to view team members
@@ -92,11 +95,13 @@ export async function GET(request: NextRequest) {
 
 export async function POST(req: NextRequest) {
     try {
-        const { userId: currentUserId } = await auth();
-        if (!currentUserId) {
+        const { userId: clerkUserId } = await auth();
+        if (!clerkUserId) {
             return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
         }
 
+        // Resolve Clerk user ID to internal UUID
+        const currentUserId = await resolveCurrentUserId(clerkUserId);
         const tenantId = await getTenantIdStrict();
 
         // Require admin or owner role to add team members
@@ -136,7 +141,7 @@ export async function POST(req: NextRequest) {
 
         // Check for existing invitation
         const existingInvitation = await query(
-            'SELECT id, expires_at FROM public.team_invitations WHERE tenant_id = $1 AND email = $2 AND accepted_at IS NULL',
+            'SELECT id, expires_at FROM public.tenant_member_invitations WHERE tenant_id = $1 AND email = $2 AND accepted_at IS NULL',
             [tenantId, email.trim().toLowerCase()]
         );
 
@@ -149,7 +154,7 @@ export async function POST(req: NextRequest) {
                 }, { status: 400 });
             } else {
                 // Delete expired invitation
-                await query('DELETE FROM public.team_invitations WHERE id = $1', [invitation.id]);
+                await query('DELETE FROM public.tenant_member_invitations WHERE id = $1', [invitation.id]);
             }
         }
 
