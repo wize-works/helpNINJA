@@ -17,8 +17,6 @@ export async function GET(req: NextRequest) {
     const verificationToken = searchParams.get('k');
     const voice = searchParams.get('voice') || 'friendly';
 
-    console.log('Widget request:', { tenantPublicKey, siteId, verificationToken, voice });
-
     // Host info for robust preview-origin detection behind proxies
     const xfHost = req.headers.get('x-forwarded-host') || '';
     const host = xfHost || req.headers.get('host') || '';
@@ -164,17 +162,17 @@ export async function GET(req: NextRequest) {
         bubbleBackground?: string;
         bubbleColor?: string;
         panelBackground?: string;
-            panelHeaderBackground?: string;
-    panelColor?: string;
-    panelHeaderColor?: string;
-    messagesBackground?: string;
-    messagesColor?: string;
-    userBubbleBackground?: string;
-    userBubbleColor?: string;
-    assistantBubbleBackground?: string;
-    assistantBubbleColor?: string;
-    buttonBackground?: string;
-    buttonColor?: string;
+        panelHeaderBackground?: string;
+        panelColor?: string;
+        panelHeaderColor?: string;
+        messagesBackground?: string;
+        messagesColor?: string;
+        userBubbleBackground?: string;
+        userBubbleColor?: string;
+        assistantBubbleBackground?: string;
+        assistantBubbleColor?: string;
+        buttonBackground?: string;
+        buttonColor?: string;
     }
 
     let widgetConfig: WidgetConfig = {};
@@ -200,7 +198,7 @@ export async function GET(req: NextRequest) {
                     buttonIcon: dbConfig.button_icon,
                     customIconUrl: dbConfig.custom_icon_url,
                     theme: dbConfig.theme,
-                    fontFamily:  dbConfig.font_family !== null && dbConfig.font_family !== undefined && dbConfig.font_family !== "undefined" ? dbConfig.font_family : 'ui-sans-serif, system-ui, sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji"',
+                    fontFamily: dbConfig.font_family !== null && dbConfig.font_family !== undefined && dbConfig.font_family !== "undefined" ? dbConfig.font_family : 'ui-sans-serif, system-ui, sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji"',
                     voice: dbConfig.voice || voice,
                     bubbleBackground: dbConfig.bubble_background || '#111',
                     bubbleColor: dbConfig.bubble_color || '#fff',
@@ -223,7 +221,7 @@ export async function GET(req: NextRequest) {
             // Continue with default configuration if fetch fails
         }
     }
-    
+
     // --- Server-side color derivation to keep client script minimal ---
     function hexToRgbServer(hex?: string): [number, number, number] {
         if (!hex) return [0, 0, 0];
@@ -302,7 +300,7 @@ export async function GET(req: NextRequest) {
         config: widgetConfig,
         paletteLight,
         paletteDark,
-      };
+    };
 
     const js = `(() => {
       // Find the origin of this script tag -> safest base for same-host API
@@ -339,12 +337,12 @@ export async function GET(req: NextRequest) {
     })();`;
 
     return withWidgetCORS(
-        new Response(js, { 
-            headers: { 
-                'content-type': 'application/javascript; charset=utf-8', 
-                'cache-control': 'public, max-age=3600' 
-            } 
-        }), 
+        new Response(js, {
+            headers: {
+                'content-type': 'application/javascript; charset=utf-8',
+                'cache-control': 'public, max-age=3600'
+            }
+        }),
         req,
         tenantId
     );

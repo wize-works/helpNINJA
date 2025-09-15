@@ -138,11 +138,6 @@ export async function POST(req: NextRequest) {
                 const expiresAt = new Date();
                 expiresAt.setDate(expiresAt.getDate() + 7); // 7 days expiry
 
-                // Create invitation
-                console.log('🔍 About to insert invitation with values:', {
-                    tenantId, emailLower, firstName, lastName, role, currentUserId, token, expiresAt, message
-                });
-
                 const invitationResult = await txQuery(
                     `INSERT INTO public.tenant_member_invitations (tenant_id, email, first_name, last_name, role, invited_by, token, expires_at, message, status)
                      VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, 'pending') 

@@ -73,7 +73,6 @@ export async function POST(req: NextRequest) {
                     [email, first, last, avatar, clerkId]
                 );
                 userId = userResult.rows[0]?.id;
-                console.log(`✅ Webhook: User upserted with internal ID: ${userId}`);
             } catch (insertErr: unknown) {
                 // Handle duplicate email constraint violation
                 const err = insertErr as { code?: string; constraint?: string };

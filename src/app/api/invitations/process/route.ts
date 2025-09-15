@@ -12,7 +12,6 @@ export async function POST() {
             return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
         }
 
-        console.log('🔍 Processing invitations for Clerk user:', userId);
 
         // Get the internal user ID from Clerk user ID
         const userResult = await query(
@@ -27,7 +26,6 @@ export async function POST() {
 
         const internalUser = userResult.rows[0];
         const userEmail = internalUser.email.toLowerCase();
-        console.log('🔍 Found internal user:', { id: internalUser.id, email: userEmail });
 
         // Check if user already has tenant memberships
         const membershipCheck = await query(
@@ -36,7 +34,6 @@ export async function POST() {
         );
 
         if (membershipCheck.rows.length > 0) {
-            console.log('✅ User already has tenant memberships, redirecting to dashboard');
             return NextResponse.json({
                 message: 'User already has memberships',
                 redirect: '/dashboard',
@@ -52,8 +49,6 @@ export async function POST() {
             [userEmail]
         );
 
-        console.log(`🔍 Found ${acceptedInvitations.rows.length} unprocessed accepted invitations`);
-
         if (acceptedInvitations.rows.length === 0) {
             return NextResponse.json({
                 message: 'No pending invitations',
@@ -61,12 +56,8 @@ export async function POST() {
             });
         }
 
-        console.log('🔧 Processing unprocessed invitations...');
-
         for (const invitation of acceptedInvitations.rows) {
             try {
-                console.log(`🔧 Processing invitation ${invitation.id} for tenant ${invitation.tenant_id}`);
-
                 // Create the actual tenant membership
                 const membershipResult = await query(
                     `INSERT INTO public.tenant_members (tenant_id, user_id, role, status, joined_at)
@@ -101,14 +92,11 @@ export async function POST() {
                     })]
                 );
 
-                console.log(`✅ Completed invitation for ${userEmail} in tenant ${invitation.tenant_id} with role ${invitation.role}`);
             } catch (invitationError) {
                 console.error(`❌ Failed to process invitation ${invitation.id}:`, invitationError);
                 // Continue with next invitation even if this one fails
             }
         }
-
-        console.log(`✅ Processed ${acceptedInvitations.rows.length} invitations for ${userEmail}`);
 
         // Return success with redirect to dashboard
         return NextResponse.json({

@@ -18,7 +18,6 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ tok
         const { token } = await params;
         const body = await req.json();
         const { firstName, lastName, password } = body;
-        console.log('🚀 Accepting invitation with token:', token, ' and body:', body);
 
         if (!token) {
             return NextResponse.json({ error: 'Invalid invitation token' }, { status: 400 });
@@ -90,10 +89,8 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ tok
             // User exists - use existing user
             userId = existingUser.rows[0].id;
             clerkUserId = existingUser.rows[0].clerk_user_id;
-            console.log(`📋 Using existing user ${invitation.email} (${userId})`);
         } else {
             // Create new Clerk user
-            console.log(`👤 Creating new Clerk user for ${invitation.email}`);
 
             try {
                 const clerkUser = await clerk.users.createUser({
@@ -106,7 +103,6 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ tok
                 });
 
                 clerkUserId = clerkUser.id;
-                console.log(`✅ Created Clerk user: ${clerkUserId}`);
 
                 // Create internal user record
                 const userResult = await query(
@@ -117,7 +113,6 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ tok
                 );
 
                 userId = userResult.rows[0].id;
-                console.log(`✅ Created internal user: ${userId}`);
 
             } catch (clerkError: unknown) {
                 console.error('❌ Failed to create Clerk user:', clerkError);
@@ -131,7 +126,6 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ tok
         // Add user to Clerk organization if clerk_org_id exists
         if (invitation.clerk_org_id) {
             try {
-                console.log(`🏢 Validating Clerk organization ${invitation.clerk_org_id} and user ${clerkUserId}`);
 
                 // Step 1: Validate organization exists
                 let organization;
@@ -139,7 +133,6 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ tok
                     organization = await clerk.organizations.getOrganization({
                         organizationId: invitation.clerk_org_id
                     });
-                    console.log(`✅ Organization verified: ${organization.name} (${organization.id})`);
                 } catch (orgError) {
                     console.error(`❌ Organization ${invitation.clerk_org_id} not found or inaccessible:`, orgError);
                     throw new Error(`Organization not found: ${invitation.clerk_org_id}`);
@@ -165,14 +158,12 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ tok
                     });
                 } else {
                     // Step 3: Create membership only if needed
-                    console.log(`📝 Creating new membership for user ${clerkUserId} in organization ${invitation.clerk_org_id}`);
                     try {
                         const membership = await clerk.organizations.createOrganizationMembership({
                             organizationId: invitation.clerk_org_id,
                             userId: clerkUserId,
                             role: invitation.role === 'admin' ? 'org:admin' : 'org:member'
                         });
-                        console.log(`✅ Created organization membership:`, membership);
                     } catch (clerkOrgError: unknown) {
                         console.error('⚠️ Failed to add user to Clerk organization:', {
                             error: clerkOrgError,
@@ -211,8 +202,6 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ tok
                 [invitation.tenant_id, userId, invitation.role]
             );
 
-            console.log(`✅ Created tenant membership for user ${userId} in tenant ${invitation.tenant_id}`);
-
             // Mark invitation as completed
             await query(
                 `UPDATE public.tenant_member_invitations 
@@ -239,8 +228,6 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ tok
 
             // Commit transaction
             await query('COMMIT');
-
-            console.log(`🎉 Successfully completed invitation acceptance for ${invitation.email}`);
 
             return NextResponse.json({
                 success: true,

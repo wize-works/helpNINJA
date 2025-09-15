@@ -222,9 +222,6 @@ const mockData = {
 };
 
 const { html, text, subject } = buildTeamInvitationEmail(mockData);
-console.log('HTML:', html);
-console.log('Text:', text);
-console.log('Subject:', subject);
 ```
 
 ### Email Client Testing

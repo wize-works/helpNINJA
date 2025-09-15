@@ -48,7 +48,6 @@ export default function InvitationPage() {
         lastName: '',
         password: ''
     });
-    console.log('InvitationPage render with token:', token);
 
     useEffect(() => {
         const fetchInvitation = async () => {

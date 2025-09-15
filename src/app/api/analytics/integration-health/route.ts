@@ -94,9 +94,6 @@ export async function GET() {
             ORDER BY name
         `, [tenantId, days]);
 
-        // Debug: Log what we got
-        console.log('📊 Integration Health Query Results:', JSON.stringify(integrations, null, 2));
-
         // Get overall statistics
         const totalIntegrations = integrations.length;
         const activeIntegrations = integrations.filter(i => i.status === 'active').length;
