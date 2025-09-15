@@ -201,7 +201,7 @@ function mountChatWidget(payload) {
     ];
 
     menuItems.forEach(item => {
-        const menuItem = el('div', `padding:12px 16px;cursor:pointer;display:flex;align-items:center;gap:12px;color:${styles.messagesColor};transition:background-color 0.2s ease;border-bottom:1px solid ${styles.borderColor};`);
+        const menuItem = el('div', `padding:12px 16px;cursor:pointer;display:flex;align-items:center;gap:12px;background-color:${styles.panelHeaderBackground};color:${styles.panelHeaderColor};transition:background-color 0.2s ease;border-bottom:1px solid ${styles.borderColor};`);
         menuItem.innerHTML = `
             <div style="width:18px;height:18px;flex-shrink:0;">${item.icon}</div>
             <span style="font-size:14px;">${item.text}</span>
@@ -209,10 +209,10 @@ function mountChatWidget(payload) {
 
         // Hover effect
         menuItem.addEventListener('mouseenter', () => {
-            menuItem.style.backgroundColor = styles.primaryColor + '16';
+            menuItem.style.backgroundColor = styles.panelHeaderBackground + '16';
         });
         menuItem.addEventListener('mouseleave', () => {
-            menuItem.style.backgroundColor = 'transparent';
+            menuItem.style.backgroundColor = styles.panelHeaderBackground;
         });
 
         // Click handler
