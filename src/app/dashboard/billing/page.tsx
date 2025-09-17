@@ -48,7 +48,7 @@ export default function BillingPage() {
         return () => { cancelled = true; };
     }, []);
 
-    const ranks = useMemo(() => ({ starter: 0, pro: 1, agency: 2 } as Record<Exclude<Plan,'none'>, number>), []);
+    const ranks = useMemo(() => ({ starter: 0, pro: 1, agency: 2 } as Record<Exclude<Plan, 'none'>, number>), []);
 
     const breadcrumbItems = [
         { label: "Dashboard", href: "/dashboard", icon: "fa-gauge-high" },
@@ -137,7 +137,7 @@ export default function BillingPage() {
                                     const showCurrent = isActive && isCurrent;
                                     const btnLabel = showCurrent
                                         ? 'Current Plan'
-                                        : (currentPlan !== 'none' && ranks[plan as Exclude<Plan,'none'>] < ranks[currentPlan as Exclude<Plan,'none'>]
+                                        : (currentPlan !== 'none' && ranks[plan as Exclude<Plan, 'none'>] < ranks[currentPlan as Exclude<Plan, 'none'>]
                                             ? `Downgrade to ${details.name}`
                                             : `Upgrade to ${details.name}`);
 
