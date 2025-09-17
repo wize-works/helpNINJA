@@ -6,7 +6,6 @@ import { AnimatedPage, StaggerContainer, StaggerChild, HoverScale } from '@/comp
 import { toastUtils } from '@/lib/toast';
 import { PLAN_DETAILS } from '@/lib/plan';
 import type { Plan } from '@/lib/limits';
-import { Plan } from '@/lib/limits';
 
 type BillingPeriod = 'monthly' | 'yearly';
 

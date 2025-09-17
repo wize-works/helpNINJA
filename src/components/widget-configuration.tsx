@@ -4,7 +4,6 @@ import { useState, useEffect } from "react";
 import { HoverScale } from "@/components/ui/animated-page";
 import toast from "react-hot-toast";
 import { useTenant } from "./tenant-context";
-import Logo from "./logo";
 import Link from "next/link";
 
 // Define the widget configuration schema
@@ -85,6 +84,9 @@ export default function WidgetConfiguration({
     const [saving, setSaving] = useState(false);
     const [config, setConfig] = useState<WidgetConfigSchema>(defaultConfig);
     const [activeTab, setActiveTab] = useState<"appearance" | "behavior" | "content">("appearance");
+    const [colorTab, setColorTab] = useState<
+        "bubble" | "panel" | "messages" | "user" | "assistant" | "button"
+    >("bubble");
 
     // Load existing configuration
     // Import useTenant hook at the top of the file
@@ -681,10 +683,9 @@ export default function WidgetConfiguration({
                         <div className="flex flex-col md:flex-row justify-items-start gap-4">
                             {/* Theme */}
                             <div className="flex flex-col gap-4 flex-1">
-                                <div>
+                                {/* <div>
                                     <label className="text-sm font-medium text-base-content block mb-2">Theme</label>
                                     <div className="flex items-center gap-3">
-                                        {/* Theme Toggle Button */}
                                         <div className="flex bg-base-200/60 rounded-lg p-1 border border-base-300/40">
                                             {([
                                                 { value: 'light' as const, label: 'Light', icon: 'fa-sun' },
@@ -709,10 +710,10 @@ export default function WidgetConfiguration({
                                         </div>
                                     </div>
                                     <p className="text-xs text-base-content/60 mt-1">Choose the color theme for your chat widget</p>
-                                </div>
-                                {/* Primary Color */}
+                                </div> */}
+                                {/* Primary color + Advanced toggle */}
                                 <div className="grid grid-cols-2 gap-6">
-                                    <div className="">
+                                    <div>
                                         <label className="text-sm font-medium text-base-content block mb-2">Primary Color</label>
                                         <div className="flex items-center gap-3">
                                             <div className="w-8 h-8 rounded-full overflow-hidden relative border border-solid border-base-content/20">
@@ -733,8 +734,7 @@ export default function WidgetConfiguration({
                                         </div>
                                         <p className="text-xs text-base-content/60 mt-1">Choose the main color for your chat widget</p>
                                     </div>
-                                    {/* Advnaced Colors */}
-                                    <div className="">
+                                    <div>
                                         <label className="text-sm font-medium text-base-content block mb-2">Advanced Colors</label>
                                         <input
                                             name="advancedColors"
@@ -743,321 +743,211 @@ export default function WidgetConfiguration({
                                             onChange={handleCheckboxChange}
                                             className="checkbox checkbox-primary"
                                         />
-                                        <p className="text-xs text-base-content/60 mt-1">Choose whether to use default or custom colors for the widget</p>
+                                        <p className="text-xs text-base-content/60 mt-1">Toggle fine-grained color controls</p>
                                     </div>
-                                    <div className="divider col-span-2 my-1 py-2"> Bubble </div>
-                                    <div>
-                                        <label className="text-sm font-medium text-base-content block mb-2">Bubble Color</label>
-                                        <div className="flex items-center gap-3">
-                                            <div className="w-8 h-8 rounded-full overflow-hidden relative border border-solid border-base-content/20">
-                                                <input
-                                                    type="color"
-                                                    value={config.bubbleColor}
-                                                    onChange={(e) => handleSpecificColorChange('bubbleColor', e.target.value)}
-                                                    className="w-20 h-20 absolute -mt-5 -ml-5 cursor-pointer "
-                                                />
-                                            </div>
-                                            <input
-                                                type="text"
-                                                name="bubbleColor"
-                                                value={config.bubbleColor}
-                                                onChange={handleInputChange}
-                                                className="input w-32 font-mono"
-                                            />
-                                        </div>
-                                        <p className="text-xs text-base-content/60 mt-1">Choose the bubble color for your chat widget</p>
-                                    </div>
-                                    {/* Bubble Background */}
-                                    <div>
-                                        <label className="text-sm font-medium text-base-content block mb-2">Bubble Background</label>
-                                        <div className="flex items-center gap-3">
-                                            <div className="w-8 h-8 rounded-full overflow-hidden relative border border-solid border-base-content/20">
-                                                <input
-                                                    type="color"
-                                                    value={config.bubbleBackground}
-                                                    onChange={(e) => handleSpecificColorChange('bubbleBackground', e.target.value)}
-                                                    className="w-20 h-20 absolute -mt-5 -ml-5 cursor-pointer "
-                                                />
-                                            </div>
-                                            <input
-                                                type="text"
-                                                name="bubbleBackground"
-                                                value={config.bubbleBackground}
-                                                onChange={handleInputChange}
-                                                className="input w-32 font-mono"
-                                            />
-                                        </div>
-                                        <p className="text-xs text-base-content/60 mt-1">Choose the background color for chat bubbles</p>
-                                    </div>
-                                    {/* Panel Background */}
-                                    <div>
-                                        <label className="text-sm font-medium text-base-content block mb-2">Panel Background</label>
-                                        <div className="flex items-center gap-3">
-                                            <div className="w-8 h-8 rounded-full overflow-hidden relative border border-solid border-base-content/20">
-                                                <input
-                                                    type="color"
-                                                    value={config.panelBackground}
-                                                    onChange={(e) => handleSpecificColorChange('panelBackground', e.target.value)}
-                                                    className="w-20 h-20 absolute -mt-5 -ml-5 cursor-pointer "
-                                                />
-                                            </div>
-                                            <input
-                                                type="text"
-                                                name="panelBackground"
-                                                value={config.panelBackground}
-                                                onChange={handleInputChange}
-                                                className="input w-32 font-mono"
-                                            />
-                                        </div>
-                                        <p className="text-xs text-base-content/60 mt-1">Choose the background color for the chat panel</p>
-                                    </div>
-                                    {/* Header Background */}
-                                    <div>
-                                        <label className="text-sm font-medium text-base-content block mb-2">Header Background</label>
-                                        <div className="flex items-center gap-3">
-                                            <div className="w-8 h-8 rounded-full overflow-hidden relative border border-solid border-base-content/20">
-                                                <input
-                                                    type="color"
-                                                    value={config.panelHeaderBackground}
-                                                    onChange={(e) => handleSpecificColorChange('panelHeaderBackground', e.target.value)}
-                                                    className="w-20 h-20 absolute -mt-5 -ml-5 cursor-pointer "
-                                                />
-                                            </div>
-                                            <input
-                                                type="text"
-                                                name="panelHeaderBackground"
-                                                value={config.panelHeaderBackground}
-                                                onChange={handleInputChange}
-                                                className="input w-32 font-mono"
-                                            />
-                                        </div>
-                                        <p className="text-xs text-base-content/60 mt-1">Choose the background color for the chat header</p>
-                                    </div>
-
-                                    {/* Panel Text Color */}
-                                    <div>
-                                        <label className="text-sm font-medium text-base-content block mb-2">Panel Text Color</label>
-                                        <div className="flex items-center gap-3">
-                                            <div className="w-8 h-8 rounded-full overflow-hidden relative border border-solid border-base-content/20">
-                                                <input
-                                                    type="color"
-                                                    value={config.panelColor}
-                                                    onChange={(e) => handleSpecificColorChange('panelColor', e.target.value)}
-                                                    className="w-20 h-20 absolute -mt-5 -ml-5 cursor-pointer "
-                                                />
-                                            </div>
-                                            <input
-                                                type="text"
-                                                name="panelColor"
-                                                value={config.panelColor}
-                                                onChange={handleInputChange}
-                                                className="input w-32 font-mono"
-                                            />
-                                        </div>
-                                        <p className="text-xs text-base-content/60 mt-1">Choose the text color for the main chat panel</p>
-                                    </div>
-
-                                    {/* Panel Header Text Color */}
-                                    <div>
-                                        <label className="text-sm font-medium text-base-content block mb-2">Header Text Color</label>
-                                        <div className="flex items-center gap-3">
-                                            <div className="w-8 h-8 rounded-full overflow-hidden relative border border-solid border-base-content/20">
-                                                <input
-                                                    type="color"
-                                                    value={config.panelHeaderColor}
-                                                    onChange={(e) => handleSpecificColorChange('panelHeaderColor', e.target.value)}
-                                                    className="w-20 h-20 absolute -mt-5 -ml-5 cursor-pointer "
-                                                />
-                                            </div>
-                                            <input
-                                                type="text"
-                                                name="panelHeaderColor"
-                                                value={config.panelHeaderColor}
-                                                onChange={handleInputChange}
-                                                className="input w-32 font-mono"
-                                            />
-                                        </div>
-                                        <p className="text-xs text-base-content/60 mt-1">Choose the text color for the chat header</p>
-                                    </div>
-                                    {/* Messages Area Backgrond */}
-                                    <div>
-                                        <label className="text-sm font-medium text-base-content block mb-2">Messages Area Background</label>
-                                        <div className="flex items-center gap-3">
-                                            <div className="w-8 h-8 rounded-full overflow-hidden relative border border-solid border-base-content/20">
-                                                <input
-                                                    type="color"
-                                                    value={config.messagesBackground}
-                                                    onChange={(e) => handleSpecificColorChange('messagesBackground', e.target.value)}
-                                                    className="w-20 h-20 absolute -mt-5 -ml-5 cursor-pointer "
-                                                />
-                                            </div>
-                                            <input
-                                                type="text"
-                                                name="messagesBackground"
-                                                value={config.messagesBackground}
-                                                onChange={handleInputChange}
-                                                className="input w-32 font-mono"
-                                            />
-                                        </div>
-                                        <p className="text-xs text-base-content/60 mt-1">Choose the background color for the messages area</p>
-                                    </div>
-
-                                    {/* Messages Text Color */}
-                                    <div>
-                                        <label className="text-sm font-medium text-base-content block mb-2">Messages Text Color</label>
-                                        <div className="flex items-center gap-3">
-                                            <div className="w-8 h-8 rounded-full overflow-hidden relative border border-solid border-base-content/20">
-                                                <input
-                                                    type="color"
-                                                    value={config.messagesColor}
-                                                    onChange={(e) => handleSpecificColorChange('messagesColor', e.target.value)}
-                                                    className="w-20 h-20 absolute -mt-5 -ml-5 cursor-pointer "
-                                                />
-                                            </div>
-                                            <input
-                                                type="text"
-                                                name="messagesColor"
-                                                value={config.messagesColor}
-                                                onChange={handleInputChange}
-                                                className="input w-32 font-mono"
-                                            />
-                                        </div>
-                                        <p className="text-xs text-base-content/60 mt-1">Choose the text color for the messages area</p>
-                                    </div>
-                                    {/* User Bubble Background */}
-                                    <div>
-                                        <label className="text-sm font-medium text-base-content block mb-2">User Bubble Background</label>
-                                        <div className="flex items-center gap-3">
-                                            <div className="w-8 h-8 rounded-full overflow-hidden relative border border-solid border-base-content/20">
-                                                <input
-                                                    type="color"
-                                                    value={config.userBubbleBackground}
-                                                    onChange={(e) => handleSpecificColorChange('userBubbleBackground', e.target.value)}
-                                                    className="w-20 h-20 absolute -mt-5 -ml-5 cursor-pointer "
-                                                />
-                                            </div>
-                                            <input
-                                                type="text"
-                                                name="userBubbleBackground"
-                                                value={config.userBubbleBackground}
-                                                onChange={handleInputChange}
-                                                className="input w-32 font-mono"
-                                            />
-                                        </div>
-                                        <p className="text-xs text-base-content/60 mt-1">Choose the background color for user messages</p>
-                                    </div>
-                                    {/* User Bubble Color */}
-                                    <div>
-                                        <label className="text-sm font-medium text-base-content block mb-2">User Bubble Color</label>
-                                        <div className="flex items-center gap-3">
-                                            <div className="w-8 h-8 rounded-full overflow-hidden relative border border-solid border-base-content/20">
-                                                <input
-                                                    type="color"
-                                                    value={config.userBubbleColor}
-                                                    onChange={(e) => handleSpecificColorChange('userBubbleColor', e.target.value)}
-                                                    className="w-20 h-20 absolute -mt-5 -ml-5 cursor-pointer "
-                                                />
-                                            </div>
-                                            <input
-                                                type="text"
-                                                name="userBubbleColor"
-                                                value={config.userBubbleColor}
-                                                onChange={handleInputChange}
-                                                className="input w-32 font-mono"
-                                            />
-                                        </div>
-                                        <p className="text-xs text-base-content/60 mt-1">Choose the text color for user messages</p>
-                                    </div>
-                                    {/* Assistant Bubble Background */}
-                                    <div>
-                                        <label className="text-sm font-medium text-base-content block mb-2">Assistant Bubble Background</label>
-                                        <div className="flex items-center gap-3">
-                                            <div className="w-8 h-8 rounded-full overflow-hidden relative border border-solid border-base-content/20">
-                                                <input
-                                                    type="color"
-                                                    value={config.assistantBubbleBackground}
-                                                    onChange={(e) => handleSpecificColorChange('assistantBubbleBackground', e.target.value)}
-                                                    className="w-20 h-20 absolute -mt-5 -ml-5 cursor-pointer "
-                                                />
-                                            </div>
-                                            <input
-                                                type="text"
-                                                name="assistantBubbleBackground"
-                                                value={config.assistantBubbleBackground}
-                                                onChange={handleInputChange}
-                                                className="input w-32 font-mono"
-                                            />
-                                        </div>
-                                        <p className="text-xs text-base-content/60 mt-1">Choose the background color for assistant messages</p>
-                                    </div>
-                                    {/* Assistant Bubble Color */}
-                                    <div>
-                                        <label className="text-sm font-medium text-base-content block mb-2">Assistant Bubble Color</label>
-                                        <div className="flex items-center gap-3">
-                                            <div className="w-8 h-8 rounded-full overflow-hidden relative border border-solid border-base-content/20">
-                                                <input
-                                                    type="color"
-                                                    value={config.assistantBubbleColor}
-                                                    onChange={(e) => handleSpecificColorChange('assistantBubbleColor', e.target.value)}
-                                                    className="w-20 h-20 absolute -mt-5 -ml-5 cursor-pointer "
-                                                />
-                                            </div>
-                                            <input
-                                                type="text"
-                                                name="assistantBubbleColor"
-                                                value={config.assistantBubbleColor}
-                                                onChange={handleInputChange}
-                                                className="input w-32 font-mono"
-                                            />
-                                        </div>
-                                        <p className="text-xs text-base-content/60 mt-1">Choose the text color for assistant messages</p>
-                                    </div>
-                                    {/* Send Button Background */}
-                                    <div>
-                                        <label className="text-sm font-medium text-base-content block mb-2">Send Button Background</label>
-                                        <div className="flex items-center gap-3">
-                                            <div className="w-8 h-8 rounded-full overflow-hidden relative border border-solid border-base-content/20">
-                                                <input
-                                                    type="color"
-                                                    value={config.buttonBackground}
-                                                    onChange={(e) => handleSpecificColorChange('buttonBackground', e.target.value)}
-                                                    className="w-20 h-20 absolute -mt-5 -ml-5 cursor-pointer "
-                                                />
-                                            </div>
-                                            <input
-                                                type="text"
-                                                name="buttonBackground"
-                                                value={config.buttonBackground}
-                                                onChange={handleInputChange}
-                                                className="input w-32 font-mono"
-                                            />
-                                        </div>
-                                        <p className="text-xs text-base-content/60 mt-1">Choose the background color for the send button</p>
-                                    </div>
-                                    {/* Send Button Color */}
-                                    <div>
-                                        <label className="text-sm font-medium text-base-content block mb-2">Send Button Color</label>
-                                        <div className="flex items-center gap-3">
-                                            <div className="w-8 h-8 rounded-full overflow-hidden relative border border-solid border-base-content/20">
-                                                <input
-                                                    type="color"
-                                                    value={config.buttonColor}
-                                                    onChange={(e) => handleSpecificColorChange('buttonColor', e.target.value)}
-                                                    className="w-20 h-20 absolute -mt-5 -ml-5 cursor-pointer "
-                                                />
-                                            </div>
-                                            <input
-                                                type="text"
-                                                name="buttonColor"
-                                                value={config.buttonColor}
-                                                onChange={handleInputChange}
-                                                className="input w-32 font-mono"
-                                            />
-                                        </div>
-                                        <p className="text-xs text-base-content/60 mt-1">Choose the text color for the send button</p>
-                                    </div>
-
                                 </div>
+
+                                {/* Color groups (visible when advanced colors enabled) */}
+                                {config.advancedColors && (
+                                    <div className="mt-4">
+                                        <div className="flex mb-4 border-b border-base-200/60">
+                                            {([
+                                                { key: "bubble", label: "Bubble", icon: "fa-comment" },
+                                                { key: "panel", label: "Panel", icon: "fa-window" },
+                                                { key: "messages", label: "Messages", icon: "fa-messages" },
+                                                { key: "user", label: "User", icon: "fa-user" },
+                                                { key: "assistant", label: "Assistant", icon: "fa-robot" },
+                                                { key: "button", label: "Button", icon: "fa-paper-plane" },
+                                            ] as const).map(tab => (
+                                                <button
+                                                    key={tab.key}
+                                                    onClick={() => setColorTab(tab.key)}
+                                                    className={`px-3 py-2 text-sm ${colorTab === tab.key ? "border-b-2 border-primary text-primary font-medium" : "text-base-content/60"}`}
+                                                    aria-label={`${tab.label} colors`}
+                                                >
+                                                    <i className={`fa-duotone fa-solid ${tab.icon} mr-2`} aria-hidden />
+                                                    {tab.label}
+                                                </button>
+                                            ))}
+                                        </div>
+
+                                        {/* Bubble */}
+                                        {colorTab === "bubble" && (
+                                            <div className="grid grid-cols-2 gap-6">
+                                                <div>
+                                                    <label className="text-sm font-medium text-base-content block mb-2">Bubble Color</label>
+                                                    <div className="flex items-center gap-3">
+                                                        <div className="w-8 h-8 rounded-full overflow-hidden relative border border-solid border-base-content/20">
+                                                            <input type="color" value={config.bubbleColor} onChange={(e) => handleSpecificColorChange('bubbleColor', e.target.value)} className="w-20 h-20 absolute -mt-5 -ml-5 cursor-pointer " />
+                                                        </div>
+                                                        <input type="text" name="bubbleColor" value={config.bubbleColor} onChange={handleInputChange} className="input w-32 font-mono" />
+                                                    </div>
+                                                    <p className="text-xs text-base-content/60 mt-1">Icon color on the floating bubble</p>
+                                                </div>
+                                                <div>
+                                                    <label className="text-sm font-medium text-base-content block mb-2">Bubble Background</label>
+                                                    <div className="flex items-center gap-3">
+                                                        <div className="w-8 h-8 rounded-full overflow-hidden relative border border-solid border-base-content/20">
+                                                            <input type="color" value={config.bubbleBackground} onChange={(e) => handleSpecificColorChange('bubbleBackground', e.target.value)} className="w-20 h-20 absolute -mt-5 -ml-5 cursor-pointer " />
+                                                        </div>
+                                                        <input type="text" name="bubbleBackground" value={config.bubbleBackground} onChange={handleInputChange} className="input w-32 font-mono" />
+                                                    </div>
+                                                    <p className="text-xs text-base-content/60 mt-1">Background of the floating bubble</p>
+                                                </div>
+                                            </div>
+                                        )}
+
+                                        {/* Panel */}
+                                        {colorTab === "panel" && (
+                                            <div className="grid grid-cols-2 gap-6">
+                                                <div>
+                                                    <label className="text-sm font-medium text-base-content block mb-2">Panel Background</label>
+                                                    <div className="flex items-center gap-3">
+                                                        <div className="w-8 h-8 rounded-full overflow-hidden relative border border-solid border-base-content/20">
+                                                            <input type="color" value={config.panelBackground} onChange={(e) => handleSpecificColorChange('panelBackground', e.target.value)} className="w-20 h-20 absolute -mt-5 -ml-5 cursor-pointer " />
+                                                        </div>
+                                                        <input type="text" name="panelBackground" value={config.panelBackground} onChange={handleInputChange} className="input w-32 font-mono" />
+                                                    </div>
+                                                    <p className="text-xs text-base-content/60 mt-1">Background color for the chat panel</p>
+                                                </div>
+                                                <div>
+                                                    <label className="text-sm font-medium text-base-content block mb-2">Header Background</label>
+                                                    <div className="flex items-center gap-3">
+                                                        <div className="w-8 h-8 rounded-full overflow-hidden relative border border-solid border-base-content/20">
+                                                            <input type="color" value={config.panelHeaderBackground} onChange={(e) => handleSpecificColorChange('panelHeaderBackground', e.target.value)} className="w-20 h-20 absolute -mt-5 -ml-5 cursor-pointer " />
+                                                        </div>
+                                                        <input type="text" name="panelHeaderBackground" value={config.panelHeaderBackground} onChange={handleInputChange} className="input w-32 font-mono" />
+                                                    </div>
+                                                    <p className="text-xs text-base-content/60 mt-1">Background color for the chat header</p>
+                                                </div>
+                                                <div>
+                                                    <label className="text-sm font-medium text-base-content block mb-2">Panel Text Color</label>
+                                                    <div className="flex items-center gap-3">
+                                                        <div className="w-8 h-8 rounded-full overflow-hidden relative border border-solid border-base-content/20">
+                                                            <input type="color" value={config.panelColor} onChange={(e) => handleSpecificColorChange('panelColor', e.target.value)} className="w-20 h-20 absolute -mt-5 -ml-5 cursor-pointer " />
+                                                        </div>
+                                                        <input type="text" name="panelColor" value={config.panelColor} onChange={handleInputChange} className="input w-32 font-mono" />
+                                                    </div>
+                                                    <p className="text-xs text-base-content/60 mt-1">Text color for the main chat panel</p>
+                                                </div>
+                                                <div>
+                                                    <label className="text-sm font-medium text-base-content block mb-2">Header Text Color</label>
+                                                    <div className="flex items-center gap-3">
+                                                        <div className="w-8 h-8 rounded-full overflow-hidden relative border border-solid border-base-content/20">
+                                                            <input type="color" value={config.panelHeaderColor} onChange={(e) => handleSpecificColorChange('panelHeaderColor', e.target.value)} className="w-20 h-20 absolute -mt-5 -ml-5 cursor-pointer " />
+                                                        </div>
+                                                        <input type="text" name="panelHeaderColor" value={config.panelHeaderColor} onChange={handleInputChange} className="input w-32 font-mono" />
+                                                    </div>
+                                                    <p className="text-xs text-base-content/60 mt-1">Text color for the chat header</p>
+                                                </div>
+                                            </div>
+                                        )}
+
+                                        {/* Messages */}
+                                        {colorTab === "messages" && (
+                                            <div className="grid grid-cols-2 gap-6">
+                                                <div>
+                                                    <label className="text-sm font-medium text-base-content block mb-2">Messages Area Background</label>
+                                                    <div className="flex items-center gap-3">
+                                                        <div className="w-8 h-8 rounded-full overflow-hidden relative border border-solid border-base-content/20">
+                                                            <input type="color" value={config.messagesBackground} onChange={(e) => handleSpecificColorChange('messagesBackground', e.target.value)} className="w-20 h-20 absolute -mt-5 -ml-5 cursor-pointer " />
+                                                        </div>
+                                                        <input type="text" name="messagesBackground" value={config.messagesBackground} onChange={handleInputChange} className="input w-32 font-mono" />
+                                                    </div>
+                                                    <p className="text-xs text-base-content/60 mt-1">Background for the messages scroll area</p>
+                                                </div>
+                                                <div>
+                                                    <label className="text-sm font-medium text-base-content block mb-2">Messages Text Color</label>
+                                                    <div className="flex items-center gap-3">
+                                                        <div className="w-8 h-8 rounded-full overflow-hidden relative border border-solid border-base-content/20">
+                                                            <input type="color" value={config.messagesColor} onChange={(e) => handleSpecificColorChange('messagesColor', e.target.value)} className="w-20 h-20 absolute -mt-5 -ml-5 cursor-pointer " />
+                                                        </div>
+                                                        <input type="text" name="messagesColor" value={config.messagesColor} onChange={handleInputChange} className="input w-32 font-mono" />
+                                                    </div>
+                                                    <p className="text-xs text-base-content/60 mt-1">Default text color in messages area</p>
+                                                </div>
+                                            </div>
+                                        )}
+
+                                        {/* User */}
+                                        {colorTab === "user" && (
+                                            <div className="grid grid-cols-2 gap-6">
+                                                <div>
+                                                    <label className="text-sm font-medium text-base-content block mb-2">User Bubble Background</label>
+                                                    <div className="flex items-center gap-3">
+                                                        <div className="w-8 h-8 rounded-full overflow-hidden relative border border-solid border-base-content/20">
+                                                            <input type="color" value={config.userBubbleBackground} onChange={(e) => handleSpecificColorChange('userBubbleBackground', e.target.value)} className="w-20 h-20 absolute -mt-5 -ml-5 cursor-pointer " />
+                                                        </div>
+                                                        <input type="text" name="userBubbleBackground" value={config.userBubbleBackground} onChange={handleInputChange} className="input w-32 font-mono" />
+                                                    </div>
+                                                    <p className="text-xs text-base-content/60 mt-1">Background for user messages</p>
+                                                </div>
+                                                <div>
+                                                    <label className="text-sm font-medium text-base-content block mb-2">User Bubble Color</label>
+                                                    <div className="flex items-center gap-3">
+                                                        <div className="w-8 h-8 rounded-full overflow-hidden relative border border-solid border-base-content/20">
+                                                            <input type="color" value={config.userBubbleColor} onChange={(e) => handleSpecificColorChange('userBubbleColor', e.target.value)} className="w-20 h-20 absolute -mt-5 -ml-5 cursor-pointer " />
+                                                        </div>
+                                                        <input type="text" name="userBubbleColor" value={config.userBubbleColor} onChange={handleInputChange} className="input w-32 font-mono" />
+                                                    </div>
+                                                    <p className="text-xs text-base-content/60 mt-1">Text color for user messages</p>
+                                                </div>
+                                            </div>
+                                        )}
+
+                                        {/* Assistant */}
+                                        {colorTab === "assistant" && (
+                                            <div className="grid grid-cols-2 gap-6">
+                                                <div>
+                                                    <label className="text-sm font-medium text-base-content block mb-2">Assistant Bubble Background</label>
+                                                    <div className="flex items-center gap-3">
+                                                        <div className="w-8 h-8 rounded-full overflow-hidden relative border border-solid border-base-content/20">
+                                                            <input type="color" value={config.assistantBubbleBackground} onChange={(e) => handleSpecificColorChange('assistantBubbleBackground', e.target.value)} className="w-20 h-20 absolute -mt-5 -ml-5 cursor-pointer " />
+                                                        </div>
+                                                        <input type="text" name="assistantBubbleBackground" value={config.assistantBubbleBackground} onChange={handleInputChange} className="input w-32 font-mono" />
+                                                    </div>
+                                                    <p className="text-xs text-base-content/60 mt-1">Background for assistant messages</p>
+                                                </div>
+                                                <div>
+                                                    <label className="text-sm font-medium text-base-content block mb-2">Assistant Bubble Color</label>
+                                                    <div className="flex items-center gap-3">
+                                                        <div className="w-8 h-8 rounded-full overflow-hidden relative border border-solid border-base-content/20">
+                                                            <input type="color" value={config.assistantBubbleColor} onChange={(e) => handleSpecificColorChange('assistantBubbleColor', e.target.value)} className="w-20 h-20 absolute -mt-5 -ml-5 cursor-pointer " />
+                                                        </div>
+                                                        <input type="text" name="assistantBubbleColor" value={config.assistantBubbleColor} onChange={handleInputChange} className="input w-32 font-mono" />
+                                                    </div>
+                                                    <p className="text-xs text-base-content/60 mt-1">Text color for assistant messages</p>
+                                                </div>
+                                            </div>
+                                        )}
+
+                                        {/* Button */}
+                                        {colorTab === "button" && (
+                                            <div className="grid grid-cols-2 gap-6">
+                                                <div>
+                                                    <label className="text-sm font-medium text-base-content block mb-2">Send Button Background</label>
+                                                    <div className="flex items-center gap-3">
+                                                        <div className="w-8 h-8 rounded-full overflow-hidden relative border border-solid border-base-content/20">
+                                                            <input type="color" value={config.buttonBackground} onChange={(e) => handleSpecificColorChange('buttonBackground', e.target.value)} className="w-20 h-20 absolute -mt-5 -ml-5 cursor-pointer " />
+                                                        </div>
+                                                        <input type="text" name="buttonBackground" value={config.buttonBackground} onChange={handleInputChange} className="input w-32 font-mono" />
+                                                    </div>
+                                                    <p className="text-xs text-base-content/60 mt-1">Background for the send button</p>
+                                                </div>
+                                                <div>
+                                                    <label className="text-sm font-medium text-base-content block mb-2">Send Button Color</label>
+                                                    <div className="flex items-center gap-3">
+                                                        <div className="w-8 h-8 rounded-full overflow-hidden relative border border-solid border-base-content/20">
+                                                            <input type="color" value={config.buttonColor} onChange={(e) => handleSpecificColorChange('buttonColor', e.target.value)} className="w-20 h-20 absolute -mt-5 -ml-5 cursor-pointer " />
+                                                        </div>
+                                                        <input type="text" name="buttonColor" value={config.buttonColor} onChange={handleInputChange} className="input w-32 font-mono" />
+                                                    </div>
+                                                    <p className="text-xs text-base-content/60 mt-1">Text/icon color for the send button</p>
+                                                </div>
+                                            </div>
+                                        )}
+                                    </div>
+                                )}
                             </div>
                             {/* Button Icon */}
                             <div className="flex flex-col gap-4 flex-1">

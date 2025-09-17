@@ -1,9 +1,9 @@
 import { getTenantIdStrict } from "@/lib/tenant-resolve";
 import { query } from "@/lib/db";
 import { Breadcrumb } from "@/components/ui/breadcrumb";
-import { AnimatedPage, StaggerContainer, StaggerChild, HoverScale, FadeIn, SlideIn } from "@/components/ui/animated-page";
+import { AnimatedPage, StaggerContainer, StaggerChild, FadeIn, SlideIn } from "@/components/ui/animated-page";
 import { WebhookAnalyticsDashboard } from "@/components/webhook-analytics-dashboard";
-import { Suspense } from "react";
+//
 import Link from "next/link";
 import StatCard from "@/components/ui/stat-card";
 
@@ -16,7 +16,7 @@ async function list(tenantId: string) {
     return rows
 }
 
-function IntegrationsPage({ integrations, tenantId }: { integrations: Row[]; tenantId: string }) {
+function IntegrationsPage({ integrations }: { integrations: Row[]; tenantId: string }) {
     const activeIntegrations = integrations.filter(i => i.status === 'active');
     const totalIntegrations = integrations.length;
     const healthyIntegrations = integrations.filter(i => i.status === 'active').length;
@@ -120,15 +120,7 @@ function IntegrationsPage({ integrations, tenantId }: { integrations: Row[]; ten
                             </div>
 
                             {activeIntegrations.length > 0 ? (
-                                <StaggerContainer>
-                                    <div className="space-y-4">
-                                        {activeIntegrations.map((integration) => (
-                                            <StaggerChild key={integration.id}>
-                                                <ActiveIntegrationCard integration={integration} />
-                                            </StaggerChild>
-                                        ))}
-                                    </div>
-                                </StaggerContainer>
+                                <ActiveIntegrationsTable rows={activeIntegrations} />
                             ) : (
                                 <div className="card bg-base-100 border-2 border-dashed border-base-300 p-12 text-center shadow-xl rounded-2xl">
                                     <div className="w-16 h-16 bg-base-200 rounded-full flex items-center justify-center mx-auto mb-4">
@@ -156,12 +148,9 @@ function IntegrationsPage({ integrations, tenantId }: { integrations: Row[]; ten
     );
 }
 
-async function WebhookCount({ tenantId }: { tenantId: string }) {
-    const { rows } = await query(`SELECT COUNT(*) as count FROM public.webhook_endpoints WHERE tenant_id = $1`, [tenantId]);
-    return <span>{rows[0]?.count || 0}</span>;
-}
+// Removed unused WebhookCount helper
 
-function ActiveIntegrationCard({ integration }: { integration: Row; tenantId?: string }) {
+function ActiveIntegrationsTable({ rows }: { rows: Row[] }) {
     const getProviderIcon = (provider: string) => {
         switch (provider) {
             case 'slack': return 'fa-brands fa-slack';
@@ -182,53 +171,62 @@ function ActiveIntegrationCard({ integration }: { integration: Row; tenantId?: s
     };
 
     return (
-        <HoverScale scale={1.01}>
-            <div className="card bg-base-100 shadow-xl rounded-2xl border border-base-200 hover:shadow-md transition-all duration-300">
-                <div className="card-body p-6">
-                    <div className="flex items-center justify-between">
-                        <div className="flex items-center gap-4">
-                            <div className="w-12 h-12 bg-primary/10 rounded-xl flex items-center justify-center">
-                                <i className={`${getProviderIcon(integration.provider)} text-lg text-primary`} />
-                            </div>
-                            <div>
-                                <h3 className="font-semibold text-base-content">{integration.name}</h3>
-                                <p className="text-sm text-base-content/60 capitalize">{integration.provider}</p>
-                            </div>
-                        </div>
-                        <div className="flex items-center gap-3">
-                            <span className={`badge ${getStatusBadge(integration.status)} badge-sm`}>
-                                {integration.status}
-                            </span>
-                            <div className="dropdown dropdown-end">
-                                <button className="btn btn-ghost btn-sm btn-square rounded-xl">
-                                    <i className="fa-duotone fa-solid fa-ellipsis-vertical" />
-                                </button>
-                                <ul className="dropdown-content menu p-2 shadow bg-base-100 rounded-box w-52">
-                                    <li>
-                                        <Link href={`/dashboard/integrations/${integration.id}`}>
-                                            <i className="fa-duotone fa-solid fa-eye mr-2" />
-                                            View Details
+        <div className="card bg-base-100 rounded-2xl shadow-sm">
+            <div className="overflow-x-auto">
+                <table className="table">
+                    <thead>
+                        <tr>
+                            <th>Integration</th>
+                            <th>Provider</th>
+                            <th>Status</th>
+                            <th>Created</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {rows.map((integration) => (
+                            <tr key={integration.id} className="hover">
+                                <td>
+                                    <div className="flex items-center gap-3">
+                                        <div className="w-10 h-10 bg-primary/10 rounded-xl flex items-center justify-center">
+                                            <i className={`${getProviderIcon(integration.provider)} text-primary`} />
+                                        </div>
+                                        <div>
+                                            <div className="font-semibold">{integration.name}</div>
+                                            <div className="text-xs text-base-content/60">{integration.id}</div>
+                                        </div>
+                                    </div>
+                                </td>
+                                <td className="capitalize">{integration.provider}</td>
+                                <td>
+                                    <span className={`badge ${getStatusBadge(integration.status)} badge-sm`}>
+                                        {integration.status}
+                                    </span>
+                                </td>
+                                <td>
+                                    <span className="text-sm">
+                                        {new Date(integration.created_at).toLocaleDateString()}
+                                    </span>
+                                </td>
+                                <td>
+                                    <div className="flex items-center gap-2">
+                                        <Link href={`/dashboard/integrations/${integration.id}`} className="btn btn-sm btn-outline rounded-lg" title="View details">
+                                            <i className="fa-duotone fa-solid fa-eye" />
                                         </Link>
-                                    </li>
-                                    <li>
-                                        <Link href={`/dashboard/integrations/${integration.id}/settings`}>
-                                            <i className="fa-duotone fa-solid fa-cog mr-2" />
-                                            Settings
+                                        <Link href={`/dashboard/integrations/${integration.id}/settings`} className="btn btn-sm btn-ghost rounded-lg" title="Settings">
+                                            <i className="fa-duotone fa-solid fa-cog" />
                                         </Link>
-                                    </li>
-                                    <li>
-                                        <Link href={`/dashboard/integrations/${integration.id}/delete`} className="text-error">
-                                            <i className="fa-duotone fa-solid fa-trash mr-2" />
-                                            Remove
+                                        <Link href={`/dashboard/integrations/${integration.id}/delete`} className="btn btn-sm btn-ghost text-error rounded-lg" title="Remove">
+                                            <i className="fa-duotone fa-solid fa-trash" />
                                         </Link>
-                                    </li>
-                                </ul>
-                            </div>
-                        </div>
-                    </div>
-                </div>
+                                    </div>
+                                </td>
+                            </tr>
+                        ))}
+                    </tbody>
+                </table>
             </div>
-        </HoverScale>
+        </div>
     );
 }
 
