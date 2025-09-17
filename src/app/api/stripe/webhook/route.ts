@@ -49,7 +49,11 @@ export async function POST(req: NextRequest) {
             const tenantId = sub.metadata?.tenantId as string | undefined;
             if (tenantId) {
                 const priceId = sub.items.data[0]?.price?.id;
-                const plan = planFromPriceId(priceId) || 'starter';
+                // Prefer explicit plan metadata sent from our app; fallback to price mapping
+                const planMeta = (sub.metadata?.plan as string | undefined)?.toLowerCase();
+                const plan = (planMeta === 'starter' || planMeta === 'pro' || planMeta === 'agency')
+                    ? planMeta
+                    : (planFromPriceId(priceId) || 'starter');
                 const status = sub.status;
                 const cpe = (sub as unknown as { current_period_end?: number }).current_period_end ?? 0;
                 const periodEnd = new Date(cpe * 1000).toISOString();

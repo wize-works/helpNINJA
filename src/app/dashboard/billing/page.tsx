@@ -1,9 +1,11 @@
 'use client';
-import { useState, Suspense } from 'react';
+import { useEffect, useMemo, useState, Suspense } from 'react';
+import { useSearchParams } from 'next/navigation';
 import { Breadcrumb } from '@/components/ui/breadcrumb';
 import { AnimatedPage, StaggerContainer, StaggerChild, HoverScale } from '@/components/ui/animated-page';
 import { toastUtils } from '@/lib/toast';
 import { PLAN_DETAILS } from '@/lib/plan';
+import type { Plan } from '@/lib/limits';
 import { Plan } from '@/lib/limits';
 
 type BillingPeriod = 'monthly' | 'yearly';
@@ -11,6 +13,42 @@ type BillingPeriod = 'monthly' | 'yearly';
 export default function BillingPage() {
     const [loading, setLoading] = useState<string | null>(null);
     const [billingPeriod, setBillingPeriod] = useState<BillingPeriod>('monthly');
+    const [currentPlan, setCurrentPlan] = useState<Plan>('none');
+    const [planStatus, setPlanStatus] = useState<string>('inactive');
+    const searchParams = useSearchParams();
+
+    useEffect(() => {
+        const updated = searchParams?.get('updated');
+        if (updated === '1') {
+            toastUtils.success('Subscription updated successfully');
+        }
+    }, [searchParams]);
+
+    useEffect(() => {
+        let cancelled = false;
+        (async () => {
+            try {
+                const r = await fetch('/api/tenant/info', { cache: 'no-store' });
+                if (!r.ok) return;
+                const j = await r.json();
+                if (cancelled) return;
+                const plan = (j.plan as Plan) || 'none';
+                const status = (j.plan_status as string) || 'inactive';
+                // Only treat as active plan if active/trialing; otherwise show none
+                if (status === 'active' || status === 'trialing') {
+                    setCurrentPlan(plan);
+                } else {
+                    setCurrentPlan('none');
+                }
+                setPlanStatus(status);
+            } catch {
+                // ignore; UI will still allow choosing a plan
+            }
+        })();
+        return () => { cancelled = true; };
+    }, []);
+
+    const ranks = useMemo(() => ({ starter: 0, pro: 1, agency: 2 } as Record<Exclude<Plan,'none'>, number>), []);
 
     const breadcrumbItems = [
         { label: "Dashboard", href: "/dashboard", icon: "fa-gauge-high" },
@@ -94,9 +132,17 @@ export default function BillingPage() {
                                 {(Object.keys(PLAN_DETAILS) as Plan[]).filter(plan => plan !== 'none').map((plan, index) => {
                                     const details = PLAN_DETAILS[plan as keyof typeof PLAN_DETAILS];
                                     const pricing = details[billingPeriod];
+                                    const isCurrent = currentPlan === plan;
+                                    const isActive = planStatus === 'active' || planStatus === 'trialing';
+                                    const showCurrent = isActive && isCurrent;
+                                    const btnLabel = showCurrent
+                                        ? 'Current Plan'
+                                        : (currentPlan !== 'none' && ranks[plan as Exclude<Plan,'none'>] < ranks[currentPlan as Exclude<Plan,'none'>]
+                                            ? `Downgrade to ${details.name}`
+                                            : `Upgrade to ${details.name}`);
 
                                     return (
-                                        <div key={plan} className={`card bg-base-100 rounded-2xl shadow-sm hover:shadow-md transition-all duration-300 group relative ${details.popular ? 'border-2 border-primary' : ''}`}>
+                                        <div key={plan} className={`card bg-base-100 rounded-2xl shadow-sm hover:shadow-md transition-all duration-300 group relative ${showCurrent ? 'border-2 border-success' : (details.popular ? 'border-2 border-primary' : '')}`}>
                                             {details.popular && (
                                                 <div className="absolute -top-3 left-1/2 transform -translate-x-1/2">
                                                     <div className="badge badge-accent">Most Popular</div>
@@ -109,6 +155,9 @@ export default function BillingPage() {
                                                     </div>
                                                     <div>
                                                         <h3 className="text-xl font-bold text-base-content">{details.name}</h3>
+                                                        {showCurrent && (
+                                                            <div className="badge badge-success badge-sm mt-1">Current</div>
+                                                        )}
                                                         <div className="text-3xl font-bold text-primary">{pricing.price}</div>
                                                         <div className="text-sm text-base-content/60">/{pricing.period}</div>
                                                         {billingPeriod === 'yearly' && 'savings' in pricing && (
@@ -131,8 +180,8 @@ export default function BillingPage() {
                                                 <HoverScale scale={1.02}>
                                                     <button
                                                         onClick={() => checkout(plan)}
-                                                        disabled={loading === plan}
-                                                        className={`btn w-full rounded-xl mt-auto ${details.color} ${loading === plan ? 'loading' : ''}`}
+                                                        disabled={loading === plan || showCurrent}
+                                                        className={`btn w-full rounded-xl mt-auto ${showCurrent ? 'btn-disabled' : details.color} ${loading === plan ? 'loading' : ''}`}
                                                     >
                                                         {loading === plan ? (
                                                             <>
@@ -142,7 +191,7 @@ export default function BillingPage() {
                                                         ) : (
                                                             <>
                                                                 <i className="fa-duotone fa-solid fa-credit-card mr-2" aria-hidden />
-                                                                Choose {details.name}
+                                                                {btnLabel}
                                                             </>
                                                         )}
                                                     </button>

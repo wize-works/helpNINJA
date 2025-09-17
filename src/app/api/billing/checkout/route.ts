@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { stripe, Plan } from '@/lib/stripe';
-import { transaction } from '@/lib/db';
+import { transaction, query } from '@/lib/db';
 import { getTenantIdStrict } from '@/lib/tenant-resolve';
 import { hasRole } from '@/lib/rbac';
 import { logAuditEvent, extractRequestInfo } from '@/lib/audit-log';
@@ -29,7 +29,20 @@ function getStripePriceId(plan: Exclude<Plan, 'none'>, billingPeriod: 'monthly' 
 
 export async function POST(req: NextRequest) {
     try {
-        const { userId } = await auth();
+        const { userId: clerkUserId } = await auth();
+        if (!clerkUserId) {
+            return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+        }
+
+        const userId = await transaction(async (txQuery) => {
+            const result = await txQuery(
+                'select id from public.users where clerk_user_id=$1',
+                [clerkUserId]
+            ) as QueryResult<{ id: string }>;
+            if (!result.rows.length) throw new Error('user not found');
+            return result.rows[0].id;
+        });
+
         if (!userId) {
             return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
         }
@@ -96,6 +109,61 @@ export async function POST(req: NextRequest) {
             return NextResponse.json({
                 error: `Price not available for ${plan} plan with ${billingPeriod} billing. Please contact support.`
             }, { status: 400 });
+        }
+
+        // If tenant already has an active subscription, update it in-app (no new subscription)
+        const { rows: subRows } = await query<{ stripe_subscription_id: string | null; plan_status: string | null }>(
+            'select stripe_subscription_id, plan_status from public.tenants where id=$1',
+            [tenantId]
+        );
+        const existingSubId = subRows[0]?.stripe_subscription_id;
+        const existingStatus = (subRows[0]?.plan_status || '').toLowerCase();
+        const hasActiveSub = !!existingSubId && existingStatus && existingStatus !== 'canceled';
+
+        if (hasActiveSub) {
+            const sub = await stripe.subscriptions.retrieve(existingSubId!);
+            const firstItem = sub.items.data[0];
+            if (!firstItem?.id) {
+                return NextResponse.json({ error: 'Subscription item missing; contact support' }, { status: 400 });
+            }
+
+            await stripe.subscriptions.update(existingSubId!, {
+                items: [
+                    {
+                        id: firstItem.id,
+                        price: priceId,
+                        quantity: 1,
+                    },
+                ],
+                proration_behavior: 'create_prorations',
+                metadata: { tenantId, plan, billingPeriod },
+            });
+
+            const updated = await stripe.subscriptions.retrieve(existingSubId!);
+            const cpe = (updated as unknown as { current_period_end?: number }).current_period_end ?? 0;
+            const periodEnd = new Date(cpe * 1000).toISOString();
+            const status = updated.status;
+            await query(
+                `update public.tenants set plan=$1, plan_status=$2, current_period_end=$3 where id=$4`,
+                [plan, status, periodEnd, tenantId]
+            );
+
+            await logAuditEvent({
+                tenantId,
+                userId,
+                action: 'plan_changed',
+                resourceType: 'subscription',
+                resourceId: existingSubId!,
+                metadata: {
+                    fromStatus: existingStatus,
+                    toPlan: plan,
+                    billingPeriod,
+                    ...extractRequestInfo(req)
+                }
+            });
+
+            // Keep client contract by returning a URL to navigate
+            return NextResponse.json({ url: `${siteUrl}/dashboard/billing?updated=1` });
         }
 
         const session = await stripe.checkout.sessions.create({

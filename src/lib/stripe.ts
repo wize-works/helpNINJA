@@ -31,6 +31,27 @@ export type Plan = keyof typeof PRICE_BY_PLAN;
 
 export function planFromPriceId(priceId?: string): Plan | null {
     if (!priceId) return null;
-    const entry = Object.entries(PRICE_BY_PLAN).find(([, id]) => id === priceId);
-    return (entry?.[0] as Plan) || null;
+    // Support both legacy single-price envs and monthly/yearly envs
+    const monthlyYearly: Record<Plan, Array<string | undefined>> = {
+        starter: [
+            process.env.STRIPE_PRICE_STARTER,
+            process.env.STRIPE_PRICE_STARTER_MONTHLY,
+            process.env.STRIPE_PRICE_STARTER_YEARLY,
+        ],
+        pro: [
+            process.env.STRIPE_PRICE_PRO,
+            process.env.STRIPE_PRICE_PRO_MONTHLY,
+            process.env.STRIPE_PRICE_PRO_YEARLY,
+        ],
+        agency: [
+            process.env.STRIPE_PRICE_AGENCY,
+            process.env.STRIPE_PRICE_AGENCY_MONTHLY,
+            process.env.STRIPE_PRICE_AGENCY_YEARLY,
+        ],
+    } as const;
+
+    for (const [plan, ids] of Object.entries(monthlyYearly) as Array<[Plan, Array<string | undefined>]>) {
+        if (ids.filter(Boolean).some((id) => id === priceId)) return plan;
+    }
+    return null;
 }

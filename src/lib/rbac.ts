@@ -28,6 +28,21 @@ export async function getUserRole(userId: string, tenantId: string): Promise<Use
     }
 }
 
+export async function geClerkUserRole(clerkUserId: string, tenantId: string): Promise<UserRole | null> {
+    try {
+        const result = await query<{ role: UserRole }>(
+            `SELECT tm.role FROM public.tenant_members tm
+            JOIN public.users u ON u.id = tm.user_id
+            WHERE u.clerk_user_id = $1 AND tm.tenant_id = $2 AND tm.status = 'active'`,
+            [clerkUserId, tenantId]
+        );
+        return result.rows[0]?.role || null;
+    } catch (error) {
+        console.error('Error fetching user role:', error);
+        return null;
+    }
+}
+
 /**
  * Check if a user has any of the required roles for a tenant
  */

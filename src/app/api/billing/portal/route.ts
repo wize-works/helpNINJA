@@ -38,7 +38,7 @@ export async function POST(req: NextRequest) {
 
         const portal = await stripe.billingPortal.sessions.create({
             customer,
-            return_url: `${siteUrl}/billing`,
+            return_url: `${siteUrl}/dashboard/billing`,
         });
 
         // Log audit event
