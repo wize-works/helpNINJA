@@ -55,7 +55,17 @@ export default function NotificationsBell() {
             // Throttle if calls happen too rapidly (< 1s apart)
             if (now - lastFetchRef.current < 750) return;
             lastFetchRef.current = now;
-            const r = await fetch('/api/notifications/unread-count', { cache: 'no-store' });
+            const r = await fetch('/api/notifications/unread-count', {
+                cache: 'no-store',
+                redirect: 'manual',
+                headers: { Accept: 'application/json' },
+            });
+            if (r.type === 'opaqueredirect' || r.status === 401) {
+                const signIn = (process.env.NEXT_PUBLIC_CLERK_SIGN_IN_URL || '/auth/signin');
+                const redirectUrl = encodeURIComponent(window.location.href);
+                window.location.href = `${signIn}?redirect_url=${redirectUrl}`;
+                return;
+            }
             if (!r.ok) return;
             const j = await r.json();
             setUnread(j.count || 0);
@@ -102,7 +112,17 @@ export default function NotificationsBell() {
             const cursor = reset ? undefined : nextCursor || undefined;
             const url = new URL('/api/notifications', window.location.origin);
             if (cursor) url.searchParams.set('cursor', cursor);
-            const r = await fetch(url.toString(), { cache: 'no-store' });
+            const r = await fetch(url.toString(), {
+                cache: 'no-store',
+                redirect: 'manual',
+                headers: { Accept: 'application/json' },
+            });
+            if (r.type === 'opaqueredirect' || r.status === 401) {
+                const signIn = (process.env.NEXT_PUBLIC_CLERK_SIGN_IN_URL || '/auth/signin');
+                const redirectUrl = encodeURIComponent(window.location.href);
+                window.location.href = `${signIn}?redirect_url=${redirectUrl}`;
+                return;
+            }
             if (r.ok) {
                 const j = await r.json();
                 setItems(prev => reset ? j.notifications : [...prev, ...j.notifications]);
@@ -126,7 +146,17 @@ export default function NotificationsBell() {
 
     async function markRead(id: string) {
         try {
-            const r = await fetch(`/api/notifications/${id}/read`, { method: 'PATCH' });
+            const r = await fetch(`/api/notifications/${id}/read`, {
+                method: 'PATCH',
+                redirect: 'manual',
+                headers: { Accept: 'application/json' },
+            });
+            if (r.type === 'opaqueredirect' || r.status === 401) {
+                const signIn = (process.env.NEXT_PUBLIC_CLERK_SIGN_IN_URL || '/auth/signin');
+                const redirectUrl = encodeURIComponent(window.location.href);
+                window.location.href = `${signIn}?redirect_url=${redirectUrl}`;
+                return;
+            }
             if (r.ok) {
                 setItems(prev => prev.map(it => it.id === id ? { ...it, read_at: new Date().toISOString() } : it));
                 setUnread(u => Math.max(0, u - 1));
@@ -136,7 +166,17 @@ export default function NotificationsBell() {
 
     async function markAll() {
         try {
-            const r = await fetch('/api/notifications/mark-all-read', { method: 'POST' });
+            const r = await fetch('/api/notifications/mark-all-read', {
+                method: 'POST',
+                redirect: 'manual',
+                headers: { Accept: 'application/json' },
+            });
+            if (r.type === 'opaqueredirect' || r.status === 401) {
+                const signIn = (process.env.NEXT_PUBLIC_CLERK_SIGN_IN_URL || '/auth/signin');
+                const redirectUrl = encodeURIComponent(window.location.href);
+                window.location.href = `${signIn}?redirect_url=${redirectUrl}`;
+                return;
+            }
             if (r.ok) {
                 setItems(prev => prev.map(it => ({ ...it, read_at: it.read_at || new Date().toISOString() })));
                 setUnread(0);
