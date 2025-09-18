@@ -43,7 +43,7 @@ export default function SignInPage() {
 
                                 <div className="divider">or</div>
 
-                                <div className="grid grid-cols-3 gap-3">
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                                     <Clerk.Connection name="google" className="btn btn-outline rounded-xl"><Clerk.Icon />Google</Clerk.Connection>
                                     <Clerk.Connection name="facebook" className="btn btn-outline rounded-xl"><Clerk.Icon />Facebook</Clerk.Connection>
                                     {/* <Clerk.Connection name="microsoft" className="btn btn-outline rounded-xl"><Clerk.Icon />Microsoft</Clerk.Connection> */}
