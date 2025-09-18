@@ -197,6 +197,8 @@ Core features (present)
   - Tenant resolved strictly server-side (Clerk org → tenant); outbox retry button.
   - Files: src/app/dashboard/page.tsx, src/components/sidebar.tsx, src/lib/tenant-resolve.ts
   - Notes: "Messages (this month)" derives from `public.messages` for the current calendar month, counting `role='user'` messages (aligned with the Chat Volume chart). Low-confidence counts use assistant messages with confidence < 0.55 in the same period.
+  - Auth-aware header: Title bar hides global search, quick create, notifications, and user menu for signed-out users and shows a Sign in button instead.
+  - Files: src/components/titlebar.tsx (uses Clerk `useUser()` to conditionally render)
 - Analytics & Integration Health
   - **Real escalation tracking**: Escalation rate calculated from actual escalations table, not just low-confidence messages
   - **Actual response times**: Calculated from real message pairs instead of mock data  
