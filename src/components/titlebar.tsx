@@ -3,12 +3,14 @@
 import Link from "next/link";
 import ThemeToggle from "./theme-toggle";
 import NotificationsBell from "./notifications-bell";
+import { usePathname } from "next/navigation";
 import Logo from "./logo";
 import { HoverScale, SlideIn } from "./ui/animated-page";
 import { SignOutButton, useUser } from "@clerk/nextjs";
 import React from "react";
 
 export default function Titlebar() {
+    const pathname = usePathname();
     const { isLoaded, user } = useUser();
     const [plan, setPlan] = React.useState<string | null>(null);
 
@@ -161,7 +163,7 @@ export default function Titlebar() {
                                 </div>
 
                                 {/* Notifications */}
-                                <NotificationsBell />
+                                {!(pathname?.startsWith('/auth')) && <NotificationsBell />}
 
                                 {/* Help */}
                                 <HoverScale scale={1.05}>

@@ -45,11 +45,40 @@ export default function NotificationsBell() {
     const [initialLoaded, setInitialLoaded] = React.useState(false);
     const panelRef = React.useRef<HTMLDivElement | null>(null);
 
+    // Helpers to avoid redirect loops on auth pages
+    const getSignInUrl = React.useCallback(() => (process.env.NEXT_PUBLIC_CLERK_SIGN_IN_URL || '/auth/signin'), []);
+    const redirectingRef = React.useRef(false);
+    const isOnAuthPage = React.useCallback(() => {
+        try {
+            const path = window.location.pathname || '';
+            const signIn = new URL(getSignInUrl(), window.location.origin);
+            return path.startsWith('/auth') || path === signIn.pathname;
+        } catch {
+            return false;
+        }
+    }, [getSignInUrl]);
+    const redirectToSignIn = React.useCallback(() => {
+        if (redirectingRef.current) return;
+        if (isOnAuthPage()) return; // already on sign-in, avoid nesting redirect_url
+        try {
+            const current = new URL(window.location.href);
+            // If current URL already has a redirect_url param, avoid nesting
+            if (current.searchParams.has('redirect_url')) return;
+            redirectingRef.current = true;
+            const signIn = new URL(getSignInUrl(), window.location.origin);
+            signIn.searchParams.set('redirect_url', current.toString());
+            window.location.href = signIn.toString();
+        } catch {
+            window.location.href = getSignInUrl();
+        }
+    }, [getSignInUrl, isOnAuthPage]);
+
     // Poll unread count (adaptive)
     const pollRef = React.useRef<ReturnType<typeof setInterval> | null>(null);
     const lastFetchRef = React.useRef<number>(0);
 
     const fetchUnread = React.useCallback(async () => {
+        if (typeof window !== 'undefined' && isOnAuthPage()) return;
         try {
             const now = Date.now();
             // Throttle if calls happen too rapidly (< 1s apart)
@@ -61,16 +90,14 @@ export default function NotificationsBell() {
                 headers: { Accept: 'application/json' },
             });
             if (r.type === 'opaqueredirect' || r.status === 401) {
-                const signIn = (process.env.NEXT_PUBLIC_CLERK_SIGN_IN_URL || '/auth/signin');
-                const redirectUrl = encodeURIComponent(window.location.href);
-                window.location.href = `${signIn}?redirect_url=${redirectUrl}`;
+                redirectToSignIn();
                 return;
             }
             if (!r.ok) return;
             const j = await r.json();
             setUnread(j.count || 0);
         } catch { /* ignore */ }
-    }, []);
+    }, [isOnAuthPage, redirectToSignIn]);
 
     const startPolling = React.useCallback((interval: number) => {
         if (pollRef.current) clearInterval(pollRef.current!);
@@ -79,10 +106,12 @@ export default function NotificationsBell() {
 
     React.useEffect(() => {
         // Base poll every 25s when closed, faster (6s) when open
-        fetchUnread();
-        startPolling(open ? 6000 : 25000);
+        if (!isOnAuthPage()) {
+            fetchUnread();
+            startPolling(open ? 6000 : 25000);
+        }
         return () => { if (pollRef.current) clearInterval(pollRef.current); };
-    }, [open, fetchUnread, startPolling]);
+    }, [open, fetchUnread, startPolling, isOnAuthPage]);
 
     // Refresh on window focus / visibility regain
     React.useEffect(() => {
@@ -118,9 +147,7 @@ export default function NotificationsBell() {
                 headers: { Accept: 'application/json' },
             });
             if (r.type === 'opaqueredirect' || r.status === 401) {
-                const signIn = (process.env.NEXT_PUBLIC_CLERK_SIGN_IN_URL || '/auth/signin');
-                const redirectUrl = encodeURIComponent(window.location.href);
-                window.location.href = `${signIn}?redirect_url=${redirectUrl}`;
+                redirectToSignIn();
                 return;
             }
             if (r.ok) {
@@ -152,9 +179,7 @@ export default function NotificationsBell() {
                 headers: { Accept: 'application/json' },
             });
             if (r.type === 'opaqueredirect' || r.status === 401) {
-                const signIn = (process.env.NEXT_PUBLIC_CLERK_SIGN_IN_URL || '/auth/signin');
-                const redirectUrl = encodeURIComponent(window.location.href);
-                window.location.href = `${signIn}?redirect_url=${redirectUrl}`;
+                redirectToSignIn();
                 return;
             }
             if (r.ok) {
@@ -172,9 +197,7 @@ export default function NotificationsBell() {
                 headers: { Accept: 'application/json' },
             });
             if (r.type === 'opaqueredirect' || r.status === 401) {
-                const signIn = (process.env.NEXT_PUBLIC_CLERK_SIGN_IN_URL || '/auth/signin');
-                const redirectUrl = encodeURIComponent(window.location.href);
-                window.location.href = `${signIn}?redirect_url=${redirectUrl}`;
+                redirectToSignIn();
                 return;
             }
             if (r.ok) {
