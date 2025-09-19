@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect, useCallback } from 'react';
-import { loadStripe } from '@stripe/stripe-js';
+import { loadStripe, Stripe } from '@stripe/stripe-js';
 import {
     Elements,
     CardNumberElement,
@@ -12,7 +12,8 @@ import {
 } from '@stripe/react-stripe-js';
 import { type Plan } from '@/lib/limits';
 
-const stripePromise = loadStripe(process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY!);
+const pk = process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY;
+const stripePromise: Promise<Stripe | null> | null = pk ? loadStripe(pk) : null;
 
 const elementOptions = {
     style: {
@@ -373,6 +374,20 @@ function CheckoutForm({ plan, billingPeriod, onComplete, onError }: StripeChecko
 }
 
 export default function StripeCheckout(props: StripeCheckoutProps) {
+    if (!stripePromise) {
+        return (
+            <div className="alert alert-error">
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+                <div>
+                    <div className="font-semibold">Payment is not configured</div>
+                    <div className="text-sm">Missing NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY. Please contact support.</div>
+                </div>
+            </div>
+        );
+    }
+
     return (
         <Elements stripe={stripePromise}>
             <CheckoutForm {...props} />
