@@ -61,7 +61,7 @@ export default function OnboardingNavigation({
                 {!isFirstStep && (
                     <button
                         onClick={handlePrev}
-                        className="btn btn-ghost rounded-xl"
+                        className="btn  rounded-xl"
                         disabled={isLoading}
                     >
                         <i className="fa-duotone fa-solid fa-arrow-left mr-2" aria-hidden />
@@ -73,7 +73,7 @@ export default function OnboardingNavigation({
             {/* Center - Skip Option */}
             <div className="flex-shrink-0">
                 {showSkip && (
-                    <Link href={skipHref} className="btn btn-ghost btn-sm rounded-lg">
+                    <Link href={skipHref} className="btn  btn-sm rounded-lg">
                         Skip setup
                     </Link>
                 )}
@@ -146,7 +146,7 @@ export function SimpleOnboardingNavigation({
             {showBack ? (
                 <button
                     onClick={onBack}
-                    className="btn btn-ghost rounded-xl"
+                    className="btn  rounded-xl"
                     disabled={isLoading}
                 >
                     <i className="fa-duotone fa-solid fa-arrow-left mr-2" aria-hidden />

@@ -38,7 +38,7 @@ export default function WidgetSetupModal({
                             <h2 className="text-2xl font-bold text-base-content">Widget Setup</h2>
                             <p className="text-base-content/60 mt-1">Integration instructions for <span className="font-medium">{siteName}</span></p>
                         </div>
-                        <button onClick={onClose} className="btn btn-ghost btn-sm rounded-lg">
+                        <button onClick={onClose} className="btn  btn-sm rounded-lg">
                             <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
                             </svg>

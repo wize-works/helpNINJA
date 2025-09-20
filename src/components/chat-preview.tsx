@@ -93,10 +93,10 @@ export default function ChatPreview({
             <div className="mb-2 flex items-center gap-2">
                 <span className="text-sm text-gray-600">Chat preview</span>
                 <div className="ml-auto flex gap-2">
-                    <button onClick={onReset} className="btn btn-sm btn-ghost rounded-lg">
+                    <button onClick={onReset} className="btn btn-sm  rounded-lg">
                         Reset conversation
                     </button>
-                    <button onClick={onReload} className="btn btn-sm btn-ghost rounded-lg">
+                    <button onClick={onReload} className="btn btn-sm  rounded-lg">
                         Reload
                     </button>
                     <button onClick={onPopOut} className="btn btn-sm btn-outline rounded-lg">

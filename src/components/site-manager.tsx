@@ -309,7 +309,7 @@ export default function SiteManager() {
                                     <button
                                         type="button"
                                         onClick={handleCancelEdit}
-                                        className="btn btn-ghost rounded-xl"
+                                        className="btn  rounded-xl"
                                         disabled={formLoading}
                                     >
                                         Cancel
@@ -377,7 +377,7 @@ export default function SiteManager() {
                             </div>
                             <button
                                 onClick={handleCancelVerification}
-                                className="btn btn-ghost btn-sm btn-square rounded-lg"
+                                className="btn  btn-sm btn-square rounded-lg"
                                 disabled={loading}
                             >
                                 <i className="fa-duotone fa-solid fa-times" aria-hidden />

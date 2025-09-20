@@ -276,15 +276,15 @@ export default function IntegrationsMarketplacePage() {
                             <i className="fa-duotone fa-solid fa-sparkles mr-2" />
                             All Integrations
                         </button>
-                        <button className="btn btn-ghost rounded-xl">
+                        <button className="btn  rounded-xl">
                             <i className="fa-duotone fa-solid fa-bell mr-2" />
                             Notifications
                         </button>
-                        <button className="btn btn-ghost rounded-xl">
+                        <button className="btn  rounded-xl">
                             <i className="fa-duotone fa-solid fa-ticket mr-2" />
                             Ticketing
                         </button>
-                        <button className="btn btn-ghost rounded-xl">
+                        <button className="btn  rounded-xl">
                             <i className="fa-duotone fa-solid fa-code mr-2" />
                             Developer
                         </button>
@@ -451,7 +451,7 @@ function IntegrationSetupModal({
 
                     {/* Actions */}
                     <div className="modal-action">
-                        <button type="button" className="btn btn-ghost rounded-xl" onClick={onClose} disabled={loading}>
+                        <button type="button" className="btn  rounded-xl" onClick={onClose} disabled={loading}>
                             Cancel
                         </button>
                         <button type="submit" className={`btn btn-${integration.color} rounded-xl`} disabled={loading}>

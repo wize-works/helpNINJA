@@ -41,9 +41,9 @@ function getProviderIcon(provider: string) {
 export default async function DeleteIntegrationPage({ params }: { params: Promise<{ id: string }> }) {
     const tenantId = await getTenantIdStrict();
     const { id } = await params;
-    
+
     const integration = await getIntegration(tenantId, id);
-    
+
     if (!integration) {
         notFound();
     }
@@ -79,11 +79,11 @@ export default async function DeleteIntegrationPage({ params }: { params: Promis
                                 </p>
                             </div>
                         </div>
-                        
+
                         <div className="flex gap-3">
                             <Link
                                 href={`/dashboard/integrations/${integration.id}`}
-                                className="btn btn-ghost rounded-xl"
+                                className="btn  rounded-xl"
                             >
                                 <i className="fa-duotone fa-solid fa-arrow-left mr-2" />
                                 Cancel
@@ -113,7 +113,7 @@ export default async function DeleteIntegrationPage({ params }: { params: Promis
                                         <li>Any escalation rules targeting this integration</li>
                                         <li>Pending items in the integration outbox</li>
                                     </ul>
-                                    
+
                                     <div className="flex items-center gap-4 p-4 bg-base-200/40 rounded-xl">
                                         <div className={`w-12 h-12 bg-primary/10 rounded-xl flex items-center justify-center`}>
                                             <i className={`${getProviderIcon(integration.provider)} text-lg text-primary`} />

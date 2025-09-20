@@ -78,7 +78,7 @@ export default function BulkDeleteButton({ selectedIds, onDeleteComplete }: Bulk
                 <button
                     onClick={handleCancel}
                     disabled={isDeleting}
-                    className="btn btn-ghost btn-sm rounded-lg"
+                    className="btn  btn-sm rounded-lg"
                 >
                     Cancel
                 </button>

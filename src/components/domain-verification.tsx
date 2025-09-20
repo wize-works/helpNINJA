@@ -138,7 +138,7 @@ export default function DomainVerification({
                 </div>
                 <button
                     onClick={() => setShowInstructions(true)}
-                    className="btn btn-sm btn-ghost rounded-lg"
+                    className="btn btn-sm  rounded-lg"
                 >
                     View Details
                 </button>

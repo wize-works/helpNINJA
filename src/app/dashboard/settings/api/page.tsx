@@ -258,7 +258,7 @@ export default function ApiKeysPage() {
                 {/* API Key Guidance */}
                 <StaggerContainer>
                     <StaggerChild>
-                        <div className="alert alert-info">
+                        <div className="alert alert-info bg-info/20">
                             <i className="fa-duotone fa-solid fa-lightbulb text-xl" aria-hidden />
                             <div>
                                 <div className="font-semibold mb-1">Managed API Keys vs Widget Keys</div>
@@ -391,7 +391,7 @@ export default function ApiKeysPage() {
                                                             <div className="font-mono text-sm bg-base-200/60 px-3 py-2 rounded-lg mb-3 flex items-center justify-between">
                                                                 <span>{apiKey.key_prefix}</span>
                                                                 <button
-                                                                    className="btn btn-ghost btn-xs rounded-lg"
+                                                                    className="btn  btn-xs rounded-lg"
                                                                     onClick={() => copyToClipboard(apiKey.key_prefix)}
                                                                     title="Copy key prefix"
                                                                 >
@@ -434,19 +434,19 @@ export default function ApiKeysPage() {
                                                     </div>
 
                                                     <div className="dropdown dropdown-end">
-                                                        <button className="btn btn-ghost btn-sm btn-square rounded-lg">
+                                                        <button className="btn  btn-sm btn-square rounded-lg">
                                                             <i className="fa-duotone fa-solid fa-ellipsis-vertical" aria-hidden />
                                                         </button>
                                                         <div className="dropdown-content z-10 menu p-2 shadow bg-base-100 rounded-box w-52 border border-base-300">
                                                             <button
-                                                                className="btn btn-ghost btn-sm justify-start rounded-lg"
+                                                                className="btn  btn-sm justify-start rounded-lg"
                                                                 onClick={() => rotateApiKey(apiKey.id, apiKey.name)}
                                                             >
                                                                 <i className="fa-duotone fa-solid fa-rotate mr-2" aria-hidden />
                                                                 Rotate Key
                                                             </button>
                                                             <button
-                                                                className="btn btn-ghost btn-sm justify-start rounded-lg"
+                                                                className="btn  btn-sm justify-start rounded-lg"
                                                                 onClick={() => setShowEditApiKey(apiKey.id)}
                                                             >
                                                                 <i className="fa-duotone fa-solid fa-edit mr-2" aria-hidden />
@@ -454,7 +454,7 @@ export default function ApiKeysPage() {
                                                             </button>
                                                             <div className="divider my-1"></div>
                                                             <button
-                                                                className="btn btn-ghost btn-sm justify-start text-error rounded-lg"
+                                                                className="btn  btn-sm justify-start text-error rounded-lg"
                                                                 onClick={() => deleteApiKey(apiKey.id, apiKey.name)}
                                                             >
                                                                 <i className="fa-duotone fa-solid fa-trash mr-2" aria-hidden />
@@ -557,19 +557,19 @@ export default function ApiKeysPage() {
                                                     </div>
 
                                                     <div className="dropdown dropdown-end">
-                                                        <button className="btn btn-ghost btn-sm btn-square rounded-lg">
+                                                        <button className="btn  btn-sm btn-square rounded-lg">
                                                             <i className="fa-duotone fa-solid fa-ellipsis-vertical" aria-hidden />
                                                         </button>
                                                         <div className="dropdown-content z-10 menu p-2 shadow bg-base-100 rounded-box w-52 border border-base-300">
                                                             <button
-                                                                className="btn btn-ghost btn-sm justify-start rounded-lg"
+                                                                className="btn  btn-sm justify-start rounded-lg"
                                                                 onClick={() => testWebhook(webhook.id, webhook.name)}
                                                             >
                                                                 <i className="fa-duotone fa-solid fa-play mr-2" aria-hidden />
                                                                 Test Webhook
                                                             </button>
                                                             <button
-                                                                className="btn btn-ghost btn-sm justify-start rounded-lg"
+                                                                className="btn  btn-sm justify-start rounded-lg"
                                                                 onClick={() => setShowEditWebhook(webhook.id)}
                                                             >
                                                                 <i className="fa-duotone fa-solid fa-edit mr-2" aria-hidden />
@@ -577,7 +577,7 @@ export default function ApiKeysPage() {
                                                             </button>
                                                             <div className="divider my-1"></div>
                                                             <button
-                                                                className="btn btn-ghost btn-sm justify-start text-error rounded-lg"
+                                                                className="btn  btn-sm justify-start text-error rounded-lg"
                                                                 onClick={() => deleteWebhook(webhook.id, webhook.name)}
                                                             >
                                                                 <i className="fa-duotone fa-solid fa-trash mr-2" aria-hidden />
@@ -624,7 +624,7 @@ export default function ApiKeysPage() {
                                             href="/openapi.json"
                                             target="_blank"
                                             rel="noopener noreferrer"
-                                            className="btn btn-ghost btn-sm rounded-lg"
+                                            className="btn  btn-sm rounded-lg"
                                             title="Download OpenAPI Specification"
                                         >
                                             <i className="fa-duotone fa-solid fa-download" aria-hidden />
@@ -795,7 +795,7 @@ export default function ApiKeysPage() {
                                                 href="/api-docs.html#/Chat/post_api_chat"
                                                 target="_blank"
                                                 rel="noopener noreferrer"
-                                                className="btn btn-ghost btn-xs rounded-lg text-info"
+                                                className="btn  btn-xs rounded-lg text-info"
                                             >
                                                 Try in Swagger →
                                             </a>
@@ -978,7 +978,7 @@ function CreateApiKeyModal({
                     <div className="flex items-center justify-between mb-6">
                         <h2 className="text-2xl font-bold text-base-content">Create API Key</h2>
                         <button
-                            className="btn btn-ghost btn-sm btn-square rounded-lg"
+                            className="btn  btn-sm btn-square rounded-lg"
                             onClick={onClose}
                             disabled={loading}
                         >
@@ -1109,7 +1109,7 @@ function CreateApiKeyModal({
                         <div className="flex justify-end gap-3 pt-4">
                             <button
                                 type="button"
-                                className="btn btn-ghost rounded-xl"
+                                className="btn  rounded-xl"
                                 onClick={onClose}
                                 disabled={loading}
                             >
@@ -1242,7 +1242,7 @@ function CreateWebhookModal({
                     <div className="flex items-center justify-between mb-6">
                         <h2 className="text-2xl font-bold text-base-content">Create Webhook</h2>
                         <button
-                            className="btn btn-ghost btn-sm btn-square rounded-lg"
+                            className="btn  btn-sm btn-square rounded-lg"
                             onClick={onClose}
                             disabled={loading}
                         >
@@ -1351,7 +1351,7 @@ function CreateWebhookModal({
                         <div className="flex justify-end gap-3 pt-4">
                             <button
                                 type="button"
-                                className="btn btn-ghost rounded-xl"
+                                className="btn  rounded-xl"
                                 onClick={onClose}
                                 disabled={loading}
                             >
@@ -1380,7 +1380,7 @@ function EditApiKeyModal({ onClose }: { apiKeyId: string; onClose: () => void; o
             <div className="bg-base-100 rounded-2xl shadow-xl w-full max-w-md p-6">
                 <h2 className="text-xl font-bold mb-4">Edit API Key</h2>
                 <p className="text-base-content/60 mb-4">Edit functionality coming soon...</p>
-                <button className="btn btn-ghost rounded-xl" onClick={onClose}>Close</button>
+                <button className="btn  rounded-xl" onClick={onClose}>Close</button>
             </div>
         </div>
     );
@@ -1392,7 +1392,7 @@ function EditWebhookModal({ onClose }: { webhookId: string; onClose: () => void;
             <div className="bg-base-100 rounded-2xl shadow-xl w-full max-w-md p-6">
                 <h2 className="text-xl font-bold mb-4">Edit Webhook</h2>
                 <p className="text-base-content/60 mb-4">Edit functionality coming soon...</p>
-                <button className="btn btn-ghost rounded-xl" onClick={onClose}>Close</button>
+                <button className="btn  rounded-xl" onClick={onClose}>Close</button>
             </div>
         </div>
     );

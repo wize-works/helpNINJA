@@ -61,7 +61,7 @@ export function AnalyticsFilters({ initialRange, initialSiteId }: { initialRange
         <div className="flex items-center gap-3">
             <div className="join">
                 {(['7d', '30d', '90d', 'all'] as Range[]).map(r => (
-                    <button key={r} onClick={() => onRange(r)} className={`join-item btn btn-sm ${isActive(r) ? 'btn-primary' : 'btn-ghost'}`}>
+                    <button key={r} onClick={() => onRange(r)} className={`join-item btn btn-sm ${isActive(r) ? 'btn-primary' : ''}`}>
                         {r === 'all' ? 'ALL' : r.toUpperCase()}
                     </button>
                 ))}

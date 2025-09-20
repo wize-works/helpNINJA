@@ -220,43 +220,43 @@ add_action('wp_footer', 'add_helpninja_widget');
             <div className="flex flex-wrap gap-2 pb-2 border-b border-base-200/60">
                 <button
                     onClick={() => setActiveTab('html')}
-                    className={`btn btn-sm ${activeTab === 'html' ? 'btn-primary' : 'btn-ghost'} rounded-lg`}
+                    className={`btn btn-sm ${activeTab === 'html' ? 'btn-primary' : ''} rounded-lg`}
                 >
                     <span className="text-xs">HTML</span>
                 </button>
                 <button
                     onClick={() => setActiveTab('nextjs')}
-                    className={`btn btn-sm ${activeTab === 'nextjs' ? 'btn-primary' : 'btn-ghost'} rounded-lg`}
+                    className={`btn btn-sm ${activeTab === 'nextjs' ? 'btn-primary' : ''} rounded-lg`}
                 >
                     <span className="text-xs">Next.js</span>
                 </button>
                 <button
                     onClick={() => setActiveTab('react')}
-                    className={`btn btn-sm ${activeTab === 'react' ? 'btn-primary' : 'btn-ghost'} rounded-lg`}
+                    className={`btn btn-sm ${activeTab === 'react' ? 'btn-primary' : ''} rounded-lg`}
                 >
                     <span className="text-xs">React</span>
                 </button>
                 <button
                     onClick={() => setActiveTab('vue')}
-                    className={`btn btn-sm ${activeTab === 'vue' ? 'btn-primary' : 'btn-ghost'} rounded-lg`}
+                    className={`btn btn-sm ${activeTab === 'vue' ? 'btn-primary' : ''} rounded-lg`}
                 >
                     <span className="text-xs">Vue</span>
                 </button>
                 <button
                     onClick={() => setActiveTab('angular')}
-                    className={`btn btn-sm ${activeTab === 'angular' ? 'btn-primary' : 'btn-ghost'} rounded-lg`}
+                    className={`btn btn-sm ${activeTab === 'angular' ? 'btn-primary' : ''} rounded-lg`}
                 >
                     <span className="text-xs">Angular</span>
                 </button>
                 <button
                     onClick={() => setActiveTab('wordpress')}
-                    className={`btn btn-sm ${activeTab === 'wordpress' ? 'btn-primary' : 'btn-ghost'} rounded-lg`}
+                    className={`btn btn-sm ${activeTab === 'wordpress' ? 'btn-primary' : ''} rounded-lg`}
                 >
                     <span className="text-xs">WordPress</span>
                 </button>
                 <button
                     onClick={() => setActiveTab('direct')}
-                    className={`btn btn-sm ${activeTab === 'direct' ? 'btn-primary' : 'btn-ghost'} rounded-lg`}
+                    className={`btn btn-sm ${activeTab === 'direct' ? 'btn-primary' : ''} rounded-lg`}
                 >
                     <span className="text-xs">Direct Link</span>
                 </button>

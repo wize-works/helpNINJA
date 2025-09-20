@@ -9,7 +9,7 @@ export default function PrivacyPolicyPage() {
                     <StaggerContainer>
                         <StaggerChild>
                             <div className="mb-8">
-                                <Link href="/" className="btn btn-ghost btn-sm">
+                                <Link href="/" className="btn  btn-sm">
                                     <i className="fa-solid fa-arrow-left mr-2" />
                                     Back to Home
                                 </Link>

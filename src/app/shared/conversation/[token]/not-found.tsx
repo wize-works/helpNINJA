@@ -37,7 +37,7 @@ export default function NotFoundPage() {
                                 </div>
 
                                 <HoverScale scale={1.02}>
-                                    <Link href="https://helpninja.com" className="btn btn-ghost btn-sm rounded-xl">
+                                    <Link href="https://helpninja.com" className="btn  btn-sm rounded-xl">
                                         <i className="fa-duotone fa-solid fa-globe mr-2" />
                                         Learn about helpNINJA
                                     </Link>

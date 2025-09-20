@@ -72,7 +72,7 @@ export default function DeleteDocumentButton({ id, size = "md", onDeleteComplete
                 <button
                     onClick={handleCancel}
                     disabled={isDeleting}
-                    className="btn btn-ghost btn-xs rounded-lg"
+                    className="btn  btn-xs rounded-lg"
                     title="Cancel"
                 >
                     <i className="fa-duotone fa-solid fa-times text-xs" aria-hidden />

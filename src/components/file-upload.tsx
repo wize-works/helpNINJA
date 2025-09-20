@@ -314,7 +314,7 @@ export default function FileUpload({
                                         <button
                                             type="button"
                                             onClick={() => removeFile(file.id)}
-                                            className="btn btn-ghost btn-xs btn-circle hover:btn-error"
+                                            className="btn  btn-xs btn-circle hover:btn-error"
                                             title="Remove file"
                                         >
                                             <i className="fa-duotone fa-solid fa-times text-xs" />

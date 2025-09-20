@@ -3,7 +3,7 @@
 export default function QuickStartDismiss() {
     return (
         <button
-            className="btn btn-ghost btn-sm rounded-lg"
+            className="btn  btn-sm rounded-lg"
             onClick={() => {
                 const banner = document.querySelector('[data-banner="quickstart"]');
                 if (banner) banner.remove();

@@ -241,7 +241,7 @@ export default function SiteWizardModal({
                             <h2 className="text-2xl font-bold text-base-content">Site Setup Wizard</h2>
                             <p className="text-base-content/60 mt-1">{stepDescriptions[step - 1]}</p>
                         </div>
-                        <button onClick={handleClose} className="btn btn-ghost btn-sm rounded-lg">
+                        <button onClick={handleClose} className="btn  btn-sm rounded-lg">
                             <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
                             </svg>
@@ -714,7 +714,7 @@ export default function SiteWizardModal({
                                                 Back
                                             </button>
                                             {addedSources.length === 0 && (
-                                                <button onClick={() => setStep(3)} className="btn btn-ghost rounded-xl">
+                                                <button onClick={() => setStep(3)} className="btn  rounded-xl">
                                                     Skip for Now
                                                 </button>
                                             )}
@@ -946,7 +946,7 @@ export default function SiteWizardModal({
                                             <HoverScale scale={1.02}>
                                                 <button
                                                     onClick={() => window.open(`/dashboard/sites`, '_blank')}
-                                                    className="btn btn-ghost rounded-xl"
+                                                    className="btn  rounded-xl"
                                                 >
                                                     <i className="fa-duotone fa-solid fa-external-link mr-2" aria-hidden />
                                                     Manage Sites

@@ -218,7 +218,7 @@ export default function TeamInvitations({ onInvitationCancelled }: TeamInvitatio
                                         <>
                                             <HoverScale scale={1.05}>
                                                 <button
-                                                    className={`btn btn-ghost btn-sm rounded-lg ${resending.has(invitation.id) ? 'loading' : ''}`}
+                                                    className={`btn  btn-sm rounded-lg ${resending.has(invitation.id) ? 'loading' : ''}`}
                                                     onClick={() => resendInvitation(invitation.id)}
                                                     disabled={resending.has(invitation.id)}
                                                     title="Resend invitation"
@@ -228,7 +228,7 @@ export default function TeamInvitations({ onInvitationCancelled }: TeamInvitatio
                                             </HoverScale>
                                             <HoverScale scale={1.05}>
                                                 <button
-                                                    className="btn btn-ghost btn-sm rounded-lg"
+                                                    className="btn  btn-sm rounded-lg"
                                                     onClick={() => copyInvitationLink(invitation.token)}
                                                     title="Copy invitation link"
                                                 >
@@ -240,7 +240,7 @@ export default function TeamInvitations({ onInvitationCancelled }: TeamInvitatio
 
                                     <HoverScale scale={1.05}>
                                         <button
-                                            className={`btn btn-ghost btn-sm text-error rounded-lg ${cancelling.has(invitation.id) ? 'loading' : ''}`}
+                                            className={`btn  btn-sm text-error rounded-lg ${cancelling.has(invitation.id) ? 'loading' : ''}`}
                                             onClick={() => cancelInvitation(invitation.id)}
                                             disabled={cancelling.has(invitation.id)}
                                             title="Cancel invitation"

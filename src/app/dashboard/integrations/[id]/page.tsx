@@ -71,30 +71,30 @@ function getStatusBadge(status: string) {
 function getActivityStatus(activity: EscalationActivity): { class: string; text: string; icon: string } {
     switch (activity.status) {
         case 'sent':
-            return { 
-                class: 'badge-success', 
-                text: 'Sent', 
-                icon: 'fa-check-circle text-success' 
+            return {
+                class: 'badge-success',
+                text: 'Sent',
+                icon: 'fa-check-circle text-success'
             };
         case 'failed':
-            return { 
-                class: 'badge-error', 
-                text: 'Failed', 
-                icon: 'fa-exclamation-circle text-error' 
+            return {
+                class: 'badge-error',
+                text: 'Failed',
+                icon: 'fa-exclamation-circle text-error'
             };
         case 'pending':
         default:
-            return { 
-                class: 'badge-warning', 
-                text: 'Pending', 
-                icon: 'fa-clock text-warning' 
+            return {
+                class: 'badge-warning',
+                text: 'Pending',
+                icon: 'fa-clock text-warning'
             };
     }
 }
 
 function ConfigDisplay({ config, title }: { config: Record<string, unknown>; title: string }) {
     const configEntries = Object.entries(config);
-    
+
     if (configEntries.length === 0) {
         return (
             <div className="text-base-content/60 text-sm">
@@ -111,7 +111,7 @@ function ConfigDisplay({ config, title }: { config: Record<string, unknown>; tit
                         {key.replace(/_/g, ' ')}
                     </span>
                     <span className="text-sm text-base-content/60 font-mono">
-                        {key.toLowerCase().includes('url') || key.toLowerCase().includes('webhook') 
+                        {key.toLowerCase().includes('url') || key.toLowerCase().includes('webhook')
                             ? String(value).substring(0, 50) + '...'
                             : String(value)
                         }
@@ -125,9 +125,9 @@ function ConfigDisplay({ config, title }: { config: Record<string, unknown>; tit
 export default async function IntegrationDetailPage({ params }: { params: Promise<{ id: string }> }) {
     const tenantId = await getTenantIdStrict();
     const { id } = await params;
-    
+
     const integration = await getIntegration(tenantId, id);
-    
+
     if (!integration) {
         notFound();
     }
@@ -168,7 +168,7 @@ export default async function IntegrationDetailPage({ params }: { params: Promis
                                 </div>
                             </div>
                         </div>
-                        
+
                         <div className="flex gap-3">
                             <Link
                                 href={`/dashboard/integrations/${integration.id}/settings`}
@@ -179,7 +179,7 @@ export default async function IntegrationDetailPage({ params }: { params: Promis
                             </Link>
                             <Link
                                 href="/dashboard/integrations"
-                                className="btn btn-ghost rounded-xl"
+                                className="btn  rounded-xl"
                             >
                                 <i className="fa-duotone fa-solid fa-arrow-left mr-2" />
                                 Back
@@ -213,7 +213,7 @@ export default async function IntegrationDetailPage({ params }: { params: Promis
                                         <i className="fa-duotone fa-solid fa-clock text-primary" />
                                         Recent Escalations
                                     </h3>
-                                    
+
                                     {recentActivity.length > 0 ? (
                                         <div className="space-y-3">
                                             {recentActivity.map((activity) => {
@@ -318,12 +318,12 @@ export default async function IntegrationDetailPage({ params }: { params: Promis
                                         </Link>
                                         <Link
                                             href={`/dashboard/outbox?provider=${integration.provider}`}
-                                            className="btn btn-ghost rounded-xl w-full justify-start"
+                                            className="btn  rounded-xl w-full justify-start"
                                         >
                                             <i className="fa-duotone fa-solid fa-inbox mr-2" />
                                             View Outbox
                                         </Link>
-                                        <button className="btn btn-ghost rounded-xl w-full justify-start">
+                                        <button className="btn  rounded-xl w-full justify-start">
                                             <i className="fa-duotone fa-solid fa-vial mr-2" />
                                             Test Integration
                                         </button>

@@ -41,9 +41,9 @@ function getProviderIcon(provider: string) {
 export default async function IntegrationSettingsPage({ params }: { params: Promise<{ id: string }> }) {
     const tenantId = await getTenantIdStrict();
     const { id } = await params;
-    
+
     const integration = await getIntegration(tenantId, id);
-    
+
     if (!integration) {
         notFound();
     }
@@ -77,11 +77,11 @@ export default async function IntegrationSettingsPage({ params }: { params: Prom
                                 <p className="text-base-content/60 mt-1">{integration.name} • {integration.provider}</p>
                             </div>
                         </div>
-                        
+
                         <div className="flex gap-3">
                             <Link
                                 href={`/dashboard/integrations/${integration.id}`}
-                                className="btn btn-ghost rounded-xl"
+                                className="btn  rounded-xl"
                             >
                                 <i className="fa-duotone fa-solid fa-arrow-left mr-2" />
                                 Back to Details
@@ -100,7 +100,7 @@ export default async function IntegrationSettingsPage({ params }: { params: Prom
                                     Update your {integration.provider} integration settings and credentials.
                                 </p>
                             </div>
-                            
+
                             <IntegrationSettingsForm integration={integration} />
                         </div>
                     </div>
@@ -116,7 +116,7 @@ export default async function IntegrationSettingsPage({ params }: { params: Prom
                                     Irreversible and destructive actions.
                                 </p>
                             </div>
-                            
+
                             <div className="space-y-4">
                                 {integration.status === 'active' ? (
                                     <div className="flex items-center justify-between p-4 bg-warning/10 border border-warning/20 rounded-xl">
@@ -145,7 +145,7 @@ export default async function IntegrationSettingsPage({ params }: { params: Prom
                                         </Link>
                                     </div>
                                 )}
-                                
+
                                 <div className="flex items-center justify-between p-4 bg-error/10 border border-error/20 rounded-xl">
                                     <div>
                                         <h3 className="font-medium text-error">Delete Integration</h3>

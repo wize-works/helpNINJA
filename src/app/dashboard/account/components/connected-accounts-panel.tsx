@@ -67,7 +67,7 @@ export default function ConnectedAccountsPanel({ accounts }: { accounts: Ext[] }
                                     {isConfirm && (
                                         <>
                                             <button onClick={() => handleUnlink(a.id)} className="btn btn-xs btn-error rounded-lg" disabled={a.busy}>{a.busy ? 'Working...' : 'Confirm'}</button>
-                                            <button onClick={() => setConfirming(null)} className="btn btn-xs btn-ghost rounded-lg" disabled={a.busy}>Cancel</button>
+                                            <button onClick={() => setConfirming(null)} className="btn btn-xs  rounded-lg" disabled={a.busy}>Cancel</button>
                                         </>
                                     )}
                                 </div>

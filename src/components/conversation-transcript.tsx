@@ -151,19 +151,19 @@ export default function ConversationTranscript({ conversationId, initialMessages
         <div className="space-y-4">
             <div className="flex flex-col md:flex-row md:items-center gap-3 justify-between">
                 <form onSubmit={handleSearchSubmit} className="flex items-center gap-2 flex-1">
-                    <div className="relative flex-1 max-w-sm">
-                        <i className="fa-duotone fa-solid fa-search absolute left-3 top-1/2 -translate-y-1/2 text-base-content/40 text-xs" />
-                        <input value={query} onChange={e => { setMessages(initialMessages); setLoaded(initialMessages.length); setHasMore(initialMessages.length < total); setQuery(e.target.value); }} className="input input-sm input-bordered pl-8 w-full" placeholder="Search in transcript..." />
-                    </div>
+                    <label className='input w-full'>
+                        <i className='fa-solid fa-duotone fa-search' />
+                        <input type='search' className='' placeholder='Search in transcript...' value={query} onChange={e => { setMessages(initialMessages); setLoaded(initialMessages.length); setHasMore(initialMessages.length < total); setQuery(e.target.value); }} />
+                    </label>
                 </form>
                 <div className="flex items-center gap-2">
                     <HoverScale scale={1.02}>
-                        <button type="button" onClick={() => setIsPolling(!isPolling)} className={`btn btn-sm btn-ghost rounded-lg ${isPolling ? 'text-success' : 'text-base-content/60'}`}>
+                        <button type="button" onClick={() => setIsPolling(!isPolling)} className={`btn btn-sm rounded-lg ${isPolling ? 'text-success' : 'text-base-content/60'}`}>
                             <i className={`fa-duotone fa-solid ${isPolling ? 'fa-satellite-dish' : 'fa-satellite-dish'}`} /> {isPolling ? 'Live' : 'Paused'}
                         </button>
                     </HoverScale>
                     <HoverScale scale={1.02}>
-                        <button type="button" onClick={exportJson} disabled={exporting} className="btn btn-sm btn-ghost rounded-lg">
+                        <button type="button" onClick={exportJson} disabled={exporting} className="btn btn-sm rounded-lg">
                             <i className="fa-duotone fa-solid fa-download" /> {exporting ? 'Exporting...' : 'Export JSON'}
                         </button>
                     </HoverScale>

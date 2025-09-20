@@ -66,10 +66,9 @@ export default function FeedbackModal({
 
     return (
         <div
-            className={`fixed inset-0 z-50 flex items-center justify-center p-4 ${
-                mode === 'widget' ? 'font-sans' : ''
-            } ${className}`}
-            style={{ 
+            className={`fixed inset-0 z-50 flex items-center justify-center p-4 ${mode === 'widget' ? 'font-sans' : ''
+                } ${className}`}
+            style={{
                 backgroundColor: mode === 'widget' ? 'rgba(0, 0, 0, 0.5)' : undefined,
                 backdropFilter: mode === 'widget' ? 'blur(4px)' : undefined
             }}
@@ -79,22 +78,20 @@ export default function FeedbackModal({
         >
             {/* Backdrop */}
             <div
-                className={`absolute inset-0 transition-opacity duration-300 ${
-                    isOpen ? 'opacity-100' : 'opacity-0'
-                }`}
-                style={{ 
+                className={`absolute inset-0 transition-opacity duration-300 ${isOpen ? 'opacity-100' : 'opacity-0'
+                    }`}
+                style={{
                     backgroundColor: mode === 'dashboard' ? 'rgba(0, 0, 0, 0.5)' : 'transparent'
                 }}
             />
 
             {/* Modal Content */}
             <div
-                className={`relative w-full max-w-2xl max-h-[90vh] bg-base-100 rounded-2xl shadow-2xl transform transition-all duration-300 ${
-                    isOpen ? 'scale-100 opacity-100 translate-y-0' : 'scale-95 opacity-0 translate-y-4'
-                }`}
+                className={`relative w-full max-w-2xl max-h-[90vh] bg-base-100 rounded-2xl shadow-2xl transform transition-all duration-300 ${isOpen ? 'scale-100 opacity-100 translate-y-0' : 'scale-95 opacity-0 translate-y-4'
+                    }`}
                 style={{
-                    boxShadow: mode === 'widget' 
-                        ? '0 25px 50px -12px rgba(0, 0, 0, 0.25)' 
+                    boxShadow: mode === 'widget'
+                        ? '0 25px 50px -12px rgba(0, 0, 0, 0.25)'
                         : undefined
                 }}
             >
@@ -109,10 +106,10 @@ export default function FeedbackModal({
                             <p className="text-sm text-base-content/60">Help us improve your experience</p>
                         </div>
                     </div>
-                    
+
                     <button
                         onClick={onClose}
-                        className="btn btn-ghost btn-sm btn-circle hover:bg-base-200 transition-colors"
+                        className="btn  btn-sm btn-circle hover:bg-base-200 transition-colors"
                         aria-label="Close feedback modal"
                     >
                         <i className="fa-duotone fa-solid fa-times text-base-content/60" />

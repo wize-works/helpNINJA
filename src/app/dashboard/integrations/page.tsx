@@ -45,7 +45,7 @@ function IntegrationsPage({ integrations }: { integrations: Row[]; tenantId: str
                         </Link>
                         <Link
                             href="/dashboard/settings/api"
-                            className="btn btn-ghost rounded-xl"
+                            className="btn  rounded-xl"
                         >
                             <i className="fa-duotone fa-solid fa-key mr-2" />
                             API Keys
@@ -213,10 +213,10 @@ function ActiveIntegrationsTable({ rows }: { rows: Row[] }) {
                                         <Link href={`/dashboard/integrations/${integration.id}`} className="btn btn-sm btn-outline rounded-lg" title="View details">
                                             <i className="fa-duotone fa-solid fa-eye" />
                                         </Link>
-                                        <Link href={`/dashboard/integrations/${integration.id}/settings`} className="btn btn-sm btn-ghost rounded-lg" title="Settings">
+                                        <Link href={`/dashboard/integrations/${integration.id}/settings`} className="btn btn-sm  rounded-lg" title="Settings">
                                             <i className="fa-duotone fa-solid fa-cog" />
                                         </Link>
-                                        <Link href={`/dashboard/integrations/${integration.id}/delete`} className="btn btn-sm btn-ghost text-error rounded-lg" title="Remove">
+                                        <Link href={`/dashboard/integrations/${integration.id}/delete`} className="btn btn-sm  text-error rounded-lg" title="Remove">
                                             <i className="fa-duotone fa-solid fa-trash" />
                                         </Link>
                                     </div>
@@ -240,11 +240,11 @@ function IntegrationQuickActions() {
                         <i className="fa-duotone fa-solid fa-plus mr-2" />
                         Add Integration
                     </Link>
-                    <Link href="/dashboard/settings/api" className="btn btn-ghost rounded-lg btn-sm w-full justify-start">
+                    <Link href="/dashboard/settings/api" className="btn  rounded-lg btn-sm w-full justify-start">
                         <i className="fa-duotone fa-solid fa-key mr-2" />
                         Manage API Keys
                     </Link>
-                    <button className="btn btn-ghost rounded-lg btn-sm w-full justify-start">
+                    <button className="btn  rounded-lg btn-sm w-full justify-start">
                         <i className="fa-duotone fa-solid fa-download mr-2" />
                         Export Logs
                     </button>

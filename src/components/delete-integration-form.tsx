@@ -83,7 +83,7 @@ export function DeleteIntegrationForm({ integration }: DeleteIntegrationFormProp
 
                 <button
                     onClick={() => router.back()}
-                    className="btn btn-ghost rounded-xl"
+                    className="btn  rounded-xl"
                     disabled={isDeleting}
                 >
                     Cancel

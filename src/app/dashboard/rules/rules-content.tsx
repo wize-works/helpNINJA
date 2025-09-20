@@ -345,7 +345,7 @@ export default function RulesContent({ tenantId, filters }: RulesContentProps) {
                                         </div>
                                     </div>
                                     <button
-                                        className="btn btn-ghost btn-sm btn-square rounded-lg"
+                                        className="btn  btn-sm btn-square rounded-lg"
                                         onClick={() => {
                                             setShowEditor(false);
                                             setEditingRule(undefined);
@@ -488,7 +488,7 @@ export default function RulesContent({ tenantId, filters }: RulesContentProps) {
 
                                     <div className="flex items-center gap-3">
                                         <button
-                                            className="btn btn-ghost rounded-xl"
+                                            className="btn  rounded-xl"
                                             onClick={() => {
                                                 setShowEditor(false);
                                                 setEditingRule(undefined);
@@ -632,7 +632,7 @@ export default function RulesContent({ tenantId, filters }: RulesContentProps) {
 
                                                         <HoverScale scale={1.05}>
                                                             <button
-                                                                className="btn btn-sm btn-ghost rounded-lg"
+                                                                className="btn btn-sm  rounded-lg"
                                                                 onClick={() => handleEdit(rule)}
                                                                 title="Edit rule"
                                                             >
@@ -642,7 +642,7 @@ export default function RulesContent({ tenantId, filters }: RulesContentProps) {
 
                                                         <HoverScale scale={1.05}>
                                                             <button
-                                                                className="btn btn-sm btn-ghost text-error rounded-lg"
+                                                                className="btn btn-sm  text-error rounded-lg"
                                                                 onClick={() => handleDelete(rule)}
                                                                 title="Delete rule"
                                                             >
@@ -678,7 +678,7 @@ export default function RulesContent({ tenantId, filters }: RulesContentProps) {
                                         </div>
                                     </div>
                                     <button
-                                        className="btn btn-ghost btn-sm btn-square rounded-lg"
+                                        className="btn  btn-sm btn-square rounded-lg"
                                         onClick={closeTestInterface}
                                     >
                                         <i className="fa-duotone fa-solid fa-times" aria-hidden />

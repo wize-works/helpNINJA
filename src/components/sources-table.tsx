@@ -341,7 +341,7 @@ export default function SourcesTable({ initialFilters = {} }: { initialFilters?:
                                 <div className="flex items-center gap-3">
                                     <button
                                         type="button"
-                                        className="btn btn-ghost rounded-xl"
+                                        className="btn  rounded-xl"
                                         onClick={() => {
                                             setShowAddForm(false);
                                             setEditingSource(null);
@@ -485,14 +485,14 @@ export default function SourcesTable({ initialFilters = {} }: { initialFilters?:
                                                         </button>
                                                     )}
                                                     <button
-                                                        className="btn btn-sm btn-ghost rounded-lg"
+                                                        className="btn btn-sm  rounded-lg"
                                                         onClick={() => handleEdit(source)}
                                                         title="Edit source"
                                                     >
                                                         <i className="fa-duotone fa-solid fa-edit" aria-hidden />
                                                     </button>
                                                     <button
-                                                        className="btn btn-sm btn-ghost text-error rounded-lg"
+                                                        className="btn btn-sm  text-error rounded-lg"
                                                         onClick={() => handleDelete(source)}
                                                         title="Delete source"
                                                     >

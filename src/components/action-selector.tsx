@@ -160,7 +160,7 @@ export default function ActionSelector({
                                     <HoverScale scale={1.05}>
                                         <button
                                             type="button"
-                                            className="btn btn-sm btn-ghost rounded-lg"
+                                            className="btn btn-sm  rounded-lg"
                                             onClick={() => {
                                                 // TODO: Show edit modal
                                             }}
@@ -173,7 +173,7 @@ export default function ActionSelector({
                                     <HoverScale scale={1.05}>
                                         <button
                                             type="button"
-                                            className="btn btn-sm btn-ghost text-error rounded-lg"
+                                            className="btn btn-sm  text-error rounded-lg"
                                             onClick={() => removeDestination(index)}
                                             disabled={disabled}
                                             title="Remove destination"
@@ -374,7 +374,7 @@ export default function ActionSelector({
                                 <div className="flex items-center gap-3">
                                     <button
                                         type="button"
-                                        className="btn btn-ghost rounded-xl"
+                                        className="btn  rounded-xl"
                                         onClick={() => setShowAddForm(false)}
                                         disabled={disabled}
                                     >

@@ -15,7 +15,7 @@ export default function CopySessionIdButton({ sessionId }: { sessionId: string }
     };
     return (
         <HoverScale scale={1.02}>
-            <button type="button" onClick={handleCopy} className="btn btn-sm btn-ghost rounded-lg">
+            <button type="button" onClick={handleCopy} className="btn btn-sm  rounded-lg">
                 <i className="fa-duotone fa-solid fa-copy" /> {copied ? 'Copied!' : 'Copy Session ID'}
             </button>
         </HoverScale>

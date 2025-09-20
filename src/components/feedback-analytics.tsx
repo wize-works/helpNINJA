@@ -144,10 +144,10 @@ export function FeedbackAnalytics({ tenantId }: FeedbackAnalyticsProps) {
     }
 
     return (
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             {/* Daily Volume Chart */}
             {data.dailyVolume.length > 0 && (
-                <div className="bg-base-50 rounded-xl p-4">
+                <div className="bg-base-100 rounded-2xl p-4 shadow">
                     <h3 className="text-lg font-semibold text-base-content mb-4">Daily Feedback Volume</h3>
                     <div className="h-64">
                         <ResponsiveContainer width="100%" height="100%">
@@ -211,7 +211,7 @@ export function FeedbackAnalytics({ tenantId }: FeedbackAnalyticsProps) {
 
             {/* Type Distribution */}
             {data.typeDistribution.length > 0 && (
-                <div className="bg-base-100 text-base-content rounded-xl p-4">
+                <div className="bg-base-100 text-base-content rounded-2xl p-4 shadow">
                     <h3 className="text-lg font-semibold mb-4">Feedback by Type</h3>
                     <div className="h-64">
                         <ResponsiveContainer width="100%" height="100%">
@@ -254,7 +254,7 @@ export function FeedbackAnalytics({ tenantId }: FeedbackAnalyticsProps) {
 
             {/* Status Distribution */}
             {data.statusDistribution.length > 0 && (
-                <div className="bg-base-50 rounded-xl p-4">
+                <div className="bg-base-100 rounded-2xl p-4 shadow">
                     <h3 className="text-lg font-semibold text-base-content mb-4">Status Distribution</h3>
                     <div className="h-64">
                         <ResponsiveContainer width="100%" height="100%">
@@ -300,7 +300,7 @@ export function FeedbackAnalytics({ tenantId }: FeedbackAnalyticsProps) {
 
             {/* Resolution Times */}
             {data.resolutionTimes.length > 0 && (
-                <div className="bg-base-100 rounded-xl p-4">
+                <div className="bg-base-100 rounded-2xl p-4 shadow">
                     <h3 className="text-lg font-semibold text-base-content mb-4">Average Resolution Time</h3>
                     <div className="space-y-3">
                         {data.resolutionTimes.map((item, index) => (

@@ -19,14 +19,14 @@ type LogoProps = {
  */
 export default function Logo({ className, color1 = "text-primary", color2 = "text-neutral-content", hoverColor = "group-hover:text-primary", height = 30, width = 120, title = "helpNINJA Logo" }: LogoProps) {
     return (
-        <div className={`inline-block group ${className ?? ""}`}>
+        <div>
             {/* PNG image for small screens */}
             <Image
-                src="/help.png"
+                src="/help.svg"
                 alt={title}
-                width={width} // Use height as width for square aspect ratio on mobile
-                height={height}
-                className="block md:hidden mt-2 pt-4 pb-4 px-0 ms-0 max-h-[30px]"
+                width={100} // Use height as width for square aspect ratio on mobile
+                height={34}
+                className={`block md:hidden ${className ?? ""}`}
                 priority
             />
 
@@ -36,8 +36,8 @@ export default function Logo({ className, color1 = "text-primary", color2 = "tex
                 data-name="Layer 2"
                 xmlns="http://www.w3.org/2000/svg"
                 viewBox="0 0 1951.96 348.16"
-                width={width}
-                height={height}
+                width={240}
+                height={34}
                 role="img"
                 aria-label={title}
                 className="hidden md:block fill-current"

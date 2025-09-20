@@ -179,7 +179,7 @@ export function FeedbackTable({ }: FeedbackTableProps) {
                 {(typeFilter || statusFilter || priorityFilter || searchFilter) && (
                     <button
                         onClick={() => router.push('/dashboard/feedback')}
-                        className="btn btn-ghost btn-sm"
+                        className="btn  btn-sm"
                     >
                         Clear filters
                     </button>
@@ -551,7 +551,7 @@ function FeedbackDetailModal({ feedback, onClose, onUpdate }: FeedbackDetailModa
                         </div>
                         <button
                             onClick={onClose}
-                            className="btn btn-ghost btn-sm btn-circle"
+                            className="btn  btn-sm btn-circle"
                         >
                             <i className="fa-duotone fa-solid fa-times" />
                         </button>
@@ -666,7 +666,7 @@ function FeedbackDetailModal({ feedback, onClose, onUpdate }: FeedbackDetailModa
 
                             <button
                                 onClick={onClose}
-                                className="btn btn-ghost btn-sm"
+                                className="btn  btn-sm"
                                 disabled={updating}
                             >
                                 Close

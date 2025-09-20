@@ -6,7 +6,7 @@ export const metadata: Metadata = {
         default: 'helpNINJA',
         template: '%s · helpNINJA',
     },
-    description: 'AI chat widget with RAG search on tenant-ingested documents',
+    description: '#1 AI Customer Support Agent',
     icons: {
         icon: [
             // Prioritize .ico so browsers reliably pick it up
@@ -33,7 +33,7 @@ export const metadata: Metadata = {
         type: 'website',
         siteName: 'helpNINJA',
         title: 'helpNINJA',
-        description: 'AI chat widget with RAG search on tenant-ingested documents',
+        description: '#1 AI Customer Support Agent',
         url: '/',
         images: [
             { url: '/logo.png', width: 1200, height: 630, alt: 'helpNINJA' },
@@ -43,7 +43,7 @@ export const metadata: Metadata = {
     twitter: {
         card: 'summary_large_image',
         title: 'helpNINJA',
-        description: 'AI chat widget with RAG search on tenant-ingested documents',
+        description: '#1 AI Customer Support Agent',
         images: ['/logo.png'],
         creator: '@wizeworks',
         site: '@wizeworks',

@@ -406,7 +406,7 @@ export function IntegrationSettingsForm({ integration }: IntegrationSettingsForm
 
                 <button
                     type="button"
-                    className="btn btn-ghost rounded-xl"
+                    className="btn  rounded-xl"
                     onClick={() => {
                         setFormData({
                             name: integration.name,

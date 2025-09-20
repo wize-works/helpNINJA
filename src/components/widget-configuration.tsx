@@ -397,7 +397,7 @@ export default function WidgetConfiguration({
                 {/* Info about preview limitations */}
                 {!iframeError && !iframeLoading && (
                     <div className="absolute top-2 right-2 tooltip tooltip-left" data-tip="Some sites may restrict embedding in iframes">
-                        <button className="btn btn-circle btn-xs btn-ghost rounded-lg text-base-content/50">
+                        <button className="btn btn-circle btn-xs  rounded-lg text-base-content/50">
                             <i className="fa-duotone fa-solid fa-circle-info" />
                         </button>
                     </div>
@@ -1151,7 +1151,7 @@ export default function WidgetConfiguration({
                         <button
                             type="button"
                             onClick={onClose}
-                            className="btn btn-ghost rounded-xl"
+                            className="btn  rounded-xl"
                         >
                             Cancel
                         </button>

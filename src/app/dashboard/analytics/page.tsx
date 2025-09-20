@@ -659,7 +659,7 @@ function TopQuestionsCard({ title, subtitle, items, searchBase, highlightLowConf
                                             </div>
                                         </div>
                                         <div className="flex items-center gap-2">
-                                            <a href={`/dashboard/conversations?${searchBase}&q=${encodeURIComponent(q.normalized)}`} className="btn btn-xs btn-ghost rounded-lg">
+                                            <a href={`/dashboard/conversations?${searchBase}&q=${encodeURIComponent(q.normalized)}`} className="btn btn-xs  rounded-lg">
                                                 Find all
                                             </a>
                                             {q.exampleConversationId && (

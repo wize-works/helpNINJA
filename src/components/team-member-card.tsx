@@ -169,7 +169,7 @@ export default function TeamMemberCard({
                             <div className="dropdown dropdown-end">
                                 <HoverScale scale={1.05}>
                                     <button
-                                        className="btn btn-ghost btn-sm btn-square rounded-lg"
+                                        className="btn  btn-sm btn-square rounded-lg"
                                         onClick={() => setShowActions(!showActions)}
                                         disabled={isUpdating}
                                     >
@@ -188,7 +188,7 @@ export default function TeamMemberCard({
                                         {assignableRoles.map((role) => (
                                             <button
                                                 key={role}
-                                                className={`btn btn-ghost btn-sm justify-start rounded-lg ${member.role === role ? 'btn-active' : ''}`}
+                                                className={`btn  btn-sm justify-start rounded-lg ${member.role === role ? 'btn-active' : ''}`}
                                                 onClick={() => handleRoleChange(role)}
                                                 disabled={isUpdating}
                                             >
@@ -201,7 +201,7 @@ export default function TeamMemberCard({
 
                                         {/* Status Toggle */}
                                         <button
-                                            className="btn btn-ghost btn-sm justify-start rounded-lg"
+                                            className="btn  btn-sm justify-start rounded-lg"
                                             onClick={handleStatusToggle}
                                             disabled={isUpdating}
                                         >
@@ -211,7 +211,7 @@ export default function TeamMemberCard({
 
                                         {/* Edit */}
                                         <button
-                                            className="btn btn-ghost btn-sm justify-start rounded-lg"
+                                            className="btn  btn-sm justify-start rounded-lg"
                                             onClick={() => {
                                                 onEdit(member);
                                                 setShowActions(false);
@@ -226,7 +226,7 @@ export default function TeamMemberCard({
 
                                         {/* Remove */}
                                         <button
-                                            className="btn btn-ghost btn-sm justify-start text-error rounded-lg"
+                                            className="btn  btn-sm justify-start text-error rounded-lg"
                                             onClick={handleRemove}
                                             disabled={isUpdating}
                                         >

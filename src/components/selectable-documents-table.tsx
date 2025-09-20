@@ -106,7 +106,7 @@ export default function SelectableDocumentsTable({ docs, onRefresh }: Selectable
                         <div className="flex items-center gap-3">
                             <button
                                 onClick={() => setSelectedIds(new Set())}
-                                className="btn btn-ghost btn-sm rounded-lg"
+                                className="btn  btn-sm rounded-lg"
                             >
                                 Clear Selection
                             </button>
@@ -135,7 +135,7 @@ export default function SelectableDocumentsTable({ docs, onRefresh }: Selectable
                                 </div>
                                 <div className="flex items-center gap-2">
                                     <HoverScale scale={1.05}>
-                                        <button className="btn btn-sm btn-ghost rounded-lg">
+                                        <button className="btn btn-sm  rounded-lg">
                                             <i className="fa-duotone fa-solid fa-download text-xs" aria-hidden />
                                             Export
                                         </button>
@@ -292,7 +292,7 @@ export default function SelectableDocumentsTable({ docs, onRefresh }: Selectable
                                 <p className="text-sm text-base-content/60">{docs.length} items in knowledge base</p>
                             </div>
                             <HoverScale scale={1.05}>
-                                <button className="btn btn-sm btn-ghost rounded-lg">
+                                <button className="btn btn-sm  rounded-lg">
                                     <i className="fa-duotone fa-solid fa-filter text-xs" aria-hidden />
                                 </button>
                             </HoverScale>

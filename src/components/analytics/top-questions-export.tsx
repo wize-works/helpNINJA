@@ -32,7 +32,7 @@ export function TopQuestionsExportButton({ items, filename }: { items: TopQuesti
     }
 
     return (
-        <button onClick={handleExport} className="btn btn-ghost btn-xs">
+        <button onClick={handleExport} className="btn  btn-xs">
             <i className="fa-duotone fa-solid fa-download text-xs" aria-hidden />
             Export CSV
         </button>

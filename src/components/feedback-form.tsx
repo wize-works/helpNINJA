@@ -661,7 +661,7 @@ export default function FeedbackForm({
                             type="button"
                             onClick={onCancel}
                             disabled={loading}
-                            className="btn btn-ghost flex-1 sm:flex-none"
+                            className="btn  flex-1 sm:flex-none"
                         >
                             <i className="fa-duotone fa-solid fa-times" />
                             Cancel

@@ -148,7 +148,7 @@ export default function EscalationChoiceModal({
                         </div>
                         <button
                             onClick={onClose}
-                            className="btn btn-ghost btn-circle btn-sm"
+                            className="btn  btn-circle btn-sm"
                             disabled={loading}
                         >
                             <i className="fa-duotone fa-solid fa-xmark text-lg" />
@@ -201,7 +201,7 @@ export default function EscalationChoiceModal({
                                 </label>
                                 <button
                                     onClick={handleSelectAll}
-                                    className="btn btn-ghost btn-xs"
+                                    className="btn  btn-xs"
                                     disabled={loading || loadingIntegrations}
                                 >
                                     {selectedIntegrations.length === integrations.length ? 'Deselect All' : 'Select All'}
@@ -279,7 +279,7 @@ export default function EscalationChoiceModal({
                         <div className="flex gap-3">
                             <button
                                 onClick={onClose}
-                                className="btn btn-ghost"
+                                className="btn "
                                 disabled={loading}
                             >
                                 Cancel

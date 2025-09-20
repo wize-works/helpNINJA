@@ -347,7 +347,7 @@ export default function AnswerEditor({
                             {onCancel && (
                                 <button
                                     type="button"
-                                    className="btn btn-ghost rounded-xl"
+                                    className="btn  rounded-xl"
                                     onClick={onCancel}
                                     disabled={loading}
                                 >

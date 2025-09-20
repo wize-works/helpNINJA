@@ -223,7 +223,7 @@ export default function AnswersClient({ answers, filters }: AnswersClientProps) 
                                                     <div className="flex items-center gap-2">
                                                         <HoverScale scale={1.05}>
                                                             <button
-                                                                className="btn btn-sm btn-ghost rounded-lg"
+                                                                className="btn btn-sm  rounded-lg"
                                                                 onClick={() => handleEdit(answer)}
                                                                 title="Edit answer"
                                                             >

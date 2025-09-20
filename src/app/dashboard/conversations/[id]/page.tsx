@@ -184,7 +184,7 @@ export default async function ConversationDetailPage({ params }: { params: Promi
                                 </div>
                                 <div className="flex items-center gap-2">
                                     <HoverScale scale={1.02}>
-                                        <Link href="/dashboard/conversations" className="btn btn-ghost btn-sm rounded-lg">
+                                        <Link href="/dashboard/conversations" className="btn  btn-sm rounded-lg">
                                             <i className="fa-duotone fa-solid fa-arrow-left text-xs" />
                                             Back
                                         </Link>
@@ -306,12 +306,6 @@ export default async function ConversationDetailPage({ params }: { params: Promi
                                                 <div>
                                                     <h3 className="font-semibold text-base-content">Conversation Transcript</h3>
                                                     <p className="text-xs text-base-content/60">{total} messages • Live updates enabled</p>
-                                                </div>
-                                            </div>
-                                            <div className="flex items-center gap-2">
-                                                <div className="badge badge-success badge-sm gap-1">
-                                                    <div className="w-1 h-1 bg-success rounded-full"></div>
-                                                    Live
                                                 </div>
                                             </div>
                                         </div>

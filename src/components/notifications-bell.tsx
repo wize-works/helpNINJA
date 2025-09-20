@@ -231,10 +231,10 @@ export default function NotificationsBell() {
                             {unread > 0 && <span className="badge badge-error badge-xs">{unread}</span>}
                         </div>
                         <div className="flex items-center gap-2">
-                            <button onClick={() => { void loadNotifications(true); void fetchUnread(); }} className="btn btn-ghost btn-xs rounded-lg" title="Refresh" aria-label="Refresh notifications">
+                            <button onClick={() => { void loadNotifications(true); void fetchUnread(); }} className="btn  btn-xs rounded-lg" title="Refresh" aria-label="Refresh notifications">
                                 <i className="fa-duotone fa-solid fa-rotate" />
                             </button>
-                            <button onClick={markAll} disabled={unread === 0} className="btn btn-ghost btn-xs rounded-lg disabled:opacity-40" aria-disabled={unread === 0}>Mark all read</button>
+                            <button onClick={markAll} disabled={unread === 0} className="btn  btn-xs rounded-lg disabled:opacity-40" aria-disabled={unread === 0}>Mark all read</button>
                         </div>
                     </div>
                     <div className="max-h-[480px] overflow-y-auto thin-scrollbar">
@@ -258,13 +258,13 @@ export default function NotificationsBell() {
                                                 {n.body && <p className="text-xs text-base-content/60 mt-1 leading-snug whitespace-pre-line">{n.body}</p>}
                                                 <div className="mt-2 flex items-center gap-2">
                                                     {!n.read_at && (
-                                                        <button onClick={() => markRead(n.id)} className="btn btn-ghost btn-xs rounded-md h-6 px-2 text-[11px]" aria-label="Mark read">
+                                                        <button onClick={() => markRead(n.id)} className="btn  btn-xs rounded-md h-6 px-2 text-[11px]" aria-label="Mark read">
                                                             Mark read
                                                         </button>
                                                     )}
                                                     {/* Future: deep link action */}
                                                     {n.meta && typeof (n.meta as Record<string, unknown>).conversationId === 'string' && (
-                                                        <a href={`/dashboard/conversations/${(n.meta as Record<string, unknown>).conversationId as string}`} className="btn btn-ghost btn-xs rounded-md h-6 px-2 text-[11px]" aria-label="Open conversation">
+                                                        <a href={`/dashboard/conversations/${(n.meta as Record<string, unknown>).conversationId as string}`} className="btn  btn-xs rounded-md h-6 px-2 text-[11px]" aria-label="Open conversation">
                                                             Open
                                                         </a>
                                                     )}
@@ -280,7 +280,7 @@ export default function NotificationsBell() {
                         </ul>
                         {nextCursor && !loading && (
                             <div className="p-3 border-t border-base-300/40 text-center">
-                                <button onClick={() => loadNotifications(false)} className="btn btn-ghost btn-sm rounded-lg w-full" aria-label="Load more notifications">Load more</button>
+                                <button onClick={() => loadNotifications(false)} className="btn  btn-sm rounded-lg w-full" aria-label="Load more notifications">Load more</button>
                             </div>
                         )}
                     </div>

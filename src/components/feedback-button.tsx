@@ -59,10 +59,10 @@ export default function FeedbackButton({
         const variantClasses = {
             primary: 'btn-primary',
             secondary: 'btn-secondary',
-            ghost: 'btn-ghost',
+            ghost: '',
             outline: 'btn-outline',
             base: '',
-            'icon-only': 'btn-ghost btn-circle'
+            'icon-only': ' btn-circle'
         };
 
         const positionClasses = position === 'floating' ? getFloatingClasses() : '';

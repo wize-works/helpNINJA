@@ -122,7 +122,7 @@ export default function AddTeamMemberForm({
                         </div>
                     </div>
                     <button
-                        className="btn btn-ghost btn-sm btn-square rounded-lg"
+                        className="btn  btn-sm btn-square rounded-lg"
                         onClick={onCancel}
                         disabled={loading}
                     >
@@ -322,7 +322,7 @@ export default function AddTeamMemberForm({
                         <div className="flex items-center gap-3">
                             <button
                                 type="button"
-                                className="btn btn-ghost rounded-xl"
+                                className="btn  rounded-xl"
                                 onClick={onCancel}
                                 disabled={loading}
                             >

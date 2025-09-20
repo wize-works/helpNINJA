@@ -88,14 +88,12 @@ export default function Titlebar() {
                         {/* Brand */}
                         <SlideIn direction="right" delay={0.1}>
                             <HoverScale scale={1.01}>
-                                <Link href="/" className="flex items-center gap-3 py-1.5 px-2 rounded-xl hover:bg-base-200/40 transition-all duration-200 group">
-                                    <div className="relative">
-                                        <Logo
-                                            width={200}
-                                            height={34}
-                                            className="text-primary group-hover:text-primary transition-all duration-200 group-hover:scale-110"
-                                        />
-                                    </div>
+                                <Link href="/" className="hover:bg-base-200/40 transition-all duration-200 group">
+                                    <Logo
+                                        width={100}
+                                        height={34}
+                                        className="text-primary group-hover:text-primary transition-all duration-200 group-hover:scale-110"
+                                    />
                                 </Link>
                             </HoverScale>
                         </SlideIn>
