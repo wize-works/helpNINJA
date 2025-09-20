@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useCallback } from "react";
 import { useRouter } from "next/navigation";
-import toast from "react-hot-toast";
+import { toast } from "../lib/toast";
 import DomainVerification from "./domain-verification";
 import WidgetSetupModal from "./widget-setup-modal";
 import WidgetConfigModal from "./widget-config-modal";
@@ -66,19 +66,19 @@ export default function SiteManager() {
         e.preventDefault();
 
         if (!formData.domain.trim() || !formData.name.trim()) {
-            toast.error('Please fill in all required fields');
+            toast.error({ message: 'Please fill in all required fields' });
             return;
         }
 
         // Basic domain validation
         const domainRegex = /^[a-zA-Z0-9]([a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(\.[a-zA-Z0-9]([a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)*$/;
         if (!domainRegex.test(formData.domain)) {
-            toast.error('Please enter a valid domain name');
+            toast.error({ message: 'Please enter a valid domain name' });
             return;
         }
 
         setFormLoading(true);
-        const toastId = toast.loading(editingSite ? 'Updating site...' : 'Creating site...');
+        const toastId = toast.loading({ message: editingSite ? 'Updating site...' : 'Creating site...' });
 
         try {
             const url = editingSite ? `/api/sites/${editingSite.id}` : '/api/sites';
@@ -95,15 +95,15 @@ export default function SiteManager() {
 
             if (!res.ok) {
                 const data = await res.json();
-                toast.error(data.error || `Failed to ${editingSite ? 'update' : 'create'} site`, { id: toastId });
+                toast.error({ message: data.error || `Failed to ${editingSite ? 'update' : 'create'} site`, id: toastId });
                 return;
             }
 
             await res.json();
-            toast.success(
-                editingSite ? 'Site updated successfully!' : 'Site created successfully!',
-                { id: toastId }
-            );
+            toast.success({
+                message: editingSite ? 'Site updated successfully!' : 'Site created successfully!',
+                id: toastId
+            });
 
             // Reset form and close
             setFormData({ domain: '', name: '', status: 'active' });
@@ -114,7 +114,7 @@ export default function SiteManager() {
             await loadSites();
             router.refresh();
         } catch {
-            toast.error('Network error. Please try again.', { id: toastId });
+            toast.error({ message: 'Network error. Please try again.', id: toastId });
         } finally {
             setFormLoading(false);
         }
@@ -125,7 +125,7 @@ export default function SiteManager() {
             return;
         }
 
-        const toastId = toast.loading('Deleting site...');
+        const toastId = toast.loading({ message: 'Deleting site...' });
 
         try {
             const res = await fetch(`/api/sites/${site.id}`, {
@@ -135,15 +135,15 @@ export default function SiteManager() {
 
             if (!res.ok) {
                 const data = await res.json();
-                toast.error(data.error || 'Failed to delete site', { id: toastId });
+                toast.error({ message: data.error || 'Failed to delete site', id: toastId });
                 return;
             }
 
-            toast.success('Site deleted successfully!', { id: toastId });
+            toast.success({ message: 'Site deleted successfully!', id: toastId });
             await loadSites();
             router.refresh();
         } catch {
-            toast.error('Network error. Please try again.', { id: toastId });
+            toast.error({ message: 'Network error. Please try again.', id: toastId });
         }
     }
 

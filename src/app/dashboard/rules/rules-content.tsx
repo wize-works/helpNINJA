@@ -5,7 +5,7 @@ import { StaggerContainer, StaggerChild, HoverScale } from "@/components/ui/anim
 import RuleBuilder from "@/components/rule-builder";
 import SiteSelector from "@/components/site-selector";
 import { RuleConditions } from "@/lib/rule-engine";
-import { toastUtils } from '@/lib/toast';
+import { toast } from '@/lib/toast';
 
 type Destination = {
     type: 'integration' | 'email' | 'webhook';
@@ -144,14 +144,14 @@ export default function RulesContent({ tenantId, filters }: RulesContentProps) {
                 setEditingRule(undefined);
                 resetForm();
                 loadRules();
-                toastUtils.success(editingRule ? 'Rule updated successfully' : 'Rule created successfully');
+                toast.success({ message: editingRule ? 'Rule updated successfully' : 'Rule created successfully' });
             } else {
                 const error = await response.json();
-                toastUtils.apiError(error, 'Failed to save rule');
+                toast.apiError(error, 'Failed to save rule');
             }
         } catch (error) {
             console.error('Error saving rule:', error);
-            toastUtils.error('Failed to save rule');
+            toast.error({ message: 'Failed to save rule' });
         }
     };
 
@@ -165,14 +165,14 @@ export default function RulesContent({ tenantId, filters }: RulesContentProps) {
 
             if (response.ok) {
                 loadRules();
-                toastUtils.success('Rule deleted successfully');
+                toast.success({ message: 'Rule deleted successfully' });
             } else {
                 const error = await response.json();
-                toastUtils.apiError(error, 'Failed to delete rule');
+                toast.apiError(error, 'Failed to delete rule');
             }
         } catch (error) {
             console.error('Error deleting rule:', error);
-            toastUtils.error('Failed to delete rule');
+            toast.error({ message: 'Failed to delete rule' });
         }
     };
 
@@ -205,14 +205,14 @@ export default function RulesContent({ tenantId, filters }: RulesContentProps) {
 
             if (response.ok) {
                 loadRules();
-                toastUtils.success('Rule updated successfully');
+                toast.success({ message: 'Rule updated successfully' });
             } else {
                 const error = await response.json();
-                toastUtils.apiError(error, 'Failed to update rule');
+                toast.apiError(error, 'Failed to update rule');
             }
         } catch (error) {
             console.error('Error updating rule:', error);
-            toastUtils.error('Failed to update rule');
+            toast.error({ message: 'Failed to update rule' });
         }
     };
 
@@ -233,11 +233,11 @@ export default function RulesContent({ tenantId, filters }: RulesContentProps) {
                 setShowTestInterface(true);
             } else {
                 const error = await response.json();
-                toastUtils.apiError(error, 'Failed to test rule');
+                toast.apiError(error, 'Failed to test rule');
             }
         } catch (error) {
             console.error('Error testing rule:', error);
-            toastUtils.error('Failed to test rule');
+            toast.error({ message: 'Failed to test rule' });
         } finally {
             setTestingRule(null);
         }

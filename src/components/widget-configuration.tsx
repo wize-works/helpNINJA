@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { HoverScale } from "@/components/ui/animated-page";
-import toast from "react-hot-toast";
+import { toast } from "@/lib/toast";
 import { useTenant } from "./tenant-context";
 import Link from "next/link";
 
@@ -132,16 +132,16 @@ export default function WidgetConfiguration({
             });
 
             if (res.ok) {
-                toast.success("Widget configuration saved");
+                toast.success({ message: "Widget configuration saved" });
                 if (onClose && isModal) onClose();
             } else {
                 const errorData = await res.json().catch(() => ({ error: "Unknown error" }));
                 console.error("Failed to save configuration:", errorData);
-                toast.error(`Failed to save configuration: ${errorData.error || res.status}`);
+                toast.error({ message: `Failed to save configuration: ${errorData.error || res.status}` });
             }
         } catch (error) {
             console.error("Error saving configuration:", error);
-            toast.error("Error saving configuration");
+            toast.error({ message: "Error saving configuration" });
         } finally {
             setSaving(false);
         }

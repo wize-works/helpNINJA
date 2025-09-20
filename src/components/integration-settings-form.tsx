@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from 'react';
-import { toastUtils } from '@/lib/toast';
+import { toast } from '@/lib/toast';
 
 type IntegrationDetails = {
     id: string;
@@ -61,14 +61,14 @@ export function IntegrationSettingsForm({ integration }: IntegrationSettingsForm
             });
 
             if (response.ok) {
-                toastUtils.success('Integration settings updated successfully');
+                toast.success({ message: 'Integration settings updated successfully' });
             } else {
                 const error = await response.json();
-                toastUtils.apiError(error, 'Failed to update integration settings');
+                toast.apiError(error, 'Failed to update integration settings');
             }
         } catch (error) {
             console.error('Error updating integration:', error);
-            toastUtils.error('Failed to update integration settings');
+            toast.error({ message: 'Failed to update integration settings' });
         } finally {
             setIsLoading(false);
         }
@@ -336,7 +336,7 @@ export function IntegrationSettingsForm({ integration }: IntegrationSettingsForm
                                 Please contact support for configuration assistance.
                             </span>
                         </div>
-                        
+
                         {/* Generic config editor */}
                         <fieldset className="fieldset">
                             <label className="label">
@@ -366,7 +366,7 @@ export function IntegrationSettingsForm({ integration }: IntegrationSettingsForm
             {/* Basic Settings */}
             <div className="space-y-4">
                 <h3 className="text-lg font-medium">Basic Settings</h3>
-                
+
                 <fieldset className="fieldset">
                     <label className="label">
                         <span className="label-text">Integration Name</span>
@@ -403,7 +403,7 @@ export function IntegrationSettingsForm({ integration }: IntegrationSettingsForm
                 >
                     {isLoading ? 'Saving...' : 'Save Changes'}
                 </button>
-                
+
                 <button
                     type="button"
                     className="btn btn-ghost rounded-xl"

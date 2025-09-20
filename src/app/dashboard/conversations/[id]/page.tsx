@@ -9,6 +9,7 @@ import ManualEscalationButton from '@/components/manual-escalation-button';
 import ShareConversationButton from '@/components/share-conversation-button';
 import Link from 'next/link';
 import React from 'react';
+import { tagClass } from '@/lib/tags';
 
 export const runtime = 'nodejs';
 
@@ -74,14 +75,38 @@ async function getConversation(tenantId: string, id: string) {
         id: string; reason: string; confidence: number | null; rule_id: string | null; created_at: string;
     }>(`select id, reason, confidence, rule_id, created_at
         from public.escalations where tenant_id=$1 and conversation_id=$2 order by created_at asc`, [tenantId, id]);
-    return { convo: convoRow, messages: messages.rows, total: total.rows[0]?.count || 0, kpis: kpi.rows[0], sources, escalations: escalations.rows };
+    // Tag flags (align with search + list pages)
+    const flags = await query<{
+        has_human: boolean;
+        has_ai: boolean;
+        escalated: boolean;
+        low_confidence: boolean;
+        shared: boolean;
+        pending_escalation: boolean;
+        has_contact: boolean;
+        status: string | null;
+    }>(
+        `select 
+            EXISTS (select 1 from public.messages m where m.tenant_id=$1 and m.conversation_id=$2 and m.is_human_response=true) as has_human,
+            EXISTS (select 1 from public.messages m where m.tenant_id=$1 and m.conversation_id=$2 and m.role='assistant') as has_ai,
+            EXISTS (select 1 from public.escalations e where e.tenant_id=$1 and e.conversation_id=$2) as escalated,
+            EXISTS (select 1 from public.messages m where m.tenant_id=$1 and m.conversation_id=$2 and m.role='assistant' and coalesce(m.confidence,1) < 0.55) as low_confidence,
+            EXISTS (select 1 from public.conversation_shares cs where cs.conversation_id=$2 and cs.expires_at > now()) as shared,
+            EXISTS (select 1 from public.pending_escalations pe where pe.conversation_id=$2) as pending_escalation,
+            EXISTS (select 1 from public.conversation_contact_info ci where ci.tenant_id=$1 and ci.conversation_id=$2) as has_contact,
+            (select status from public.conversations where tenant_id=$1 and id=$2) as status
+        `,
+        [tenantId, id]
+    );
+    const tagFlags = flags.rows[0] || { has_human: false, has_ai: false, escalated: false, low_confidence: false, shared: false, pending_escalation: false, has_contact: false, status: null };
+    return { convo: convoRow, messages: messages.rows, total: total.rows[0]?.count || 0, kpis: kpi.rows[0], sources, escalations: escalations.rows, tagFlags } as const;
 }
 
 
 export default async function ConversationDetailPage({ params }: { params: Promise<Params> }) {
     const { id } = await params;
     const tenantId = await getTenantIdStrict();
-    const { convo, messages, total, kpis, sources, escalations } = await getConversation(tenantId, id);
+    const { convo, messages, total, kpis, sources, escalations, tagFlags } = await getConversation(tenantId, id);
 
     const breadcrumbItems = [
         { label: 'Dashboard', href: '/dashboard', icon: 'fa-gauge-high' },
@@ -134,12 +159,22 @@ export default async function ConversationDetailPage({ params }: { params: Promi
                                             <h1 className="text-2xl font-bold text-base-content">
                                                 Conversation Details
                                             </h1>
-                                            {kpis?.escalations ? (
-                                                <span className="inline-flex items-center gap-2 px-2 py-1 rounded-lg text-xs font-medium bg-warning/10 text-warning border border-warning/20 mt-1">
-                                                    <i className="fa-duotone fa-solid fa-fire text-[10px]" />
-                                                    Escalated
-                                                </span>
-                                            ) : null}
+                                            <div className="mt-1 flex items-center gap-1 flex-wrap">
+                                                {[
+                                                    tagFlags?.has_human ? 'human' : undefined,
+                                                    tagFlags?.has_ai ? 'ai' : undefined,
+                                                    tagFlags?.escalated ? 'escalated' : undefined,
+                                                    tagFlags?.low_confidence ? 'low-confidence' : undefined,
+                                                    tagFlags?.shared ? 'shared' : undefined,
+                                                    tagFlags?.pending_escalation ? 'pending-escalation' : undefined,
+                                                    tagFlags?.has_contact ? 'contact' : undefined,
+                                                    tagFlags?.status && tagFlags.status !== 'active' ? tagFlags.status : undefined
+                                                ].filter(Boolean).map(tag => (
+                                                    <span key={String(tag)} className={`badge ${tagClass(String(tag))} badge-sm capitalize`}>
+                                                        {String(tag).replace('-', ' ')}
+                                                    </span>
+                                                ))}
+                                            </div>
                                         </div>
                                     </div>
                                     <p className="text-sm text-base-content/60">

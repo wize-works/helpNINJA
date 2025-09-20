@@ -4,7 +4,7 @@ import { useState } from 'react';
 import { getRoleInfo, type Role } from '@/lib/permissions';
 import { getAssignableRoles } from '@/lib/role-utils';
 import { HoverScale } from './ui/animated-page';
-import { toastUtils } from '@/lib/toast';
+import { toast } from '@/lib/toast';
 
 interface AddTeamMemberFormProps {
     currentUserRole: Role;
@@ -81,12 +81,12 @@ export default function AddTeamMemberForm({
 
                 if (formData.method === 'invitation') {
                     if (data.email_sent) {
-                        toastUtils.success(`Invitation sent to ${formData.email}! They will receive an email to join your team.`);
+                        toast.success({ message: `Invitation sent to ${formData.email}! They will receive an email to join your team.` });
                     } else {
-                        toastUtils.info(`Invitation created but email delivery failed. The user can still be added manually.`);
+                        toast.info({ message: `Invitation created but email delivery failed. The user can still be added manually.` });
                     }
                 } else {
-                    toastUtils.success(`${formData.email} has been added to your team!`);
+                    toast.success({ message: `${formData.email} has been added to your team!` });
                 }
 
                 onSuccess();

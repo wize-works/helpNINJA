@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { toast } from "react-hot-toast";
+import { toast } from "@/lib/toast";
 import { HoverScale } from "@/components/ui/animated-page";
 
 interface DeleteDocumentButtonProps {
@@ -27,7 +27,7 @@ export default function DeleteDocumentButton({ id, size = "md", onDeleteComplete
             });
 
             if (response.ok) {
-                toast.success("Document deleted successfully!");
+                toast.success({ message: "Document deleted successfully!" });
                 // Call the callback if provided, otherwise fallback to router refresh
                 if (onDeleteComplete) {
                     onDeleteComplete();
@@ -40,7 +40,7 @@ export default function DeleteDocumentButton({ id, size = "md", onDeleteComplete
             }
         } catch (error) {
             console.error('Delete error:', error);
-            toast.error("Something went wrong. Please try again.");
+            toast.error({ message: "Something went wrong. Please try again." });
         } finally {
             setIsDeleting(false);
             setShowConfirm(false);

@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
-import toast from 'react-hot-toast';
+import { toast } from '@/lib/toast';
 
 interface FeedbackItem {
     id: string;
@@ -98,7 +98,7 @@ export function FeedbackTable({ }: FeedbackTableProps) {
             setTotalPages(data.pagination?.totalPages || 1);
         } catch (error) {
             console.error('Error fetching feedback:', error);
-            toast.error('Failed to load feedback');
+            toast.error({ message: 'Failed to load feedback' });
         } finally {
             setLoading(false);
         }
@@ -120,11 +120,11 @@ export function FeedbackTable({ }: FeedbackTableProps) {
                 throw new Error('Failed to update feedback');
             }
 
-            toast.success('Feedback updated successfully');
+            toast.success({ message: 'Feedback updated successfully' });
             fetchFeedback(); // Refresh the list
         } catch (error) {
             console.error('Error updating feedback:', error);
-            toast.error('Failed to update feedback');
+            toast.error({ message: 'Failed to update feedback' });
         }
     };
 
@@ -509,12 +509,12 @@ function FeedbackDetailModal({ feedback, onClose, onUpdate }: FeedbackDetailModa
                 throw new Error('Failed to update feedback');
             }
 
-            toast.success('Status updated successfully');
+            toast.success({ message: 'Status updated successfully' });
             onUpdate();
             onClose();
         } catch (error) {
             console.error('Error updating feedback:', error);
-            toast.error('Failed to update status');
+            toast.error({ message: 'Failed to update status' });
         } finally {
             setUpdating(false);
         }

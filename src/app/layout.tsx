@@ -32,26 +32,9 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
                     </Suspense>
                 </ClerkProvider>
                 <Toaster
-                    position="top-right"
+                    position="bottom-left"
                     toastOptions={{
                         duration: 4000,
-                        style: {
-                            background: 'hsl(var(--color-base-100))',
-                            color: 'hsl(var(--color-base-content))',
-                            border: '1px solid hsl(var(--color-base-300))',
-                        },
-                        success: {
-                            iconTheme: {
-                                primary: 'hsl(var(--color-success))',
-                                secondary: 'hsl(var(--color-success-content))',
-                            },
-                        },
-                        error: {
-                            iconTheme: {
-                                primary: 'hsl(var(--color-error))',
-                                secondary: 'hsl(var(--color-error-content))',
-                            },
-                        },
                     }}
                 />
                 <Script src="https://kit.fontawesome.com/fab812572f.js" crossOrigin="anonymous" />

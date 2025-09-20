@@ -3,7 +3,7 @@
 import Link from "next/link";
 import ThemeToggle from "./theme-toggle";
 import NotificationsBell from "./notifications-bell";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import Logo from "./logo";
 import { HoverScale, SlideIn } from "./ui/animated-page";
 import { SignOutButton, useUser } from "@clerk/nextjs";
@@ -11,8 +11,11 @@ import React from "react";
 
 export default function Titlebar() {
     const pathname = usePathname();
+    const router = useRouter();
     const { isLoaded, user } = useUser();
     const [plan, setPlan] = React.useState<string | null>(null);
+    const [q, setQ] = React.useState("");
+    const searchInputRef = React.useRef<HTMLInputElement | null>(null);
     const isSignedIn = !!user;
 
     React.useEffect(() => {
@@ -44,6 +47,27 @@ export default function Titlebar() {
         return "?";
     }, [displayName, displayEmail]);
     const planLabel = (plan || "starter").replace(/^./, c => c.toUpperCase()) + " Plan";
+
+    // Cmd/Ctrl+K to focus the global search
+    React.useEffect(() => {
+        function onKeyDown(e: KeyboardEvent) {
+            const isMac = navigator.platform.toUpperCase().includes('MAC');
+            const meta = isMac ? e.metaKey : e.ctrlKey;
+            if (meta && (e.key === 'k' || e.key === 'K')) {
+                e.preventDefault();
+                searchInputRef.current?.focus();
+            }
+        }
+        window.addEventListener('keydown', onKeyDown);
+        return () => window.removeEventListener('keydown', onKeyDown);
+    }, []);
+
+    const onSubmitSearch = React.useCallback(() => {
+        const term = q.trim();
+        if (!term) return;
+        router.push(`/dashboard/search?q=${encodeURIComponent(term)}`);
+    }, [q, router]);
+
     return (
         <header className="sticky top-0 z-50 bg-base-100/60 backdrop-blur-sm border-b border-base-200/60">
             <div className="w-full px-4 sm:px-6">
@@ -79,18 +103,23 @@ export default function Titlebar() {
 
                     {/* Center: Global Search (only when signed in) */}
                     {isSignedIn && (
-                        <div className="flex-1 max-w-xl mx-8 hidden md:block">
+                        <div className="flex-1 max-w-2xl mx-8 hidden md:block">
                             <SlideIn delay={0.2}>
                                 <HoverScale scale={1.01}>
-                                    <div className="relative group">
-                                        <div className="absolute inset-y-0 left-3 flex items-center pointer-events-none">
-                                            <i className="fa-duotone fa-solid fa-magnifying-glass text-sm text-base-content/40 group-hover:text-base-content/60 transition-colors" aria-hidden />
-                                        </div>
+                                    <label className='input input-primary border-[0.5] rounded-2xl w-full'>
+                                        <i className="fa-duotone fa-solid fa-magnifying-glass text-sm text-base-content/40 group-hover:text-base-content/60 transition-colors" aria-hidden />
                                         <input
+                                            ref={searchInputRef}
                                             type="search"
+                                            aria-label="Global Search"
                                             placeholder="Search conversations, documents..."
-                                            className="w-full h-10 pl-10 pr-16 bg-base-200/40 border border-base-300/40 rounded-xl text-sm placeholder:text-base-content/40 focus:bg-base-100/80 focus:border-primary/40 focus:outline-none focus:ring-2 focus:ring-primary/20 transition-all duration-200"
-                                            aria-label="Global search"
+                                            value={q}
+                                            onChange={(e) => setQ(e.target.value)}
+                                            onKeyDown={(e) => {
+                                                if (e.key === 'Enter') {
+                                                    onSubmitSearch();
+                                                }
+                                            }}
                                         />
                                         <div className="absolute inset-y-0 right-3 flex items-center pointer-events-none">
                                             <div className="flex items-center gap-1">
@@ -98,7 +127,7 @@ export default function Titlebar() {
                                                 <kbd className="kbd kbd-xs bg-base-300/60 text-base-content/50 border border-base-300/60">K</kbd>
                                             </div>
                                         </div>
-                                    </div>
+                                    </label>
                                 </HoverScale>
                             </SlideIn>
                         </div>

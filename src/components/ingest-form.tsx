@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import toast from "react-hot-toast";
+import { toast } from "@/lib/toast";
 import SiteSelector from "./site-selector";
 
 export default function IngestForm() {
@@ -14,7 +14,7 @@ export default function IngestForm() {
     async function onSubmit(e: React.FormEvent) {
         e.preventDefault();
         if (!input.trim()) {
-            toast.error("Please enter a valid URL");
+            toast.error({ message: "Please enter a valid URL" });
             return;
         }
 
@@ -22,12 +22,12 @@ export default function IngestForm() {
         try {
             new URL(input.trim());
         } catch {
-            toast.error("Please enter a valid URL");
+            toast.error({ message: "Please enter a valid URL" });
             return;
         }
 
         setLoading(true);
-        const toastId = toast.loading("Ingesting content...");
+        const toastId = toast.loading({ message: "Ingesting content..." });
 
         try {
             const res = await fetch("/api/ingest", {
@@ -45,14 +45,15 @@ export default function IngestForm() {
 
                 if (res.status === 402 && data?.error === 'site limit reached') {
                     const d = data.details || {};
-                    toast.error(
-                        `Site limit reached: ${d.current ?? '?'} of ${d.limit ?? '?'} used on "${d.plan ?? 'starter'}". Host: ${d.host ?? ''}`,
-                        { id: toastId, duration: 6000 }
-                    );
+                    toast.error({
+                        message: `Site limit reached: ${d.current ?? '?'} of ${d.limit ?? '?'} used on "${d.plan ?? 'starter'}". Host: ${d.host ?? ''}`,
+                        id: toastId,
+                        duration: 6000
+                    });
                 } else if (res.status === 402 && data?.error) {
-                    toast.error(String(data.error), { id: toastId });
+                    toast.error({ message: String(data.error), id: toastId });
                 } else {
-                    toast.error(data?.error || 'Ingestion failed. Please try again.', { id: toastId });
+                    toast.error({ message: data?.error || 'Ingestion failed. Please try again.', id: toastId });
                 }
                 return;
             }
@@ -60,13 +61,13 @@ export default function IngestForm() {
             const result = await res.json();
             setInput("");
             setSiteId("");
-            toast.success(
-                result.message || "Content ingested successfully!",
-                { id: toastId }
-            );
+            toast.success({
+                message: result.message || "Content ingested successfully!",
+                id: toastId
+            });
             router.refresh();
         } catch {
-            toast.error("Network error. Please check your connection and try again.", { id: toastId });
+            toast.error({ message: "Network error. Please check your connection and try again.", id: toastId });
         } finally {
             setLoading(false);
         }

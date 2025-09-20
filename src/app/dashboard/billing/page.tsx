@@ -3,7 +3,7 @@ import { useEffect, useMemo, useState, Suspense } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { Breadcrumb } from '@/components/ui/breadcrumb';
 import { AnimatedPage, StaggerContainer, StaggerChild, HoverScale } from '@/components/ui/animated-page';
-import { toastUtils } from '@/lib/toast';
+import { toast } from '@/lib/toast';
 import { PLAN_DETAILS } from '@/lib/plan';
 import type { Plan } from '@/lib/limits';
 
@@ -19,7 +19,7 @@ export default function BillingPage() {
     useEffect(() => {
         const updated = searchParams?.get('updated');
         if (updated === '1') {
-            toastUtils.success('Subscription updated successfully');
+            toast.success({ message: 'Subscription updated successfully' });
         }
     }, [searchParams]);
 
@@ -59,13 +59,13 @@ export default function BillingPage() {
         const r = await fetch('/api/billing/checkout', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ plan, billingPeriod }) });
         const j = await r.json();
         setLoading(null);
-        if (j.url) window.location.href = j.url; else toastUtils.error(j.error || 'Error creating checkout');
+        if (j.url) window.location.href = j.url; else toast.error(j.error || 'Error creating checkout');
     }
 
     async function portal() {
         const r = await fetch('/api/billing/portal', { method: 'POST', headers: { 'content-type': 'application/json' } });
         const j = await r.json();
-        if (j.url) window.location.href = j.url; else toastUtils.error(j.error || 'Error accessing billing portal');
+        if (j.url) window.location.href = j.url; else toast.error(j.error || 'Error accessing billing portal');
     }
 
     return (

@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import toast from "react-hot-toast";
+import { toast } from "@/lib/toast";
 import WidgetConfiguration from "./widget-configuration";
 
 // Define the site interface
@@ -39,10 +39,10 @@ export default function DefaultWidgetConfiguration() {
                         setSelectedSiteId(data[0].id);
                     }
                 } else {
-                    toast.error("Failed to load sites");
+                    toast.error({ message: "Failed to load sites" });
                 }
             } catch {
-                toast.error("Error loading sites");
+                toast.error({ message: "Error loading sites" });
             } finally {
                 setLoading(false);
             }

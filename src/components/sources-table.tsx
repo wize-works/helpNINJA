@@ -4,7 +4,7 @@ import { useState, useEffect, useCallback } from 'react';
 import SiteSelector from './site-selector';
 import CrawlStatus from './crawl-status';
 import { HoverScale } from './ui/animated-page';
-import { toastUtils } from '@/lib/toast';
+import { toast } from '@/lib/toast';
 
 type Source = {
     id: string;
@@ -98,14 +98,14 @@ export default function SourcesTable({ initialFilters = {} }: { initialFilters?:
                 setEditingSource(null);
                 setFormData({ kind: 'url', url: '', title: '', siteId: '' });
                 loadSources();
-                toastUtils.success(editingSource ? 'Source updated successfully' : 'Source created successfully');
+                toast.success({ message: editingSource ? 'Source updated successfully' : 'Source created successfully' });
             } else {
                 const error = await response.json();
-                toastUtils.apiError(error, 'Failed to save source');
+                toast.apiError(error, 'Failed to save source');
             }
         } catch (error) {
             console.error('Error saving source:', error);
-            toastUtils.error('Failed to save source');
+            toast.error({ message: 'Failed to save source' });
         } finally {
             setSubmitting(false);
         }
@@ -132,14 +132,14 @@ export default function SourcesTable({ initialFilters = {} }: { initialFilters?:
 
             if (response.ok) {
                 loadSources();
-                toastUtils.success('Source deleted successfully');
+                toast.success({ message: 'Source deleted successfully' });
             } else {
                 const error = await response.json();
-                toastUtils.apiError(error, 'Failed to delete source');
+                toast.apiError(error, 'Failed to delete source');
             }
         } catch (error) {
             console.error('Error deleting source:', error);
-            toastUtils.error('Failed to delete source');
+            toast.error({ message: 'Failed to delete source' });
         }
     };
 
@@ -155,14 +155,14 @@ export default function SourcesTable({ initialFilters = {} }: { initialFilters?:
                 // Refresh the source status
                 loadSources();
                 const result = await response.json();
-                toastUtils.success(`Crawl completed: ${result.documentsCreated} documents, ${result.chunksCreated} chunks`);
+                toast.success({ message: `Crawl completed: ${result.documentsCreated} documents, ${result.chunksCreated} chunks` });
             } else {
                 const error = await response.json();
-                toastUtils.apiError(error, 'Failed to start crawl');
+                toast.apiError(error, 'Failed to start crawl');
             }
         } catch (error) {
             console.error('Error starting crawl:', error);
-            toastUtils.error('Failed to start crawl');
+            toast.error({ message: 'Failed to start crawl' });
         }
     };
 

@@ -70,7 +70,13 @@ function rankAndDedupe(results: HybridResult[], k: number, intent?: IntentKey): 
         const baseSim = Math.max(r._lexScore ?? 0, distToSim(r._vecDist));
         const score = baseSim + pathBoost(r.url, intent);
         const prev = byUrl.get(r.url);
-        if (!prev || score > prev._score) byUrl.set(r.url, { ...r, _score: score });
+        if (!prev || score > prev._score) {
+            const merged: Scored = { ...r, _score: score } as Scored;
+            if (!merged.title && prev?.title) merged.title = prev.title;
+            byUrl.set(r.url, merged);
+        } else if (prev && !prev.title && r.title) {
+            byUrl.set(r.url, { ...prev, title: r.title });
+        }
     }
 
     return [...byUrl.values()]
@@ -134,18 +140,20 @@ export async function searchHybrid(
     }
 
     const vecSql = `
-    SELECT
-      c.id,
-      c.url,
-      c.content,
-      c.document_id,
-      (c.embedding <=> $2::vector) AS _vecDist
-    FROM public.chunks c
-    WHERE c.tenant_id = $1
-      ${chunkSiteFilter}
-    ORDER BY _vecDist ASC
-    LIMIT ${Math.min(40, Math.max(20, k * 3))}
-  `;
+        SELECT
+            c.id,
+            d.url,
+            c.content,
+            c.document_id,
+            d.title,
+            (c.embedding <=> $2::vector) AS _vecDist
+        FROM public.chunks c
+        JOIN public.documents d ON d.id = c.document_id AND d.tenant_id = c.tenant_id
+        WHERE c.tenant_id = $1
+            ${chunkSiteFilter}
+        ORDER BY _vecDist ASC
+        LIMIT ${Math.min(40, Math.max(20, k * 3))}
+    `;
 
     const { rows: vec } = await query<(HybridResult & { _vecDist: number })>(vecSql, chunkParams);
 

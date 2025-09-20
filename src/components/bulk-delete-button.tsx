@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { toast } from "react-hot-toast";
+import { toast } from "@/lib/toast";
 import { HoverScale } from "@/components/ui/animated-page";
 
 interface BulkDeleteButtonProps {
@@ -31,7 +31,7 @@ export default function BulkDeleteButton({ selectedIds, onDeleteComplete }: Bulk
 
             if (response.ok) {
                 const result = await response.json();
-                toast.success(`${result.deletedCount} document${result.deletedCount === 1 ? '' : 's'} deleted successfully!`);
+                toast.success({ message: `${result.deletedCount} document${result.deletedCount === 1 ? '' : 's'} deleted successfully!` });
                 onDeleteComplete();
                 // Don't need router.refresh() since we're handling the refresh through the callback
             } else {
@@ -40,7 +40,7 @@ export default function BulkDeleteButton({ selectedIds, onDeleteComplete }: Bulk
             }
         } catch (error) {
             console.error('Bulk delete error:', error);
-            toast.error("Something went wrong. Please try again.");
+            toast.error({ message: "Something went wrong. Please try again." });
         } finally {
             setIsDeleting(false);
             setShowConfirm(false);

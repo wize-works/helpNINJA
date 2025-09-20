@@ -8,7 +8,7 @@ import AddTeamMemberForm from '@/components/add-team-member-form';
 import TeamInvitations from '@/components/team-invitations';
 import { Breadcrumb } from "@/components/ui/breadcrumb";
 import { AnimatedPage, StaggerContainer, StaggerChild, HoverScale } from "@/components/ui/animated-page";
-import { toastUtils } from '@/lib/toast';
+import { toast } from '@/lib/toast';
 import StatCard from '@/components/ui/stat-card';
 
 export default function TeamPage() {
@@ -79,14 +79,14 @@ export default function TeamPage() {
 
             if (response.ok) {
                 loadTeamMembers();
-                toastUtils.success('Team member removed successfully');
+                toast.success({ message: 'Team member removed successfully' });
             } else {
                 const error = await response.json();
-                toastUtils.apiError(error, 'Failed to remove team member');
+                toast.apiError(error, 'Failed to remove team member');
             }
         } catch (error) {
             console.error('Error removing team member:', error);
-            toastUtils.error('Failed to remove team member');
+            toast.error({ message: 'Failed to remove team member' });
         }
     };
 
@@ -102,14 +102,14 @@ export default function TeamPage() {
 
             if (response.ok) {
                 loadTeamMembers();
-                toastUtils.success('Role updated successfully');
+                toast.success({ message: 'Role updated successfully' });
             } else {
                 const error = await response.json();
-                toastUtils.apiError(error, 'Failed to update role');
+                toast.apiError(error, 'Failed to update role');
             }
         } catch (error) {
             console.error('Error updating role:', error);
-            toastUtils.error('Failed to update role');
+            toast.error({ message: 'Failed to update role' });
         }
     };
 
@@ -125,14 +125,14 @@ export default function TeamPage() {
 
             if (response.ok) {
                 loadTeamMembers();
-                toastUtils.success('Status updated successfully');
+                toast.success({ message: 'Status updated successfully' });
             } else {
                 const error = await response.json();
-                toastUtils.apiError(error, 'Failed to update status');
+                toast.apiError(error, 'Failed to update status');
             }
         } catch (error) {
             console.error('Error updating status:', error);
-            toastUtils.error('Failed to update status');
+            toast.error({ message: 'Failed to update status' });
         }
     };
 

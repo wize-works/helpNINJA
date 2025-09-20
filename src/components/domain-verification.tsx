@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
-import toast from "react-hot-toast";
+import { toast } from "@/lib/toast";
 
 type VerificationMethod = 'meta' | 'dns' | 'file';
 
@@ -77,7 +77,7 @@ export default function DomainVerification({
 
     async function handleVerify() {
         setVerifying(true);
-        const toastId = toast.loading(`Verifying domain via ${selectedMethod}...`);
+        const toastId = toast.loading({ message: `Verifying domain via ${selectedMethod}...` });
 
         try {
             const res = await fetch(`/api/sites/${siteId}/verify`, {
@@ -93,13 +93,13 @@ export default function DomainVerification({
             if (data.verified) {
                 setVerified(true);
                 setShowInstructions(false);
-                toast.success('Domain verified successfully!', { id: toastId });
+                toast.success({ message: 'Domain verified successfully!', id: toastId });
                 onVerificationChange?.(true);
             } else {
-                toast.error(data.message || 'Verification failed', { id: toastId });
+                toast.error({ message: data.message || 'Verification failed', id: toastId });
             }
         } catch {
-            toast.error('Network error during verification', { id: toastId });
+            toast.error({ message: 'Network error during verification', id: toastId });
         } finally {
             setVerifying(false);
         }
@@ -107,9 +107,9 @@ export default function DomainVerification({
 
     function copyToClipboard(text: string, type: string) {
         navigator.clipboard.writeText(text).then(() => {
-            toast.success(`${type} copied to clipboard!`);
+            toast.success({ message: `${type} copied to clipboard!` });
         }).catch(() => {
-            toast.error('Failed to copy to clipboard');
+            toast.error({ message: 'Failed to copy to clipboard' });
         });
     }
 

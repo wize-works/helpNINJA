@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import { HoverScale } from '@/components/ui/animated-page';
-import toast from 'react-hot-toast';
+import { toast } from '@/lib/toast';
 
 type IntegrationTab = 'html' | 'nextjs' | 'react' | 'vue' | 'angular' | 'wordpress' | 'direct';
 
@@ -32,7 +32,7 @@ export default function IntegrationOptions({
 
     const copyToClipboard = (code: string) => {
         navigator.clipboard.writeText(code);
-        toast.success('Code copied to clipboard!');
+        toast.success({ message: 'Code copied to clipboard!' });
     };
 
     // Generate the various integration code options

@@ -5,7 +5,7 @@ import { useTenant } from '@/components/tenant-context';
 import { type Role } from '@/lib/permissions';
 import RoleBadge from './role-badge';
 import { HoverScale } from './ui/animated-page';
-import { toastUtils } from '@/lib/toast';
+import { toast } from '@/lib/toast';
 
 type Invitation = {
     id: string;
@@ -69,17 +69,17 @@ export default function TeamInvitations({ onInvitationCancelled }: TeamInvitatio
                 loadInvitations(); // Refresh the list
 
                 if (data.email_sent) {
-                    toastUtils.success('Invitation resent successfully');
+                    toast.success({ message: 'Invitation resent successfully' });
                 } else {
-                    toastUtils.info('Invitation updated but email delivery failed');
+                    toast.info({ message: 'Invitation updated but email delivery failed' });
                 }
             } else {
                 const error = await response.json();
-                toastUtils.apiError(error, 'Failed to resend invitation');
+                toast.apiError(error, 'Failed to resend invitation');
             }
         } catch (error) {
             console.error('Error resending invitation:', error);
-            toastUtils.error('Failed to resend invitation');
+            toast.error({ message: 'Failed to resend invitation' });
         } finally {
             setResending(prev => {
                 const newSet = new Set(prev);
@@ -100,14 +100,14 @@ export default function TeamInvitations({ onInvitationCancelled }: TeamInvitatio
             if (response.ok) {
                 setInvitations(prev => prev.filter(inv => inv.id !== invitationId));
                 onInvitationCancelled?.();
-                toastUtils.success('Invitation cancelled successfully');
+                toast.success({ message: 'Invitation cancelled successfully' });
             } else {
                 const error = await response.json();
-                toastUtils.apiError(error, 'Failed to cancel invitation');
+                toast.apiError(error, 'Failed to cancel invitation');
             }
         } catch (error) {
             console.error('Error cancelling invitation:', error);
-            toastUtils.error('Failed to cancel invitation');
+            toast.error({ message: 'Failed to cancel invitation' });
         } finally {
             setCancelling(prev => {
                 const newSet = new Set(prev);
@@ -121,7 +121,7 @@ export default function TeamInvitations({ onInvitationCancelled }: TeamInvitatio
         // In a real implementation, this would be the actual invitation URL
         const invitationUrl = `${window.location.origin}/invite/${token}`;
         navigator.clipboard.writeText(invitationUrl);
-        toastUtils.copied('Invitation link');
+        toast.copied({ item: "Invitation link" });
     };
 
     const formatDate = (dateString: string) => {

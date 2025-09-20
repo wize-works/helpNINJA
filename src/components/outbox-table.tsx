@@ -3,7 +3,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { HoverScale } from './ui/animated-page';
-import { toastUtils } from '@/lib/toast';
+import { toast } from '@/lib/toast';
 import StatCard from './ui/stat-card';
 
 type OutboxItem = {
@@ -98,16 +98,16 @@ export default function OutboxTable() {
 
             if (response.ok) {
                 const result = await response.json();
-                toastUtils.success(`Retry completed: ${result.retried} successful, ${result.failed} failed`);
+                toast.success({ message: `Retry completed: ${result.retried} successful, ${result.failed} failed` });
                 loadOutboxItems();
                 setSelectedItems(new Set());
             } else {
                 const error = await response.json();
-                toastUtils.apiError(error, 'Failed to retry items');
+                toast.apiError(error, 'Failed to retry items');
             }
         } catch (error) {
             console.error('Error retrying items:', error);
-            toastUtils.error('Failed to retry items');
+            toast.error({ message: 'Failed to retry items' });
         } finally {
             setRetrying(prev => {
                 const newSet = new Set(prev);
@@ -133,15 +133,15 @@ export default function OutboxTable() {
 
             if (response.ok) {
                 const result = await response.json();
-                toastUtils.success(`Retry completed: ${result.retried} successful, ${result.failed} failed`);
+                toast.success({ message: `Retry completed: ${result.retried} successful, ${result.failed} failed` });
                 loadOutboxItems();
             } else {
                 const error = await response.json();
-                toastUtils.apiError(error, 'Failed to retry all items');
+                toast.apiError(error, 'Failed to retry all items');
             }
         } catch (error) {
             console.error('Error retrying all items:', error);
-            toastUtils.error('Failed to retry all items');
+            toast.error({ message: 'Failed to retry all items' });
         } finally {
             setRetrying(prev => {
                 const newSet = new Set(prev);

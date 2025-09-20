@@ -4,7 +4,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { useTenant } from "@/components/tenant-context";
 import { Breadcrumb } from "@/components/ui/breadcrumb";
 import { AnimatedPage, StaggerContainer, StaggerChild } from "@/components/ui/animated-page";
-import { toastUtils } from '@/lib/toast';
+import { toast } from '@/lib/toast';
 import StatCard from '@/components/ui/stat-card';
 
 type ApiKey = {
@@ -88,7 +88,7 @@ export default function ApiKeysPage() {
 
     const copyToClipboard = (text: string) => {
         navigator.clipboard.writeText(text);
-        toastUtils.copied();
+        toast.copied({ item: text });
     };
 
     const deleteApiKey = async (id: string, name: string) => {
@@ -104,11 +104,11 @@ export default function ApiKeysPage() {
                 throw new Error(error.error || 'Failed to delete API key');
             }
 
-            toastUtils.success('API key deleted successfully');
+            toast.success({ message: 'API key deleted successfully' });
             loadData();
         } catch (error) {
             console.error('Error deleting API key:', error);
-            toastUtils.error(error instanceof Error ? error.message : 'Failed to delete API key');
+            toast.error({ message: error instanceof Error ? error.message : 'Failed to delete API key' });
         }
     };
 
@@ -126,18 +126,18 @@ export default function ApiKeysPage() {
             }
 
             const result = await response.json();
-            toastUtils.success('API key rotated successfully');
+            toast.success({ message: 'API key rotated successfully' });
 
             // Copy new key to clipboard
             if (result.key) {
                 await navigator.clipboard.writeText(result.key);
-                toastUtils.success('New API key copied to clipboard - save it securely!');
+                toast.success({ message: 'New API key copied to clipboard - save it securely!' });
             }
 
             loadData();
         } catch (error) {
             console.error('Error rotating API key:', error);
-            toastUtils.error(error instanceof Error ? error.message : 'Failed to rotate API key');
+            toast.error({ message: error instanceof Error ? error.message : 'Failed to rotate API key' });
         }
     };
 
@@ -154,11 +154,11 @@ export default function ApiKeysPage() {
                 throw new Error(error.error || 'Failed to delete webhook');
             }
 
-            toastUtils.success('Webhook deleted successfully');
+            toast.success({ message: 'Webhook deleted successfully' });
             loadData();
         } catch (error) {
             console.error('Error deleting webhook:', error);
-            toastUtils.error(error instanceof Error ? error.message : 'Failed to delete webhook');
+            toast.error({ message: error instanceof Error ? error.message : 'Failed to delete webhook' });
         }
     };
 
@@ -171,10 +171,10 @@ export default function ApiKeysPage() {
                 throw new Error(error.error || 'Failed to test webhook');
             }
 
-            toastUtils.success(`Test event sent to "${name}" successfully`);
+            toast.success({ message: `Test event sent to "${name}" successfully` });
         } catch (error) {
             console.error('Error testing webhook:', error);
-            toastUtils.error(error instanceof Error ? error.message : 'Failed to test webhook');
+            toast.error({ message: error instanceof Error ? error.message : 'Failed to test webhook' });
         }
     };
 
@@ -926,7 +926,7 @@ function CreateApiKeyModal({
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         if (!formData.name.trim()) {
-            toastUtils.error('API key name is required');
+            toast.error({ message: 'API key name is required' });
             return;
         }
 
@@ -952,20 +952,20 @@ function CreateApiKeyModal({
             }
 
             const result = await response.json();
-            toastUtils.success('API key created successfully');
+            toast.success({ message: 'API key created successfully' });
 
             // Show the full key only once
             const fullKey = result.key;
             if (fullKey) {
                 // Copy to clipboard automatically
                 await navigator.clipboard.writeText(fullKey);
-                toastUtils.success('API key copied to clipboard - save it securely!');
+                toast.success({ message: 'API key copied to clipboard - save it securely!' });
             }
 
             onSuccess();
         } catch (error) {
             console.error('Error creating API key:', error);
-            toastUtils.error(error instanceof Error ? error.message : 'Failed to create API key');
+            toast.error({ message: error instanceof Error ? error.message : 'Failed to create API key' });
         } finally {
             setLoading(false);
         }
@@ -1178,22 +1178,22 @@ function CreateWebhookModal({
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         if (!formData.name.trim()) {
-            toastUtils.error('Webhook name is required');
+            toast.error({ message: 'Webhook name is required' });
             return;
         }
 
         if (!formData.url.trim()) {
-            toastUtils.error('Webhook URL is required');
+            toast.error({ message: 'Webhook URL is required' });
             return;
         }
 
         if (!validateUrl(formData.url)) {
-            toastUtils.error('Please enter a valid HTTPS URL');
+            toast.error({ message: 'Please enter a valid HTTPS URL' });
             return;
         }
 
         if (formData.events.length === 0) {
-            toastUtils.error('Please select at least one event');
+            toast.error({ message: 'Please select at least one event' });
             return;
         }
 
@@ -1218,18 +1218,18 @@ function CreateWebhookModal({
             }
 
             const result = await response.json();
-            toastUtils.success('Webhook created successfully');
+            toast.success({ message: 'Webhook created successfully' });
 
             // Show the secret if generated
             if (result.secret) {
                 await navigator.clipboard.writeText(result.secret);
-                toastUtils.success('Webhook secret copied to clipboard - save it securely!');
+                toast.success({ message: 'Webhook secret copied to clipboard - save it securely!' });
             }
 
             onSuccess();
         } catch (error) {
             console.error('Error creating webhook:', error);
-            toastUtils.error(error instanceof Error ? error.message : 'Failed to create webhook');
+            toast.error({ message: error instanceof Error ? error.message : 'Failed to create webhook' });
         } finally {
             setLoading(false);
         }

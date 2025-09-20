@@ -265,6 +265,14 @@ Core features (present)
 - Chat preview
   - Component renders the real widget in an iframe for admins.
   - Files: src/components/chat-preview.tsx
+ - Global search (NEW)
+  - Titlebar search wired to results with Cmd/Ctrl+K focus
+    - Results page shows curated answers, documents, and conversations
+      - Conversations show site domain and relative time (with exact timestamp on hover)
+      - Conversation tags: color-coded badges for human, AI, escalated, low-confidence, shared, pending-escalation, contact, and non-active statuses
+      - Unified tag styling: the same tag colors/labels now render on Conversations list and Conversation detail pages (shared helper at `src/lib/tags.ts`)
+      - Feedback tab: searches `public.feedback` via full-text and ILIKE; shows title, type/status/priority chips, site domain, created-at (relative), and snippet
+  - Files: src/components/titlebar.tsx, src/app/dashboard/search/page.tsx, src/components/search-results-viewer.tsx, src/lib/rag.ts
  - Notifications (MVP In Progress)
   - Schema + service for in-app notifications (notifications, notification_recipients, notification_preferences)
   - API: /api/notifications, /api/notifications/unread-count, /api/notifications/mark-all-read, /api/notifications/[id]/read, /api/notification-preferences (GET/PATCH), /api/internal/notifications (POST)

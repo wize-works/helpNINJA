@@ -4,6 +4,7 @@ import { TableSkeleton } from "@/components/ui/skeleton";
 import { Breadcrumb } from "@/components/ui/breadcrumb";
 import { AnimatedPage, StaggerContainer, StaggerChild, HoverScale, FadeIn } from "@/components/ui/animated-page";
 import { Suspense } from "react";
+import { tagClass } from '@/lib/tags';
 import FilterControls from "./filter-controls";
 import Link from "next/link";
 import StatCard from "@/components/ui/stat-card";
@@ -25,6 +26,11 @@ type Row = {
     site_name: string | null;
     has_human_agent: boolean;
     agent_names: string | null;
+    has_ai?: boolean;
+    low_confidence?: boolean;
+    shared?: boolean;
+    pending_escalation?: boolean;
+    has_contact?: boolean;
 }
 
 type KPI = {
@@ -96,6 +102,11 @@ async function list(tenantId: string, filters: Filters) {
             ts.domain as site_domain,
             ts.name as site_name,
             (select count(*) > 0 from public.messages m where m.conversation_id=c.id and m.is_human_response=true) as has_human_agent,
+            (select count(*) > 0 from public.messages m where m.conversation_id=c.id and m.role='assistant') as has_ai,
+            (select count(*) > 0 from public.messages m where m.conversation_id=c.id and m.role='assistant' and coalesce(m.confidence,1) < 0.55) as low_confidence,
+            (select count(*) > 0 from public.conversation_shares cs where cs.conversation_id = c.id and cs.expires_at > now()) as shared,
+            (select count(*) > 0 from public.pending_escalations pe where pe.conversation_id = c.id) as pending_escalation,
+            (select count(*) > 0 from public.conversation_contact_info ci where ci.conversation_id = c.id) as has_contact,
             (select string_agg(distinct COALESCE(u.first_name || ' ' || u.last_name, u.email), ', ') from public.messages m 
              join public.users u on u.id = m.agent_id 
              where m.conversation_id=c.id and m.is_human_response=true and m.agent_id is not null) as agent_names
@@ -190,6 +201,7 @@ function ConversationsTable({ conversations }: { conversations: Row[] }) {
                                         <th className="text-left p-4 text-sm font-semibold text-base-content/80">Messages</th>
                                         <th className="text-left p-4 text-sm font-semibold text-base-content/80">Last Updated</th>
                                         <th className="text-left p-4 text-sm font-semibold text-base-content/80">Agent</th>
+                                        <th className="text-left p-4 text-sm font-semibold text-base-content/80">Tags</th>
                                         <th className="text-right p-4 text-sm font-semibold text-base-content/80">Actions</th>
                                     </tr>
                                 </thead>
@@ -246,60 +258,42 @@ function ConversationsTable({ conversations }: { conversations: Row[] }) {
                                                 </div>
                                             </td>
                                             <td className="p-4">
-                                                {r.has_human_agent ? (
-                                                    <div className="flex items-center gap-2">
-                                                        <div className="flex items-center gap-2 px-2 py-1 bg-success/10 text-success rounded-md">
-                                                            <i className="fa-duotone fa-solid fa-headset text-xs" aria-hidden />
-                                                            <span className="text-sm font-medium">Human</span>
-                                                        </div>
-                                                        {r.agent_names && (
-                                                            <span className="text-xs text-base-content/60 truncate max-w-[100px]" title={r.agent_names}>
-                                                                {r.agent_names}
-                                                            </span>
-                                                        )}
-                                                    </div>
-                                                ) : r.status === 'human_handling' ? (
-                                                    <div className="flex items-center gap-2">
-                                                        <div className="flex items-center gap-2 px-2 py-1 bg-warning/10 text-warning rounded-md">
-                                                            <i className="fa-duotone fa-solid fa-hand text-xs" aria-hidden />
-                                                            <span className="text-sm font-medium">Escalated</span>
-                                                        </div>
-                                                    </div>
-                                                ) : (
-                                                    <div className="flex items-center gap-2">
-                                                        <div className="flex items-center gap-2 px-2 py-1 bg-primary/10 text-primary rounded-md">
-                                                            <i className="fa-duotone fa-solid fa-robot text-xs" aria-hidden />
-                                                            <span className="text-sm font-medium">AI</span>
-                                                        </div>
-                                                        {r.escalations > 0 && (
-                                                            <div className="flex items-center gap-1 px-1 py-0.5 bg-warning/10 text-warning rounded text-xs">
-                                                                <i className="fa-duotone fa-solid fa-fire text-[10px]" aria-hidden />
-                                                                {r.escalations}
-                                                            </div>
-                                                        )}
-                                                    </div>
-                                                )}
+                                                <div className="">
+                                                    {[
+                                                        r.has_human_agent ? 'human' : undefined,
+                                                        r.has_ai ? 'ai' : undefined,
+                                                    ].filter(Boolean).map(tag => (
+                                                        <span key={String(tag)} className={`badge ${tagClass(String(tag))} badge-sm capitalize`}>
+                                                            {String(tag).replace('-', ' ')}
+                                                        </span>
+                                                    ))}
+                                                    {r.agent_names && r.has_human_agent && (
+                                                        <span className="text-xs text-base-content/60 truncate max-w-[140px] ml-2" title={r.agent_names}>
+                                                            {r.agent_names}
+                                                        </span>
+                                                    )}
+                                                </div>
+                                            </td>
+                                            <td>
+                                                <div className="flex items-center gap-1 flex-wrap">
+                                                    {[
+                                                        r.escalations > 0 ? 'escalated' : undefined,
+                                                        r.low_confidence ? 'low-confidence' : undefined,
+                                                        r.shared ? 'shared' : undefined,
+                                                        r.pending_escalation ? 'pending-escalation' : undefined,
+                                                        r.has_contact ? 'contact' : undefined,
+                                                        r.status && r.status !== 'active' ? r.status : undefined
+                                                    ].filter(Boolean).map(tag => (
+                                                        <span key={String(tag)} className={`badge ${tagClass(String(tag))} badge-sm capitalize`}>
+                                                            {String(tag).replace('-', ' ')}
+                                                        </span>
+                                                    ))}
+                                                </div>
                                             </td>
                                             <td className="p-4 text-right space-x-2 whitespace-nowrap">
                                                 <Link href={`/dashboard/conversations/${r.id}`} className="inline-flex items-center gap-1 px-2 py-1 bg-primary/10 hover:bg-primary/20 text-primary rounded-md text-xs font-medium transition-colors">
                                                     <i className="fa-duotone fa-solid fa-eye text-[10px]" aria-hidden /> View
                                                 </Link>
-                                                {r.status === 'human_handling' ? (
-                                                    <span className="inline-flex items-center gap-1 px-2 py-1 bg-success/10 text-success rounded-md text-xs font-medium">
-                                                        <div className="w-1.5 h-1.5 bg-success rounded-full animate-pulse"></div>
-                                                        Active
-                                                    </span>
-                                                ) : r.escalations > 0 ? (
-                                                    <span className="inline-flex items-center gap-1 px-2 py-1 bg-warning/10 text-warning rounded-md text-xs font-medium" title={r.last_escalation_reason || undefined}>
-                                                        <i className="fa-duotone fa-solid fa-fire text-[10px]" />
-                                                        Escalated
-                                                    </span>
-                                                ) : (
-                                                    <span className="inline-flex items-center gap-1 px-2 py-1 bg-base-200/60 text-base-content/60 rounded-md text-xs font-medium">
-                                                        <div className="w-1.5 h-1.5 bg-base-content/40 rounded-full"></div>
-                                                        Complete
-                                                    </span>
-                                                )}
                                             </td>
                                         </tr>
                                     ))}
@@ -334,6 +328,22 @@ function ConversationsTable({ conversations }: { conversations: Row[] }) {
                                                         hour: '2-digit',
                                                         minute: '2-digit'
                                                     })}
+                                                </div>
+                                                <div className="mt-2 flex items-center gap-1 flex-wrap">
+                                                    {[
+                                                        r.has_human_agent ? 'human' : undefined,
+                                                        r.has_ai ? 'ai' : undefined,
+                                                        r.escalations > 0 ? 'escalated' : undefined,
+                                                        r.low_confidence ? 'low-confidence' : undefined,
+                                                        r.shared ? 'shared' : undefined,
+                                                        r.pending_escalation ? 'pending-escalation' : undefined,
+                                                        r.has_contact ? 'contact' : undefined,
+                                                        r.status && r.status !== 'active' ? r.status : undefined
+                                                    ].filter(Boolean).map(tag => (
+                                                        <span key={String(tag)} className={`badge ${tagClass(String(tag))} badge-xs capitalize`}>
+                                                            {String(tag).replace('-', ' ')}
+                                                        </span>
+                                                    ))}
                                                 </div>
                                             </div>
                                         </div>

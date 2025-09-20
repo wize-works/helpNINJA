@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from 'react';
-import toast from 'react-hot-toast';
+import { toast } from '@/lib/toast';
 import FileUpload, { FileUploadItem } from './file-upload';
 
 export interface FeedbackFormData {
@@ -93,7 +93,7 @@ export default function FeedbackForm({
     const handleTypeChange = (type: FeedbackFormData['type']) => {
         setFormData(prev => ({ ...prev, type }));
         setShowBugFields(type === 'bug');
-        
+
         // Auto-adjust priority for bugs
         if (type === 'bug' && formData.priority === 'low') {
             setFormData(prev => ({ ...prev, priority: 'medium' }));
@@ -145,14 +145,14 @@ export default function FeedbackForm({
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
-        
+
         if (!validateForm()) {
-            toast.error('Please fix the errors below');
+            toast.error({ message: 'Please fix the errors below' });
             return;
         }
 
         setLoading(true);
-        const toastId = toast.loading('Submitting feedback...');
+        const toastId = toast.loading({ message: 'Submitting feedback...' });
 
         try {
             // Capture additional metadata
@@ -195,29 +195,29 @@ export default function FeedbackForm({
                 }
 
                 const result = await response.json();
-                
+
                 // Upload attachments if any
                 if (attachmentFiles.length > 0) {
                     try {
                         await uploadAttachments(result.id, attachmentFiles);
-                        toast.success(
-                            `Feedback submitted with ${attachmentFiles.length} attachment(s)!`,
-                            { id: toastId }
-                        );
+                        toast.success({
+                            message: `Feedback submitted with ${attachmentFiles.length} attachment(s)!`,
+                            id: toastId
+                        });
                     } catch (uploadError) {
                         console.warn('Attachment upload failed:', uploadError);
-                        toast.success(
-                            'Feedback submitted, but some attachments failed to upload.',
-                            { id: toastId }
-                        );
+                        toast.success({
+                            message: 'Feedback submitted, but some attachments failed to upload.',
+                            id: toastId
+                        });
                     }
                 } else {
-                    toast.success(
-                        result.escalated 
+                    toast.success({
+                        message: result.escalated
                             ? 'Feedback submitted and escalated for immediate attention!'
                             : 'Thank you for your feedback!',
-                        { id: toastId }
-                    );
+                        id: toastId
+                    });
                 }
 
                 if (onSuccess) {
@@ -227,10 +227,10 @@ export default function FeedbackForm({
 
         } catch (error) {
             console.error('Feedback submission error:', error);
-            toast.error(
-                error instanceof Error ? error.message : 'Failed to submit feedback. Please try again.',
-                { id: toastId }
-            );
+            toast.error({
+                message: error instanceof Error ? error.message : 'Failed to submit feedback. Please try again.',
+                id: toastId
+            });
         } finally {
             setLoading(false);
         }
@@ -247,7 +247,7 @@ export default function FeedbackForm({
     const uploadAttachments = async (feedbackId: string, files: FileUploadItem[]): Promise<void> => {
         const formData = new FormData();
         formData.append('feedbackId', feedbackId);
-        
+
         files.forEach((fileItem) => {
             formData.append('files', fileItem.file);
         });
@@ -291,11 +291,10 @@ export default function FeedbackForm({
                         {FEEDBACK_TYPES.map((type) => (
                             <label
                                 key={type.value}
-                                className={`cursor-pointer border rounded-xl p-4 transition-all duration-200 hover:border-primary/50 ${
-                                    formData.type === type.value
-                                        ? 'border-primary bg-primary/5 shadow-sm'
-                                        : 'border-base-300 hover:bg-base-50'
-                                }`}
+                                className={`cursor-pointer border rounded-xl p-4 transition-all duration-200 hover:border-primary/50 ${formData.type === type.value
+                                    ? 'border-primary bg-primary/5 shadow-sm'
+                                    : 'border-base-300 hover:bg-base-50'
+                                    }`}
                             >
                                 <input
                                     type="radio"
@@ -306,13 +305,11 @@ export default function FeedbackForm({
                                     className="sr-only"
                                 />
                                 <div className="flex items-start gap-3">
-                                    <i className={`fa-duotone fa-solid ${type.icon} text-lg ${
-                                        formData.type === type.value ? 'text-primary' : 'text-base-content/40'
-                                    }`} />
+                                    <i className={`fa-duotone fa-solid ${type.icon} text-lg ${formData.type === type.value ? 'text-primary' : 'text-base-content/40'
+                                        }`} />
                                     <div className="flex-1 min-w-0">
-                                        <div className={`text-sm font-medium ${
-                                            formData.type === type.value ? 'text-primary' : 'text-base-content'
-                                        }`}>
+                                        <div className={`text-sm font-medium ${formData.type === type.value ? 'text-primary' : 'text-base-content'
+                                            }`}>
                                             {type.label}
                                         </div>
                                         <div className="text-xs text-base-content/60 mt-1">
@@ -332,11 +329,10 @@ export default function FeedbackForm({
                         {PRIORITY_LEVELS.map((priority) => (
                             <label
                                 key={priority.value}
-                                className={`cursor-pointer border rounded-lg p-3 text-center transition-all duration-200 hover:border-primary/50 ${
-                                    formData.priority === priority.value
-                                        ? 'border-primary bg-primary/5'
-                                        : 'border-base-300'
-                                }`}
+                                className={`cursor-pointer border rounded-lg p-3 text-center transition-all duration-200 hover:border-primary/50 ${formData.priority === priority.value
+                                    ? 'border-primary bg-primary/5'
+                                    : 'border-base-300'
+                                    }`}
                             >
                                 <input
                                     type="radio"
@@ -346,9 +342,8 @@ export default function FeedbackForm({
                                     onChange={(e) => updateFormData('priority', e.target.value)}
                                     className="sr-only"
                                 />
-                                <div className={`text-sm font-medium ${
-                                    formData.priority === priority.value ? 'text-primary' : priority.color
-                                }`}>
+                                <div className={`text-sm font-medium ${formData.priority === priority.value ? 'text-primary' : priority.color
+                                    }`}>
                                     {priority.label}
                                 </div>
                                 <div className="text-xs text-base-content/60 mt-1">
@@ -371,9 +366,8 @@ export default function FeedbackForm({
                     </label>
                     <input
                         type="text"
-                        className={`input input-bordered w-full focus:input-primary transition-all duration-200 focus:scale-[1.02] ${
-                            errors.title ? 'input-error' : ''
-                        }`}
+                        className={`input input-bordered w-full focus:input-primary transition-all duration-200 focus:scale-[1.02] ${errors.title ? 'input-error' : ''
+                            }`}
                         placeholder="Brief summary of your feedback..."
                         value={formData.title}
                         onChange={(e) => updateFormData('title', e.target.value)}
@@ -402,9 +396,8 @@ export default function FeedbackForm({
                         </span>
                     </label>
                     <textarea
-                        className={`textarea textarea-bordered w-full h-32 focus:textarea-primary transition-all duration-200 focus:scale-[1.02] ${
-                            errors.description ? 'textarea-error' : ''
-                        }`}
+                        className={`textarea textarea-bordered w-full h-32 focus:textarea-primary transition-all duration-200 focus:scale-[1.02] ${errors.description ? 'textarea-error' : ''
+                            }`}
                         placeholder="Please provide detailed information about your feedback..."
                         value={formData.description}
                         onChange={(e) => updateFormData('description', e.target.value)}
@@ -439,9 +432,8 @@ export default function FeedbackForm({
                                 </span>
                             </label>
                             <textarea
-                                className={`textarea textarea-bordered w-full h-24 focus:textarea-primary transition-all duration-200 ${
-                                    errors.stepsToReproduce ? 'textarea-error' : ''
-                                }`}
+                                className={`textarea textarea-bordered w-full h-24 focus:textarea-primary transition-all duration-200 ${errors.stepsToReproduce ? 'textarea-error' : ''
+                                    }`}
                                 placeholder="1. Go to...&#10;2. Click on...&#10;3. See error..."
                                 value={formData.stepsToReproduce || ''}
                                 onChange={(e) => updateFormData('stepsToReproduce', e.target.value)}
@@ -465,9 +457,8 @@ export default function FeedbackForm({
                                     </span>
                                 </label>
                                 <textarea
-                                    className={`textarea textarea-bordered w-full h-20 focus:textarea-primary transition-all duration-200 ${
-                                        errors.expectedBehavior ? 'textarea-error' : ''
-                                    }`}
+                                    className={`textarea textarea-bordered w-full h-20 focus:textarea-primary transition-all duration-200 ${errors.expectedBehavior ? 'textarea-error' : ''
+                                        }`}
                                     placeholder="What should happen..."
                                     value={formData.expectedBehavior || ''}
                                     onChange={(e) => updateFormData('expectedBehavior', e.target.value)}
@@ -489,9 +480,8 @@ export default function FeedbackForm({
                                     </span>
                                 </label>
                                 <textarea
-                                    className={`textarea textarea-bordered w-full h-20 focus:textarea-primary transition-all duration-200 ${
-                                        errors.actualBehavior ? 'textarea-error' : ''
-                                    }`}
+                                    className={`textarea textarea-bordered w-full h-20 focus:textarea-primary transition-all duration-200 ${errors.actualBehavior ? 'textarea-error' : ''
+                                        }`}
                                     placeholder="What actually happens..."
                                     value={formData.actualBehavior || ''}
                                     onChange={(e) => updateFormData('actualBehavior', e.target.value)}
@@ -587,11 +577,10 @@ export default function FeedbackForm({
                                 {CONTACT_METHODS.map((method) => (
                                     <label
                                         key={method.value}
-                                        className={`cursor-pointer border rounded-lg p-3 text-center transition-all duration-200 hover:border-primary/50 ${
-                                            formData.contactMethod === method.value
-                                                ? 'border-primary bg-primary/5'
-                                                : 'border-base-300'
-                                        }`}
+                                        className={`cursor-pointer border rounded-lg p-3 text-center transition-all duration-200 hover:border-primary/50 ${formData.contactMethod === method.value
+                                            ? 'border-primary bg-primary/5'
+                                            : 'border-base-300'
+                                            }`}
                                     >
                                         <input
                                             type="radio"
@@ -602,9 +591,8 @@ export default function FeedbackForm({
                                             className="sr-only"
                                         />
                                         <div className="flex flex-col items-center gap-1">
-                                            <i className={`fa-duotone fa-solid ${method.icon} ${
-                                                formData.contactMethod === method.value ? 'text-primary' : 'text-base-content/40'
-                                            }`} />
+                                            <i className={`fa-duotone fa-solid ${method.icon} ${formData.contactMethod === method.value ? 'text-primary' : 'text-base-content/40'
+                                                }`} />
                                             <span className="text-xs font-medium">{method.label}</span>
                                         </div>
                                     </label>
@@ -618,18 +606,17 @@ export default function FeedbackForm({
                                 <label className="label">
                                     <span className="label-text">
                                         {formData.contactMethod === 'email' ? 'Email Address' :
-                                         formData.contactMethod === 'phone' ? 'Phone Number' : 'Slack Username'}
+                                            formData.contactMethod === 'phone' ? 'Phone Number' : 'Slack Username'}
                                         <span className="text-error ml-1">*</span>
                                     </span>
                                 </label>
                                 <input
                                     type={formData.contactMethod === 'email' ? 'email' : 'text'}
-                                    className={`input input-bordered w-full focus:input-primary transition-all duration-200 ${
-                                        errors.contactValue ? 'input-error' : ''
-                                    }`}
+                                    className={`input input-bordered w-full focus:input-primary transition-all duration-200 ${errors.contactValue ? 'input-error' : ''
+                                        }`}
                                     placeholder={
                                         formData.contactMethod === 'email' ? 'your@email.com' :
-                                        formData.contactMethod === 'phone' ? '+1 (555) 123-4567' : '@username'
+                                            formData.contactMethod === 'phone' ? '+1 (555) 123-4567' : '@username'
                                     }
                                     value={formData.contactValue || ''}
                                     onChange={(e) => updateFormData('contactValue', e.target.value)}

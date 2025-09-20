@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { toastUtils } from '@/lib/toast';
+import { toast } from '@/lib/toast';
 
 type IntegrationDetails = {
     id: string;
@@ -39,15 +39,15 @@ export function DeleteIntegrationForm({ integration }: DeleteIntegrationFormProp
             });
 
             if (response.ok) {
-                toastUtils.success('Integration deleted successfully');
+                toast.success({ message: 'Integration deleted successfully' });
                 router.push('/dashboard/integrations');
             } else {
                 const error = await response.json();
-                toastUtils.apiError(error, 'Failed to delete integration');
+                toast.apiError(error, 'Failed to delete integration');
             }
         } catch (error) {
             console.error('Error deleting integration:', error);
-            toastUtils.error('Failed to delete integration');
+            toast.error({ message: 'Failed to delete integration' });
         } finally {
             setIsDeleting(false);
         }
@@ -60,7 +60,7 @@ export function DeleteIntegrationForm({ integration }: DeleteIntegrationFormProp
                 <p className="text-base-content/60 mb-4">
                     To confirm deletion, type <code className="bg-base-200 px-2 py-1 rounded text-sm">delete {integration.name}</code> below:
                 </p>
-                
+
                 <div className="form-control">
                     <input
                         type="text"
@@ -80,7 +80,7 @@ export function DeleteIntegrationForm({ integration }: DeleteIntegrationFormProp
                 >
                     {isDeleting ? 'Deleting...' : 'Delete Integration'}
                 </button>
-                
+
                 <button
                     onClick={() => router.back()}
                     className="btn btn-ghost rounded-xl"

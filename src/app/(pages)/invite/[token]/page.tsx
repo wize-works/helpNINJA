@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { HoverScale } from '@/components/ui/animated-page';
-import { toastUtils } from '@/lib/toast';
+import { toast } from '@/lib/toast';
 
 type InvitationData = {
     id: string;
@@ -90,12 +90,12 @@ export default function InvitationPage() {
 
         // Validate required fields
         if (!formData.firstName.trim() || !formData.lastName.trim() || !formData.password.trim()) {
-            toastUtils.error('Please fill in all required fields');
+            toast.error({ message: 'Please fill in all required fields' });
             return;
         }
 
         if (formData.password.length < 8) {
-            toastUtils.error('Password must be at least 8 characters long');
+            toast.error({ message: 'Password must be at least 8 characters long' });
             return;
         }
 
@@ -116,16 +116,16 @@ export default function InvitationPage() {
             const data: AcceptanceResponse = await response.json();
 
             if (response.ok) {
-                toastUtils.success(`Welcome ${data.user.first_name}! Your account has been created and you've been added to ${data.tenant.name}.`);
+                toast.success({ message: `Welcome ${data.user.first_name}! Your account has been created and you've been added to ${data.tenant.name}.` });
                 setTimeout(() => {
                     window.location.href = data.signin_url;
                 }, 2000);
             } else {
-                toastUtils.apiError(data, 'Failed to accept invitation');
+                toast.apiError(data, 'Failed to accept invitation');
             }
         } catch (error) {
             console.error('Error accepting invitation:', error);
-            toastUtils.error('Failed to accept invitation');
+            toast.error({ message: 'Failed to accept invitation' });
         } finally {
             setAccepting(false);
         }

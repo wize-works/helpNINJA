@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import { Breadcrumb } from "@/components/ui/breadcrumb";
 import { AnimatedPage, StaggerContainer, StaggerChild, HoverScale, FadeIn, SlideIn } from "@/components/ui/animated-page";
-import { toastUtils } from '@/lib/toast';
+import { toast } from '@/lib/toast';
 
 const integrationTypes = [
     {
@@ -236,11 +236,11 @@ export default function IntegrationsMarketplacePage() {
                 throw new Error(error.error || 'Failed to setup integration');
             }
 
-            toastUtils.success(`${integrationTypes.find(t => t.id === provider)?.name} integration configured successfully!`);
+            toast.success({ message: `${integrationTypes.find(t => t.id === provider)?.name} integration configured successfully!` });
             setShowSetupModal(null);
         } catch (error) {
             console.error('Error setting up integration:', error);
-            toastUtils.error(error instanceof Error ? error.message : 'Failed to setup integration');
+            toast.error({ message: error instanceof Error ? error.message : 'Failed to setup integration' });
         } finally {
             setLoading(false);
         }

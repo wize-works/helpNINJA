@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useState } from "react";
-import toast from "react-hot-toast";
+import { toast } from "@/lib/toast";
 import DomainVerification from "@/components/domain-verification";
 import { HoverScale } from "@/components/ui/animated-page";
 import { useTenant } from "@/components/tenant-context";
@@ -78,13 +78,13 @@ export default function SiteWizardModal({
 
     const createSite = async () => {
         if (!domain.trim() || !siteName.trim()) {
-            toast.error("Please enter both domain and site name");
+            toast.error({ message: "Please enter both domain and site name" });
             return;
         }
 
         const domainRegex = /^[a-zA-Z0-9]([a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(\.[a-zA-Z0-9]([a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)*$/;
         if (!domainRegex.test(domain.toLowerCase().trim())) {
-            toast.error("Enter a valid domain (e.g., example.com)");
+            toast.error({ message: "Enter a valid domain (e.g., example.com)" });
             return;
         }
 
@@ -105,13 +105,13 @@ export default function SiteWizardModal({
                 const newSite = await res.json();
                 setSites(prev => [...prev, newSite]);
                 setCurrentSite(newSite);
-                toast.success("Site created successfully!");
+                toast.success({ message: "Site created successfully!" });
             } else {
                 const error = await res.json();
                 toast.error(error.error || "Failed to create site");
             }
         } catch {
-            toast.error("Something went wrong");
+            toast.error({ message: "Something went wrong" });
         } finally {
             setSaving(false);
         }
@@ -119,12 +119,12 @@ export default function SiteWizardModal({
 
     const ingestContent = async () => {
         if (!currentSite) {
-            toast.error("No site selected");
+            toast.error({ message: "No site selected" });
             return;
         }
 
         if (!ingestInput.trim()) {
-            toast.error("Please enter content to ingest");
+            toast.error({ message: "Please enter content to ingest" });
             return;
         }
 
@@ -165,7 +165,7 @@ export default function SiteWizardModal({
                     successMessage = `✍️ Manual content added successfully!`;
                 }
 
-                toast.success(successMessage);
+                toast.success({ message: successMessage });
                 return true;
             } else {
                 const error = await res.json();
@@ -173,7 +173,7 @@ export default function SiteWizardModal({
                 return false;
             }
         } catch {
-            toast.error("Something went wrong during ingestion");
+            toast.error({ message: "Something went wrong during ingestion" });
             return false;
         } finally {
             setIngestLoading(false);
@@ -235,7 +235,7 @@ export default function SiteWizardModal({
     return (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm">
             <div className="bg-base-300 rounded-2xl shadow-2xl w-full max-w-4xl max-h-[90vh] overflow-y-auto mx-4">
-                <div className="sticky top-0 bg-base-100 border-b border-base-200 px-6 py-4 rounded-t-2xl">
+                <div className="sticky top-0 bg-base-100 border-b border-base-200 px-6 py-4 rounded-t-2xl z-10">
                     <div className="flex items-center justify-between">
                         <div>
                             <h2 className="text-2xl font-bold text-base-content">Site Setup Wizard</h2>
@@ -400,7 +400,7 @@ export default function SiteWizardModal({
                                                         if (verified) {
                                                             setCurrentSite(prev => prev ? { ...prev, verified: true } : null);
                                                             setSites(prev => prev.map(s => s.id === currentSite.id ? { ...s, verified: true } : s));
-                                                            toast.success("Domain verified successfully!");
+                                                            toast.success({ message: "Domain verified successfully!" });
                                                         }
                                                     }}
                                                 />
@@ -425,7 +425,7 @@ export default function SiteWizardModal({
                                                                 </div>
                                                                 <button
                                                                     onClick={() => {
-                                                                        toast.success("Verification skipped. You can complete this later from your dashboard.");
+                                                                        toast.success({ message: "Verification skipped. You can complete this later from your dashboard." });
                                                                         setStep(2);
                                                                     }}
                                                                     className="btn btn-outline btn-info rounded-xl"

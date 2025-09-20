@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from 'react';
+import { tagClass } from '@/lib/tags';
 
 type CuratedAnswer = {
     id: string;
@@ -23,64 +24,106 @@ type RagResult = {
     source: string;
 };
 
+type FeedbackItem = {
+    id: string;
+    title: string;
+    url?: string;
+    type: string;
+    status: string;
+    priority: string;
+    createdAt: string;
+    siteDomain?: string;
+    snippet: string;
+};
+
 interface SearchResultsViewerProps {
     curatedAnswers: CuratedAnswer[];
     ragResults: RagResult[];
     query: string;
+    conversations?: Array<{
+        id: string;
+        sessionId: string;
+        lastMessageAt: string;
+        siteDomain?: string;
+        snippet: string;
+        tags?: string[];
+    }>;
+    feedback?: FeedbackItem[];
 }
 
 export default function SearchResultsViewer({
     curatedAnswers,
     ragResults,
-    query
+    query,
+    conversations = [],
+    feedback = []
 }: SearchResultsViewerProps) {
-    const [activeTab, setActiveTab] = useState<'curated' | 'documents'>('curated');
-    const [expandedResults, setExpandedResults] = useState<Set<string>>(new Set());
+    const [activeTab, setActiveTab] = useState<'curated' | 'documents' | 'conversations' | 'feedback'>('curated');
 
-    const toggleExpanded = (id: string) => {
-        setExpandedResults(prev => {
-            const newSet = new Set(prev);
-            if (newSet.has(id)) {
-                newSet.delete(id);
-            } else {
-                newSet.add(id);
+    const rtf = new Intl.RelativeTimeFormat(undefined, { numeric: 'auto' });
+    const formatRelativeTime = (date: Date) => {
+        const DIVISIONS: { amount: number; unit: Intl.RelativeTimeFormatUnit }[] = [
+            { amount: 60, unit: 'second' },
+            { amount: 60, unit: 'minute' },
+            { amount: 24, unit: 'hour' },
+            { amount: 7, unit: 'day' },
+            { amount: 4.34524, unit: 'week' },
+            { amount: 12, unit: 'month' },
+            { amount: Infinity, unit: 'year' }
+        ];
+        let duration = (date.getTime() - Date.now()) / 1000;
+        for (const division of DIVISIONS) {
+            if (Math.abs(duration) < division.amount) {
+                return rtf.format(Math.round(duration), division.unit);
             }
-            return newSet;
-        });
+            duration /= division.amount;
+        }
+        return date.toLocaleString();
     };
 
+    const escapeHtml = (str: string) =>
+        str
+            .replace(/&/g, '&amp;')
+            .replace(/</g, '&lt;')
+            .replace(/>/g, '&gt;')
+            .replace(/"/g, '&quot;')
+            .replace(/'/g, '&#39;');
+
+    const escapeRegExp = (str: string) => str.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+
     const highlightQuery = (text: string, query: string) => {
-        if (!query || query.length < 2) return text;
+        if (!text) return '';
+        const escaped = escapeHtml(text);
+        if (!query || query.length < 2) return escaped;
 
-        const words = query.toLowerCase().split(' ').filter(w => w.length > 2);
-        let highlightedText = text;
+        const words = query
+            .split(/\s+/)
+            .map(w => w.trim())
+            .filter(w => w.length > 2);
 
-        words.forEach(word => {
-            const regex = new RegExp(`(${word})`, 'gi');
-            highlightedText = highlightedText.replace(regex, '<mark class="bg-warning/30 text-warning-content">$1</mark>');
-        });
+        if (words.length === 0) return escaped;
 
+        let highlightedText = escaped;
+        for (const word of words) {
+            const regex = new RegExp(`(${escapeRegExp(word)})`, 'gi');
+            highlightedText = highlightedText.replace(
+                regex,
+                '<mark class="bg-warning/30 text-warning-content">$1</mark>'
+            );
+        }
         return highlightedText;
     };
 
-    const getRelevanceColor = (score: number) => {
-        if (score >= 0.8) return 'text-success';
-        if (score >= 0.6) return 'text-warning';
-        return 'text-error';
-    };
 
-    if (curatedAnswers.length === 0 && ragResults.length === 0) {
+
+    if (curatedAnswers.length === 0 && ragResults.length === 0 && conversations.length === 0 && feedback.length === 0) {
         return (
-            <div className="card bg-base-100 shadow-xl rounded-2xl">
-                <div className="card-body text-center py-12">
-                    <div className="w-16 h-16 bg-base-200/60 rounded-xl flex items-center justify-center mx-auto mb-4">
-                        <i className="fa-duotone fa-solid fa-search text-2xl text-base-content/40" aria-hidden />
-                    </div>
-                    <h3 className="font-semibold text-lg mb-2">No Results Found</h3>
-                    <p className="text-base-content/60">
-                        No curated answers or documents match your query. Try different keywords or add more content to your knowledge base.
-                    </p>
+            <div className="text-center py-12">
+                <div className="w-16 h-16 bg-base-200/60 rounded-xl flex items-center justify-center mx-auto mb-4">
+                    <i className="fa-duotone fa-solid fa-search text-2xl text-base-content/40" aria-hidden />
                 </div>
+                <h3 className="font-semibold text-lg mb-2">No results</h3>
+                <p className="text-base-content/60">Try different keywords or add more content to your knowledge base.</p>
             </div>
         );
     }
@@ -88,25 +131,43 @@ export default function SearchResultsViewer({
     return (
         <div className="space-y-6">
             {/* Tabs */}
-            <div className="tabs tabs-bordered">
-                <button
-                    className={`tab tab-lg ${activeTab === 'curated' ? 'tab-active' : ''}`}
+            <div className="tabs tabs-box tabs-lg space-x-4" role='tablist' aria-label='Search Result Categories'>
+                <button role='tab'
+                    className={`tab px-4 ${activeTab === 'curated' ? 'tab-active' : ''}`}
                     onClick={() => setActiveTab('curated')}
+                    aria-label='Curated Answers'
                 >
                     <i className="fa-duotone fa-solid fa-star mr-2" aria-hidden />
                     Curated Answers ({curatedAnswers.length})
                 </button>
-                <button
-                    className={`tab tab-lg ${activeTab === 'documents' ? 'tab-active' : ''}`}
+                <button role='tab'
+                    className={`tab px-4 ${activeTab === 'documents' ? 'tab-active' : ''}`}
                     onClick={() => setActiveTab('documents')}
+                    aria-label='Documents'
                 >
                     <i className="fa-duotone fa-solid fa-file-text mr-2" aria-hidden />
                     Documents ({ragResults.length})
                 </button>
+                <button role='tab'
+                    className={`tab px-4 ${activeTab === 'conversations' ? 'tab-active' : ''}`}
+                    onClick={() => setActiveTab('conversations')}
+                    aria-label='Conversations'
+                >
+                    <i className="fa-duotone fa-solid fa-messages mr-2" aria-hidden />
+                    Conversations ({conversations.length})
+                </button>
+                <button role='tab'
+                    className={`tab px-4 ${activeTab === 'feedback' ? 'tab-active' : ''}`}
+                    onClick={() => setActiveTab('feedback')}
+                    aria-label='Feedback'
+                >
+                    <i className="fa-duotone fa-solid fa-comments mr-2" aria-hidden />
+                    Feedback ({feedback.length})
+                </button>
             </div>
 
             {/* Content */}
-            <div className="space-y-4">
+            <div className="space-y-6 bg-base-100 p-6 rounded-lg border border-base-200">
                 {activeTab === 'curated' && (
                     <>
                         {curatedAnswers.length === 0 ? (
@@ -116,67 +177,42 @@ export default function SearchResultsViewer({
                                 <p className="text-sm">Consider creating a curated answer for this query</p>
                             </div>
                         ) : (
-                            curatedAnswers.map((answer, index) => (
-                                <div key={answer.id} className="card bg-base-100 shadow-xl rounded-2xl">
-                                    <div className="card-body">
-                                        <div className="flex items-start justify-between mb-3">
-                                            <div className="flex items-center gap-3">
-                                                <div className="w-8 h-8 bg-primary/20 text-primary rounded-lg flex items-center justify-center font-bold text-sm">
-                                                    {index + 1}
-                                                </div>
-                                                <div className="flex items-center gap-2">
-                                                    <div className="badge badge-primary badge-sm">
-                                                        Priority {answer.priority}
-                                                    </div>
-                                                    <div className="badge badge-success badge-sm">
-                                                        {Math.round(answer.confidence * 100)}% confidence
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        </div>
-
-                                        <div className="space-y-3">
-                                            <div>
-                                                <h4 className="font-semibold text-base-content mb-2">Question:</h4>
-                                                <div
-                                                    className="text-base-content/80"
-                                                    dangerouslySetInnerHTML={{
-                                                        __html: highlightQuery(answer.question, query)
-                                                    }}
-                                                />
-                                            </div>
-
-                                            <div>
-                                                <h4 className="font-semibold text-base-content mb-2">Answer:</h4>
-                                                <div
-                                                    className="prose max-w-none text-base-content/80"
-                                                    dangerouslySetInnerHTML={{
-                                                        __html: highlightQuery(answer.answer, query)
-                                                    }}
-                                                />
-                                            </div>
-
-                                            {(answer.keywords.length > 0 || answer.tags.length > 0) && (
-                                                <div>
-                                                    <h4 className="font-semibold text-base-content mb-2">Keywords & Tags:</h4>
-                                                    <div className="flex flex-wrap gap-2">
-                                                        {answer.keywords.map((keyword) => (
-                                                            <span key={keyword} className="badge badge-primary badge-sm">
-                                                                {keyword}
-                                                            </span>
-                                                        ))}
-                                                        {answer.tags.map((tag) => (
-                                                            <span key={tag} className="badge badge-secondary badge-sm">
-                                                                {tag}
-                                                            </span>
-                                                        ))}
-                                                    </div>
-                                                </div>
+                            curatedAnswers.map((answer, index) => {
+                                const answerSnippet = answer.answer.length > 320 ? `${answer.answer.slice(0, 320)}…` : answer.answer;
+                                return (
+                                    <article key={answer.id} className="space-y-1 pb-6 border-b border-base-200 last:border-b-0">
+                                        <div className="flex items-center gap-2 text-xs text-base-content/60">
+                                            <span className="badge badge-ghost badge-xs">Curated</span>
+                                            <span>Priority {answer.priority}</span>
+                                            <span>•</span>
+                                            <span>{Math.round(answer.confidence * 100)}% confidence</span>
+                                            {index === 0 && (
+                                                <span className="badge badge-primary badge-xs">Featured</span>
                                             )}
                                         </div>
-                                    </div>
-                                </div>
-                            ))
+                                        <h3 className="text-xl leading-snug">
+                                            <span
+                                                className="link link-primary hover:text-primary/80"
+                                                dangerouslySetInnerHTML={{ __html: highlightQuery(answer.question, query) }}
+                                            />
+                                        </h3>
+                                        <div
+                                            className="text-sm text-base-content/80"
+                                            dangerouslySetInnerHTML={{ __html: highlightQuery(answerSnippet, query) }}
+                                        />
+                                        {(answer.keywords.length > 0 || answer.tags.length > 0) && (
+                                            <div className="flex flex-wrap gap-2 mt-2">
+                                                {answer.keywords.map((keyword) => (
+                                                    <span key={keyword} className="badge badge-outline badge-xs">{keyword}</span>
+                                                ))}
+                                                {answer.tags.map((tag) => (
+                                                    <span key={tag} className="badge badge-outline badge-xs">{tag}</span>
+                                                ))}
+                                            </div>
+                                        )}
+                                    </article>
+                                );
+                            })
                         )}
                     </>
                 )}
@@ -190,77 +226,136 @@ export default function SearchResultsViewer({
                                 <p className="text-sm">Try different keywords or add more content</p>
                             </div>
                         ) : (
-                            ragResults.map((result, index) => {
-                                const isExpanded = expandedResults.has(result.id);
+                            ragResults.map((result) => {
+                                const snippet = result.snippet || (result.content.length > 220 ? `${result.content.slice(0, 220)}…` : result.content);
+                                const displayUrl = result.url || '';
+                                const hostname = (() => {
+                                    try {
+                                        return displayUrl ? new URL(displayUrl).hostname : '';
+                                    } catch {
+                                        return '';
+                                    }
+                                })();
                                 return (
-                                    <div key={result.id} className="card bg-base-100 shadow-xl rounded-2xl">
-                                        <div className="card-body">
-                                            <div className="flex items-start justify-between mb-3">
-                                                <div className="flex items-center gap-3">
-                                                    <div className="w-8 h-8 bg-secondary/20 text-secondary rounded-lg flex items-center justify-center font-bold text-sm">
-                                                        {index + 1}
-                                                    </div>
-                                                    <div>
-                                                        <h4 className="font-semibold text-base-content line-clamp-1">
-                                                            {result.title}
-                                                        </h4>
-                                                        {result.url && (
-                                                            <a
-                                                                href={result.url}
-                                                                target="_blank"
-                                                                rel="noreferrer"
-                                                                className="text-primary hover:text-primary/80 text-sm transition-colors"
-                                                            >
-                                                                {result.url}
-                                                                <i className="fa-duotone fa-solid fa-external-link text-xs ml-1" aria-hidden />
-                                                            </a>
-                                                        )}
-                                                    </div>
-                                                </div>
-
-                                                <div className="flex items-center gap-2">
-                                                    <div className={`text-sm font-medium ${getRelevanceColor(result.relevance_score)}`}>
-                                                        {Math.round(result.relevance_score * 100)}% relevance
-                                                    </div>
-                                                    <button
-                                                        className="btn btn-ghost btn-sm btn-square rounded-lg"
-                                                        onClick={() => toggleExpanded(result.id)}
-                                                    >
-                                                        <i className={`fa-duotone fa-solid ${isExpanded ? 'fa-chevron-up' : 'fa-chevron-down'}`} aria-hidden />
-                                                    </button>
-                                                </div>
-                                            </div>
-
-                                            <div>
-                                                {isExpanded ? (
-                                                    <div
-                                                        className="text-base-content/80 text-sm leading-relaxed"
-                                                        dangerouslySetInnerHTML={{
-                                                            __html: highlightQuery(result.content, query)
+                                    <article key={result.id} className="pb-6 border-b border-base-200 last:border-b-0">
+                                        <h3 className="text-xl leading-snug">
+                                            {result.url ? (
+                                                <a href={result.url} target="_blank" rel="noreferrer" className="link link-primary hover:text-primary/80">
+                                                    {result.title || result.url}
+                                                </a>
+                                            ) : (
+                                                <span className="text-base-content">{result.title || 'Document'}</span>
+                                            )}
+                                        </h3>
+                                        {displayUrl && (
+                                            <div className="flex items-center gap-2 text-xs text-success/70 truncate mt-1">
+                                                {hostname ? (
+                                                    <span
+                                                        aria-hidden
+                                                        className="inline-block w-4 h-4 rounded-[3px] bg-base-200"
+                                                        style={{
+                                                            backgroundImage: `url(https://icons.duckduckgo.com/ip3/${hostname}.ico)`,
+                                                            backgroundSize: 'cover',
                                                         }}
                                                     />
-                                                ) : (
-                                                    <div
-                                                        className="text-base-content/80 text-sm leading-relaxed"
-                                                        dangerouslySetInnerHTML={{
-                                                            __html: highlightQuery(result.snippet, query)
-                                                        }}
-                                                    />
-                                                )}
-
-                                                {!isExpanded && result.content.length > result.snippet.length && (
-                                                    <button
-                                                        className="text-primary hover:text-primary/80 text-sm mt-2 transition-colors"
-                                                        onClick={() => toggleExpanded(result.id)}
-                                                    >
-                                                        Show more...
-                                                    </button>
-                                                )}
+                                                ) : null}
+                                                <span className="truncate">{displayUrl}</span>
                                             </div>
-                                        </div>
-                                    </div>
+                                        )}
+                                        <div
+                                            className="text-sm text-base-content/80 mt-1"
+                                            dangerouslySetInnerHTML={{ __html: highlightQuery(snippet, query) }}
+                                        />
+                                    </article>
                                 );
                             })
+                        )}
+                    </>
+                )}
+
+                {activeTab === 'conversations' && (
+                    <>
+                        {conversations.length === 0 ? (
+                            <div className="text-center py-8 text-base-content/60">
+                                <i className="fa-duotone fa-solid fa-messages text-3xl mb-3 block" aria-hidden />
+                                <p>No conversations found</p>
+                            </div>
+                        ) : (
+                            conversations.map((c) => (
+                                <article key={c.id} className="pb-6 border-b border-base-200 last:border-b-0">
+                                    <h3 className="text-xl leading-snug">
+                                        <a href={`/dashboard/conversations/${c.id}`} className="link link-primary hover:text-primary/80">
+                                            Conversation {c.sessionId}
+                                        </a>
+                                    </h3>
+                                    <div className="text-xs text-base-content/60 mt-1 flex items-center gap-2 flex-wrap">
+                                        {c.siteDomain ? <span>{c.siteDomain}</span> : null}
+                                        {c.siteDomain ? <span>•</span> : null}
+                                        <time
+                                            dateTime={new Date(c.lastMessageAt).toISOString()}
+                                            title={new Date(c.lastMessageAt).toLocaleString()}
+                                        >
+                                            {formatRelativeTime(new Date(c.lastMessageAt))}
+                                        </time>
+                                        {c.tags && c.tags.length > 0 && (
+                                            <span className="hidden sm:inline">•</span>
+                                        )}
+                                        {c.tags?.map(tag => (
+                                            <span key={tag} className={`badge ${tagClass(tag)} badge-sm capitalize`}>{tag.replace('-', ' ')}</span>
+                                        ))}
+                                    </div>
+                                    {c.snippet && (
+                                        <div
+                                            className="text-sm text-base-content/80 mt-1"
+                                            dangerouslySetInnerHTML={{ __html: highlightQuery(c.snippet, query) }}
+                                        />
+                                    )}
+                                </article>
+                            ))
+                        )}
+                    </>
+                )}
+
+                {activeTab === 'feedback' && (
+                    <>
+                        {feedback.length === 0 ? (
+                            <div className="text-center py-8 text-base-content/60">
+                                <i className="fa-duotone fa-solid fa-comments text-3xl mb-3 block" aria-hidden />
+                                <p>No feedback found</p>
+                            </div>
+                        ) : (
+                            feedback.map((f) => (
+                                <article key={f.id} className="pb-6 border-b border-base-200 last:border-b-0">
+                                    <h3 className="text-xl leading-snug">
+                                        {f.url ? (
+                                            <a href={f.url} target="_blank" rel="noreferrer" className="link link-primary hover:text-primary/80">
+                                                {f.title}
+                                            </a>
+                                        ) : (
+                                            <a href={`/dashboard/feedback?search=${encodeURIComponent(f.title)}`} className="link link-primary hover:text-primary/80">
+                                                {f.title}
+                                            </a>
+                                        )}
+                                    </h3>
+                                    <div className="flex items-center gap-2 text-xs text-base-content/60 mt-1">
+                                        {f.siteDomain ? <span>{f.siteDomain}</span> : null}
+                                        {f.siteDomain ? <span>•</span> : null}
+                                        <span className={`badge badge-ghost badge-xs`}>{f.type.replace('_', ' ')}</span>
+                                        <span className={`badge badge-outline badge-xs`}>{f.status}</span>
+                                        <span className={`badge badge-outline badge-xs`}>{f.priority}</span>
+                                        <span>•</span>
+                                        <time dateTime={new Date(f.createdAt).toISOString()} title={new Date(f.createdAt).toLocaleString()}>
+                                            {formatRelativeTime(new Date(f.createdAt))}
+                                        </time>
+                                    </div>
+                                    {f.snippet && (
+                                        <div
+                                            className="text-sm text-base-content/80 mt-1"
+                                            dangerouslySetInnerHTML={{ __html: highlightQuery(f.snippet, query) }}
+                                        />
+                                    )}
+                                </article>
+                            ))
                         )}
                     </>
                 )}

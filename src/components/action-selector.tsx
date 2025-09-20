@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { HoverScale } from './ui/animated-page';
-import { toastUtils } from '@/lib/toast';
+import { toast } from '@/lib/toast';
 import Link from 'next/link';
 
 type Integration = {
@@ -63,15 +63,15 @@ export default function ActionSelector({
 
     const addDestination = () => {
         if (newDestination.type === 'integration' && !newDestination.integrationId) {
-            toastUtils.validation('Please select an integration');
+            toast.validation({ message: 'Please select an integration' });
             return;
         }
         if (newDestination.type === 'email' && !newDestination.email) {
-            toastUtils.validation('Please enter an email address');
+            toast.validation({ message: 'Please enter an email address' });
             return;
         }
         if (newDestination.type === 'webhook' && !newDestination.webhookUrl) {
-            toastUtils.validation('Please enter a webhook URL');
+            toast.validation({ message: 'Please enter a webhook URL' });
             return;
         }
 

@@ -385,11 +385,12 @@ async function getAnalyticsData(tenantId: string, opts: { days: number; siteId?:
     };
 }
 
-export default async function AnalyticsPage({ searchParams }: { searchParams?: { range?: string; siteId?: string } }) {
+export default async function AnalyticsPage({ searchParams }: { searchParams?: Promise<{ range?: string; siteId?: string }> }) {
     const tenantId = await getTenantIdStrict();
-    const range = (searchParams?.range as '7d' | '30d' | '90d' | 'all') || '30d'
+    const params = (await searchParams) ?? {};
+    const range = (params.range as '7d' | '30d' | '90d' | 'all') || '30d'
     const days = range === '7d' ? 7 : range === '90d' ? 90 : range === 'all' ? 365 : 30
-    const siteId = searchParams?.siteId || null
+    const siteId = params.siteId || null
     let siteLabel: string | null = null;
     if (siteId) {
         try {
