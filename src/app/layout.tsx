@@ -7,7 +7,7 @@ import { Toaster } from "react-hot-toast";
 import Clarity from "@/components/clarity";
 import ConditionalFooter from "@/components/conditional-footer";
 
-export { metadata } from "./metadata";
+export { metadata, viewport } from "./metadata";
 
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
