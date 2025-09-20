@@ -63,11 +63,6 @@ export const metadata: Metadata = {
     alternates: {
         canonical: '/',
     },
-    // UI: PWA and theme hints
-    themeColor: [
-        { media: '(prefers-color-scheme: light)', color: '#ffffff' },
-        { media: '(prefers-color-scheme: dark)', color: '#0b0b0b' },
-    ],
 };
 
 export const viewport: Viewport = {
