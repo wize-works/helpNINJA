@@ -12,6 +12,7 @@ interface Filters {
     priority?: string;
     search?: string;
     siteId?: string;
+    days?: string;
 }
 
 interface SiteOption {
@@ -26,9 +27,18 @@ interface FeedbackContentProps {
     sites: SiteOption[];
 }
 
-export default function FeedbackContent({ tenantId, filters, sites }: FeedbackContentProps) {
+export default function FeedbackContent({ tenantId }: FeedbackContentProps) {
     return (
         <StaggerContainer>
+            {/* Header with Filters */}
+            <StaggerChild>
+                <div className="flex items-center justify-between mb-6">
+                    <div>
+                        <h1 className="text-2xl font-semibold text-base-content">Feedback</h1>
+                        <p className="text-sm text-base-content/60">Analytics and management of user-submitted feedback</p>
+                    </div>
+                </div>
+            </StaggerChild>
             {/* Analytics Section */}
             <StaggerChild>
                 <div className="card bg-base-100 rounded-2xl shadow-sm hover:shadow-md transition-all duration-300 mb-10">

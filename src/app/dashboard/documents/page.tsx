@@ -171,7 +171,7 @@ export default async function DocumentsPage({
                                     <div className="flex items-center gap-3">
                                         <FilterControls filters={filters} sites={sites} />
                                         <HoverScale scale={1.02}>
-                                            <a href="/dashboard/sources" className="btn btn-outline btn-sm rounded-lg">
+                                            <a href="/dashboard/sources" className="btn btn-outline rounded-xl">
                                                 <i className="fa-duotone fa-solid fa-database mr-2" aria-hidden />
                                                 Manage Sources
                                             </a>

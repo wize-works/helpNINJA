@@ -1,64 +1,76 @@
 "use client";
 import { useRouter, useSearchParams, usePathname } from 'next/navigation';
-import { useState, useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { HoverScale } from '@/components/ui/animated-page';
+import SiteSelector from '@/components/site-selector';
+
+type Range = '7d' | '30d' | '90d' | 'all'
 
 interface Filters {
-    escalated?: string;
-    range?: string;
-    search?: string;
-    site?: string;
+    range?: Range;
+    siteId?: string;
 }
 
-function useDebounced<T>(value: T, delay = 400) {
-    const [v, setV] = useState(value);
-    useEffect(() => {
-        const t = setTimeout(() => setV(value), delay);
-        return () => clearTimeout(t);
-    }, [value, delay]);
-    return v;
-}
+const LS_RANGE_KEY = 'hn_analytics_range'
+const LS_SITE_KEY = 'hn_analytics_site'
 
-interface SiteOpt { id: string; domain: string; name: string }
-
-export default function FilterControls({ filters, sites = [] }: { filters: Filters; sites?: SiteOpt[] }) {
+export default function FilterControls({ filters }: { filters: Filters }) {
     const router = useRouter();
     const searchParams = useSearchParams();
     const pathname = usePathname();
     const [open, setOpen] = useState(false);
     const [local, setLocal] = useState<Filters>(filters);
-    const debouncedSearch = useDebounced(local.search);
 
-    // Push changes when debounced search changes
     useEffect(() => {
-        applyFilters({ ...local, search: debouncedSearch });
+        // Initialize from localStorage if URL lacks params
+        const hasRange = !!searchParams.get('range');
+        const hasSite = !!searchParams.get('siteId');
+        const next = new URLSearchParams(searchParams.toString());
+        let changed = false;
+        if (!hasRange) {
+            const storedRange = (typeof window !== 'undefined' ? (localStorage.getItem(LS_RANGE_KEY) as Range | null) : null);
+            if (storedRange) { next.set('range', storedRange); changed = true }
+        }
+        if (!hasSite) {
+            const storedSite = typeof window !== 'undefined' ? localStorage.getItem(LS_SITE_KEY) : null;
+            if (storedSite != null && storedSite.length > 0) { next.set('siteId', storedSite); changed = true }
+        }
+        if (changed) router.replace(`${pathname}?${next.toString()}`)
         // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [debouncedSearch]);
+    }, [])
 
     function applyFilters(next: Filters, replace = true) {
         const params = new URLSearchParams(searchParams?.toString() || '');
-        ['escalated', 'range', 'search', 'site'].forEach(k => {
-            const val = (next as Record<string, string | undefined>)[k];
-            if (val) params.set(k, val); else params.delete(k);
-        });
+        const range = next.range || undefined;
+        const siteId = next.siteId || undefined;
+        if (range) params.set('range', range); else params.delete('range');
+        if (siteId) params.set('siteId', siteId); else params.delete('siteId');
+        try { if (range) localStorage.setItem(LS_RANGE_KEY, range) } catch { }
+        try { localStorage.setItem(LS_SITE_KEY, siteId || '') } catch { }
         const url = `${pathname}?${params.toString()}`;
         if (replace) router.replace(url); else router.push(url);
     }
 
     function clearFilters() {
         setLocal({});
+        try { localStorage.removeItem(LS_RANGE_KEY); localStorage.removeItem(LS_SITE_KEY); } catch { }
         router.replace(pathname);
     }
+
+    const activeFilterCount = (filters.range ? 1 : 0) + (filters.siteId ? 1 : 0);
 
     return (
         <div className="relative">
             <HoverScale scale={1.02}>
-                <button onClick={() => setOpen(o => !o)} className="btn rounded-xl">
+                <button
+                    onClick={() => setOpen(o => !o)}
+                    className="btn rounded-xl"
+                >
                     <i className="fa-duotone fa-solid fa-filter text-xs" aria-hidden />
                     Filters
-                    {(filters.escalated || filters.range || filters.search || filters.site) && (
+                    {activeFilterCount > 0 && (
                         <span className="ml-1 inline-flex items-center justify-center px-1.5 h-5 text-[10px] rounded bg-primary text-primary-content">
-                            {(['escalated', 'range', 'search', 'site'] as (keyof Filters)[]).filter(k => filters[k]).length}
+                            {activeFilterCount}
                         </span>
                     )}
                     <i className={`fa-duotone fa-solid fa-chevron-${open ? 'up' : 'down'} text-[10px] opacity-70`} />
@@ -68,57 +80,33 @@ export default function FilterControls({ filters, sites = [] }: { filters: Filte
                 <div className="absolute right-0 mt-2 w-80 z-20">
                     <div className="card bg-base-100 rounded-2xl shadow-lg border border-base-300/40 p-4 space-y-4">
                         <div className="flex items-center justify-between">
-                            <h4 className="text-sm font-semibold">Filter Conversations</h4>
+                            <h4 className="text-sm font-semibold">Filter Analytics</h4>
                             <button onClick={() => setOpen(false)} className="text-xs opacity-60 hover:opacity-100">Close</button>
                         </div>
                         <div className="space-y-3">
                             <div className="space-y-1">
-                                <label className="text-xs font-medium uppercase tracking-wide opacity-70">Search</label>
-                                <input
-                                    className="input input-sm input-bordered w-full"
-                                    placeholder="Session ID"
-                                    value={local.search || ''}
-                                    onChange={e => setLocal(l => ({ ...l, search: e.target.value || undefined }))}
-                                />
-                            </div>
-                            <div className="space-y-1">
-                                <label className="text-xs font-medium uppercase tracking-wide opacity-70">Escalated</label>
-                                <select
-                                    className="select select-sm select-bordered w-full"
-                                    value={local.escalated || ''}
-                                    onChange={e => setLocal(l => ({ ...l, escalated: e.target.value || undefined }))}
-                                >
-                                    <option value="">Any</option>
-                                    <option value="1">Only escalated</option>
-                                    <option value="0">No escalations</option>
-                                </select>
-                            </div>
-                            <div className="space-y-1">
                                 <label className="text-xs font-medium uppercase tracking-wide opacity-70">Time Range</label>
                                 <div className="grid grid-cols-4 gap-1">
-                                    {['24h', '7d', '30d'].map(r => (
+                                    {(['7d', '30d', '90d', 'all'] as Range[]).map(r => (
                                         <button
                                             key={r}
                                             onClick={() => setLocal(l => ({ ...l, range: l.range === r ? undefined : r }))}
                                             className={`text-xs px-2 py-1 rounded-lg border transition-colors ${local.range === r ? 'bg-primary text-primary-content border-primary' : 'border-base-300/40 bg-base-200/60 hover:bg-base-200'}`}
                                         >
-                                            {r}
+                                            {r === 'all' ? 'ALL' : r.toUpperCase()}
                                         </button>
                                     ))}
                                 </div>
                             </div>
                             <div className="space-y-1">
                                 <label className="text-xs font-medium uppercase tracking-wide opacity-70">Site</label>
-                                <select
-                                    className="select select-sm select-bordered w-full"
-                                    value={local.site || ''}
-                                    onChange={e => setLocal(l => ({ ...l, site: e.target.value || undefined }))}
-                                >
-                                    <option value="">All sites</option>
-                                    {sites.map(s => (
-                                        <option key={s.id} value={s.id}>{s.domain || s.name}</option>
-                                    ))}
-                                </select>
+                                <SiteSelector
+                                    value={local.siteId || ''}
+                                    onChange={(siteId) => setLocal(l => ({ ...l, siteId: siteId || '' }))}
+                                    allowNone
+                                    noneLabel="All sites"
+                                    className="select-sm w-full"
+                                />
                             </div>
                         </div>
                         <div className="flex items-center justify-between pt-2 gap-2">

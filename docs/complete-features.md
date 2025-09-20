@@ -206,6 +206,14 @@ Core features (present)
   - **Complete data sources**: All analytics metrics now pull from real database data including conversation trends, confidence distribution, and top knowledge sources
   - Dashboard showing message volume, escalations, integration status, response times with 30-day trends and growth calculations
   - Files: src/app/dashboard/analytics/page.tsx, src/app/api/analytics/integration-health/route.ts, src/components/analytics/integration-health-dashboard.tsx
+  - **Question Insights (NEW)**: Top Questions and Low-Confidence Questions
+    - Top Questions: Groups normalized user questions over the selected range (7/30/90 days; All time capped to 365 days) with counts and average assistant confidence; links to example conversations and a Find all drill-down
+    - Low-Confidence Questions: Highlights questions frequently answered with confidence < 55%, sorted by frequency
+    - Privacy: Simple on-the-fly redaction masks obvious emails and phone numbers in preview text
+    - Performance: Pure SQL aggregation scoped to tenant and time window; minimum frequency threshold prevents noise; All time uses a safe cap (365d)
+    - Filters: Range and site filters persist via localStorage and URL. Active filters are shown as chips in the header. Filter UI follows the shared dropdown pattern used elsewhere (Apply/Reset, count badge).
+    - Drill-downs: Each question includes a Find all link to Conversations, pre-filtered by text (`q`), range, and site.
+    - Files: Implemented inline in `src/app/dashboard/analytics/page.tsx` via `TopQuestionsSection` and `TopQuestionsCard`; standardized filter dropdown in `src/app/dashboard/analytics/filter-controls.tsx` (aligned with `/dashboard/answers`). Conversations supports `q` in `src/app/dashboard/conversations/page.tsx`.
 - Admin pages
   - Documents: src/app/dashboard/documents/page.tsx and DELETE API src/app/api/documents/[id]/route.ts
     - Document statistics: chunk count, total tokens, content length surfaced in dashboard table (new columns + sorting by chunks/tokens). Derived live via LEFT JOIN aggregate on public.chunks (no duplicate storage). Sort keys: chunks_desc/asc, tokens_desc/asc. Zero-chunk docs highlighted with warning badge.
@@ -293,7 +301,6 @@ Core features (present)
   - **Flexible verification flow**: Domain verification is optional during setup, allowing users to complete wizard without delays
   - **Skip and continue**: Users can skip verification to delegate to team members or complete when convenient
   - **Security awareness**: Clear messaging about verification benefits with appropriate UI indicators for unverified sites
-  - Pages: src/app/(pages)/onboarding/step-1/page.tsx, step-2/page.tsx, step-3/page.tsx
   - Components: src/components/onboarding-progress.tsx, src/components/onboarding-navigation.tsx
   - Features: Progress tracking, site registration with optional verification, live widget preview, installation guide
   - Layout: Custom onboarding layout with branded header and streamlined UX

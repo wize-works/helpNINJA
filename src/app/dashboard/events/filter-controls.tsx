@@ -62,7 +62,7 @@ export default function FilterControls({
             <HoverScale scale={1.02}>
                 <button
                     onClick={() => setOpen(o => !o)}
-                    className="flex items-center gap-2 px-4 py-2 bg-base-200/60 hover:bg-base-200 border border-base-300/40 rounded-lg text-sm font-medium transition-all duration-200"
+                    className="btn rounded-xl"
                 >
                     <i className="fa-duotone fa-solid fa-filter text-xs" aria-hidden />
                     Filters
@@ -134,8 +134,8 @@ export default function FilterControls({
                                                 dateRange: l.dateRange === r ? undefined : r
                                             }))}
                                             className={`text-xs px-2 py-1 rounded-lg border transition-colors ${local.dateRange === r
-                                                    ? 'bg-primary text-primary-content border-primary'
-                                                    : 'border-base-300/40 bg-base-200/60 hover:bg-base-200'
+                                                ? 'bg-primary text-primary-content border-primary'
+                                                : 'border-base-300/40 bg-base-200/60 hover:bg-base-200'
                                                 }`}
                                         >
                                             {r}

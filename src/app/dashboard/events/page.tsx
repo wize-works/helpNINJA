@@ -47,7 +47,7 @@ export default async function EventsPage({ searchParams }: Props) {
                             <div className="flex items-center gap-3">
                                 <FilterControls filters={{ search, event, dateRange }} />
                                 <HoverScale scale={1.02}>
-                                    <a href="/dashboard/analytics" className="btn btn-primary btn-sm rounded-lg">
+                                    <a href="/dashboard/analytics" className="btn btn-primary rounded-xl">
                                         <i className="fa-duotone fa-solid fa-chart-line mr-2" aria-hidden />
                                         Analytics
                                     </a>

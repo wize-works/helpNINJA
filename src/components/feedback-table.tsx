@@ -69,6 +69,8 @@ export function FeedbackTable({ }: FeedbackTableProps) {
     const statusFilter = searchParams.get('status') || '';
     const priorityFilter = searchParams.get('priority') || '';
     const searchFilter = searchParams.get('search') || '';
+    const siteId = searchParams.get('siteId') || '';
+    const days = searchParams.get('days') || '';
 
     const fetchFeedback = useCallback(async () => {
         setLoading(true);
@@ -82,6 +84,8 @@ export function FeedbackTable({ }: FeedbackTableProps) {
             if (statusFilter) params.append('status', statusFilter);
             if (priorityFilter) params.append('priority', priorityFilter);
             if (searchFilter) params.append('search', searchFilter);
+            if (siteId) params.append('siteId', siteId);
+            if (days) params.append('days', days);
 
             const response = await fetch(`/api/feedback?${params.toString()}`);
             if (!response.ok) {
@@ -98,7 +102,7 @@ export function FeedbackTable({ }: FeedbackTableProps) {
         } finally {
             setLoading(false);
         }
-    }, [page, typeFilter, statusFilter, priorityFilter, searchFilter]);
+    }, [page, typeFilter, statusFilter, priorityFilter, searchFilter, siteId, days]);
 
     useEffect(() => {
         fetchFeedback();

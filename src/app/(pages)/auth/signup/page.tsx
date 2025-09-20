@@ -93,7 +93,7 @@ export default function SignUpPage() {
     useEffect(() => {
         // Only redirect to onboarding if user has organization AND has completed payment
         if (isSignedIn && orgLoaded && organization && planCompleted) {
-            router.replace("/onboarding/step-1");
+            router.replace("/dashboard");
         }
         // If user has organization but we're still on org step, they just created org and need plan selection
         else if (isSignedIn && orgLoaded && organization && step === 'org') {

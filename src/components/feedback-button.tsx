@@ -6,7 +6,7 @@ import type { FeedbackFormData } from './feedback-form';
 
 interface FeedbackButtonProps {
     mode?: 'widget' | 'dashboard';
-    variant?: 'primary' | 'secondary' | 'ghost' | 'outline' | 'icon-only';
+    variant?: 'primary' | 'secondary' | 'ghost' | 'outline' | 'icon-only' | 'base';
     size?: 'sm' | 'md' | 'lg';
     tenantId?: string;
     conversationId?: string;
@@ -49,7 +49,7 @@ export default function FeedbackButton({
 
     const getButtonClasses = () => {
         const baseClasses = 'btn transition-all duration-200 hover:scale-105';
-        
+
         const sizeClasses = {
             sm: 'btn-sm',
             md: '',
@@ -61,6 +61,7 @@ export default function FeedbackButton({
             secondary: 'btn-secondary',
             ghost: 'btn-ghost',
             outline: 'btn-outline',
+            base: '',
             'icon-only': 'btn-ghost btn-circle'
         };
 
@@ -71,10 +72,10 @@ export default function FeedbackButton({
 
     const getFloatingClasses = () => {
         const baseFloating = 'fixed z-40 shadow-lg';
-        
+
         const positionClasses = {
             'bottom-right': 'bottom-4 right-4',
-            'bottom-left': 'bottom-4 left-4', 
+            'bottom-left': 'bottom-4 left-4',
             'top-right': 'top-4 right-4',
             'top-left': 'top-4 left-4'
         };
@@ -124,25 +125,21 @@ export default function FeedbackButton({
             {position === 'floating' && tooltip && variant === 'icon-only' ? (
                 <div className="relative">
                     {buttonElement}
-                    
+
                     {/* Tooltip for floating icon button */}
                     {isHovered && (
                         <div
-                            className={`absolute z-50 px-3 py-2 text-sm font-medium text-white bg-gray-900 rounded-lg shadow-sm opacity-100 transition-opacity duration-300 whitespace-nowrap ${
-                                floatingPosition.includes('right') ? 'right-full mr-3' : 'left-full ml-3'
-                            } ${
-                                floatingPosition.includes('bottom') ? 'bottom-0' : 'top-0'
-                            }`}
+                            className={`absolute z-50 px-3 py-2 text-sm font-medium text-white bg-gray-900 rounded-lg shadow-sm opacity-100 transition-opacity duration-300 whitespace-nowrap ${floatingPosition.includes('right') ? 'right-full mr-3' : 'left-full ml-3'
+                                } ${floatingPosition.includes('bottom') ? 'bottom-0' : 'top-0'
+                                }`}
                         >
                             {tooltip}
-                            
+
                             {/* Tooltip arrow */}
                             <div
-                                className={`absolute w-2 h-2 bg-gray-900 transform rotate-45 ${
-                                    floatingPosition.includes('right') ? 'right-[-4px]' : 'left-[-4px]'
-                                } ${
-                                    floatingPosition.includes('bottom') ? 'bottom-3' : 'top-3'
-                                }`}
+                                className={`absolute w-2 h-2 bg-gray-900 transform rotate-45 ${floatingPosition.includes('right') ? 'right-[-4px]' : 'left-[-4px]'
+                                    } ${floatingPosition.includes('bottom') ? 'bottom-3' : 'top-3'
+                                    }`}
                             />
                         </div>
                     )}
@@ -228,7 +225,7 @@ export function DashboardFeedbackButton({
 }: {
     tenantId?: string;
     className?: string;
-    variant?: 'primary' | 'secondary' | 'ghost' | 'outline';
+    variant?: 'primary' | 'secondary' | 'ghost' | 'outline' | 'base';
 }) {
     return (
         <FeedbackButton

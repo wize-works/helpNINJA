@@ -109,43 +109,6 @@ export function TimeRangeFilter({ selectedRange, onRangeChange, className = "" }
     );
 }
 
-type AnalyticsFiltersProps = {
-    selectedSite: string | null;
-    onSiteChange: (siteId: string | null) => void;
-    selectedRange: string;
-    onRangeChange: (range: string) => void;
-    onRefresh?: () => void;
-    className?: string;
-};
+// Legacy props type removed along with the deprecated AnalyticsFilters wrapper.
 
-export function AnalyticsFilters({
-    selectedSite,
-    onSiteChange,
-    selectedRange,
-    onRangeChange,
-    onRefresh,
-    className = ""
-}: AnalyticsFiltersProps) {
-    return (
-        <div className={`flex flex-wrap items-center gap-4 p-4 bg-base-100 rounded-lg border border-base-200 ${className}`}>
-            <SiteFilter
-                selectedSite={selectedSite}
-                onSiteChange={onSiteChange}
-            />
-            <TimeRangeFilter
-                selectedRange={selectedRange}
-                onRangeChange={onRangeChange}
-            />
-            <div className="flex-1"></div>
-            {onRefresh && (
-                <button
-                    onClick={onRefresh}
-                    className="btn btn-ghost btn-sm rounded-lg"
-                    title="Refresh data"
-                >
-                    <i className="fa-duotone fa-solid fa-refresh" />
-                </button>
-            )}
-        </div>
-    );
-}
+// Removed legacy AnalyticsFilters wrapper; use page-specific filter controls instead.

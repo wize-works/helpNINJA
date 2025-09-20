@@ -6,7 +6,6 @@ import toast from "react-hot-toast";
 import DomainVerification from "./domain-verification";
 import WidgetSetupModal from "./widget-setup-modal";
 import WidgetConfigModal from "./widget-config-modal";
-import SiteWizardButton from "./site-wizard-button";
 import SiteWizardLauncher from "./site-wizard-launcher";
 
 type Site = {

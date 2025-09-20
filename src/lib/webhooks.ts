@@ -1,5 +1,4 @@
 import { query } from '@/lib/db';
-import { EscalationReason } from '@/lib/integrations/types';
 import crypto from 'crypto';
 
 export type WebhookEvent = {
@@ -239,29 +238,29 @@ async function processInternalWebhook(
                         }
                     };
 
-                                    // Check if this escalation has rule-based destinations that should override
-                // If this is a rule-based escalation, only forward to integrations that are in the rule destinations
-                if (event.data.rule_id || (event.data.destinations && Array.isArray(event.data.destinations) && event.data.destinations.length > 0)) {
-                    // This is a rule-based escalation - check if this integration should receive it
-                    const ruleDestinations = event.data.destinations as Array<{provider?: string, id?: string}>;
-                    const shouldReceive = ruleDestinations.some(dest => 
-                        dest.provider === integration.provider || dest.id === integration.id
-                    );
-                    
-                    if (!shouldReceive) {
-                        console.log(`⏭️ Skipping ${integration.provider} integration (${integration.id}) - not in rule destinations`);
-                        return true; // Skip this integration
+                    // Check if this escalation has rule-based destinations that should override
+                    // If this is a rule-based escalation, only forward to integrations that are in the rule destinations
+                    if (event.data.rule_id || (event.data.destinations && Array.isArray(event.data.destinations) && event.data.destinations.length > 0)) {
+                        // This is a rule-based escalation - check if this integration should receive it
+                        const ruleDestinations = event.data.destinations as Array<{ provider?: string, id?: string }>;
+                        const shouldReceive = ruleDestinations.some(dest =>
+                            dest.provider === integration.provider || dest.id === integration.id
+                        );
+
+                        if (!shouldReceive) {
+                            console.log(`⏭️ Skipping ${integration.provider} integration (${integration.id}) - not in rule destinations`);
+                            return true; // Skip this integration
+                        }
                     }
-                }
 
-                // Forward directly to this specific integration's provider
-                const provider = getProvider(integration.provider);
-                if (!provider) {
-                    throw new Error(`Provider not found: ${integration.provider}`);
-                }
+                    // Forward directly to this specific integration's provider
+                    const provider = getProvider(integration.provider);
+                    if (!provider) {
+                        throw new Error(`Provider not found: ${integration.provider}`);
+                    }
 
-                console.log(`🎯 Forwarding escalation directly to ${integration.provider} integration (${integration.id})`);
-                const result = await provider.sendEscalation(escalationEvent, integration);
+                    console.log(`🎯 Forwarding escalation directly to ${integration.provider} integration (${integration.id})`);
+                    const result = await provider.sendEscalation(escalationEvent, integration);
 
                     // Simulate an HTTP response for compatibility with existing code
                     response = {
@@ -468,13 +467,13 @@ export const webhookEvents = {
         }),
 
     escalationTriggered: async (
-        tenantId: string, 
-        conversationId: string, 
-        reason: string, 
-        confidence?: number, 
+        tenantId: string,
+        conversationId: string,
+        reason: string,
+        confidence?: number,
         userMessage?: string,
         ruleId?: string,
-        ruleDestinations?: Array<{integrationId?: string, provider?: string, directEmail?: string}>
+        ruleDestinations?: Array<{ integrationId?: string, provider?: string, directEmail?: string }>
     ) => {
         // escalationTriggered webhook called
 

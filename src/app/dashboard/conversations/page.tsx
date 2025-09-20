@@ -41,6 +41,7 @@ interface Filters {
     range?: string; // '24h' | '7d' | '30d'
     search?: string; // session id contains
     site?: string; // site_id filter
+    q?: string; // message content contains
 }
 
 function buildConditions(tenantId: string, filters: Filters) {
@@ -56,6 +57,11 @@ function buildConditions(tenantId: string, filters: Filters) {
     if (filters.search) {
         conditions.push(`c.session_id ILIKE $${idx}`);
         params.push(`%${filters.search}%`);
+        idx++;
+    }
+    if (filters.q) {
+        conditions.push(`EXISTS (SELECT 1 FROM public.messages m WHERE m.conversation_id = c.id AND m.role = 'user' AND m.content ILIKE $${idx})`);
+        params.push(`%${filters.q}%`);
         idx++;
     }
     if (filters.site) {
@@ -407,7 +413,8 @@ export default async function ConversationsPage({ searchParams }: { searchParams
         escalated: typeof resolved.escalated === 'string' ? resolved.escalated : undefined,
         range: typeof resolved.range === 'string' ? resolved.range : undefined,
         search: typeof resolved.search === 'string' ? resolved.search : undefined,
-        site: typeof resolved.site === 'string' ? resolved.site : undefined
+        site: typeof resolved.site === 'string' ? resolved.site : undefined,
+        q: typeof resolved.q === 'string' ? resolved.q : undefined
     };
     const tenantId = await getTenantIdStrict()
     const sites = await listSites(tenantId);
@@ -440,7 +447,7 @@ export default async function ConversationsPage({ searchParams }: { searchParams
                             <div className="flex items-center gap-3">
                                 <FilterControls filters={filters} sites={sites} />
                                 <HoverScale scale={1.02}>
-                                    <button className="btn btn-secondary btn-sm rounded-lg">
+                                    <button className="btn btn-secondary rounded-xl">
                                         <i className="fa-duotone fa-solid fa-download text-xs" aria-hidden />
                                         Export
                                     </button>

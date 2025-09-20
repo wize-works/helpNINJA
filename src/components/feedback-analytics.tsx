@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from 'react';
+import { useSearchParams } from 'next/navigation';
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, BarChart, Bar, PieChart, Pie, Cell, Legend } from 'recharts';
 import { getChartColors } from '@/lib/colors';
 
@@ -44,11 +45,17 @@ export function FeedbackAnalytics({ tenantId }: FeedbackAnalyticsProps) {
         resolutionTimes: []
     });
     const [loading, setLoading] = useState(true);
+    const searchParams = useSearchParams();
 
     useEffect(() => {
         async function fetchAnalytics() {
             try {
-                const response = await fetch('/api/feedback/analytics');
+                const params = new URLSearchParams();
+                const siteId = searchParams.get('siteId');
+                const days = searchParams.get('days');
+                if (siteId) params.set('siteId', siteId);
+                if (days) params.set('days', days);
+                const response = await fetch(`/api/feedback/analytics${params.toString() ? `?${params.toString()}` : ''}`);
                 if (response.ok) {
                     const analyticsData = await response.json();
                     // Ensure data structure is properly initialized
@@ -67,7 +74,7 @@ export function FeedbackAnalytics({ tenantId }: FeedbackAnalyticsProps) {
         }
 
         fetchAnalytics();
-    }, [tenantId]);
+    }, [tenantId, searchParams]);
 
     if (loading) {
         return (
@@ -297,12 +304,12 @@ export function FeedbackAnalytics({ tenantId }: FeedbackAnalyticsProps) {
                     <h3 className="text-lg font-semibold text-base-content mb-4">Average Resolution Time</h3>
                     <div className="space-y-3">
                         {data.resolutionTimes.map((item, index) => (
-                            <div key={index} className="flex items-center justify-between p-3 bg-base-300 rounded-lg">
+                            <div key={index} className="flex items-center justify-between p-3 bg-info/10 rounded-lg">
                                 <div>
                                     <div className="font-medium text-base-content">
                                         {formatType(item.type)}
                                     </div>
-                                    <div className={`text-sm ${item.priority === "medium" ? "text-warning/60" : item.priority === "high" ? "text-error/60" : item.priority === "critical" ? "text-error/60" : "text-info/60"}`}>
+                                    <div className={`text-sm ${item.priority === "medium" ? "text-warning" : item.priority === "high" ? "text-error" : item.priority === "critical" ? "text-error" : "text-info"}`}>
                                         {item.priority} priority • {item.resolved_count} resolved
                                     </div>
                                 </div>

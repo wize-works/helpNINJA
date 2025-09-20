@@ -79,93 +79,95 @@ export function ExportControls({ selectedSite, selectedRange = '30d', className 
     ];
 
     return (
-        <div className={`card bg-base-100 shadow-xl rounded-2xl ${className}`}>
-            <div className="card-body p-6">
-                <div className="flex items-center gap-3 mb-4">
-                    <div className="w-8 h-8 bg-info/20 rounded-lg flex items-center justify-center">
-                        <i className="fa-duotone fa-solid fa-download text-sm text-info" />
+        <div className='flex flex-col gap-4'>
+            <div className={`card bg-base-100 shadow-xl rounded-2xl ${className}`}>
+                <div className="card-body p-6">
+                    <div className="flex items-center gap-3 mb-4">
+                        <div className="w-8 h-8 bg-info/20 rounded-lg flex items-center justify-center">
+                            <i className="fa-duotone fa-solid fa-download text-sm text-info" />
+                        </div>
+                        <div>
+                            <h3 className="font-semibold">Export Analytics Data</h3>
+                            <p className="text-sm text-base-content/60">Download your analytics data for external analysis</p>
+                        </div>
                     </div>
-                    <div>
-                        <h3 className="font-semibold">Export Analytics Data</h3>
-                        <p className="text-sm text-base-content/60">Download your analytics data for external analysis</p>
-                    </div>
-                </div>
 
-                <div className="space-y-4">
-                    {/* Export Type Selection */}
-                    <div>
-                        <label className="label">
-                            <span className="label-text font-medium">Data Type</span>
-                        </label>
-                        <select
-                            className="select select-bordered w-full"
-                            value={exportType}
-                            onChange={(e) => setExportType(e.target.value as ExportType)}
+                    <div className="space-y-4">
+                        {/* Export Type Selection */}
+                        <div>
+                            <label className="label">
+                                <span className="label-text font-medium">Data Type</span>
+                            </label>
+                            <select
+                                className="select select-bordered w-full"
+                                value={exportType}
+                                onChange={(e) => setExportType(e.target.value as ExportType)}
+                            >
+                                {exportTypes.map((type) => (
+                                    <option key={type.value} value={type.value}>
+                                        {type.label}
+                                    </option>
+                                ))}
+                            </select>
+                        </div>
+
+                        {/* Format Selection */}
+                        <div>
+                            <label className="label">
+                                <span className="label-text font-medium">Format</span>
+                            </label>
+                            <div className="flex gap-2">
+                                <label className="flex items-center gap-2 cursor-pointer">
+                                    <input
+                                        type="radio"
+                                        name="format"
+                                        value="csv"
+                                        checked={exportFormat === 'csv'}
+                                        onChange={(e) => setExportFormat(e.target.value as ExportFormat)}
+                                        className="radio radio-primary radio-sm"
+                                    />
+                                    <span className="text-sm">CSV</span>
+                                </label>
+                                <label className="flex items-center gap-2 cursor-pointer">
+                                    <input
+                                        type="radio"
+                                        name="format"
+                                        value="json"
+                                        checked={exportFormat === 'json'}
+                                        onChange={(e) => setExportFormat(e.target.value as ExportFormat)}
+                                        className="radio radio-primary radio-sm"
+                                    />
+                                    <span className="text-sm">JSON</span>
+                                </label>
+                            </div>
+                        </div>
+
+                        {/* Export Details */}
+                        <div className="bg-base-200/50 rounded-lg p-3 text-sm">
+                            <div className="flex items-center gap-2 text-base-content/70 mb-2">
+                                <i className="fa-duotone fa-solid fa-info-circle" />
+                                <span>Export Details</span>
+                            </div>
+                            <ul className="space-y-1 text-base-content/60">
+                                <li>• Time period: {selectedRange === '1d' ? 'Last 24 hours' :
+                                    selectedRange === '7d' ? 'Last 7 days' :
+                                        selectedRange === '30d' ? 'Last 30 days' : 'Last 90 days'}</li>
+                                <li>• Site filter: {selectedSite ? 'Specific site' : 'All sites'}</li>
+                                <li>• Format: {exportFormat.toUpperCase()}</li>
+                                <li>• Data type: {exportTypes.find(t => t.value === exportType)?.label}</li>
+                            </ul>
+                        </div>
+
+                        {/* Export Button */}
+                        <button
+                            onClick={handleExport}
+                            disabled={isExporting}
+                            className={`btn btn-primary rounded-xl w-full ${isExporting ? 'loading' : ''}`}
                         >
-                            {exportTypes.map((type) => (
-                                <option key={type.value} value={type.value}>
-                                    {type.label}
-                                </option>
-                            ))}
-                        </select>
+                            {!isExporting && <i className="fa-duotone fa-solid fa-download mr-2" />}
+                            {isExporting ? 'Exporting...' : 'Export Data'}
+                        </button>
                     </div>
-
-                    {/* Format Selection */}
-                    <div>
-                        <label className="label">
-                            <span className="label-text font-medium">Format</span>
-                        </label>
-                        <div className="flex gap-2">
-                            <label className="flex items-center gap-2 cursor-pointer">
-                                <input
-                                    type="radio"
-                                    name="format"
-                                    value="csv"
-                                    checked={exportFormat === 'csv'}
-                                    onChange={(e) => setExportFormat(e.target.value as ExportFormat)}
-                                    className="radio radio-primary radio-sm"
-                                />
-                                <span className="text-sm">CSV</span>
-                            </label>
-                            <label className="flex items-center gap-2 cursor-pointer">
-                                <input
-                                    type="radio"
-                                    name="format"
-                                    value="json"
-                                    checked={exportFormat === 'json'}
-                                    onChange={(e) => setExportFormat(e.target.value as ExportFormat)}
-                                    className="radio radio-primary radio-sm"
-                                />
-                                <span className="text-sm">JSON</span>
-                            </label>
-                        </div>
-                    </div>
-
-                    {/* Export Details */}
-                    <div className="bg-base-200/50 rounded-lg p-3 text-sm">
-                        <div className="flex items-center gap-2 text-base-content/70 mb-2">
-                            <i className="fa-duotone fa-solid fa-info-circle" />
-                            <span>Export Details</span>
-                        </div>
-                        <ul className="space-y-1 text-base-content/60">
-                            <li>• Time period: {selectedRange === '1d' ? 'Last 24 hours' :
-                                selectedRange === '7d' ? 'Last 7 days' :
-                                    selectedRange === '30d' ? 'Last 30 days' : 'Last 90 days'}</li>
-                            <li>• Site filter: {selectedSite ? 'Specific site' : 'All sites'}</li>
-                            <li>• Format: {exportFormat.toUpperCase()}</li>
-                            <li>• Data type: {exportTypes.find(t => t.value === exportType)?.label}</li>
-                        </ul>
-                    </div>
-
-                    {/* Export Button */}
-                    <button
-                        onClick={handleExport}
-                        disabled={isExporting}
-                        className={`btn btn-primary rounded-xl w-full ${isExporting ? 'loading' : ''}`}
-                    >
-                        {!isExporting && <i className="fa-duotone fa-solid fa-download mr-2" />}
-                        {isExporting ? 'Exporting...' : 'Export Data'}
-                    </button>
                 </div>
             </div>
         </div>

@@ -13,6 +13,7 @@ interface Filters {
     priority?: string;
     search?: string;
     siteId?: string;
+    days?: string;
 }
 
 interface SiteOption {
@@ -175,6 +176,7 @@ export default async function FeedbackPage({
         priority: typeof params.priority === 'string' ? params.priority : undefined,
         search: typeof params.search === 'string' ? params.search : undefined,
         siteId: typeof params.siteId === 'string' ? params.siteId : undefined,
+        days: typeof params.days === 'string' ? params.days : undefined,
     };
 
     const tenantId = await getTenantIdStrict();
@@ -197,7 +199,7 @@ export default async function FeedbackPage({
                                 <FilterControls filters={filters} sites={sites} />
                                 <DashboardFeedbackButton
                                     tenantId={tenantId}
-                                    variant="outline"
+                                    variant="base"
                                     className="rounded-xl"
                                 />
                                 <button className="btn btn-primary rounded-xl">

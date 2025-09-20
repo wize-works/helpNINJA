@@ -42,13 +42,6 @@ This document tracks the implementation of missing critical features identified 
 ### **Phase 2: Onboarding Experience (P0 Critical)** ✅ COMPLETED
 *3-step flow: create tenant → register sites → get widget*
 
-#### ✅ Onboarding Pages (COMPLETED)
-- [x] `src/app/(pages)/onboarding/page.tsx` - Redirect to step 1
-- [x] `src/app/(pages)/onboarding/step-1/page.tsx` - Tenant setup and preferences
-- [x] `src/app/(pages)/onboarding/step-2/page.tsx` - Site registration with verification
-- [x] `src/app/(pages)/onboarding/step-3/page.tsx` - Widget installation guide with live preview
-- [x] `src/app/(pages)/onboarding/layout.tsx` - Onboarding-specific layout
-
 #### ✅ Onboarding Components (COMPLETED)
 - [x] `src/components/onboarding-progress.tsx` - Step indicator with progress bar
 - [x] `src/components/onboarding-navigation.tsx` - Next/Previous navigation

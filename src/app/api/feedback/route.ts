@@ -90,11 +90,16 @@ export async function GET(req: NextRequest) {
         const priority = url.searchParams.get('priority');
         const search = url.searchParams.get('search');
         const siteId = url.searchParams.get('siteId');
+        const daysParam = url.searchParams.get('days');
+        const days = Math.min(parseInt(daysParam || '30', 10) || 30, 365);
 
         // Build WHERE conditions
         const conditions: string[] = ['f.tenant_id = $1'];
         const params: unknown[] = [tenantId];
         let paramIndex = 2;
+
+        // Time range filter (default 30 days, capped 365)
+        conditions.push(`f.created_at >= NOW() - INTERVAL '${days} days'`);
 
         if (type) {
             conditions.push(`f.type = $${paramIndex}`);

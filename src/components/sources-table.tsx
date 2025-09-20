@@ -21,13 +21,7 @@ type Source = {
     site_domain?: string;
 };
 
-type Site = {
-    id: string;
-    domain: string;
-    name: string;
-    status: string;
-    verified: boolean;
-};
+// Site type not needed here; selection handled by SiteSelector
 
 interface Filters {
     site?: string;
@@ -38,7 +32,7 @@ interface Filters {
 
 export default function SourcesTable({ initialFilters = {} }: { initialFilters?: Filters }) {
     const [sources, setSources] = useState<Source[]>([]);
-    const [sites, setSites] = useState<Site[]>([]);
+    // Removed unused local sites state; page-level filters provide site options
     const [loading, setLoading] = useState(true);
     const [showAddForm, setShowAddForm] = useState(false);
     const [editingSource, setEditingSource] = useState<Source | null>(null);
@@ -77,22 +71,11 @@ export default function SourcesTable({ initialFilters = {} }: { initialFilters?:
         }
     }, [initialFilters]);
 
-    const loadSites = useCallback(async () => {
-        try {
-            const response = await fetch('/api/sites');
-            if (response.ok) {
-                const data = await response.json();
-                setSites(data);
-            }
-        } catch (error) {
-            console.error('Error loading sites:', error);
-        }
-    }, []);
+    // Removed unused site loader; source creation uses SiteSelector directly
 
     useEffect(() => {
         loadSources();
-        loadSites();
-    }, [loadSources, loadSites]);
+    }, [loadSources]);
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();

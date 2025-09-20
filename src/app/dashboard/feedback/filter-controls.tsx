@@ -10,6 +10,7 @@ interface Filters {
     priority?: string;
     search?: string;
     siteId?: string;
+    days?: string;
 }
 
 // Site option type
@@ -52,7 +53,7 @@ export default function FilterControls({
     function applyFilters(next: Filters, replace = true) {
         const params = new URLSearchParams(searchParams?.toString() || '');
         // Update for feedback-specific filter keys
-        ['type', 'status', 'priority', 'search', 'siteId'].forEach(k => {
+        ['type', 'status', 'priority', 'search', 'siteId', 'days'].forEach(k => {
             const val = (next as Record<string, string | undefined>)[k];
             if (val) params.set(k, val); else params.delete(k);
         });
@@ -66,7 +67,7 @@ export default function FilterControls({
     }
 
     // Count active filters for the badge
-    const activeFilterCount = ['type', 'status', 'priority', 'search', 'siteId']
+    const activeFilterCount = ['type', 'status', 'priority', 'search', 'siteId', 'days']
         .filter(k => filters[k as keyof Filters]).length;
 
     return (
@@ -74,7 +75,7 @@ export default function FilterControls({
             <HoverScale scale={1.02}>
                 <button
                     onClick={() => setOpen(o => !o)}
-                    className="btn btn-ghost rounded-xl"
+                    className="btn rounded-xl"
                 >
                     <i className="fa-duotone fa-solid fa-filter text-xs" aria-hidden />
                     Filters
@@ -94,6 +95,20 @@ export default function FilterControls({
                             <button onClick={() => setOpen(false)} className="text-xs opacity-60 hover:opacity-100">Close</button>
                         </div>
                         <div className="space-y-3">
+                            {/* Time range */}
+                            <div className="space-y-1">
+                                <label className="text-xs font-medium uppercase tracking-wide opacity-70">Time Range</label>
+                                <select
+                                    className="select select-sm select-bordered w-full"
+                                    value={local.days || '30'}
+                                    onChange={e => setLocal(l => ({ ...l, days: e.target.value || undefined }))}
+                                >
+                                    <option value="7">Last 7 days</option>
+                                    <option value="30">Last 30 days</option>
+                                    <option value="90">Last 90 days</option>
+                                    <option value="365">Last 365 days</option>
+                                </select>
+                            </div>
                             {/* Search input with debounce */}
                             <div className="space-y-1">
                                 <label className="text-xs font-medium uppercase tracking-wide opacity-70">Search</label>

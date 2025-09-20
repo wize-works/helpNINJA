@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { query } from '@/lib/db';
-import { getUserRole, hasRole, type UserRole, type RolePermission, hasPermission as hasRolePermission } from '@/lib/rbac';
+import { getUserRole, type UserRole } from '@/lib/rbac';
 import { hasFeature, type PlanFeature } from '@/lib/plan-features';
 
 export type AuthenticatedRequest = NextRequest & {

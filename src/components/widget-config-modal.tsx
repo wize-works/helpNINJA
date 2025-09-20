@@ -1,6 +1,5 @@
 "use client";
 
-import { HoverScale } from "@/components/ui/animated-page";
 import WidgetConfiguration from "@/components/widget-configuration";
 
 interface WidgetConfigModalProps {

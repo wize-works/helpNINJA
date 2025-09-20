@@ -138,7 +138,7 @@ export default function PlaygroundPage() {
                             </div>
                             <div className="flex items-center gap-3">
                                 <HoverScale scale={1.02}>
-                                    <a href="/dashboard/analytics" className="btn btn-outline btn-sm rounded-lg">
+                                    <a href="/dashboard/analytics" className="btn btn-outline rounded-xl">
                                         <i className="fa-duotone fa-solid fa-chart-line mr-2" aria-hidden />
                                         View Analytics
                                     </a>

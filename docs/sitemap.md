@@ -15,13 +15,6 @@
 - **`/auth/reset-password`** - Password reset flow
 - **`/auth/verify-email`** - Email verification page
 
-## 🚀 **Onboarding Flow**
-
-### Setup Wizard
-- **`/onboarding/step-1`** - Account setup and tenant configuration
-- **`/onboarding/step-2`** - Site configuration and domain setup
-- **`/onboarding/step-3`** - Content ingestion and initial knowledge base
-
 ## 📊 **Dashboard Application**
 
 ### Core Dashboard

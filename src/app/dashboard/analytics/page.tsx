@@ -7,6 +7,8 @@ import { AnimatedPage, StaggerContainer, StaggerChild, HoverScale } from "@/comp
 import { ConversationTrendsChart, ConfidenceAnalysisChart, ResponseTimeChart } from "./analytics-charts";
 import { IntegrationHealthDashboard } from "@/components/analytics/integration-health-dashboard";
 import { ExportControls } from "@/components/analytics/export-controls";
+import { TopQuestionsExportButton } from "@/components/analytics/top-questions-export";
+import FilterControls from "./filter-controls";
 import StatCard from "@/components/ui/stat-card";
 
 export const runtime = 'nodejs'
@@ -55,7 +57,26 @@ type TopSourcesData = {
     accuracy: number;
 };
 
-async function getAnalyticsData(tenantId: string): Promise<AnalyticsData> {
+type TopQuestionRow = {
+    normalized_text: string;
+    count: number;
+    avg_confidence: number | null;
+    low_conf_count: number;
+    example_conversation_id: string | null;
+    example_text: string | null;
+};
+
+type TopQuestion = {
+    question: string;
+    count: number;
+    avgConfidence: number;
+    lowConfidenceCount: number;
+    exampleConversationId?: string;
+    normalized: string;
+};
+
+async function getAnalyticsData(tenantId: string, opts: { days: number; siteId?: string | null }): Promise<AnalyticsData> {
+    const { days, siteId } = opts;
     // Current period stats
     const currentStatsQuery = await query<{
         total_messages: number;
@@ -68,12 +89,13 @@ async function getAnalyticsData(tenantId: string): Promise<AnalyticsData> {
             COUNT(CASE WHEN role = 'user' THEN 1 END)::int as total_messages,
             COUNT(DISTINCT conversation_id)::int as total_conversations,
             AVG(CASE WHEN confidence IS NOT NULL THEN confidence ELSE 0 END) as avg_confidence,
-            (SELECT COUNT(*)::int FROM public.escalations WHERE tenant_id = $1 AND created_at >= NOW() - INTERVAL '30 days') as total_escalations,
+            (SELECT COUNT(*)::int FROM public.escalations WHERE tenant_id = $1 AND created_at >= NOW() - ($2 || ' days')::interval ${siteId ? ' AND site_id = $3' : ''}) as total_escalations,
             (SELECT COUNT(*)::int FROM public.integrations WHERE tenant_id = $1 AND status = 'active') as active_integrations
         FROM public.messages 
         WHERE tenant_id = $1 
-        AND created_at >= NOW() - INTERVAL '30 days'
-    `, [tenantId]);
+        AND created_at >= NOW() - ($2 || ' days')::interval
+        ${siteId ? ' AND site_id = $3' : ''}
+    `, siteId ? [tenantId, days, siteId] : [tenantId, days]);
 
     // Previous period stats for growth calculation
     const previousStatsQuery = await query<{
@@ -86,12 +108,13 @@ async function getAnalyticsData(tenantId: string): Promise<AnalyticsData> {
             COUNT(CASE WHEN role = 'user' THEN 1 END)::int as prev_messages,
             COUNT(DISTINCT conversation_id)::int as prev_conversations,
             AVG(CASE WHEN confidence IS NOT NULL THEN confidence ELSE 0 END) as prev_confidence,
-            (SELECT COUNT(*)::int FROM public.escalations WHERE tenant_id = $1 AND created_at >= NOW() - INTERVAL '60 days' AND created_at < NOW() - INTERVAL '30 days') as prev_escalations
+            (SELECT COUNT(*)::int FROM public.escalations WHERE tenant_id = $1 AND created_at >= NOW() - ($2 * 2 || ' days')::interval AND created_at < NOW() - ($2 || ' days')::interval ${siteId ? ' AND site_id = $3' : ''}) as prev_escalations
         FROM public.messages 
         WHERE tenant_id = $1 
-        AND created_at >= NOW() - INTERVAL '60 days'
-        AND created_at < NOW() - INTERVAL '30 days'
-    `, [tenantId]);
+        AND created_at >= NOW() - ($2 * 2 || ' days')::interval
+        AND created_at < NOW() - ($2 || ' days')::interval
+        ${siteId ? ' AND site_id = $3' : ''}
+    `, siteId ? [tenantId, days, siteId] : [tenantId, days]);
 
     // Conversation trends over time
     const conversationTrendsQuery = await query<{
@@ -107,7 +130,8 @@ async function getAnalyticsData(tenantId: string): Promise<AnalyticsData> {
                 COUNT(CASE WHEN role = 'user' THEN 1 END)::int as messages
             FROM public.messages 
             WHERE tenant_id = $1 
-            AND created_at >= NOW() - INTERVAL '30 days'
+            AND created_at >= NOW() - ($2 || ' days')::interval
+            ${siteId ? ' AND site_id = $3' : ''}
             GROUP BY date_trunc('day', created_at)::date
         ),
         daily_escalations AS (
@@ -116,7 +140,8 @@ async function getAnalyticsData(tenantId: string): Promise<AnalyticsData> {
                 COUNT(*)::int as escalations
             FROM public.escalations 
             WHERE tenant_id = $1 
-            AND created_at >= NOW() - INTERVAL '30 days'
+            AND created_at >= NOW() - ($2 || ' days')::interval
+            ${siteId ? ' AND site_id = $3' : ''}
             GROUP BY date_trunc('day', created_at)::date
         )
         SELECT 
@@ -127,7 +152,7 @@ async function getAnalyticsData(tenantId: string): Promise<AnalyticsData> {
         FROM daily_messages dm
         LEFT JOIN daily_escalations de ON dm.date = de.date
         ORDER BY dm.date
-    `, [tenantId]);
+    `, siteId ? [tenantId, days, siteId] : [tenantId, days]);
 
     // Confidence score distribution
     const confidenceQuery = await query<{
@@ -145,7 +170,8 @@ async function getAnalyticsData(tenantId: string): Promise<AnalyticsData> {
         FROM public.messages 
         WHERE tenant_id = $1 
         AND confidence IS NOT NULL
-        AND created_at >= NOW() - INTERVAL '30 days'
+        AND created_at >= NOW() - ($2 || ' days')::interval
+        ${siteId ? ' AND site_id = $3' : ''}
         GROUP BY 
             CASE 
                 WHEN confidence >= 0.8 THEN 'High (80-100%)'
@@ -160,7 +186,7 @@ async function getAnalyticsData(tenantId: string): Promise<AnalyticsData> {
                 WHEN confidence >= 0.4 THEN 2
                 ELSE 1
             END) DESC
-    `, [tenantId]);
+    `, siteId ? [tenantId, days, siteId] : [tenantId, days]);
 
     // Response time by hour (calculate actual response times from conversation pairs)
     const responseTimeQuery = await query<{
@@ -179,8 +205,9 @@ async function getAnalyticsData(tenantId: string): Promise<AnalyticsData> {
                 AND assistant_msg.role = 'assistant'
             WHERE user_msg.tenant_id = $1 
                 AND user_msg.role = 'user'
-                AND user_msg.created_at >= NOW() - INTERVAL '7 days'
+                AND user_msg.created_at >= NOW() - (LEAST($2, 7) || ' days')::interval
                 AND assistant_msg.created_at <= user_msg.created_at + INTERVAL '10 minutes'
+                ${siteId ? ' AND user_msg.site_id = $3' : ''}
             AND NOT EXISTS (
                 SELECT 1 FROM public.messages mid_msg 
                 WHERE mid_msg.conversation_id = user_msg.conversation_id 
@@ -196,7 +223,7 @@ async function getAnalyticsData(tenantId: string): Promise<AnalyticsData> {
         WHERE response_seconds BETWEEN 0 AND 600  -- Filter out unrealistic response times
         GROUP BY hour
         ORDER BY hour
-    `, [tenantId]);
+    `, siteId ? [tenantId, days, siteId] : [tenantId, days]);
 
     // Top performing sources
     const sourcesQuery = await query<{
@@ -212,11 +239,13 @@ async function getAnalyticsData(tenantId: string): Promise<AnalyticsData> {
         JOIN public.documents d ON d.tenant_id = m.tenant_id
         WHERE m.tenant_id = $1 
         AND m.confidence IS NOT NULL
-        AND m.created_at >= NOW() - INTERVAL '30 days'
+        AND m.created_at >= NOW() - ($2 || ' days')::interval
+        ${siteId ? ' AND m.site_id = $3' : ''}
         GROUP BY d.id, d.title
         ORDER BY queries DESC
         LIMIT 10
-    `, [tenantId]);
+    `, siteId ? [tenantId, days, siteId] : [tenantId, days]);
+
 
     // Calculate trends (comparing current vs previous period)
     const calculateGrowth = (current: number, previous: number) => {
@@ -240,13 +269,13 @@ async function getAnalyticsData(tenantId: string): Promise<AnalyticsData> {
     };
 
     // Process conversation trends data to fill gaps
-    const last30Days = Array.from({ length: 30 }, (_, i) => {
+    const lastDays = Array.from({ length: days }, (_, i) => {
         const date = new Date();
-        date.setDate(date.getDate() - (29 - i));
+        date.setDate(date.getDate() - (days - 1 - i));
         return date.toISOString().split('T')[0];
     });
 
-    const conversationsByDay = last30Days.map(date => {
+    const conversationsByDay = lastDays.map(date => {
         const data = conversationTrendsQuery.rows.find(row => row.date === date);
         return {
             date,
@@ -284,6 +313,8 @@ async function getAnalyticsData(tenantId: string): Promise<AnalyticsData> {
         accuracy: Math.round((row.avg_confidence || 0) * 100)
     }));
 
+    // Note: Questions insights are rendered separately in TopQuestionsSection
+
     // Calculate escalation rate and average response time from real data
     const escalationRate = currData.total_conversations > 0
         ? Math.round((currData.total_escalations / currData.total_conversations) * 100)
@@ -313,9 +344,10 @@ async function getAnalyticsData(tenantId: string): Promise<AnalyticsData> {
                 AND assistant_msg.role = 'assistant'
             WHERE user_msg.tenant_id = $1 
                 AND user_msg.role = 'user'
-                AND user_msg.created_at >= NOW() - INTERVAL '60 days'
-                AND user_msg.created_at < NOW() - INTERVAL '30 days'
+                AND user_msg.created_at >= NOW() - ($2 * 2 || ' days')::interval
+                AND user_msg.created_at < NOW() - ($2 || ' days')::interval
                 AND assistant_msg.created_at <= user_msg.created_at + INTERVAL '10 minutes'
+                ${siteId ? ' AND user_msg.site_id = $3' : ''}
             AND NOT EXISTS (
                 SELECT 1 FROM public.messages mid_msg 
                 WHERE mid_msg.conversation_id = user_msg.conversation_id 
@@ -326,7 +358,7 @@ async function getAnalyticsData(tenantId: string): Promise<AnalyticsData> {
         SELECT AVG(response_seconds) as avg_response_time
         FROM response_times
         WHERE response_seconds BETWEEN 0 AND 600
-    `, [tenantId]);
+    `, siteId ? [tenantId, days, siteId] : [tenantId, days]);
 
     const prevAvgResponseTime = prevResponseTimeRows[0]?.avg_response_time || 0;
 
@@ -353,8 +385,23 @@ async function getAnalyticsData(tenantId: string): Promise<AnalyticsData> {
     };
 }
 
-export default async function AnalyticsPage() {
+export default async function AnalyticsPage({ searchParams }: { searchParams?: { range?: string; siteId?: string } }) {
     const tenantId = await getTenantIdStrict();
+    const range = (searchParams?.range as '7d' | '30d' | '90d' | 'all') || '30d'
+    const days = range === '7d' ? 7 : range === '90d' ? 90 : range === 'all' ? 365 : 30
+    const siteId = searchParams?.siteId || null
+    let siteLabel: string | null = null;
+    if (siteId) {
+        try {
+            const { rows } = await query<{ domain: string | null; name: string | null }>(
+                `select domain, name from public.tenant_sites where id = $1 and tenant_id = $2 limit 1`,
+                [siteId, tenantId]
+            );
+            siteLabel = rows[0]?.domain || rows[0]?.name || siteId;
+        } catch {
+            siteLabel = siteId;
+        }
+    }
 
     const breadcrumbItems = [
         { label: "Dashboard", href: "/dashboard", icon: "fa-gauge-high" },
@@ -378,20 +425,23 @@ export default async function AnalyticsPage() {
                             <div>
                                 <h1 className="text-3xl font-bold text-base-content tracking-tight">Analytics</h1>
                                 <p className="text-base-content/60 mt-2">Comprehensive insights into your AI support performance</p>
+                                {/* Active filter chips */}
+                                <div className="flex flex-wrap items-center gap-2 mt-3">
+                                    <span className="text-xs text-base-content/50">Filtered by</span>
+                                    <span className="badge badge-sm badge-outline">
+                                        {range === 'all' ? 'All time (cap 365d)' : (range === '7d' ? 'Last 7 days' : range === '90d' ? 'Last 90 days' : 'Last 30 days')}
+                                    </span>
+                                    {siteId && (
+                                        <span className="badge badge-sm badge-outline">Site: {siteLabel}</span>
+                                    )}
+                                    <a href={`/dashboard/conversations?${new URLSearchParams({ ...(siteId ? { site: siteId } : {}), range: range === 'all' ? '30d' : (range as '7d' | '30d' | '90d') }).toString()}`}
+                                        className="link text-xs">
+                                        Browse conversations
+                                    </a>
+                                </div>
                             </div>
                             <div className="flex items-center gap-3">
-                                <HoverScale scale={1.02}>
-                                    <button className="flex items-center gap-2 px-4 py-2 bg-base-200/60 hover:bg-base-200 border border-base-300/40 rounded-lg text-sm transition-all duration-200">
-                                        <i className="fa-duotone fa-solid fa-download text-xs" aria-hidden />
-                                        Export Report
-                                    </button>
-                                </HoverScale>
-                                <HoverScale scale={1.02}>
-                                    <button className="flex items-center gap-2 px-4 py-2 bg-primary text-primary-content rounded-lg text-sm font-medium shadow-sm transition-all duration-200">
-                                        <i className="fa-duotone fa-solid fa-calendar text-xs" aria-hidden />
-                                        Last 30 Days
-                                    </button>
-                                </HoverScale>
+                                <FilterControls filters={{ range, siteId: siteId || undefined }} />
                             </div>
                         </div>
                     </StaggerChild>
@@ -399,15 +449,15 @@ export default async function AnalyticsPage() {
 
                 {/* Content */}
                 <Suspense fallback={<AnalyticsSkeleton />}>
-                    <AnalyticsContent tenantId={tenantId} />
+                    <AnalyticsContent tenantId={tenantId} days={days} siteId={siteId} range={range} />
                 </Suspense>
             </div>
         </AnimatedPage>
     );
 }
 
-async function AnalyticsContent({ tenantId }: { tenantId: string }) {
-    const data = await getAnalyticsData(tenantId);
+async function AnalyticsContent({ tenantId, days, siteId, range }: { tenantId: string; days: number; siteId: string | null; range: '7d' | '30d' | '90d' | 'all' }) {
+    const data = await getAnalyticsData(tenantId, { days, siteId });
 
     return (
         <div className="space-y-8">
@@ -448,6 +498,9 @@ async function AnalyticsContent({ tenantId }: { tenantId: string }) {
                     </StaggerChild>
                 </div>
             </div>
+
+            {/* Questions Insights */}
+            <TopQuestionsSection tenantId={tenantId} days={days} siteId={siteId} range={range} />
         </div>
     );
 }
@@ -471,6 +524,155 @@ function AnalyticsSkeleton() {
                     <ChartSkeleton />
                 </div>
                 <ChartSkeleton />
+            </div>
+        </div>
+    );
+}
+
+// Server component section to fetch and render Top Questions and Low-Confidence Questions
+async function TopQuestionsSection({ tenantId, days, siteId, range }: { tenantId: string; days: number; siteId: string | null; range: '7d' | '30d' | '90d' | 'all' }) {
+    // Reuse the same SQL used in getAnalyticsData to avoid drift
+    const topQuestionsSql = `
+        WITH user_msgs AS (
+            SELECT 
+                m.id,
+                m.conversation_id,
+                lower(trim(regexp_replace(m.content, '[[:space:]]+', ' ', 'g'))) AS normalized_text,
+                m.content,
+                m.created_at
+            FROM public.messages m
+            WHERE m.tenant_id = $1
+              AND m.role = 'user'
+              AND m.created_at >= NOW() - ($2 || ' days')::interval
+              ${siteId ? ' AND m.site_id = $3' : ''}
+              AND length(m.content) >= 5
+        ), paired AS (
+            SELECT 
+                u.normalized_text,
+                u.content,
+                u.conversation_id,
+                a.confidence AS assistant_confidence
+            FROM user_msgs u
+            LEFT JOIN LATERAL (
+                SELECT confidence
+                FROM public.messages a
+                WHERE a.conversation_id = u.conversation_id
+                  AND a.created_at > u.created_at
+                  AND a.role = 'assistant'
+                ORDER BY a.created_at ASC
+                LIMIT 1
+            ) a ON true
+        )
+        SELECT 
+            normalized_text,
+            COUNT(*)::int AS count,
+            AVG(assistant_confidence) AS avg_confidence,
+            SUM(CASE WHEN assistant_confidence IS NOT NULL AND assistant_confidence < 0.55 THEN 1 ELSE 0 END)::int AS low_conf_count,
+            MIN(conversation_id::text) AS example_conversation_id,
+            MIN(content) AS example_text
+        FROM paired
+        GROUP BY normalized_text
+        HAVING COUNT(*) >= 2
+        ORDER BY count DESC
+        LIMIT 100`;
+
+    const { rows } = await query<TopQuestionRow>(topQuestionsSql, siteId ? [tenantId, days, siteId] : [tenantId, days]);
+
+    const redact = (s: string | null) => {
+        if (!s) return '';
+        let t = s;
+        t = t.replace(/[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}/gi, '[email]');
+        t = t.replace(/\+?\d[\d\s().-]{7,}\d/g, '[phone]');
+        return t.slice(0, 140);
+    };
+
+    const items: TopQuestion[] = rows.map(r => ({
+        question: redact(r.example_text) || r.normalized_text,
+        count: r.count,
+        avgConfidence: Math.round(((r.avg_confidence || 0) * 100)),
+        lowConfidenceCount: r.low_conf_count,
+        exampleConversationId: r.example_conversation_id || undefined,
+        normalized: r.normalized_text
+    }));
+
+    const top = items.slice(0, 10);
+    const lowConf = items.filter(i => i.lowConfidenceCount > 0).sort((a, b) => b.lowConfidenceCount - a.lowConfidenceCount).slice(0, 10);
+
+    const subtitleFor = (kind: 'top' | 'low') => {
+        const rangeLabel = range === 'all' ? 'All time (capped)' : (range === '7d' ? 'Last 7 days' : range === '90d' ? 'Last 90 days' : 'Last 30 days')
+        return kind === 'top' ? `Most frequent user questions • ${rangeLabel}` : `Questions often answered with low confidence • ${rangeLabel}`
+    }
+    const searchBase = new URLSearchParams({ ...(siteId ? { site: siteId } : {}), range: range === 'all' ? '30d' : range }).toString()
+
+    return (
+        <div className="grid grid-cols-1 xl:grid-cols-2 gap-8">
+            <TopQuestionsCard title="Top Questions" subtitle={subtitleFor('top')} items={top} searchBase={searchBase} />
+            <TopQuestionsCard title="Low-Confidence Questions" subtitle={subtitleFor('low')} items={lowConf} searchBase={searchBase} highlightLowConfidence />
+        </div>
+    );
+}
+
+function TopQuestionsCard({ title, subtitle, items, searchBase, highlightLowConfidence = false }: { title: string; subtitle: string; items: TopQuestion[]; searchBase: string; highlightLowConfidence?: boolean }) {
+    return (
+        <div className="flex flex-col gap-4">
+            <div className="card bg-base-100 rounded-2xl shadow-sm hover:shadow-md transition-all duration-300">
+                <div className="p-6">
+                    <div className="flex items-center justify-between mb-6">
+                        <div>
+                            <h3 className="text-lg font-semibold text-base-content">{title}</h3>
+                            <p className="text-sm text-base-content/60">{subtitle}</p>
+                        </div>
+                        <div className="flex items-center gap-3">
+                            <TopQuestionsExportButton items={items} filename={title.toLowerCase().replace(/\s+/g, '-')} />
+                            <div className="w-10 h-10 bg-amber-500/10 rounded-xl flex items-center justify-center">
+                                <i className="fa-duotone fa-solid fa-clipboard-question text-lg text-amber-600" aria-hidden />
+                            </div>
+                        </div>
+                    </div>
+
+                    {items.length === 0 ? (
+                        <div className="text-center py-8">
+                            <div className="w-12 h-12 bg-base-200/60 rounded-xl flex items-center justify-center mx-auto mb-4">
+                                <i className="fa-duotone fa-solid fa-comments-question text-lg text-base-content/40" aria-hidden />
+                            </div>
+                            <p className="text-sm text-base-content/60">No question insights yet</p>
+                            <p className="text-xs text-base-content/40 mt-1">As users ask more questions, insights will appear here</p>
+                        </div>
+                    ) : (
+                        <div className="space-y-4">
+                            {items.map((q, index) => (
+                                <div key={`${q.question}-${index}`} className="p-3 bg-base-200/30 rounded-xl hover:bg-base-200/50 transition-colors">
+                                    <div className="flex items-start justify-between gap-3">
+                                        <div className="min-w-0 flex-1">
+                                            <div className="font-medium text-sm text-base-content truncate" title={q.question}>
+                                                {q.question}
+                                            </div>
+                                            <div className="text-xs text-base-content/60 mt-0.5 flex items-center gap-3">
+                                                <span className="inline-flex items-center gap-1"><i className="fa-duotone fa-solid fa-hashtag text-xs" aria-hidden /> {q.count}</span>
+                                                <span className="inline-flex items-center gap-1"><i className="fa-duotone fa-solid fa-gauge-high text-xs" aria-hidden /> {q.avgConfidence}%</span>
+                                                {highlightLowConfidence && (
+                                                    <span className={`inline-flex items-center gap-1 ${q.lowConfidenceCount > 0 ? 'text-amber-700' : 'text-base-content/60'}`}>
+                                                        <i className="fa-duotone fa-solid fa-triangle-exclamation text-xs" aria-hidden /> {q.lowConfidenceCount} low-conf
+                                                    </span>
+                                                )}
+                                            </div>
+                                        </div>
+                                        <div className="flex items-center gap-2">
+                                            <a href={`/dashboard/conversations?${searchBase}&q=${encodeURIComponent(q.normalized)}`} className="btn btn-xs btn-ghost rounded-lg">
+                                                Find all
+                                            </a>
+                                            {q.exampleConversationId && (
+                                                <a href={`/dashboard/conversations/${q.exampleConversationId}`} className="btn btn-xs rounded-lg">
+                                                    View
+                                                </a>
+                                            )}
+                                        </div>
+                                    </div>
+                                </div>
+                            ))}
+                        </div>
+                    )}
+                </div>
             </div>
         </div>
     );
@@ -617,53 +819,55 @@ function ResponseTimeCard({ data }: { data: ResponseTimeData[] }) {
 
 function TopSourcesCard({ data }: { data: TopSourcesData[] }) {
     return (
-        <div className="card bg-base-100 rounded-2xl shadow-sm hover:shadow-md transition-all duration-300">
-            <div className="p-6">
-                <div className="flex items-center justify-between mb-6">
-                    <div>
-                        <h3 className="text-lg font-semibold text-base-content">Top Knowledge Sources</h3>
-                        <p className="text-sm text-base-content/60">Most queried content sources</p>
-                    </div>
-                    <div className="w-10 h-10 bg-orange-500/10 rounded-xl flex items-center justify-center">
-                        <i className="fa-duotone fa-solid fa-ranking-star text-lg text-orange-600" aria-hidden />
-                    </div>
-                </div>
-
-                {data.length === 0 ? (
-                    <div className="text-center py-8">
-                        <div className="w-12 h-12 bg-base-200/60 rounded-xl flex items-center justify-center mx-auto mb-4">
-                            <i className="fa-duotone fa-solid fa-database text-lg text-base-content/40" aria-hidden />
+        <div className="flex flex-col gap-4">
+            <div className="card bg-base-100 rounded-2xl shadow-sm hover:shadow-md transition-all duration-300">
+                <div className="p-6">
+                    <div className="flex items-center justify-between mb-6">
+                        <div>
+                            <h3 className="text-lg font-semibold text-base-content">Top Knowledge Sources</h3>
+                            <p className="text-sm text-base-content/60">Most queried content sources</p>
                         </div>
-                        <p className="text-sm text-base-content/60">No source data available</p>
-                        <p className="text-xs text-base-content/40 mt-1">Ingest some documents to see analytics</p>
+                        <div className="w-10 h-10 bg-orange-500/10 rounded-xl flex items-center justify-center">
+                            <i className="fa-duotone fa-solid fa-ranking-star text-lg text-orange-600" aria-hidden />
+                        </div>
                     </div>
-                ) : (
-                    <div className="space-y-4">
-                        {data.slice(0, 5).map((source, index) => (
-                            <div key={source.source} className="flex items-center justify-between p-3 bg-base-200/30 rounded-xl hover:bg-base-200/50 transition-colors">
-                                <div className="flex items-center gap-3 min-w-0 flex-1">
-                                    <div className="w-8 h-8 bg-primary/10 rounded-lg flex items-center justify-center flex-shrink-0">
-                                        <span className="text-sm font-bold text-primary">#{index + 1}</span>
-                                    </div>
-                                    <div className="min-w-0 flex-1">
-                                        <div className="font-medium text-sm text-base-content truncate" title={source.source}>
-                                            {source.source}
-                                        </div>
-                                        <div className="text-xs text-base-content/60">
-                                            {source.queries} queries
-                                        </div>
-                                    </div>
-                                </div>
-                                <div className={`px-2 py-1 rounded-lg text-xs font-semibold ${source.accuracy >= 80 ? 'bg-emerald-500/10 text-emerald-700 border border-emerald-500/20' :
-                                    source.accuracy >= 60 ? 'bg-amber-500/10 text-amber-700 border border-amber-500/20' :
-                                        'bg-red-500/10 text-red-700 border border-red-500/20'
-                                    }`}>
-                                    {source.accuracy}%
-                                </div>
+
+                    {data.length === 0 ? (
+                        <div className="text-center py-8">
+                            <div className="w-12 h-12 bg-base-200/60 rounded-xl flex items-center justify-center mx-auto mb-4">
+                                <i className="fa-duotone fa-solid fa-database text-lg text-base-content/40" aria-hidden />
                             </div>
-                        ))}
-                    </div>
-                )}
+                            <p className="text-sm text-base-content/60">No source data available</p>
+                            <p className="text-xs text-base-content/40 mt-1">Ingest some documents to see analytics</p>
+                        </div>
+                    ) : (
+                        <div className="space-y-4">
+                            {data.slice(0, 5).map((source, index) => (
+                                <div key={source.source} className="flex items-center justify-between p-3 bg-base-200/30 rounded-xl hover:bg-base-200/50 transition-colors">
+                                    <div className="flex items-center gap-3 min-w-0 flex-1">
+                                        <div className="w-8 h-8 bg-primary/10 rounded-lg flex items-center justify-center flex-shrink-0">
+                                            <span className="text-sm font-bold text-primary">#{index + 1}</span>
+                                        </div>
+                                        <div className="min-w-0 flex-1">
+                                            <div className="font-medium text-sm text-base-content truncate" title={source.source}>
+                                                {source.source}
+                                            </div>
+                                            <div className="text-xs text-base-content/60">
+                                                {source.queries} queries
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div className={`px-2 py-1 rounded-lg text-xs font-semibold ${source.accuracy >= 80 ? 'bg-emerald-500/10 text-emerald-700 border border-emerald-500/20' :
+                                        source.accuracy >= 60 ? 'bg-amber-500/10 text-amber-700 border border-amber-500/20' :
+                                            'bg-red-500/10 text-red-700 border border-red-500/20'
+                                        }`}>
+                                        {source.accuracy}%
+                                    </div>
+                                </div>
+                            ))}
+                        </div>
+                    )}
+                </div>
             </div>
         </div>
     );

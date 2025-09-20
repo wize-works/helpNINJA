@@ -153,7 +153,7 @@ export default async function SourcesPage({
                             <div className="flex items-center gap-3">
                                 <FilterControls filters={filters} sites={sites} />
                                 <HoverScale scale={1.02}>
-                                    <a href="/dashboard/documents" className="btn btn-outline btn-secondary btn-sm rounded-lg">
+                                    <a href="/dashboard/documents" className="btn btn-outline btn-secondary rounded-xl">
                                         <i className="fa-duotone fa-solid fa-file-lines mr-2" aria-hidden />
                                         View Documents
                                     </a>
