@@ -138,3 +138,7 @@ export function useTenant(): TenantContextValue {
     if (!ctx) throw new Error("useTenant must be used within a TenantProvider");
     return ctx;
 }
+
+export function useOptionalTenant(): TenantContextValue | undefined {
+    return useContext(TenantContext);
+}

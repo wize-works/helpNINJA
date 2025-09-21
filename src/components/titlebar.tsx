@@ -8,7 +8,7 @@ import Logo from "./logo";
 import { HoverScale, SlideIn } from "./ui/animated-page";
 import { SignOutButton, useUser } from "@clerk/nextjs";
 import React from "react";
-import { useTenant } from "./tenant-context";
+import { useOptionalTenant } from "./tenant-context";
 
 function formatPlan(plan?: string | null) {
     if (!plan) return "Starter Plan";
@@ -21,7 +21,9 @@ export default function Titlebar() {
     const pathname = usePathname();
     const router = useRouter();
     const { isLoaded, user } = useUser();
-    const { tenantInfo, usage } = useTenant();
+    const tenantCtx = useOptionalTenant();
+    const tenantInfo = tenantCtx?.tenantInfo;
+    const usage = tenantCtx?.usage;
     const [q, setQ] = React.useState("");
     const searchInputRef = React.useRef<HTMLInputElement | null>(null);
     const isSignedIn = !!user;
