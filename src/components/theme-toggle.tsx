@@ -27,17 +27,12 @@ function applyTheme(mode: Mode, explicitTheme?: ThemeName) {
                 ? DARK_THEME
                 : LIGHT_THEME;
 
-    // allow an explicit non-light/dark theme if passed (e.g., corporate)
     const final = explicitTheme ?? theme;
+    const root = document.documentElement;
+    const isDarkTheme = final.toLowerCase().includes("dark");
 
-
-    // toggle dark class for Tailwind dark: utilities to play nice with DaisyUI
-    if (mode === "dark" || (mode === "system" && systemPrefersDark())) {
-        document.querySelector("html")?.setAttribute("data-theme", DARK_THEME);
-    } else {
-        document.querySelector("html")?.setAttribute("data-theme", LIGHT_THEME);
-    }
-    localStorage.setItem(STORAGE_THEME, final);
+    root.setAttribute("data-theme", final);
+    root.style.colorScheme = isDarkTheme ? "dark" : "light";
 }
 
 const themeOptions = [
@@ -103,16 +98,18 @@ export default function ThemeToggle() {
     }
 
     const currentOption = themeOptions.find(option => option.mode === mode);
+    const label = currentOption?.label ?? "System";
+    const icon = currentOption?.icon ?? "fa-circle-half-stroke";
 
     return (
         <HoverScale scale={1.05}>
             <button
                 onClick={toggleTheme}
                 className="w-9 h-9 rounded-lg bg-base-200/60 hover:bg-base-200 border border-base-300/40 flex items-center justify-center transition-all duration-200 group"
-                aria-label={`Current theme: ${currentOption?.label}. Click to cycle to next theme`}
-                title={`Theme: ${currentOption?.label} (click to cycle)`}
+                aria-label={`Current theme: ${label}. Click to cycle to next theme`}
+                title={`Theme: ${label} (click to cycle)`}
             >
-                <i className={`fa-duotone fa-solid ${currentOption?.icon} text-sm text-base-content/70 group-hover:text-base-content transition-colors`} aria-hidden />
+                <i className={`fa-duotone fa-solid ${icon} text-sm text-base-content/70 group-hover:text-base-content transition-colors`} aria-hidden />
             </button>
         </HoverScale>
     );

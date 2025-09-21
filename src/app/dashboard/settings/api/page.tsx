@@ -258,7 +258,7 @@ export default function ApiKeysPage() {
                 {/* API Key Guidance */}
                 <StaggerContainer>
                     <StaggerChild>
-                        <div className="alert alert-info bg-info/20">
+                        <div className="alert alert-info bg-info/20 text-secondary-content">
                             <i className="fa-duotone fa-solid fa-lightbulb text-xl" aria-hidden />
                             <div>
                                 <div className="font-semibold mb-1">Managed API Keys vs Widget Keys</div>
