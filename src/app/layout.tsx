@@ -41,11 +41,11 @@ const fontAwesomeKitUrl = process.env.NEXT_PUBLIC_FONTAWESOME_KIT_URL || "https:
 export default function RootLayout({ children }: { children: React.ReactNode }) {
     return (
         <html lang="en" suppressHydrationWarning>
-            <Script id="theme-initializer" strategy="beforeInteractive">
-                {themeInitializer}
-            </Script>
-            <Clarity />
             <body className="bg-base-100">
+                <Script id="theme-initializer" strategy="beforeInteractive">
+                    {themeInitializer}
+                </Script>
+                <Clarity />
                 <ClerkProvider
                     signInUrl={process.env.NEXT_PUBLIC_CLERK_SIGN_IN_URL || "/auth/signin"}
                     signUpUrl={process.env.NEXT_PUBLIC_CLERK_SIGN_UP_URL || "/auth/signup"}
