@@ -7,6 +7,7 @@ This document captures the cross-cutting cleanups we identified during the Codex
 ### 1. Consolidate plan/usage data fetching
 - **Problem**: Both the sidebar (`src/components/sidebar.tsx:124`) and titlebar (`src/components/titlebar.tsx:25`) fire `/api/usage`, duplicating network calls and risking inconsistent UI states.
 - **Action**: Load plan/usage server-side (e.g. `TenantProvider` in `src/components/tenant-context.tsx`) and expose it via context. Consumers read from context instead of calling the API directly.
+- **Status**: ✅ Completed – usage & plan metadata load once in `TenantProvider` and are consumed via context in the sidebar/titlebar.
 - **Done when**: The dashboard makes a single fetch per request, and sidebar/titlebar render with the shared data without client fetch warnings.
 
 ### 2. Tighten keyboard accessibility on global navigation
@@ -50,5 +51,6 @@ This document captures the cross-cutting cleanups we identified during the Codex
 6. README refresh (Task 7) - update documentation last so it reflects the new setup.
 
 Feel free to check items off directly in this file or convert to GitHub issues once complete.
+
 
 

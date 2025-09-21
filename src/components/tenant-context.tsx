@@ -3,6 +3,12 @@
 import React, { createContext, useContext, useState, useEffect, useCallback } from "react";
 import { type Plan } from "@/lib/limits";
 
+type UsageInfo = {
+    used: number;
+    limit: number;
+    plan: string;
+};
+
 export type TenantInfo = {
     id: string;
     name: string;
@@ -16,6 +22,10 @@ export type TenantContextValue = {
     tenantInfo: TenantInfo | null;
     loading: boolean;
     error: string | null;
+    usage: UsageInfo | null;
+    usageLoading: boolean;
+    usageError: string | null;
+    usageOffline: boolean;
     refetch: () => Promise<void>;
     updateTenantInfo: (updates: Partial<TenantInfo>) => void;
 };
@@ -27,34 +37,69 @@ export function TenantProvider({ tenantId, children }: { tenantId: string; child
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
 
-    const fetchTenantInfo = useCallback(async () => {
+    const [usage, setUsage] = useState<UsageInfo | null>(null);
+    const [usageLoading, setUsageLoading] = useState(true);
+    const [usageError, setUsageError] = useState<string | null>(null);
+    const [usageOffline, setUsageOffline] = useState(false);
+
+    const fetchTenantData = useCallback(async () => {
         if (!tenantId) {
             setLoading(false);
+            setUsageLoading(false);
             return;
         }
 
-        try {
-            setError(null);
-            const response = await fetch('/api/tenant/info');
+        setError(null);
+        setUsageError(null);
+        setUsageOffline(false);
 
-            if (!response.ok) {
-                throw new Error(`Failed to fetch tenant info: ${response.status}`);
+        try {
+            const tenantRes = await fetch('/api/tenant/info');
+            if (!tenantRes.ok) {
+                throw new Error(`Failed to fetch tenant info: ${tenantRes.status}`);
             }
 
-            const data = await response.json();
+            const tenantJson = await tenantRes.json();
             setTenantInfo({
                 id: tenantId,
-                name: data.name,
-                plan: data.plan,
-                plan_status: data.plan_status,
-                public_key: data.public_key
+                name: tenantJson.name,
+                plan: tenantJson.plan,
+                plan_status: tenantJson.plan_status,
+                public_key: tenantJson.public_key
             });
+
+            try {
+                const usageRes = await fetch('/api/usage');
+                if (!usageRes.ok) {
+                    setUsage(null);
+                    setUsageOffline(true);
+                    setUsageError(`Failed to fetch usage: ${usageRes.status}`);
+                } else {
+                    const usageJson = await usageRes.json();
+                    setUsage({
+                        used: Number(usageJson.used ?? 0),
+                        limit: Number(usageJson.limit ?? 0),
+                        plan: String(usageJson.plan ?? '')
+                    });
+                    setUsageOffline(false);
+                }
+            } catch (usageErr) {
+                setUsage(null);
+                setUsageOffline(true);
+                const message = usageErr instanceof Error ? usageErr.message : 'Failed to load usage information';
+                setUsageError(message);
+                console.error('Error fetching usage info:', usageErr);
+            }
         } catch (err) {
             const message = err instanceof Error ? err.message : 'Failed to load tenant information';
             setError(message);
             console.error('Error fetching tenant info:', err);
+            setUsage(null);
+            setUsageOffline(true);
+            setUsageError(message);
         } finally {
             setLoading(false);
+            setUsageLoading(false);
         }
     }, [tenantId]);
 
@@ -64,18 +109,23 @@ export function TenantProvider({ tenantId, children }: { tenantId: string; child
 
     const refetch = useCallback(async () => {
         setLoading(true);
-        await fetchTenantInfo();
-    }, [fetchTenantInfo]);
+        setUsageLoading(true);
+        await fetchTenantData();
+    }, [fetchTenantData]);
 
     useEffect(() => {
-        fetchTenantInfo();
-    }, [fetchTenantInfo]);
+        fetchTenantData();
+    }, [fetchTenantData]);
 
     const value: TenantContextValue = {
         tenantId,
         tenantInfo,
         loading,
         error,
+        usage,
+        usageLoading,
+        usageError,
+        usageOffline,
         refetch,
         updateTenantInfo
     };

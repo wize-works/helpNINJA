@@ -8,27 +8,29 @@ import Logo from "./logo";
 import { HoverScale, SlideIn } from "./ui/animated-page";
 import { SignOutButton, useUser } from "@clerk/nextjs";
 import React from "react";
+import { useTenant } from "./tenant-context";
+
+function formatPlan(plan?: string | null) {
+    if (!plan) return "Starter Plan";
+    const normalized = plan.toString().trim();
+    if (!normalized) return "Starter Plan";
+    return `${normalized.charAt(0).toUpperCase()}${normalized.slice(1).toLowerCase()} Plan`;
+}
 
 export default function Titlebar() {
     const pathname = usePathname();
     const router = useRouter();
     const { isLoaded, user } = useUser();
-    const [plan, setPlan] = React.useState<string | null>(null);
+    const { tenantInfo, usage } = useTenant();
     const [q, setQ] = React.useState("");
     const searchInputRef = React.useRef<HTMLInputElement | null>(null);
     const isSignedIn = !!user;
 
-    React.useEffect(() => {
-        let aborted = false;
-        // Only fetch plan details for authenticated users
-        if (isSignedIn) {
-            fetch('/api/usage')
-                .then(r => (r.ok ? r.json() : null))
-                .then(d => { if (!aborted && d?.plan) setPlan(String(d.plan)); })
-                .catch(() => { });
-        }
-        return () => { aborted = true; };
-    }, [isSignedIn]);
+    const planLabel = React.useMemo(() => {
+        const planFromUsage = usage?.plan;
+        const planFromTenant = tenantInfo?.plan;
+        return formatPlan(planFromUsage ?? planFromTenant ?? "starter");
+    }, [tenantInfo?.plan, usage?.plan]);
 
     const displayName = React.useMemo(() => {
         if (!isLoaded || !user) return "";
@@ -46,7 +48,6 @@ export default function Titlebar() {
         if (displayEmail) return displayEmail.charAt(0).toUpperCase();
         return "?";
     }, [displayName, displayEmail]);
-    const planLabel = (plan || "starter").replace(/^./, c => c.toUpperCase()) + " Plan";
 
     // Cmd/Ctrl+K to focus the global search
     React.useEffect(() => {
@@ -263,13 +264,15 @@ export default function Titlebar() {
                                                             </div>
                                                         )}
                                                     </div>
-                                                    <div className="flex-1">
-                                                        <div className="font-semibold text-base-content">{displayName || ""}</div>
-                                                        <div className="text-sm text-base-content/60">{displayEmail}</div>
-                                                        <div className="text-xs text-primary font-medium">{planLabel}</div>
+                                                    <div>
+                                                        <div className="text-sm font-semibold text-base-content">{displayName || ""}</div>
+                                                        <div className="text-xs text-base-content/50">{displayEmail}</div>
+                                                        <div className="text-xs text-primary font-medium mt-1">{planLabel}</div>
                                                     </div>
                                                 </div>
                                             </li>
+
+                                            <div className="divider my-2"></div>
 
                                             {/* Account Section */}
                                             <li className="menu-title text-xs font-semibold text-base-content/50 px-3 py-2 uppercase tracking-wide">
@@ -277,7 +280,7 @@ export default function Titlebar() {
                                             </li>
                                             <li>
                                                 <Link href="/dashboard/account" className="flex items-center gap-3 py-2.5 px-3 rounded-xl hover:bg-base-200/60 transition-colors">
-                                                    <i className="fa-duotone fa-solid fa-user text-base text-base-content/60" aria-hidden />
+                                                    <i className="fa-duotone fa-solid fa-user-gear text-base text-base-content/60" aria-hidden />
                                                     <div>
                                                         <div className="font-medium">Profile Settings</div>
                                                         <div className="text-xs text-base-content/50">Manage your account</div>

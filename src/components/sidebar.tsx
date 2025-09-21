@@ -81,15 +81,10 @@ const navigationSections: NavSection[] = [
     { id: "developers", label: "Developers", icon: "fa-code", href: "/dashboard/settings/api", collapsible: false }
 ];
 
-type Usage = { used: number; limit: number; plan: string } | null;
-
 export default function Sidebar() {
     const pathname = usePathname();
-    const { tenantId } = useTenant();
-    const [usage, setUsage] = useState<Usage>(null);
-    const [offline, setOffline] = useState(false);
+    const { usage, usageLoading, usageOffline } = useTenant();
     const [collapsedSections, setCollapsedSections] = useState<Record<string, boolean>>({});
-    const [loadingUsage, setLoadingUsage] = useState(true);
 
     const LS_KEY = 'sidebarCollapsedSections';
 
@@ -116,28 +111,6 @@ export default function Sidebar() {
         setCollapsedSections(initial);
     }, []);
 
-    useEffect(() => {
-        let cancelled = false;
-        async function load() {
-            if (!tenantId) return;
-            try {
-                const res = await fetch(`/api/usage`);
-                if (!res.ok) throw new Error('bad');
-                const data = await res.json();
-                if (!cancelled) {
-                    setUsage({ used: data.used, limit: data.limit, plan: data.plan });
-                    setOffline(false);
-                }
-            } catch {
-                if (!cancelled) { setOffline(true); }
-            } finally {
-                if (!cancelled) setLoadingUsage(false);
-            }
-        }
-        load();
-        return () => { cancelled = true; };
-    }, [tenantId]);
-
     const toggleSection = (sectionId: string) => {
         setCollapsedSections(prev => {
             const next = { ...prev, [sectionId]: !prev[sectionId] };
@@ -152,6 +125,11 @@ export default function Sidebar() {
         }
         return pathname.startsWith(href);
     };
+
+    const usageLimit = usage?.limit ?? 0;
+    const usageUsed = usage?.used ?? 0;
+    const usagePercent = usageLimit > 0 ? Math.min(100, (usageUsed / usageLimit) * 100) : 0;
+    const planLabel = usage?.plan ? usage.plan : 'Starter';
 
     return (
         <aside className="h-[calc(100vh-4rem)] sticky w-64 bg-base-100/60 backdrop-blur-sm border-r border-base-200/60">
@@ -236,7 +214,7 @@ export default function Sidebar() {
                 {/* Usage Statistics Card */}
                 <div className="p-3 border-t border-base-200/60">
                     <SlideIn delay={0.3}>
-                        {offline && (
+                        {usageOffline && (
                             <div className="mb-3 p-2 bg-warning/10 text-warning rounded-lg text-xs flex items-center gap-2">
                                 <i className="fa-duotone fa-solid fa-triangle-exclamation" aria-hidden />
                                 <span>Offline mode</span>
@@ -252,12 +230,12 @@ export default function Sidebar() {
                                     <span className="text-sm font-medium">Usage</span>
                                 </div>
                                 <span className="text-xs text-base-content/60 bg-base-100/60 px-2 py-1 rounded-md">
-                                    {usage?.plan || 'Starter'}
+                                    {planLabel.replace(/^./, c => c.toUpperCase())}
                                 </span>
                             </div>
 
                             <div className="space-y-2">
-                                {loadingUsage ? (
+                                {usageLoading ? (
                                     <div className="space-y-2 animate-pulse" aria-label="Loading usage metrics">
                                         <div className="flex items-center justify-between text-sm">
                                             <span className="text-base-content/40">User messages<br /><span className="text-xs">(UTC month)</span></span>
@@ -276,21 +254,21 @@ export default function Sidebar() {
                                         <div className="flex items-center justify-between text-sm">
                                             <span className="text-base-content/70">User messages<br /><span className="text-xs">(UTC month)</span></span>
                                             <span className="font-medium">
-                                                {usage ? `${usage.used} / ${usage.limit}` : offline ? '—' : '0 / 0'}
+                                                {usage ? `${usageUsed} / ${usageLimit}` : usageOffline ? '—' : '0 / 0'}
                                             </span>
                                         </div>
                                         <div className="w-full bg-base-300/60 rounded-full h-2" title={`Resets ${new Date(Date.UTC(new Date().getUTCFullYear(), new Date().getUTCMonth() + 1, 1)).toISOString().slice(0, 10)}`}>
                                             <div
                                                 className="bg-gradient-to-r from-primary to-secondary h-2 rounded-full transition-all duration-500"
                                                 style={{
-                                                    width: usage ? `${Math.min(100, (usage.used / usage.limit) * 100)}%` : '0%'
+                                                    width: `${usagePercent}%`
                                                 }}
                                             />
                                         </div>
                                         <div className="flex items-center justify-between text-xs text-base-content/60">
                                             <span>This month</span>
                                             <span>
-                                                {usage ? `${Math.round(Math.min(100, (usage.used / usage.limit) * 100))}%` : offline ? '—' : '0%'} used
+                                                {usage ? `${Math.round(usagePercent)}%` : usageOffline ? '—' : '0%'} used
                                             </span>
                                         </div>
                                     </>
