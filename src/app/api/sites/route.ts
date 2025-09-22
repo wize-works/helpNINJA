@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { query } from '@/lib/db'
 import { PLAN_LIMITS } from '@/lib/limits'
 import { getTenantIdStrict } from '@/lib/tenant-resolve'
+import { trackActivity } from '@/lib/activity-tracker'
 
 export const runtime = 'nodejs'
 
@@ -18,6 +19,9 @@ type SiteRow = {
 }
 
 export async function GET() {
+    // Track user activity for sites viewing
+    await trackActivity();
+
     const tenantId = await getTenantIdStrict()
 
     try {
@@ -36,6 +40,9 @@ export async function GET() {
 }
 
 export async function POST(req: NextRequest) {
+    // Track user activity for site creation
+    await trackActivity();
+
     const body = await req.json() as {
         tenantId?: string
         domain?: string

@@ -3,10 +3,14 @@ import { getTenantIdStrict } from '@/lib/tenant-resolve'
 import { query } from '@/lib/db'
 import { PLAN_LIMITS } from '@/lib/limits'
 import { ensureUsageRow, resetIfNewMonth } from '@/lib/usage'
+import { trackActivity } from '@/lib/activity-tracker'
 
 export const runtime = 'nodejs'
 
 export async function GET() {
+    // Track user activity for usage viewing
+    await trackActivity();
+
     const tenantId = await getTenantIdStrict()
 
     // Ensure counters exist for other flows, but we derive display usage from messages for UTC month alignment

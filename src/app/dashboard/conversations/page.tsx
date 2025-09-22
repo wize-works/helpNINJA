@@ -26,6 +26,7 @@ type Row = {
     site_name: string | null;
     has_human_agent: boolean;
     agent_names: string | null;
+    user_name: string | null;
     has_ai?: boolean;
     low_confidence?: boolean;
     shared?: boolean;
@@ -109,9 +110,11 @@ async function list(tenantId: string, filters: Filters) {
             (select count(*) > 0 from public.conversation_contact_info ci where ci.conversation_id = c.id) as has_contact,
             (select string_agg(distinct COALESCE(u.first_name || ' ' || u.last_name, u.email), ', ') from public.messages m 
              join public.users u on u.id = m.agent_id 
-             where m.conversation_id=c.id and m.is_human_response=true and m.agent_id is not null) as agent_names
+             where m.conversation_id=c.id and m.is_human_response=true and m.agent_id is not null) as agent_names,
+            cci.name as user_name
          from public.conversations c
          left join public.tenant_sites ts on ts.id = c.site_id
+         left join public.conversation_contact_info cci on cci.conversation_id = c.id
          where ${where}
          order by COALESCE(c.updated_at, c.created_at) desc
          limit 100`,
@@ -196,7 +199,7 @@ function ConversationsTable({ conversations }: { conversations: Row[] }) {
                             <table className="w-full">
                                 <thead className="bg-base-200/40">
                                     <tr>
-                                        <th className="text-left p-4 text-sm font-semibold text-base-content/80">Session</th>
+                                        <th className="text-left p-4 text-sm font-semibold text-base-content/80">User/Session</th>
                                         <th className="text-left p-4 text-sm font-semibold text-base-content/80">Site</th>
                                         <th className="text-left p-4 text-sm font-semibold text-base-content/80">Messages</th>
                                         <th className="text-left p-4 text-sm font-semibold text-base-content/80">Last Updated</th>
@@ -206,7 +209,7 @@ function ConversationsTable({ conversations }: { conversations: Row[] }) {
                                     </tr>
                                 </thead>
                                 <tbody className="divide-y divide-base-200/60">
-                                    {conversations.map((r, index) => (
+                                    {conversations.map((r) => (
                                         <tr key={r.id} className="hover:bg-base-200/30 hover:scale-[1.002] transition-all duration-200">
                                             <td className="p-4">
                                                 <div className="flex items-center gap-3">
@@ -214,11 +217,11 @@ function ConversationsTable({ conversations }: { conversations: Row[] }) {
                                                         <i className="fa-duotone fa-solid fa-user text-sm text-secondary" aria-hidden />
                                                     </div>
                                                     <div className="min-w-0 flex-1">
-                                                        <Link href={`/dashboard/conversations/${r.id}`} className="font-mono text-sm text-primary hover:text-primary/80 truncate transition-colors" title={r.session_id} prefetch>
-                                                            {r.session_id}
+                                                        <Link href={`/dashboard/conversations/${r.id}`} className="font-medium text-sm text-primary hover:text-primary/80 truncate transition-colors block" title={r.user_name || 'Unknown User'} prefetch>
+                                                            {r.user_name || 'Unknown User'}
                                                         </Link>
                                                         <div className="text-xs text-base-content/60 mt-0.5">
-                                                            Session #{index + 1}
+                                                            Session: {r.session_id.slice(0, 8)}...
                                                         </div>
                                                     </div>
                                                 </div>
@@ -307,7 +310,7 @@ function ConversationsTable({ conversations }: { conversations: Row[] }) {
             {/* Mobile/Tablet Cards */}
             <StaggerChild>
                 <div className="lg:hidden space-y-4">
-                    {conversations.map((r, index) => (
+                    {conversations.map((r) => (
                         <HoverScale key={r.id} scale={1.02}>
                             <div className="card bg-base-100 rounded-2xl shadow-sm hover:shadow-md transition-all duration-300 cursor-pointer">
                                 <div className="p-6">
@@ -318,7 +321,7 @@ function ConversationsTable({ conversations }: { conversations: Row[] }) {
                                             </div>
                                             <div className="min-w-0 flex-1">
                                                 <h3 className="font-semibold text-base-content mb-1">
-                                                    Session #{index + 1}
+                                                    {r.user_name || 'Unknown User'}
                                                 </h3>
                                                 <div className="text-sm text-base-content/60">
                                                     Last updated {new Date(r.updated_at).toLocaleDateString('en-US', {

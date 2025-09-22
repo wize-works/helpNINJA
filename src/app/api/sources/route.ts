@@ -1,11 +1,15 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { query } from '@/lib/db';
 import { getTenantIdStrict } from '@/lib/tenant-resolve';
+import { trackActivity } from '@/lib/activity-tracker';
 
 export const runtime = 'nodejs';
 
 export async function GET(req: NextRequest) {
     try {
+        // Track user activity for sources viewing
+        await trackActivity();
+
         const tenantId = await getTenantIdStrict();
         const { searchParams } = new URL(req.url);
 
@@ -71,6 +75,9 @@ export async function GET(req: NextRequest) {
 
 export async function POST(req: NextRequest) {
     try {
+        // Track user activity for source creation
+        await trackActivity();
+
         const tenantId = await getTenantIdStrict();
         const body = await req.json();
 

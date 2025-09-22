@@ -1,11 +1,15 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getTenantIdStrict } from "@/lib/tenant-resolve";
 import { query } from "@/lib/db";
+import { trackActivity } from '@/lib/activity-tracker';
 
 export const runtime = 'nodejs';
 
 export async function GET(req: NextRequest) {
     try {
+        // Track user activity for document searching
+        await trackActivity();
+
         const { searchParams } = new URL(req.url);
         const tenantId = searchParams.get('tenantId') || await getTenantIdStrict();
 

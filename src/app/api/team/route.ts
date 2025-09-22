@@ -5,11 +5,15 @@ import { hasRole } from '@/lib/rbac';
 import { logAuditEvent, extractRequestInfo } from '@/lib/audit-log';
 import { resolveCurrentUserId } from '@/lib/user-mapping';
 import { auth } from '@clerk/nextjs/server';
+import { trackActivity } from '@/lib/activity-tracker';
 
 export const runtime = 'nodejs';
 
 export async function GET(request: NextRequest) {
     try {
+        // Track user activity for team viewing
+        await trackActivity();
+
         const { userId: clerkUserId } = await auth();
         if (!clerkUserId) {
             return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
@@ -95,6 +99,9 @@ export async function GET(request: NextRequest) {
 
 export async function POST(req: NextRequest) {
     try {
+        // Track user activity for team member creation
+        await trackActivity();
+
         const { userId: clerkUserId } = await auth();
         if (!clerkUserId) {
             return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });

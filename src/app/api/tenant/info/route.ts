@@ -1,10 +1,14 @@
 import { NextResponse } from 'next/server'
 import { query } from '@/lib/db'
 import { getTenantIdStrict } from '@/lib/tenant-resolve'
+import { trackActivity } from '@/lib/activity-tracker'
 
 export const runtime = 'nodejs'
 
 export async function GET() {
+    // Track user activity for tenant info viewing
+    await trackActivity();
+
     let tenantId: string
     try {
         tenantId = await getTenantIdStrict()

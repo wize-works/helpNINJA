@@ -6,6 +6,7 @@ import { hasRole } from '@/lib/rbac';
 import { logAuditEvent, extractRequestInfo } from '@/lib/audit-log';
 import { auth } from '@clerk/nextjs/server';
 import { QueryResult } from 'pg';
+import { trackActivity } from '@/lib/activity-tracker';
 
 export const runtime = 'nodejs';
 
@@ -29,6 +30,9 @@ function getStripePriceId(plan: Exclude<Plan, 'none'>, billingPeriod: 'monthly' 
 
 export async function POST(req: NextRequest) {
     try {
+        // Track user activity for billing checkout
+        await trackActivity();
+
         const { userId: clerkUserId } = await auth();
         if (!clerkUserId) {
             return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });

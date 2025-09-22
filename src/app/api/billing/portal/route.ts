@@ -5,11 +5,15 @@ import { getTenantIdStrict } from '@/lib/tenant-resolve';
 import { hasRole } from '@/lib/rbac';
 import { logAuditEvent, extractRequestInfo } from '@/lib/audit-log';
 import { auth } from '@clerk/nextjs/server';
+import { trackActivity } from '@/lib/activity-tracker';
 
 export const runtime = 'nodejs';
 
 export async function POST(req: NextRequest) {
     try {
+        // Track user activity for billing portal access
+        await trackActivity();
+
         const { userId } = await auth();
         if (!userId) {
             return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
