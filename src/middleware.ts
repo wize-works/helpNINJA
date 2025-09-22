@@ -9,6 +9,10 @@ const isPublicRoute = createRouteMatcher([
     '/features',
     '/about',
     '/contact',
+    '/docs',
+    '/docs/(.*)',
+    '/terms',
+    '/privacy',
 
     // Invitation pages - must be public for new users
     '/invite(.*)',
