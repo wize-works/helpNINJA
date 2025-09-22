@@ -61,6 +61,8 @@ export function FeedbackTable({ }: FeedbackTableProps) {
     const [page, setPage] = useState(1);
     const [totalPages, setTotalPages] = useState(1);
     const [total, setTotal] = useState(0);
+    const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
+    const [bulkBusy, setBulkBusy] = useState(false);
 
     const searchParams = useSearchParams();
     const router = useRouter();
@@ -108,6 +110,23 @@ export function FeedbackTable({ }: FeedbackTableProps) {
         fetchFeedback();
     }, [fetchFeedback]);
 
+    const toggleSelect = (id: string) => {
+        setSelectedIds(prev => {
+            const next = new Set(prev);
+            if (next.has(id)) next.delete(id); else next.add(id);
+            return next;
+        });
+    };
+
+    const toggleSelectAll = () => {
+        setSelectedIds(prev => {
+            if (prev.size === feedback.length) return new Set();
+            return new Set(feedback.map(f => f.id));
+        });
+    };
+
+    const clearSelection = () => setSelectedIds(new Set());
+
     const updateFeedbackStatus = async (id: string, status: string) => {
         try {
             const response = await fetch(`/api/feedback/${id}`, {
@@ -125,6 +144,49 @@ export function FeedbackTable({ }: FeedbackTableProps) {
         } catch (error) {
             console.error('Error updating feedback:', error);
             toast.error({ message: 'Failed to update feedback' });
+        }
+    };
+
+    const bulkUpdate = async (changes: Partial<{ status: string; priority: string }>) => {
+        if (selectedIds.size === 0) return;
+        setBulkBusy(true);
+        try {
+            const ids = Array.from(selectedIds);
+            await Promise.all(ids.map(async (id) => {
+                const res = await fetch(`/api/feedback/${id}`, {
+                    method: 'PATCH',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(changes)
+                });
+                if (!res.ok) throw new Error('Failed');
+            }));
+            toast.success({ message: 'Updated selected feedback' });
+            clearSelection();
+            fetchFeedback();
+        } catch {
+            toast.error({ message: 'Bulk update failed' });
+        } finally {
+            setBulkBusy(false);
+        }
+    };
+
+    const bulkDelete = async () => {
+        if (selectedIds.size === 0) return;
+        if (!confirm(`Delete ${selectedIds.size} selected item(s)? This cannot be undone.`)) return;
+        setBulkBusy(true);
+        try {
+            const ids = Array.from(selectedIds);
+            await Promise.all(ids.map(async (id) => {
+                const res = await fetch(`/api/feedback/${id}`, { method: 'DELETE' });
+                if (!res.ok) throw new Error('Failed');
+            }));
+            toast.success({ message: 'Deleted selected feedback' });
+            clearSelection();
+            fetchFeedback();
+        } catch {
+            toast.error({ message: 'Bulk delete failed' });
+        } finally {
+            setBulkBusy(false);
         }
     };
 
@@ -198,15 +260,63 @@ export function FeedbackTable({ }: FeedbackTableProps) {
                             <h3 className="text-lg font-semibold text-base-content">Feedback Management</h3>
                             <p className="text-sm text-base-content/60">User feedback submissions and requests</p>
                         </div>
-                        <div className="flex items-center gap-2 text-sm text-base-content/60">
-                            <i className="fa-duotone fa-solid fa-comments text-xs" aria-hidden />
-                            <span>{feedback.length} items</span>
+                        <div className="flex items-center gap-3">
+                            {selectedIds.size > 0 ? (
+                                <div className="flex items-center gap-2">
+                                    <span className="text-sm text-base-content/80">Selected: {selectedIds.size}</span>
+                                    <select
+                                        className="select select-bordered select-sm"
+                                        disabled={bulkBusy}
+                                        onChange={(e) => {
+                                            const v = e.target.value;
+                                            if (v) bulkUpdate({ status: v });
+                                            e.currentTarget.selectedIndex = 0;
+                                        }}
+                                    >
+                                        <option value="">Set status…</option>
+                                        <option value="open">Open</option>
+                                        <option value="in_review">In Review</option>
+                                        <option value="planned">Planned</option>
+                                        <option value="in_progress">In Progress</option>
+                                        <option value="completed">Completed</option>
+                                        <option value="rejected">Rejected</option>
+                                        <option value="duplicate">Duplicate</option>
+                                    </select>
+                                    <select
+                                        className="select select-bordered select-sm"
+                                        disabled={bulkBusy}
+                                        onChange={(e) => {
+                                            const v = e.target.value;
+                                            if (v) bulkUpdate({ priority: v });
+                                            e.currentTarget.selectedIndex = 0;
+                                        }}
+                                    >
+                                        <option value="">Set priority…</option>
+                                        <option value="urgent">Urgent</option>
+                                        <option value="high">High</option>
+                                        <option value="medium">Medium</option>
+                                        <option value="low">Low</option>
+                                    </select>
+                                    <button className="btn btn-error btn-sm" disabled={bulkBusy} onClick={bulkDelete}>
+                                        <i className="fa-duotone fa-solid fa-trash" /> Delete
+                                    </button>
+                                    <button className="btn btn-ghost btn-sm" disabled={bulkBusy} onClick={clearSelection}>Clear</button>
+                                </div>
+                            ) : (
+                                <div className="flex items-center gap-2 text-sm text-base-content/60">
+                                    <i className="fa-duotone fa-solid fa-comments text-xs" aria-hidden />
+                                    <span>{feedback.length} items</span>
+                                </div>
+                            )}
                         </div>
                     </div>
                     <div className="overflow-hidden rounded-xl border border-base-200/60">
                         <table className="w-full">
                             <thead className="bg-base-200/40">
                                 <tr>
+                                    <th className="p-4">
+                                        <input type="checkbox" className="checkbox checkbox-sm" onChange={toggleSelectAll} checked={feedback.length > 0 && selectedIds.size === feedback.length} />
+                                    </th>
                                     <th className="text-left p-4 text-sm font-semibold text-base-content/80">Feedback</th>
                                     <th className="text-left p-4 text-sm font-semibold text-base-content/80">Type</th>
                                     <th className="text-left p-4 text-sm font-semibold text-base-content/80">Priority</th>
@@ -223,6 +333,14 @@ export function FeedbackTable({ }: FeedbackTableProps) {
 
                                     return (
                                         <tr key={item.id} className="hover:bg-base-200/30 hover:scale-[1.002] transition-all duration-200">
+                                            <td className="p-4">
+                                                <input
+                                                    type="checkbox"
+                                                    className="checkbox checkbox-sm"
+                                                    checked={selectedIds.has(item.id)}
+                                                    onChange={() => toggleSelect(item.id)}
+                                                />
+                                            </td>
                                             <td className="p-4">
                                                 <div className="flex items-start gap-3">
                                                     <div className="w-8 h-8 bg-base-200/60 rounded-lg flex items-center justify-center flex-shrink-0">
@@ -401,6 +519,12 @@ export function FeedbackTable({ }: FeedbackTableProps) {
                                             )}
                                         </div>
                                         <div className="flex items-center gap-2">
+                                            <input
+                                                type="checkbox"
+                                                className="checkbox checkbox-sm"
+                                                checked={selectedIds.has(item.id)}
+                                                onChange={() => toggleSelect(item.id)}
+                                            />
                                             <button
                                                 onClick={() => setSelectedItem(item)}
                                                 className="flex items-center gap-2 px-3 py-2 bg-primary/10 hover:bg-primary/20 text-primary rounded-lg text-sm font-medium transition-colors"
@@ -495,6 +619,30 @@ interface FeedbackDetailModalProps {
 
 function FeedbackDetailModal({ feedback, onClose, onUpdate }: FeedbackDetailModalProps) {
     const [updating, setUpdating] = useState(false);
+    const [details, setDetails] = useState<{
+        comments: Array<{ id: string; author_name: string | null; author_email: string | null; comment: string; is_internal: boolean; created_at: string }>;
+        attachments: Array<{ id: string; filename: string; original_filename?: string; mime_type: string; file_size: number; description?: string; created_at: string; downloadUrl?: string }>
+    } | null>(null);
+    const [loading, setLoading] = useState(true);
+    const [newComment, setNewComment] = useState('');
+    const [isInternal, setIsInternal] = useState(true);
+    const [uploading, setUploading] = useState(false);
+    const [uploadFiles, setUploadFiles] = useState<File[]>([]);
+
+    const loadDetails = useCallback(async () => {
+        try {
+            setLoading(true);
+            const res = await fetch(`/api/feedback/${feedback.id}`);
+            if (res.ok) {
+                const data = await res.json();
+                setDetails({ comments: data.comments || [], attachments: data.attachments || [] });
+            }
+        } finally {
+            setLoading(false);
+        }
+    }, [feedback.id]);
+
+    useEffect(() => { loadDetails(); }, [loadDetails]);
 
     const updateStatus = async (status: string) => {
         setUpdating(true);
@@ -638,6 +786,126 @@ function FeedbackDetailModal({ feedback, onClose, onUpdate }: FeedbackDetailModa
                                 </div>
                             </div>
                         )}
+
+                        {/* Attachments */}
+                        <div>
+                            <div className="flex items-center justify-between mb-2">
+                                <h4 className="font-medium text-base-content">Attachments</h4>
+                                <label className="btn btn-sm">
+                                    <input
+                                        type="file"
+                                        multiple
+                                        className="hidden"
+                                        onChange={(e) => setUploadFiles(Array.from(e.target.files || []))}
+                                    />
+                                    <i className="fa-duotone fa-solid fa-paperclip" /> Add
+                                </label>
+                            </div>
+                            {loading ? (
+                                <div className="text-sm text-base-content/60">Loading…</div>
+                            ) : details && details.attachments.length > 0 ? (
+                                <div className="space-y-2">
+                                    {details.attachments.map(att => (
+                                        <div key={att.id} className="flex items-center justify-between p-2 border rounded-lg">
+                                            <div className="truncate max-w-[70%]">
+                                                <span className="font-medium">{att.original_filename || att.filename}</span>
+                                                <span className="ml-2 text-xs text-base-content/60">{Math.round(att.file_size / 1024)} KB</span>
+                                            </div>
+                                            <div className="flex items-center gap-2">
+                                                <a className="btn btn-xs" href={`/api/feedback/attachments/${att.id}/download`} target="_blank" rel="noreferrer">
+                                                    <i className="fa-duotone fa-solid fa-download" />
+                                                </a>
+                                            </div>
+                                        </div>
+                                    ))}
+                                </div>
+                            ) : (
+                                <div className="text-sm text-base-content/60">No attachments</div>
+                            )}
+                            {uploadFiles.length > 0 && (
+                                <div className="flex items-center gap-2 mt-2">
+                                    <span className="text-sm">{uploadFiles.length} file(s) ready</span>
+                                    <button
+                                        className="btn btn-primary btn-sm"
+                                        disabled={uploading}
+                                        onClick={async () => {
+                                            setUploading(true);
+                                            try {
+                                                const fd = new FormData();
+                                                fd.append('feedbackId', feedback.id);
+                                                uploadFiles.forEach(f => fd.append('files', f));
+                                                const resp = await fetch('/api/feedback/attachments', { method: 'POST', body: fd });
+                                                if (!resp.ok) throw new Error('upload failed');
+                                                setUploadFiles([]);
+                                                await loadDetails();
+                                                onUpdate();
+                                            } catch {
+                                            } finally {
+                                                setUploading(false);
+                                            }
+                                        }}
+                                    >
+                                        Upload
+                                    </button>
+                                    <button className="btn btn-sm" onClick={() => setUploadFiles([])}>Clear</button>
+                                </div>
+                            )}
+                        </div>
+
+                        {/* Comments */}
+                        <div>
+                            <h4 className="font-medium text-base-content mb-2">Comments</h4>
+                            {loading ? (
+                                <div className="text-sm text-base-content/60">Loading…</div>
+                            ) : details && details.comments.length > 0 ? (
+                                <div className="space-y-3">
+                                    {details.comments.map(c => (
+                                        <div key={c.id} className="p-3 border rounded-lg">
+                                            <div className="flex items-center justify-between text-xs text-base-content/60 mb-1">
+                                                <span>{c.author_name || 'Admin'} {c.is_internal && <span className="ml-2 badge badge-ghost badge-xs">internal</span>}</span>
+                                                <span>{new Date(c.created_at).toLocaleString()}</span>
+                                            </div>
+                                            <div className="text-sm whitespace-pre-wrap">{c.comment}</div>
+                                        </div>
+                                    ))}
+                                </div>
+                            ) : (
+                                <div className="text-sm text-base-content/60">No comments yet</div>
+                            )}
+
+                            {/* Add comment */}
+                            <div className="mt-3 space-y-2">
+                                <textarea
+                                    className="textarea textarea-bordered w-full"
+                                    placeholder="Add a comment…"
+                                    value={newComment}
+                                    onChange={(e) => setNewComment(e.target.value)}
+                                />
+                                <div className="flex items-center justify-between">
+                                    <label className="label cursor-pointer gap-2">
+                                        <input type="checkbox" className="checkbox checkbox-sm" checked={isInternal} onChange={(e) => setIsInternal(e.target.checked)} />
+                                        <span className="label-text text-sm">Internal</span>
+                                    </label>
+                                    <button
+                                        className="btn btn-primary btn-sm"
+                                        disabled={!newComment.trim()}
+                                        onClick={async () => {
+                                            const res = await fetch(`/api/feedback/${feedback.id}`, {
+                                                method: 'POST',
+                                                headers: { 'Content-Type': 'application/json' },
+                                                body: JSON.stringify({ comment: newComment, isInternal })
+                                            });
+                                            if (res.ok) {
+                                                setNewComment('');
+                                                await loadDetails();
+                                            }
+                                        }}
+                                    >
+                                        Add Comment
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
                     </div>
                 </div>
 

@@ -230,9 +230,25 @@ Core features (present)
     - Server-side filtering with URL persistence for search, type, status, priority, and site association
     - Comprehensive feedback analytics with visual charts showing trends, priority distribution, and resolution metrics
     - Advanced feedback table with modal detail views, status management, and escalation tracking
+    - CSV export of filtered feedback with Excel-friendly encoding
+    - Bulk actions (status/priority updates, deletion) with multi-select
+    - Detail modal collaboration: comments (internal/external) and attachments (upload/download)
     - Site-specific feedback filtering allows isolation of feedback by verified tenant sites
     - Auto-escalation for urgent/high-priority feedback with centralized escalation service integration
     - Files: src/app/dashboard/feedback/page.tsx (server-side main page), src/app/dashboard/feedback/feedback-content.tsx (client component), src/app/dashboard/feedback/filter-controls.tsx (standardized filters), src/app/api/feedback/route.ts (enhanced with ILIKE search), src/components/feedback-table.tsx, src/components/feedback-analytics.tsx
+    - CSV Export:
+      - UI: `src/app/dashboard/feedback/export-csv-button.tsx` reads current URL filters and opens export in a new tab
+      - API: `src/app/api/feedback/export/route.ts` mirrors list filters (`type`, `status`, `priority`, `search`, `siteId`, `days` capped to 365), limits to 5000 rows, returns UTF-8 BOM-prefixed `text/csv` with `Content-Disposition: attachment`
+      - Columns: `created_at, type, priority, status, title, description, category, tags, user_name, user_email, url, site_domain, escalated_at, resolved_at`
+    - Bulk Actions:
+      - Multi-select checkboxes in table header/rows; toolbar appears when items selected
+      - Supported: Set Status, Set Priority (batched via parallel `PATCH /api/feedback/[id]`), Delete (batched `DELETE /api/feedback/[id]`)
+      - Tenant-scoped, preserves current filters; optimistically refreshes after completion
+    - Detail Modal Enhancements:
+      - Loads full details (including comments and attachments) via `GET /api/feedback/[id]`
+      - Comments: add via `POST /api/feedback/[id]` with `content` and `isInternal` flag; renders author, visibility, and timestamps
+      - Attachments: upload via `POST /api/feedback/attachments` (multipart FormData with `feedbackId` + files), list/download via `GET /api/feedback/attachments` and `GET /api/feedback/attachments/[id]/download`; delete supported via `DELETE /api/feedback/attachments/[id]/download`
+      - Files: Implemented in `src/components/feedback-table.tsx` modal section leveraging existing attachment routes
   - **Outbox (Delivery Status)**: Complete integration delivery monitoring with standardized filter implementation following filter-button-guide.md pattern
     - Server-side filtering with URL persistence for search, status (pending/sent/failed), provider, and escalation rule association
     - Search functionality across integration names, error messages, providers, and rule names for efficient troubleshooting

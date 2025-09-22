@@ -6,6 +6,7 @@ import StatCard from '@/components/ui/stat-card';
 import { DashboardFeedbackButton } from '@/components/feedback-button';
 import FeedbackContent from './feedback-content';
 import FilterControls from './filter-controls';
+import ExportCsvButton from './export-csv-button';
 
 interface Filters {
     type?: string;
@@ -202,10 +203,7 @@ export default async function FeedbackPage({
                                     variant="base"
                                     className="rounded-xl"
                                 />
-                                <button className="btn btn-primary rounded-xl">
-                                    <i className="fa-duotone fa-solid fa-download" />
-                                    Export CSV
-                                </button>
+                                <ExportCsvButton />
                             </div>
                         </div>
                     </StaggerChild>
