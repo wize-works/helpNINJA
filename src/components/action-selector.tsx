@@ -42,6 +42,8 @@ export default function ActionSelector({
         type: 'integration',
         template: 'User needs help with: {{message}}\nConfidence: {{confidence}}\nTime: {{timestamp}}'
     });
+    const [editingIndex, setEditingIndex] = useState<number | null>(null);
+    const [editDestination, setEditDestination] = useState<Destination | null>(null);
 
     useEffect(() => {
         loadIntegrations();
@@ -162,7 +164,8 @@ export default function ActionSelector({
                                             type="button"
                                             className="btn btn-sm  rounded-lg"
                                             onClick={() => {
-                                                // TODO: Show edit modal
+                                                setEditingIndex(index);
+                                                setEditDestination({ ...destination });
                                             }}
                                             disabled={disabled}
                                             title="Edit destination"
@@ -390,6 +393,157 @@ export default function ActionSelector({
                                         >
                                             <i className="fa-duotone fa-solid fa-plus mr-2" aria-hidden />
                                             Add Destination
+                                        </button>
+                                    </HoverScale>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {/* Edit Destination Modal */}
+            {editingIndex !== null && editDestination && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center">
+                    <div className="fixed inset-0 bg-black/20 backdrop-blur-sm" onClick={() => { setEditingIndex(null); setEditDestination(null); }} />
+                    <div className="relative w-full max-w-2xl mx-4 max-h-[90vh] overflow-y-auto">
+                        <div className="bg-base-100 rounded-2xl shadow-2xl border border-base-300/40">
+                            <div className="flex items-center justify-between p-6 border-b border-base-300/40">
+                                <div>
+                                    <h2 className="text-xl font-semibold text-base-content">Edit Destination</h2>
+                                    <p className="text-sm text-base-content/60 mt-1">Update where escalation notifications will be sent</p>
+                                </div>
+                                <button
+                                    onClick={() => { setEditingIndex(null); setEditDestination(null); }}
+                                    className="btn  btn-circle btn-sm"
+                                    disabled={disabled}
+                                >
+                                    <i className="fa-duotone fa-solid fa-xmark text-lg" />
+                                </button>
+                            </div>
+
+                            <div className="p-6 space-y-6">
+                                {/* Destination Type (read-only for simplicity) */}
+                                <div>
+                                    <label className="label"><span className="label-text font-medium">Destination Type</span></label>
+                                    <input className="input input-bordered w-full" value={editDestination.type} disabled />
+                                </div>
+
+                                {/* Integration Selection */}
+                                {editDestination.type === 'integration' && (
+                                    <label className="block">
+                                        <span className="text-sm font-medium text-base-content mb-2 block">Select Integration<span className="text-error ml-1">*</span></span>
+                                        {integrations.length === 0 ? (
+                                            <div className="text-center py-6 bg-base-200/40 rounded-xl border border-base-300">
+                                                <div className="w-12 h-12 bg-base-300/60 rounded-xl flex items-center justify-center mx-auto mb-3">
+                                                    <i className="fa-duotone fa-solid fa-puzzle-piece text-xl text-base-content/40" aria-hidden />
+                                                </div>
+                                                <p className="text-base-content/60 mb-3">No active integrations found</p>
+                                                <Link href="/dashboard/integrations" className="btn btn-sm btn-outline rounded-lg">
+                                                    <i className="fa-duotone fa-solid fa-plus mr-2" aria-hidden />
+                                                    Set Up Integrations
+                                                </Link>
+                                            </div>
+                                        ) : (
+                                            <select
+                                                className="select select-bordered w-full focus:select-primary transition-all duration-200"
+                                                value={editDestination.integrationId || ''}
+                                                onChange={(e) => setEditDestination({ ...editDestination, integrationId: e.target.value })}
+                                                disabled={disabled}
+                                            >
+                                                <option value="">Choose an integration...</option>
+                                                {integrations.map((integration) => (
+                                                    <option key={integration.id} value={integration.id}>
+                                                        {integration.name} ({integration.provider})
+                                                    </option>
+                                                ))}
+                                            </select>
+                                        )}
+                                    </label>
+                                )}
+
+                                {/* Email Input */}
+                                {editDestination.type === 'email' && (
+                                    <label className="block">
+                                        <span className="text-sm font-medium text-base-content mb-2 block">Email Address<span className="text-error ml-1">*</span></span>
+                                        <input
+                                            type="email"
+                                            className="input input-bordered w-full focus:input-primary transition-all duration-200"
+                                            placeholder="support@company.com"
+                                            value={editDestination.email || ''}
+                                            onChange={(e) => setEditDestination({ ...editDestination, email: e.target.value })}
+                                            disabled={disabled}
+                                        />
+                                    </label>
+                                )}
+
+                                {/* Webhook Input */}
+                                {editDestination.type === 'webhook' && (
+                                    <label className="block">
+                                        <span className="text-sm font-medium text-base-content mb-2 block">Webhook URL<span className="text-error ml-1">*</span></span>
+                                        <input
+                                            type="url"
+                                            className="input input-bordered w-full focus:input-primary transition-all duration-200"
+                                            placeholder="https://api.example.com/webhook"
+                                            value={editDestination.webhookUrl || ''}
+                                            onChange={(e) => setEditDestination({ ...editDestination, webhookUrl: e.target.value })}
+                                            disabled={disabled}
+                                        />
+                                    </label>
+                                )}
+
+                                {/* Message Template */}
+                                <fieldset className="space-y-4">
+                                    <legend className="text-base font-semibold text-base-content mb-2">Message Template</legend>
+                                    <label className="block">
+                                        <span className="text-sm font-medium text-base-content mb-2 block">Template Content</span>
+                                        <textarea
+                                            className="textarea textarea-bordered w-full h-24 focus:textarea-primary transition-all duration-200"
+                                            placeholder="Customize the message that will be sent..."
+                                            value={editDestination.template || ''}
+                                            onChange={(e) => setEditDestination({ ...editDestination, template: e.target.value })}
+                                            disabled={disabled}
+                                        />
+                                    </label>
+                                </fieldset>
+                            </div>
+
+                            <div className="flex items-center justify-between p-6 border-t border-base-300/40 bg-base-50/50">
+                                <div className="text-sm text-base-content/60">Editing destination #{editingIndex + 1}</div>
+                                <div className="flex gap-3">
+                                    <button
+                                        onClick={() => { setEditingIndex(null); setEditDestination(null); }}
+                                        className="btn "
+                                        disabled={disabled}
+                                    >
+                                        Cancel
+                                    </button>
+                                    <HoverScale scale={1.02}>
+                                        <button
+                                            onClick={() => {
+                                                if (!editDestination) return;
+                                                if (editDestination.type === 'integration' && !editDestination.integrationId) {
+                                                    toast.validation({ message: 'Please select an integration' });
+                                                    return;
+                                                }
+                                                if (editDestination.type === 'email' && !editDestination.email) {
+                                                    toast.validation({ message: 'Please enter an email address' });
+                                                    return;
+                                                }
+                                                if (editDestination.type === 'webhook' && !editDestination.webhookUrl) {
+                                                    toast.validation({ message: 'Please enter a webhook URL' });
+                                                    return;
+                                                }
+                                                const updated = destinations.map((d, i) => i === editingIndex ? { ...editDestination } : d);
+                                                onChange(updated);
+                                                setEditingIndex(null);
+                                                setEditDestination(null);
+                                            }}
+                                            className="btn btn-primary"
+                                            disabled={disabled}
+                                        >
+                                            <i className="fa-duotone fa-solid fa-check mr-2" />
+                                            Save Changes
                                         </button>
                                     </HoverScale>
                                 </div>

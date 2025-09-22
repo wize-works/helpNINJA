@@ -181,6 +181,7 @@ Core features (present)
   - Files: src/lib/usage.ts, src/lib/limits.ts
 - Integrations + outbox
   - Provider interface (email/slack/teams/discord supported); registry + dispatch through centralized escalation service; failed sends go to integration_outbox; retry via API.
+  - Manual escalation supports selecting specific integrations per action; the UI passes `selectedIntegrations` and the API maps them to destinations to prevent broadcasting to all integrations.
   - **Microsoft Teams Integration**: Modern Power Automate webhook integration with Adaptive Card formatting, rich message support, and comprehensive setup wizard
   - **Teams Features**: Modern Adaptive Cards, professional layout with logos and action buttons, markdown support, contact information display, reference links
   - **Power Automate Integration**: Uses modern workflow-based webhooks (not deprecated Office 365 connectors), includes detailed Power Automate setup instructions
@@ -189,6 +190,7 @@ Core features (present)
   - **Discord Visual Design**: Dynamic color coding (amber for low confidence, red for restricted content, blue for handoffs, green for user requests), emoji-enhanced field headers, professional footer branding
   - **UI Integration**: Complete configuration UI with provider-specific fields, detailed setup instructions, and marketplace integration (Discord available alongside Slack, Teams, and Email)
   - Files: src/lib/integrations/types.ts, src/lib/integrations/registry.ts, src/lib/integrations/providers/teams.ts, src/lib/integrations/providers/discord.ts, src/lib/escalation-service.ts, src/app/api/outbox/retry/route.ts, src/components/integration-settings-form.tsx, src/app/dashboard/integrations/marketplace/page.tsx
+  - Manual escalation flow files: `src/components/manual-escalation-button.tsx`, `src/components/escalation-choice-modal.tsx`, API `src/app/api/escalate/route.ts` (handles `selectedIntegrations`), service `src/lib/escalation-service.ts` (uses `matchedRuleDestinations`).
 - Billing
   - Checkout/portal endpoints; Stripe webhook updates tenant plan/status and ensures usage counters.
   - Files: src/app/api/billing/**, src/app/api/stripe/webhook/route.ts, src/lib/stripe.ts

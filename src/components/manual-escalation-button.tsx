@@ -42,7 +42,6 @@ export default function ManualEscalationButton({
                     reason: reason || 'manual',
                     fromChat: false,
                     skipWebhooks: false,
-                    // TODO: Add selectedIntegrations to the API payload in next phase
                     selectedIntegrations
                 })
             });

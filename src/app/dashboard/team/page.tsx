@@ -24,6 +24,10 @@ export default function TeamPage() {
         pending: 0,
         suspended: 0
     });
+    const [editingMember, setEditingMember] = useState<UserMember | null>(null);
+    const [editFirstName, setEditFirstName] = useState('');
+    const [editLastName, setEditLastName] = useState('');
+    const [savingEdit, setSavingEdit] = useState(false);
 
     const breadcrumbItems = [
         { label: "Dashboard", href: "/dashboard", icon: "fa-gauge-high" },
@@ -65,9 +69,50 @@ export default function TeamPage() {
         loadTeamMembers();
     };
 
-    const handleEdit = () => {
-        // TODO: Show edit modal
-        // Edit member action (implementation pending)
+
+    const handleEdit = (member: UserMember) => {
+        setEditingMember(member);
+        setEditFirstName(member.first_name || '');
+        setEditLastName(member.last_name || '');
+    };
+
+    const closeEdit = () => {
+        setEditingMember(null);
+        setEditFirstName('');
+        setEditLastName('');
+        setSavingEdit(false);
+    };
+
+    const saveEdit = async () => {
+        if (!editingMember) return;
+        setSavingEdit(true);
+        try {
+            const response = await fetch(`/api/team/${editingMember.user_id}`, {
+                method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ firstName: editFirstName, lastName: editLastName })
+            });
+
+            if (response.ok) {
+                await loadTeamMembers();
+                toast.success({ message: 'Member updated successfully' });
+                closeEdit();
+            } else {
+                try {
+                    const errJson: unknown = await response.json();
+                    toast.apiError(errJson, 'Failed to update member');
+                } catch {
+                    toast.error({ message: 'Failed to update member' });
+                }
+            }
+        } catch (error) {
+            console.error('Error updating member:', error);
+            toast.error({ message: 'Failed to update member' });
+        } finally {
+            setSavingEdit(false);
+        }
     };
 
     const handleRemove = async (member: UserMember) => {
@@ -408,6 +453,55 @@ export default function TeamPage() {
                     </StaggerContainer>
                 )}
             </div>
+            {/* Edit Member Modal */}
+            {editingMember && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center">
+                    <div className="fixed inset-0 bg-black/20 backdrop-blur-sm" onClick={closeEdit} />
+                    <div className="relative w-full max-w-lg mx-4">
+                        <div className="bg-base-100 rounded-2xl shadow-2xl border border-base-300/40">
+                            <div className="flex items-center justify-between p-6 border-b border-base-300/40">
+                                <div>
+                                    <h2 className="text-xl font-semibold text-base-content">Edit Team Member</h2>
+                                    <p className="text-sm text-base-content/60 mt-1">Update name details for this member</p>
+                                </div>
+                                <button onClick={closeEdit} className="btn  btn-circle btn-sm" disabled={savingEdit}>
+                                    <i className="fa-duotone fa-solid fa-xmark text-lg" />
+                                </button>
+                            </div>
+                            <div className="p-6 space-y-4">
+                                <div>
+                                    <label className="label"><span className="label-text font-medium">First Name</span></label>
+                                    <input
+                                        className="input input-bordered w-full"
+                                        value={editFirstName}
+                                        onChange={(e) => setEditFirstName(e.target.value)}
+                                        placeholder="First name"
+                                        disabled={savingEdit}
+                                    />
+                                </div>
+                                <div>
+                                    <label className="label"><span className="label-text font-medium">Last Name</span></label>
+                                    <input
+                                        className="input input-bordered w-full"
+                                        value={editLastName}
+                                        onChange={(e) => setEditLastName(e.target.value)}
+                                        placeholder="Last name"
+                                        disabled={savingEdit}
+                                    />
+                                </div>
+                                <div className="text-xs text-base-content/60">Email: {editingMember.email}</div>
+                            </div>
+                            <div className="flex items-center justify-end gap-3 p-6 border-t border-base-300/40 bg-base-50/50">
+                                <button className="btn " onClick={closeEdit} disabled={savingEdit}>Cancel</button>
+                                <button className={`btn btn-primary ${savingEdit ? 'btn-disabled' : ''}`} onClick={saveEdit} disabled={savingEdit}>
+                                    {savingEdit && <span className="loading loading-spinner loading-xs mr-2" />}
+                                    Save Changes
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            )}
         </AnimatedPage>
     );
 }
