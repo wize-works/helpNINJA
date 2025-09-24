@@ -6,6 +6,22 @@ Allow: /about
 Allow: /contact
 Allow: /auth/signin
 Allow: /auth/signup
+
+# Documentation
+Allow: /docs/
+Allow: /docs/widget-installation
+Allow: /docs/dashboard
+Allow: /docs/integrations
+Allow: /docs/billing
+Allow: /docs/troubleshooting
+
+# Legal pages
+Allow: /legal/terms
+Allow: /legal/privacy
+Allow: /legal/cookies
+Allow: /legal/data-deletion
+
+# API Documentation
 Allow: /api-docs.html
 Allow: /openapi.json
 Allow: /openapi.yaml
@@ -17,5 +33,11 @@ Disallow: /api/
 Disallow: /auth/reset-password
 Disallow: /auth/verify-email
 
+# AI crawling guidelines
+Allow: /ai.txt
+
 # Sitemap location
 Sitemap: https://helpninja.app/sitemap.xml
+
+# AI guidelines location
+AI: https://helpninja.app/ai.txt

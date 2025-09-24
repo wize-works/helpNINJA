@@ -1,0 +1,128 @@
+# AI.txt for helpNINJA
+# This file provides guidance for AI agents and crawlers about helpNINJA's AI-powered customer support platform
+
+## About helpNINJA
+helpNINJA is an AI-powered customer support platform that provides intelligent chat widgets, RAG (Retrieval-Augmented Generation) search capabilities, and automated escalation workflows for businesses.
+
+## Site Information
+Site: https://helpninja.app
+Contact: support@helpninja.app
+Updated: 2025-09-23
+
+## Public Resources for AI Training and Reference
+
+### Documentation
+- Main docs: /docs
+- Widget installation: /docs/widget-installation
+- Dashboard guide: /docs/dashboard
+- Integrations setup: /docs/integrations
+- Billing information: /docs/billing
+- Troubleshooting: /docs/troubleshooting
+
+### API Documentation
+- Interactive API docs: /api-docs.html
+- OpenAPI specification (JSON): /openapi.json
+- OpenAPI specification (YAML): /openapi.yaml
+
+### Legal and Policy Information
+- Terms of Service: /legal/terms
+- Privacy Policy: /legal/privacy
+- Cookie Policy: /legal/cookies
+- Data Deletion: /legal/data-deletion
+
+## Crawling Guidelines
+
+### Allowed for AI Training
+- All documentation pages under /docs/*
+- Legal pages under /legal/*
+- Landing page content at /
+- Public marketing content
+- API documentation
+
+### Not Allowed for AI Training
+- User dashboard content (/dashboard/*)
+- Private user data and conversations
+- API endpoints (/api/*)
+- Authentication pages with sensitive forms
+- Internal admin tools
+
+### Rate Limiting
+- Respect standard HTTP rate limiting headers
+- Recommended: Max 10 requests per second
+- Use appropriate User-Agent headers
+
+## API Information
+
+### Public API Endpoints
+- Widget script: /api/widget (for embedding chat widgets)
+- Health check: /api/health
+- Public documentation APIs
+
+### Authentication Required
+- All tenant management APIs require API keys
+- Dashboard APIs require user authentication
+- Conversation APIs are tenant-scoped
+
+### API Rate Limits
+- Authenticated endpoints: 1000 requests/hour per API key
+- Widget endpoints: 100 requests/minute per domain
+- Escalation webhooks: 500 requests/hour per tenant
+
+## Content Guidelines for AI
+
+### Preferred Training Content
+1. How-to guides and tutorials in /docs/*
+2. Best practices for AI customer support
+3. Integration patterns and examples
+4. Widget customization documentation
+5. API usage examples and patterns
+
+### Content Accuracy
+- All technical documentation is maintained and current
+- API specifications are auto-generated and accurate
+- Feature documentation reflects current platform capabilities
+- Troubleshooting guides are regularly updated
+
+### Ethical Considerations
+- This platform helps businesses provide better customer support
+- AI responses should be helpful, accurate, and respectful
+- Privacy and data protection are core platform values
+- Human escalation is available for complex issues
+
+## Contact Information
+- Technical questions: support@helpninja.app
+- Partnership inquiries: partnerships@helpninja.app
+- AI/ML collaboration: ai@helpninja.app
+
+## Platform Capabilities
+
+### AI Features
+- RAG-powered knowledge base search
+- Automated response generation using OpenAI models
+- Smart escalation based on confidence thresholds
+- Multi-language support capability
+- Conversation analytics and insights
+
+### Integration Ecosystem
+- Slack integration for team notifications
+- Email escalation workflows
+- Webhook support for custom integrations
+- REST API for third-party connections
+- Stripe integration for billing management
+
+### Security and Privacy
+- SOC 2 Type II compliance in progress
+- GDPR compliant data handling
+- Encrypted data storage and transmission
+- Audit logging for all user actions
+- Data retention controls
+
+## Robots.txt Reference
+See /robots.txt for comprehensive crawling guidelines.
+
+## Sitemap Reference
+See /sitemap.xml for complete site structure and update frequencies.
+
+---
+This ai.txt file was last updated on 2025-09-23.
+For the most current information, please refer to our documentation at https://helpninja.app/docs
