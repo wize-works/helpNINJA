@@ -175,6 +175,7 @@ Core features (present)
   - Files: src/lib/rag.ts; relies on public.chunks(url, content, embedding vector, tsv tsvector, tenant_id)
 - Ingestion pipeline
   - API endpoint ingests URL/sitemap, crawls, chunks, embeds, inserts documents/chunks.
+  - **Graceful authentication handling**: Crawler properly handles auth-protected pages (401/403) as informational messages rather than errors, preventing log noise while continuing to process accessible content
   - Files: src/app/api/ingest/route.ts, src/lib/crawler.ts, src/lib/chunk.ts, src/lib/embeddings.ts
 - Usage gating
   - Monthly counters per tenant; auto-init + monthly reset; enforce PLAN_LIMITS before AI calls; increment after.

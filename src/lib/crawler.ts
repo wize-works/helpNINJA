@@ -16,7 +16,14 @@ async function fetchHtml(url: string, retries = 3): Promise<string> {
                     'Accept-Language': 'en-US,en;q=0.9'
                 }
             });
-            if (!res.ok) throw new Error(`fetch ${url} -> ${res.status}`);
+
+            if (!res.ok) {
+                // Handle authentication/authorization errors gracefully - these are expected
+                if (res.status === 401 || res.status === 403) {
+                    throw new Error(`ACCESS_DENIED:${res.status}`);
+                }
+                throw new Error(`fetch ${url} -> ${res.status}`);
+            }
             return await res.text();
         } catch (error) {
             const isRedirectError = error instanceof Error &&
@@ -62,14 +69,29 @@ async function fetchHtml(url: string, retries = 3): Promise<string> {
                     if (response.ok) {
                         return await response.text();
                     } else {
+                        // Handle authentication/authorization errors gracefully in manual redirect handling too
+                        if (response.status === 401 || response.status === 403) {
+                            throw new Error(`ACCESS_DENIED:${response.status}`);
+                        }
                         throw new Error(`fetch ${finalUrl} -> ${response.status}`);
                     }
                 } catch (manualError) {
                     if (attempt === retries) {
-                        throw new Error(`Failed to fetch ${url} after ${retries + 1} attempts. Last error: ${manualError instanceof Error ? manualError.message : 'Unknown error'}`);
+                        // Preserve access denied errors
+                        const errorMessage = manualError instanceof Error ? manualError.message : 'Unknown error';
+                        if (errorMessage.startsWith('ACCESS_DENIED:')) {
+                            throw manualError;
+                        }
+                        throw new Error(`Failed to fetch ${url} after ${retries + 1} attempts. Last error: ${errorMessage}`);
                     }
                 }
             } else {
+                // Don't retry access denied errors - they won't succeed on retry
+                const errorMessage = error instanceof Error ? error.message : String(error);
+                if (errorMessage.startsWith('ACCESS_DENIED:')) {
+                    throw error;
+                }
+
                 if (attempt === retries) {
                     throw error;
                 }
@@ -114,7 +136,13 @@ export async function crawl(input: string, maxPages = 40): Promise<CrawledDoc[]>
         }
         return [doc];
     } catch (e) {
-        console.error('crawl error', e);
+        const errorMessage = e instanceof Error ? e.message : String(e);
+        if (errorMessage.startsWith('ACCESS_DENIED:')) {
+            const status = errorMessage.split(':')[1];
+            console.info(`[crawler] Cannot access protected page (${status}): ${input}`);
+            return [];
+        }
+        console.error('[crawler] Crawl error:', e);
         return [];
     }
 }
@@ -143,7 +171,13 @@ async function crawlSitemap(url: string, maxPages: number): Promise<CrawledDoc[]
                 }
                 out.push(doc);
             } catch (err) {
-                console.warn('crawl sitemap page failed', u, err);
+                const errorMessage = err instanceof Error ? err.message : String(err);
+                if (errorMessage.startsWith('ACCESS_DENIED:')) {
+                    const status = errorMessage.split(':')[1];
+                    console.info(`[crawler] Skipping protected page (${status}): ${u}`);
+                } else {
+                    console.warn('[crawler] Failed to crawl sitemap page:', u, err);
+                }
             }
         }
         return out;
