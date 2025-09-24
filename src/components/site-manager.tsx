@@ -3,21 +3,12 @@
 import { useState, useEffect, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "../lib/toast";
+import { type Site, type ApiError } from "../lib/api-retry";
+import { dedupedSiteApi } from "../lib/request-deduplicator";
 import DomainVerification from "./domain-verification";
 import WidgetSetupModal from "./widget-setup-modal";
 import WidgetConfigModal from "./widget-config-modal";
 import SiteWizardLauncher from "./site-wizard-launcher";
-
-type Site = {
-    id: string;
-    domain: string;
-    name: string;
-    status: 'active' | 'paused' | 'pending';
-    verified: boolean;
-    verification_token?: string;
-    created_at: string;
-    updated_at: string;
-};
 
 export default function SiteManager() {
     const [sites, setSites] = useState<Site[]>([]);
@@ -41,18 +32,16 @@ export default function SiteManager() {
 
     const loadSites = useCallback(async () => {
         try {
-            const res = await fetch('/api/sites', {
-                // strict server-side tenant resolution; no client headers
-            });
-
-            if (res.ok) {
-                const data = await res.json();
-                setSites(data);
-            } else {
-                console.error('Failed to load sites');
-            }
+            const sites = await dedupedSiteApi.list();
+            setSites(sites);
         } catch (error) {
             console.error('Error loading sites:', error);
+            const apiError = error as ApiError;
+            if (apiError.status === 409) {
+                toast.error({ message: 'Conflict loading sites. Please refresh the page.' });
+            } else {
+                toast.error({ message: 'Failed to load sites' });
+            }
         } finally {
             setLoading(false);
         }
@@ -81,25 +70,12 @@ export default function SiteManager() {
         const toastId = toast.loading({ message: editingSite ? 'Updating site...' : 'Creating site...' });
 
         try {
-            const url = editingSite ? `/api/sites/${editingSite.id}` : '/api/sites';
-            const method = editingSite ? 'PUT' : 'POST';
-
-            const res = await fetch(url, {
-                method,
-                headers: {
-                    'content-type': 'application/json',
-                    // strict server-side tenant resolution; no client headers
-                },
-                body: JSON.stringify(formData),
-            });
-
-            if (!res.ok) {
-                const data = await res.json();
-                toast.error({ message: data.error || `Failed to ${editingSite ? 'update' : 'create'} site`, id: toastId });
-                return;
+            if (editingSite) {
+                await dedupedSiteApi.update(editingSite.id, formData);
+            } else {
+                await dedupedSiteApi.create(formData);
             }
 
-            await res.json();
             toast.success({
                 message: editingSite ? 'Site updated successfully!' : 'Site created successfully!',
                 id: toastId
@@ -113,8 +89,17 @@ export default function SiteManager() {
             // Reload sites
             await loadSites();
             router.refresh();
-        } catch {
-            toast.error({ message: 'Network error. Please try again.', id: toastId });
+        } catch (error) {
+            const apiError = error as ApiError;
+            let message = `Failed to ${editingSite ? 'update' : 'create'} site`;
+
+            if (apiError.status === 409) {
+                message = apiError.message || 'Conflict detected. The operation was retried automatically.';
+            } else if (apiError.message) {
+                message = apiError.message;
+            }
+
+            toast.error({ message, id: toastId });
         } finally {
             setFormLoading(false);
         }
@@ -128,22 +113,21 @@ export default function SiteManager() {
         const toastId = toast.loading({ message: 'Deleting site...' });
 
         try {
-            const res = await fetch(`/api/sites/${site.id}`, {
-                method: 'DELETE',
-                // strict server-side tenant resolution; no client headers
-            });
-
-            if (!res.ok) {
-                const data = await res.json();
-                toast.error({ message: data.error || 'Failed to delete site', id: toastId });
-                return;
-            }
-
+            await dedupedSiteApi.delete(site.id);
             toast.success({ message: 'Site deleted successfully!', id: toastId });
             await loadSites();
             router.refresh();
-        } catch {
-            toast.error({ message: 'Network error. Please try again.', id: toastId });
+        } catch (error) {
+            const apiError = error as ApiError;
+            let message = 'Failed to delete site';
+
+            if (apiError.status === 409) {
+                message = apiError.message || 'Cannot delete site - it may have associated content or there was a conflict';
+            } else if (apiError.message) {
+                message = apiError.message;
+            }
+
+            toast.error({ message, id: toastId });
         }
     }
 

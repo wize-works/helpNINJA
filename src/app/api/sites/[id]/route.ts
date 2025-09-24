@@ -23,6 +23,8 @@ export async function GET(_req: NextRequest, ctx: Context) {
     const tenantId = await getTenantIdStrict()
     const { id } = await ctx.params
 
+    console.info(`[sites-api] GET request: tenant=${tenantId}, site=${id}`);
+
     if (!id) {
         return NextResponse.json({ error: 'Missing site ID' }, { status: 400 })
     }
@@ -62,6 +64,8 @@ export async function PUT(req: NextRequest, ctx: Context) {
 
     const { domain, name, status } = body
 
+    console.info(`[sites-api] PUT request: tenant=${tenantId}, site=${id}, domain=${domain}, name=${name}, status=${status}`);
+
     // Validate domain format if provided
     if (domain) {
         const domainRegex = /^[a-zA-Z0-9]([a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(\.[a-zA-Z0-9]([a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)*$/
@@ -89,7 +93,8 @@ export async function PUT(req: NextRequest, ctx: Context) {
             )
 
             if ((domainConflict.rowCount ?? 0) > 0) {
-                return NextResponse.json({ error: 'Domain already registered for this tenant' }, { status: 409 })
+                console.warn(`[sites-api] Domain conflict detected: tenant=${tenantId}, domain=${domain}, existing_site=${domainConflict.rows[0]?.id}, requested_site=${id}`);
+                return NextResponse.json({ error: 'Domain already registered for this tenant' }, { status: 409 });
             }
         }
 
@@ -143,6 +148,8 @@ export async function DELETE(_req: NextRequest, ctx: Context) {
     const tenantId = await getTenantIdStrict()
     const { id } = await ctx.params
 
+    console.info(`[sites-api] DELETE request: tenant=${tenantId}, site=${id}`);
+
     if (!id) {
         return NextResponse.json({ error: 'Missing site ID' }, { status: 400 })
     }
@@ -161,6 +168,7 @@ export async function DELETE(_req: NextRequest, ctx: Context) {
         const totalContent = parseInt(document_count) + parseInt(chunk_count) + parseInt(source_count)
 
         if (totalContent > 0) {
+            console.warn(`[sites-api] Delete conflict detected: tenant=${tenantId}, site=${id}, content_count=${totalContent} (docs=${document_count}, chunks=${chunk_count}, sources=${source_count})`);
             return NextResponse.json({
                 error: 'Cannot delete site with associated content',
                 details: {
@@ -168,7 +176,7 @@ export async function DELETE(_req: NextRequest, ctx: Context) {
                     chunks: parseInt(chunk_count),
                     sources: parseInt(source_count)
                 }
-            }, { status: 409 })
+            }, { status: 409 });
         }
 
         // Delete the site

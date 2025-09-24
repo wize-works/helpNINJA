@@ -22,6 +22,10 @@ async function fetchHtml(url: string, retries = 3): Promise<string> {
                 if (res.status === 401 || res.status === 403) {
                     throw new Error(`ACCESS_DENIED:${res.status}`);
                 }
+                // Handle conflicts (409) as retryable errors
+                if (res.status === 409) {
+                    throw new Error(`CONFLICT:${res.status}`);
+                }
                 throw new Error(`fetch ${url} -> ${res.status}`);
             }
             return await res.text();
@@ -73,23 +77,41 @@ async function fetchHtml(url: string, retries = 3): Promise<string> {
                         if (response.status === 401 || response.status === 403) {
                             throw new Error(`ACCESS_DENIED:${response.status}`);
                         }
+                        // Handle conflicts (409) as retryable errors in redirect handling too
+                        if (response.status === 409) {
+                            throw new Error(`CONFLICT:${response.status}`);
+                        }
                         throw new Error(`fetch ${finalUrl} -> ${response.status}`);
                     }
                 } catch (manualError) {
                     if (attempt === retries) {
-                        // Preserve access denied errors
+                        // Preserve access denied and conflict errors for proper handling
                         const errorMessage = manualError instanceof Error ? manualError.message : 'Unknown error';
-                        if (errorMessage.startsWith('ACCESS_DENIED:')) {
+                        if (errorMessage.startsWith('ACCESS_DENIED:') || errorMessage.startsWith('CONFLICT:')) {
                             throw manualError;
                         }
                         throw new Error(`Failed to fetch ${url} after ${retries + 1} attempts. Last error: ${errorMessage}`);
                     }
                 }
             } else {
-                // Don't retry access denied errors - they won't succeed on retry
                 const errorMessage = error instanceof Error ? error.message : String(error);
+
+                // Don't retry access denied errors - they won't succeed on retry
                 if (errorMessage.startsWith('ACCESS_DENIED:')) {
                     throw error;
+                }
+
+                // Handle conflicts with longer retry delay to avoid race conditions
+                if (errorMessage.startsWith('CONFLICT:')) {
+                    console.warn(`[crawler] Conflict detected (attempt ${attempt + 1}/${retries + 1}): ${url}`);
+                    if (attempt === retries) {
+                        console.error(`[crawler] Max retries reached for conflict on: ${url}`);
+                        throw error;
+                    }
+                    // Longer delay for conflicts to allow race condition to resolve
+                    const conflictDelay = Math.pow(2, attempt) * 2000 + Math.random() * 1000; // 2-3s, 4-5s, 8-9s with jitter
+                    await new Promise(resolve => setTimeout(resolve, conflictDelay));
+                    continue; // Skip to next retry attempt
                 }
 
                 if (attempt === retries) {
@@ -142,6 +164,11 @@ export async function crawl(input: string, maxPages = 40): Promise<CrawledDoc[]>
             console.info(`[crawler] Cannot access protected page (${status}): ${input}`);
             return [];
         }
+        if (errorMessage.startsWith('CONFLICT:')) {
+            const status = errorMessage.split(':')[1];
+            console.warn(`[crawler] Conflict error (${status}) - skipping: ${input}`);
+            return [];
+        }
         console.error('[crawler] Crawl error:', e);
         return [];
     }
@@ -175,6 +202,9 @@ async function crawlSitemap(url: string, maxPages: number): Promise<CrawledDoc[]
                 if (errorMessage.startsWith('ACCESS_DENIED:')) {
                     const status = errorMessage.split(':')[1];
                     console.info(`[crawler] Skipping protected page (${status}): ${u}`);
+                } else if (errorMessage.startsWith('CONFLICT:')) {
+                    const status = errorMessage.split(':')[1];
+                    console.warn(`[crawler] Conflict error (${status}) - skipping page: ${u}`);
                 } else {
                     console.warn('[crawler] Failed to crawl sitemap page:', u, err);
                 }

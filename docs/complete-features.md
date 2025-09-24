@@ -176,7 +176,10 @@ Core features (present)
 - Ingestion pipeline
   - API endpoint ingests URL/sitemap, crawls, chunks, embeds, inserts documents/chunks.
   - **Graceful authentication handling**: Crawler properly handles auth-protected pages (401/403) as informational messages rather than errors, preventing log noise while continuing to process accessible content
-  - Files: src/app/api/ingest/route.ts, src/lib/crawler.ts, src/lib/chunk.ts, src/lib/embeddings.ts
+  - **Robust 409 conflict handling**: Enhanced error handling for HTTP 409 conflicts with automatic retry logic, exponential backoff with jitter, and request deduplication to prevent race conditions
+  - **Client-side retry logic**: Frontend components automatically handle transient API errors (409, 429, 5xx) with intelligent retry patterns and user-friendly error messages
+  - **Request deduplication**: Global request deduplication prevents concurrent identical API calls that can cause conflicts, especially for site management operations
+  - Files: src/app/api/ingest/route.ts, src/lib/crawler.ts, src/lib/chunk.ts, src/lib/embeddings.ts, src/lib/api-retry.ts, src/lib/request-deduplicator.ts
 - Usage gating
   - Monthly counters per tenant; auto-init + monthly reset; enforce PLAN_LIMITS before AI calls; increment after.
   - Files: src/lib/usage.ts, src/lib/limits.ts

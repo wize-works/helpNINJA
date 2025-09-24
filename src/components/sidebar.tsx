@@ -47,6 +47,7 @@ const navigationSections: NavSection[] = [
             { href: "/dashboard/sources", label: "Sources", badge: null },
             { href: "/dashboard/documents", label: "Documents", badge: null },
             { href: "/dashboard/answers", label: "Answers", badge: null },
+            { href: "/dashboard/crawl-failures", label: "Crawl Failures", badge: null },
             { href: "/dashboard/widget", label: "Widget Settings", badge: null },
         ]
     },
