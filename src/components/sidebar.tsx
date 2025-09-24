@@ -4,6 +4,7 @@ import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
 import { useTenant } from "./tenant-context";
 import { HoverScale, SlideIn } from "./ui/animated-page";
+import { useSidebarBadges, type SidebarBadges } from "./sidebar-badge-context";
 
 // Types for navigation structure
 type NavItem = {
@@ -22,6 +23,7 @@ type NavSectionBase = {
 type NavSectionLink = NavSectionBase & {
     collapsible: false;
     href: string;
+    badge?: number | null;
 };
 
 type NavSectionCollapsible = NavSectionBase & {
@@ -32,62 +34,116 @@ type NavSectionCollapsible = NavSectionBase & {
 
 type NavSection = NavSectionLink | NavSectionCollapsible;
 
-// Main navigation sections with improved information architecture
-// Order reflects onboarding -> operations -> optimization -> admin
-const navigationSections: NavSection[] = [
-    { id: "dashboard", label: "Dashboard", icon: "fa-gauge-high", href: "/dashboard", collapsible: false },
-    {
-        id: "knowledge",
-        label: "Knowledge",
-        icon: "fa-book",
-        collapsible: true,
-        defaultOpen: true,
-        items: [
-            { href: "/dashboard/sites", label: "Sites", badge: null },
-            { href: "/dashboard/sources", label: "Sources", badge: null },
-            { href: "/dashboard/documents", label: "Documents", badge: null },
-            { href: "/dashboard/answers", label: "Answers", badge: null },
-            { href: "/dashboard/crawl-failures", label: "Crawl Failures", badge: null },
-            { href: "/dashboard/widget", label: "Widget Settings", badge: null },
-        ]
-    },
-    { id: "conversations", label: "Conversations", icon: "fa-comments", href: "/dashboard/conversations", collapsible: false },
-    { id: "feedback", label: "User Feedback", icon: "fa-comment-dots", href: "/dashboard/feedback", collapsible: false },
-    {
-        id: "automation",
-        label: "Automation",
-        icon: "fa-gears",
-        collapsible: true,
-        defaultOpen: false,
-        items: [
-            { href: "/dashboard/rules", label: "Escalation Rules", badge: null },
-            { href: "/dashboard/outbox", label: "Delivery Status", badge: null },
-        ]
-    },
-    {
-        id: "integrations",
-        label: "Integrations",
-        icon: "fa-plug",
-        collapsible: true,
-        defaultOpen: false,
-        items: [
-            { href: "/dashboard/integrations", label: "Installed", badge: 2 },
-            { href: "/dashboard/integrations/marketplace", label: "Marketplace", badge: null },
-        ]
-    },
-    { id: "analytics", label: "Analytics", icon: "fa-chart-line", href: "/dashboard/analytics", collapsible: false },
-    { id: "events", label: "Events", icon: "fa-waveform-lines", href: "/dashboard/events", collapsible: false },
-    { id: "playground", label: "Playground", icon: "fa-flask", href: "/dashboard/playground", collapsible: false },
-    { id: "team", label: "Team & Access", icon: "fa-users", href: "/dashboard/team", collapsible: false },
-    { id: "developers", label: "Developers", icon: "fa-code", href: "/dashboard/settings/api", collapsible: false }
-];
+// Create navigation sections with dynamic badges
+function createNavigationSections(badges: SidebarBadges): NavSection[] {
+    return [
+        { id: "dashboard", label: "Dashboard", icon: "fa-gauge-high", href: "/dashboard", collapsible: false },
+        {
+            id: "knowledge",
+            label: "Knowledge",
+            icon: "fa-book",
+            collapsible: true,
+            defaultOpen: true,
+            items: [
+                { href: "/dashboard/sites", label: "Sites", badge: badges.knowledge.sites },
+                { href: "/dashboard/sources", label: "Sources", badge: badges.knowledge.sources },
+                { href: "/dashboard/documents", label: "Documents", badge: badges.knowledge.documents },
+                { href: "/dashboard/answers", label: "Answers", badge: badges.knowledge.answers },
+                { href: "/dashboard/crawl-failures", label: "Crawl Failures", badge: badges.knowledge.crawlFailures },
+                { href: "/dashboard/widget", label: "Widget Settings", badge: badges.knowledge.widget },
+            ]
+        },
+        {
+            id: "conversations",
+            label: "Conversations",
+            icon: "fa-comments",
+            href: "/dashboard/conversations",
+            collapsible: false,
+            badge: badges.conversations
+        },
+        {
+            id: "feedback",
+            label: "User Feedback",
+            icon: "fa-comment-dots",
+            href: "/dashboard/feedback",
+            collapsible: false,
+            badge: badges.feedback
+        },
+        {
+            id: "automation",
+            label: "Automation",
+            icon: "fa-gears",
+            collapsible: true,
+            defaultOpen: false,
+            items: [
+                { href: "/dashboard/rules", label: "Escalation Rules", badge: badges.automation.rules || null },
+                { href: "/dashboard/outbox", label: "Delivery Status", badge: badges.automation.outbox || null },
+            ]
+        },
+        {
+            id: "integrations",
+            label: "Integrations",
+            icon: "fa-plug",
+            collapsible: true,
+            defaultOpen: false,
+            items: [
+                { href: "/dashboard/integrations", label: "Installed", badge: badges.integrations.installed || null },
+                { href: "/dashboard/integrations/marketplace", label: "Marketplace", badge: badges.integrations.marketplace || null },
+            ]
+        },
+        { id: "analytics", label: "Analytics", icon: "fa-chart-line", href: "/dashboard/analytics", collapsible: false },
+        { id: "events", label: "Events", icon: "fa-waveform-lines", href: "/dashboard/events", collapsible: false },
+        { id: "playground", label: "Playground", icon: "fa-flask", href: "/dashboard/playground", collapsible: false },
+        { id: "team", label: "Team & Access", icon: "fa-users", href: "/dashboard/team", collapsible: false },
+        { id: "developers", label: "Developers", icon: "fa-code", href: "/dashboard/settings/api", collapsible: false }
+    ];
+}
 
 export default function Sidebar() {
     const pathname = usePathname();
     const { usage, usageLoading, usageOffline } = useTenant();
+    const { badges, refreshBadges } = useSidebarBadges();
     const [collapsedSections, setCollapsedSections] = useState<Record<string, boolean>>({});
 
     const LS_KEY = 'sidebarCollapsedSections';
+
+    // Create navigation sections with current badge data
+    const navigationSections = createNavigationSections(badges);
+
+    // Fetch badges on mount and periodically
+    useEffect(() => {
+        refreshBadges();
+
+        // Refresh badges every 30 seconds
+        const interval = setInterval(refreshBadges, 30000);
+        return () => clearInterval(interval);
+    }, [refreshBadges]);
+
+    // Refresh badges when navigating to relevant pages (potential issue resolution)
+    useEffect(() => {
+        if (pathname.includes('/integrations') ||
+            pathname.includes('/outbox') ||
+            pathname.includes('/rules') ||
+            pathname.includes('/crawl-failures') ||
+            pathname.includes('/feedback') ||
+            pathname.includes('/conversations')) {
+            // Small delay to allow for any operations to complete
+            const timeoutId = setTimeout(() => {
+                refreshBadges();
+            }, 1000);
+            return () => clearTimeout(timeoutId);
+        }
+    }, [pathname, refreshBadges]);
+
+    // Refresh badges when window gains focus (user may have fixed issues elsewhere)
+    useEffect(() => {
+        const handleFocus = () => {
+            refreshBadges();
+        };
+
+        window.addEventListener('focus', handleFocus);
+        return () => window.removeEventListener('focus', handleFocus);
+    }, [refreshBadges]);
 
     useEffect(() => {
         // Initialize collapsed state from localStorage or default settings
@@ -95,22 +151,32 @@ export default function Sidebar() {
             const stored = typeof window !== 'undefined' ? localStorage.getItem(LS_KEY) : null;
             if (stored) {
                 const parsed = JSON.parse(stored) as Record<string, boolean>;
+                // Define static section defaults to avoid dependency on navigationSections
+                const sectionDefaults = {
+                    knowledge: false, // defaultOpen: true -> collapsed: false
+                    automation: true, // defaultOpen: false -> collapsed: true  
+                    integrations: true // defaultOpen: false -> collapsed: true
+                };
+
                 // Ensure any newly added sections get defaults
-                navigationSections.forEach(section => {
-                    if (section.collapsible && !(section.id in parsed)) {
-                        parsed[section.id] = !section.defaultOpen;
+                Object.entries(sectionDefaults).forEach(([id, defaultCollapsed]) => {
+                    if (!(id in parsed)) {
+                        parsed[id] = defaultCollapsed;
                     }
                 });
                 setCollapsedSections(parsed);
                 return;
             }
         } catch { /* ignore */ }
-        const initial: Record<string, boolean> = {};
-        navigationSections.forEach(section => {
-            if (section.collapsible) initial[section.id] = !section.defaultOpen;
-        });
+
+        // Default collapsed state for collapsible sections
+        const initial: Record<string, boolean> = {
+            knowledge: false, // defaultOpen: true
+            automation: true, // defaultOpen: false  
+            integrations: true // defaultOpen: false
+        };
         setCollapsedSections(initial);
-    }, []);
+    }, []); // Empty dependency array - only run on mount
 
     const toggleSection = (sectionId: string) => {
         setCollapsedSections(prev => {
@@ -161,14 +227,24 @@ export default function Sidebar() {
                                     <HoverScale scale={1.01}>
                                         <Link
                                             href={section.href}
-                                            className={`flex items-center gap-3 px-3 py-2 rounded-md text-sm font-medium transition-colors duration-150 ${isActive(section.href)
+                                            className={`flex items-center justify-between px-3 py-2 rounded-md text-sm font-medium transition-colors duration-150 ${isActive(section.href)
                                                 ? "bg-base-200 text-base-content border border-base-300/60"
                                                 : "text-base-content/80 hover:text-base-content hover:bg-base-200/60"
                                                 }`}
                                         >
-                                            <i className={`fa-duotone fa-solid ${section.icon} text-base ${isActive(section.href) ? "opacity-100" : "opacity-70"
-                                                }`} aria-hidden />
-                                            <span>{section.label}</span>
+                                            <div className="flex items-center gap-3">
+                                                <i className={`fa-duotone fa-solid ${section.icon} text-base ${isActive(section.href) ? "opacity-100" : "opacity-70"
+                                                    }`} aria-hidden />
+                                                <span>{section.label}</span>
+                                            </div>
+                                            {section.badge && section.badge > 0 && (
+                                                <span className={`inline-flex items-center justify-center w-5 h-5 text-xs font-medium rounded-full ${section.href.includes('/conversations') || section.href.includes('/feedback')
+                                                    ? 'bg-warning text-warning-content'
+                                                    : 'bg-error text-error-content'
+                                                    }`}>
+                                                    {section.badge > 99 ? '99+' : section.badge}
+                                                </span>
+                                            )}
                                         </Link>
                                     </HoverScale>
                                 )}
@@ -195,9 +271,14 @@ export default function Sidebar() {
                                                                 }`}
                                                         >
                                                             <span>{item.label}</span>
-                                                            {item.badge && (
-                                                                <span className="inline-flex items-center justify-center w-5 h-5 text-xs font-medium bg-accent text-accent-content rounded-full">
-                                                                    {item.badge}
+                                                            {item.badge && item.badge > 0 && (
+                                                                <span className={`inline-flex items-center justify-center w-5 h-5 text-xs font-medium rounded-full ${item.href.includes('/outbox') || item.href.includes('/integrations')
+                                                                        ? 'bg-error text-error-content'
+                                                                        : item.href.includes('/crawl-failures')
+                                                                            ? 'bg-warning text-warning-content'
+                                                                            : 'bg-accent text-accent-content'
+                                                                    }`}>
+                                                                    {item.badge > 99 ? '99+' : item.badge}
                                                                 </span>
                                                             )}
                                                         </Link>
