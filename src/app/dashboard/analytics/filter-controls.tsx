@@ -22,20 +22,37 @@ export default function FilterControls({ filters }: { filters: Filters }) {
     const [local, setLocal] = useState<Filters>(filters);
 
     useEffect(() => {
-        // Initialize from localStorage if URL lacks params
+        // Only run on mount to initialize from localStorage if URL lacks params
         const hasRange = !!searchParams.get('range');
         const hasSite = !!searchParams.get('siteId');
+
+        if (hasRange && hasSite) {
+            // Both params are present, no need to check localStorage
+            return;
+        }
+
         const next = new URLSearchParams(searchParams.toString());
         let changed = false;
-        if (!hasRange) {
-            const storedRange = (typeof window !== 'undefined' ? (localStorage.getItem(LS_RANGE_KEY) as Range | null) : null);
-            if (storedRange) { next.set('range', storedRange); changed = true }
+
+        if (!hasRange && typeof window !== 'undefined') {
+            const storedRange = localStorage.getItem(LS_RANGE_KEY) as Range | null;
+            if (storedRange) {
+                next.set('range', storedRange);
+                changed = true;
+            }
         }
-        if (!hasSite) {
-            const storedSite = typeof window !== 'undefined' ? localStorage.getItem(LS_SITE_KEY) : null;
-            if (storedSite != null && storedSite.length > 0) { next.set('siteId', storedSite); changed = true }
+
+        if (!hasSite && typeof window !== 'undefined') {
+            const storedSite = localStorage.getItem(LS_SITE_KEY);
+            if (storedSite && storedSite.length > 0) {
+                next.set('siteId', storedSite);
+                changed = true;
+            }
         }
-        if (changed) router.replace(`${pathname}?${next.toString()}`)
+
+        if (changed) {
+            router.replace(`${pathname}?${next.toString()}`);
+        }
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [])
 

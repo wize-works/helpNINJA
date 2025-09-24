@@ -1,6 +1,6 @@
 "use client";
 
-import React, { createContext, useContext, useState, useCallback, useRef } from "react";
+import { createContext, useContext, useState, useCallback, useRef, useEffect } from 'react';
 
 export interface SidebarBadges {
     knowledge: {
@@ -55,10 +55,11 @@ export function SidebarBadgeProvider({ children }: { children: React.ReactNode }
         automation: { rules: 0, outbox: 0 }
     });
     const [loading, setLoading] = useState(false);
+    const [isReady, setIsReady] = useState(false);
     const lastFetchRef = useRef<number>(0);
 
     const refreshBadges = useCallback(async () => {
-        if (loading) return;
+        if (loading || !isReady) return;
 
         // Throttle calls to prevent spam
         const now = Date.now();
@@ -68,19 +69,47 @@ export function SidebarBadgeProvider({ children }: { children: React.ReactNode }
         setLoading(true);
         try {
             const response = await fetch('/api/sidebar/badges', {
+                method: 'GET',
                 cache: 'no-store',
-                headers: { Accept: 'application/json' }
+                credentials: 'include', // Include cookies for authentication
+                headers: {
+                    'Accept': 'application/json',
+                    'Content-Type': 'application/json'
+                }
             });
+
             if (response.ok) {
                 const data: SidebarBadges = await response.json();
                 setBadges(data);
+            } else if (response.status === 401) {
+                console.warn('Sidebar badges: User not authenticated');
+                // Don't log error for auth issues, just silently fail
+            } else {
+                console.error('Failed to fetch sidebar badges:', response.status, response.statusText);
             }
         } catch (error) {
             console.error('Failed to fetch sidebar badges:', error);
         } finally {
             setLoading(false);
         }
-    }, [loading]);
+    }, [loading, isReady]);
+
+    // Initialize after auth setup
+    useEffect(() => {
+        // Give time for authentication to set up
+        const timer = setTimeout(() => {
+            setIsReady(true);
+        }, 1000);
+
+        return () => clearTimeout(timer);
+    }, []);
+
+    // Initial load when ready
+    useEffect(() => {
+        if (isReady) {
+            refreshBadges();
+        }
+    }, [refreshBadges, isReady]);
 
     const value: SidebarBadgeContextValue = {
         badges,
