@@ -5,32 +5,32 @@
     prefersdark: false;
   
     /* Brand palette (vibrant + approachable) */
-    --color-primary:           #4DA8DA; /* Sky Blue */
-    --color-primary-content:   #ffffff; /*#0b1220;*/ /* dark navy text for contrast on primary */
+    --color-primary:           #2d3748; /* Sky Blue */
+    --color-primary-content:   #ffffff; 
   
-    --color-secondary:         #7E4DDA; /* purple */
-    --color-secondary-content: #ffffff; /* deep teal text for contrast on secondary */
+    --color-secondary:         #e53e3e; /* purple */
+    --color-secondary-content: #ffffff; 
   
-    --color-accent:            #C3423F; /* Blood Red */
-    --color-accent-content:    #ffffff; /* strong contrast on accent */
+    --color-accent:            #4DA8DA; /* Blood Red */
+    --color-accent-content:    #ffffff; 
   
     --color-neutral:           #E5E7EB; /* card/nav surfaces */
     --color-neutral-content:   #0b1220; /* readable text on neutral */
   
     /* Base (surface) steps */
-    --color-base-100:          #ffffff; /* page bg */
-    --color-base-200:          #f9fafb; /* section bg */
-    --color-base-300:          #eef2f7; /* subtle panels/borders */
+    --color-base-100:          #F2F3F5; /* page bg */
+    --color-base-200:          #EAECEF; /* section bg */
+    --color-base-300:          #CBCFD7; /* subtle panels/borders */
     --color-base-content:      #0b1220; /* default text color */
   
     /* State colors */
-    --color-info:              #40E0D0; /* Turquoise */
+    --color-info:              #2DE1C2; /* Turquoise */
     --color-info-content:      #0b1b33; /* deep navy for legibility */
   
-    --color-success:           #22C55E; /* Bright Green */
+    --color-success:           #7BC950; /* Bright Green */
     --color-success-content:   #ffffff; /* readable on success bg */
   
-    --color-warning:           #FACC15; /* Soft Yellow */
+    --color-warning:           #FCBA04; /* Soft Yellow */
     --color-warning-content:   #231a03; /* warm dark for legibility */
   
     --color-error:             #DC2626; /* Proper red for errors */
@@ -48,5 +48,31 @@
     --tab-radius:              .75rem;
   
     color-scheme: light;
-  }
-  
+
+    --glass-bg: rgb(from var(--color-primary-content) R G B / 0.20 );
+    --glass-opacity: .2;
+    --glass-blur: 90px; 
+    --glass-reflect-opacity: 0.08;
+    --glass-text-shadow-opacity: 0.025;
+}
+
+/* .glass {
+  border: none;
+  backdrop-filter: blur(var(--glass-blur, 40px));
+  background-color: var(--glass-bg);
+  background-image:
+    linear-gradient(
+      135deg,
+      oklch(100% 0 0 / var(--glass-opacity, 30%)) 0%,
+      oklch(0% 0 0 / 0%) 100%
+    ),
+    linear-gradient(
+      var(--glass-reflect-degree, 100deg),
+      oklch(100% 0 0 / var(--glass-reflect-opacity, 5%)) 25%,
+      oklch(0% 0 0 / 0%) 25%
+    );
+  box-shadow:
+    0 0 0 1px oklch(100% 0 0 / var(--glass-border-opacity, 20%)) inset,
+    0 0 0 2px oklch(0% 0 0 / 5%);
+  text-shadow: 0 1px oklch(0% 0 0 / var(--glass-text-shadow-opacity, 5%));
+} */

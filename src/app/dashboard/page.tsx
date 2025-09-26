@@ -12,6 +12,7 @@ import SiteWizardLauncher from "@/components/site-wizard-launcher";
 import Link from "next/link";
 import { getChartColors } from "@/lib/colors";
 import StatCard from "@/components/ui/stat-card";
+import { GlassPanel } from "@/components/ui/glass-panel";
 
 export const runtime = "nodejs"; // ensure Node runtime for pg
 export const dynamic = "force-dynamic"; // always fetch fresh stats/charts
@@ -326,8 +327,8 @@ export default async function Dashboard() {
                     <StaggerChild>
                         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
                             <div>
-                                <h1 className="text-3xl font-bold text-base-content">Dashboard</h1>
-                                <p className="text-base-content/60 mt-1">Monitor your AI support performance and analytics</p>
+                                <h1 className="text-3xl font-bold">Dashboard</h1>
+                                <p className="opacity-80 mt-1">Monitor your AI support performance and analytics</p>
                             </div>
                             <div className="flex items-center gap-3">
                                 <Suspense fallback={<div className="w-20 h-8 bg-base-200/60 rounded-lg animate-pulse"></div>}>
@@ -377,12 +378,12 @@ export default async function Dashboard() {
                     <div className="grid grid-cols-1 xl:grid-cols-3 gap-6">
                         {/* Chat Volume Chart - Takes 2/3 width */}
                         <StaggerChild className="xl:col-span-2">
-                            <div className="card bg-base-100 rounded-2xl shadow-sm hover:shadow-md transition-all duration-300">
+                            <GlassPanel intensity="medium" animated={true} className="rounded-2xl hover:bg-white/5 transition-all duration-300">
                                 <div className="p-6">
                                     <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
                                         <div>
-                                            <h3 className="text-lg font-semibold text-base-content">Chat Volume</h3>
-                                            <p className="text-sm text-base-content/60">Messages and conversations over time</p>
+                                            <h3 className="text-lg font-semibold">Chat Volume</h3>
+                                            <p className="text-sm opacity-70">Messages and conversations over time</p>
                                         </div>
                                         <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3">
                                             <Suspense fallback={<div className="w-48 h-8 bg-base-200/60 rounded-lg animate-pulse"></div>}>
@@ -404,19 +405,19 @@ export default async function Dashboard() {
                                         </Suspense>
                                     </div>
                                 </div>
-                            </div>
+                            </GlassPanel>
                         </StaggerChild>
 
                         {/* Response Quality Chart */}
                         <StaggerChild>
-                            <div className="card bg-base-100 rounded-2xl shadow-sm hover:shadow-md transition-all duration-300">
+                            <GlassPanel intensity="medium" animated={true} className="rounded-2xl hover:bg-white/5 transition-all duration-300">
                                 <div className="p-6">
                                     <div className="flex items-center justify-between mb-4">
                                         <div>
-                                            <h3 className="text-lg font-semibold text-base-content">Response Quality</h3>
-                                            <p className="text-sm text-base-content/60">Confidence score distribution</p>
+                                            <h3 className="text-lg font-semibold">Response Quality</h3>
+                                            <p className="text-sm opacity-70">Confidence score distribution</p>
                                         </div>
-                                        <div className="w-8 h-8 bg-purple-500/20 rounded-lg flex items-center justify-center">
+                                        <div className="w-8 h-8 bg-purple-500/20 backdrop-blur-sm rounded-lg flex items-center justify-center">
                                             <i className="fa-duotone fa-solid fa-gauge-high text-sm text-purple-600" aria-hidden />
                                         </div>
                                     </div>
@@ -427,7 +428,7 @@ export default async function Dashboard() {
                                         </Suspense>
                                     </div>
                                 </div>
-                            </div>
+                            </GlassPanel>
                         </StaggerChild>
                     </div>
                 </StaggerContainer>
@@ -437,14 +438,14 @@ export default async function Dashboard() {
                     <div className="grid grid-cols-1 xl:grid-cols-3 gap-6">
                         {/* Knowledge Base */}
                         <StaggerChild>
-                            <div className="card bg-base-100 rounded-2xl shadow-sm hover:shadow-md transition-all duration-300">
+                            <GlassPanel intensity="medium" animated={true} className="rounded-2xl hover:bg-white/5 transition-all duration-300">
                                 <div className="p-6">
                                     <div className="flex items-center justify-between mb-4">
                                         <div>
-                                            <h3 className="text-lg font-semibold text-base-content">Knowledge Base</h3>
-                                            <p className="text-sm text-base-content/60">Indexed content sources</p>
+                                            <h3 className="text-lg font-semibold">Knowledge Base</h3>
+                                            <p className="text-sm opacity-70">Indexed content sources</p>
                                         </div>
-                                        <div className="w-8 h-8 bg-secondary/20 rounded-lg flex items-center justify-center">
+                                        <div className="w-8 h-8 bg-secondary/20 backdrop-blur-sm rounded-lg flex items-center justify-center">
                                             <i className="fa-duotone fa-solid fa-database text-sm text-secondary" aria-hidden />
                                         </div>
                                     </div>
@@ -459,19 +460,19 @@ export default async function Dashboard() {
                                         </Suspense>
                                     </div>
                                 </div>
-                            </div>
+                            </GlassPanel>
                         </StaggerChild>
 
                         {/* Top Performing Content */}
                         <StaggerChild>
-                            <div className="card bg-base-100 rounded-2xl shadow-sm hover:shadow-md transition-all duration-300">
+                            <GlassPanel intensity="medium" animated={true} className="rounded-2xl hover:bg-white/5 transition-all duration-300">
                                 <div className="p-6">
                                     <div className="flex items-center justify-between mb-4">
                                         <div>
-                                            <h3 className="text-lg font-semibold text-base-content">Top Content</h3>
-                                            <p className="text-sm text-base-content/60">Most referenced documents</p>
+                                            <h3 className="text-lg font-semibold">Top Content</h3>
+                                            <p className="text-sm opacity-70">Most referenced documents</p>
                                         </div>
-                                        <div className="w-8 h-8 bg-emerald-500/20 rounded-lg flex items-center justify-center">
+                                        <div className="w-8 h-8 bg-emerald-500/20 backdrop-blur-sm rounded-lg flex items-center justify-center">
                                             <i className="fa-duotone fa-solid fa-ranking-star text-sm text-emerald-600" aria-hidden />
                                         </div>
                                     </div>
@@ -480,19 +481,19 @@ export default async function Dashboard() {
                                         <TopSourcesContainer tenantId={tenantId} />
                                     </Suspense>
                                 </div>
-                            </div>
+                            </GlassPanel>
                         </StaggerChild>
 
                         {/* Response Time Analysis */}
                         <StaggerChild>
-                            <div className="card bg-base-100 rounded-2xl shadow-sm hover:shadow-md transition-all duration-300">
+                            <GlassPanel intensity="medium" animated={true} className="rounded-2xl hover:bg-white/5 transition-all duration-300">
                                 <div className="p-6">
                                     <div className="flex items-center justify-between mb-4">
                                         <div>
-                                            <h3 className="text-lg font-semibold text-base-content">Response Time</h3>
-                                            <p className="text-sm text-base-content/60">Average response speed & peak hours</p>
+                                            <h3 className="text-lg font-semibold">Response Time</h3>
+                                            <p className="text-sm opacity-70">Average response speed & peak hours</p>
                                         </div>
-                                        <div className="w-8 h-8 bg-blue-500/20 rounded-lg flex items-center justify-center">
+                                        <div className="w-8 h-8 bg-blue-500/20 backdrop-blur-sm rounded-lg flex items-center justify-center">
                                             <i className="fa-duotone fa-solid fa-bolt text-sm text-blue-600" aria-hidden />
                                         </div>
                                     </div>
@@ -501,7 +502,7 @@ export default async function Dashboard() {
                                         <ResponseTimeCardContainer tenantId={tenantId} />
                                     </Suspense>
                                 </div>
-                            </div>
+                            </GlassPanel>
                         </StaggerChild>
                     </div>
                 </StaggerContainer>
@@ -511,12 +512,12 @@ export default async function Dashboard() {
                     <div className="grid grid-cols-1 lg:grid-cols-5 gap-6">
                         {/* Integrations */}
                         <StaggerChild className="lg:col-span-2">
-                            <div className="card bg-base-100 rounded-2xl shadow-sm hover:shadow-md transition-all duration-300">
+                            <GlassPanel intensity="medium" animated={true} className="rounded-2xl hover:bg-white/5 transition-all duration-300">
                                 <div className="p-6">
                                     <div className="flex items-center justify-between mb-4">
                                         <div>
-                                            <h3 className="text-lg font-semibold text-base-content">Integrations</h3>
-                                            <p className="text-sm text-base-content/60">Connected services</p>
+                                            <h3 className="text-lg font-semibold">Integrations</h3>
+                                            <p className="text-sm opacity-70">Connected services</p>
                                         </div>
                                         <HoverScale scale={1.02}>
                                             <Link
@@ -532,18 +533,18 @@ export default async function Dashboard() {
                                         <IntegrationsOverview tenantId={tenantId} />
                                     </Suspense>
                                 </div>
-                            </div>
+                            </GlassPanel>
                         </StaggerChild>
 
                         {/* Usage Overview */}
                         <StaggerChild className="lg:col-span-3">
-                            <div className="card bg-base-100 rounded-2xl shadow-sm hover:shadow-md transition-all duration-300">
+                            <GlassPanel intensity="medium" animated={true} className="rounded-2xl hover:bg-white/5 transition-all duration-300">
                                 <div className="p-6">
                                     <Suspense fallback={<div className="space-y-3"><div className="animate-pulse bg-base-300/60 h-6 rounded w-1/2"></div><div className="animate-pulse bg-base-300/60 h-4 rounded"></div></div>}>
                                         <UsageOverview tenantId={tenantId} />
                                     </Suspense>
                                 </div>
-                            </div>
+                            </GlassPanel>
                         </StaggerChild>
                     </div>
                 </StaggerContainer>
@@ -619,6 +620,8 @@ async function StatsCards({ tenantId }: { tenantId: string }) {
                         title="Conversations"
                         value={num(stats.conversations)}
                         description={<MetricTrend value={stats.conversations} previousValue={Math.max(1, stats.conversations - 5)} label="vs last week" />}
+                        glass={true}
+                        glassIntensity="light"
                     />
                 </HoverScale>
                 <HoverScale scale={1.02}>
@@ -628,6 +631,8 @@ async function StatsCards({ tenantId }: { tenantId: string }) {
                         title="User Messages"
                         value={`${num(stats.messages_this_month)}/${limit}`}
                         description={<MetricTrend value={stats.messages_this_month} previousValue={Math.max(1, stats.messages_this_month - 20)} label="vs last week" />}
+                        glass={true}
+                        glassIntensity="light"
                     />
                 </HoverScale>
                 <HoverScale scale={1.02}>
@@ -637,6 +642,8 @@ async function StatsCards({ tenantId }: { tenantId: string }) {
                         title="Low-confidence"
                         value={`${lowConfRate}%`}
                         description={<MetricTrend value={lowConfRate} previousValue={Math.max(0, lowConfRate - 1)} label="vs last week" />}
+                        glass={true}
+                        glassIntensity="light"
                     />
                 </HoverScale>
                 <HoverScale scale={1.02}>
@@ -646,6 +653,8 @@ async function StatsCards({ tenantId }: { tenantId: string }) {
                         title="Active integrations"
                         value={num(stats.integrations_active)}
                         description={<MetricTrend value={stats.integrations_active} previousValue={Math.max(0, stats.integrations_active - 1)} label="vs last week" />}
+                        glass={true}
+                        glassIntensity="light"
                     />
                 </HoverScale>
             </div>

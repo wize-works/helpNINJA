@@ -22,7 +22,7 @@
         "@supabase/supabase-js": "^2.54.0",
         "@upstash/ratelimit": "^2.0.6",
         "ai": "^5.0.8",
-        "daisyui": "^5.0.50",
+        "daisyui": "^5.1.18",
         "framer-motion": "^12.23.12",
         "ioredis": "^5.7.0",
         "linkedom": "^0.18.11",
