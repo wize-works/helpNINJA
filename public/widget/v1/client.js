@@ -252,7 +252,7 @@ function mountChatWidget(payload) {
 
     dropdownContainer.appendChild(menuButton);
     dropdownContainer.appendChild(dropdownMenu);
-    const close = el('button', `background:${styles.panelHeaderBackground};color:${styles.panelHeaderColor};border:none;cursor:pointer;padding:6px;border-radius:50%;height:40px;width:40px;transition:all .2s ease;`);
+    const close = el('button', `background:${styles.panelHeaderColor}40;color:${styles.panelHeaderColor};border:none;cursor:pointer;padding:6px;border-radius:50%;height:40px;width:40px;transition:all .2s ease;`);
     close.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 640" fill="currentColor"><path d="M506.4 135.4C514.9 125.3 513.6 110.1 503.5 101.6C493.4 93.1 478.2 94.4 469.7 104.5L320 282.7L170.4 104.6C161.9 94.4 146.7 93.1 136.6 101.6C126.5 110.1 125.1 125.3 133.6 135.4L288.7 320L133.6 504.6C125.1 514.8 126.4 529.9 136.5 538.4C146.6 546.9 161.8 545.6 170.3 535.5L320 357.3L469.6 535.4C478.1 545.6 493.3 546.9 503.4 538.3C513.5 529.7 514.9 514.6 506.3 504.5L351.3 320L506.4 135.4z"/></svg>';
     close.onclick = () => { panel.style.display = 'none'; bubble.style.display = 'flex'; };
 
