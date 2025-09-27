@@ -1029,7 +1029,7 @@ function mountChatWidget(payload) {
                     <label style="display:block;font-size:14px;font-weight:500;color:${styles.panelColor};margin-bottom:6px;">
                         Title <span style="color:#ef4444;">*</span>
                     </label>
-                    <input type="text" id="hn_feedback_title" maxlength="100" style="width:100%;padding:12px 16px;border:1px solid ${styles.inputBorder};border-radius:8px;background:${styles.panelBackground};color:${styles.messagesColor};font-size:14px;outline:none;box-sizing:border-box;" placeholder="Brief summary of your feedback">
+                    <input type="text" id="hn_feedback_title" maxlength="100" style="width:100%;padding:12px 16px;border:1px solid ${styles.inputBorder};border-radius:8px;background:${styles.panelBackground};color:${styles.panelColor};font-size:14px;outline:none;box-sizing:border-box;" placeholder="Brief summary of your feedback">
                     <div style="display:flex;justify-content:space-between;align-items:center;margin-top:4px;">
                         <div id="title-error" style="display:none;color:#ef4444;font-size:12px;"></div>
                         <div id="title-counter" style="font-size:12px;color:${styles.panelColor};">0/100</div>
@@ -1041,7 +1041,7 @@ function mountChatWidget(payload) {
                     <label style="display:block;font-size:14px;font-weight:500;color:${styles.panelColor};margin-bottom:6px;">
                         Description <span style="color:#ef4444;">*</span>
                     </label>
-                    <textarea id="hn_feedback_description" maxlength="1000" rows="4" style="width:100%;padding:12px 16px;border:1px solid ${styles.inputBorder};border-radius:8px;background:${styles.panelBackground};color:${styles.messagesColor};font-size:14px;outline:none;resize:vertical;box-sizing:border-box;" placeholder="Please provide detailed information about your feedback"></textarea>
+                    <textarea id="hn_feedback_description" maxlength="1000" rows="4" style="width:100%;padding:12px 16px;border:1px solid ${styles.inputBorder};border-radius:8px;background:${styles.panelBackground};color:${styles.panelColor};font-size:14px;outline:none;resize:vertical;box-sizing:border-box;" placeholder="Please provide detailed information about your feedback"></textarea>
                     <div style="display:flex;justify-content:space-between;align-items:center;margin-top:4px;">
                         <div id="desc-error" style="display:none;color:#ef4444;font-size:12px;"></div>
                         <div id="desc-counter" style="font-size:12px;color:${styles.panelColor};">0/1000</div>
@@ -1102,11 +1102,11 @@ function mountChatWidget(payload) {
                         <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px;">
                             <div>
                                 <label style="display:block;font-size:13px;font-weight:500;color:${styles.panelColor};margin-bottom:6px;">Your Name <span style="color:#ef4444;">*</span></label>
-                                <input type="text" id="hn_feedback_user_name" style="width:100%;padding:12px 16px;border:1px solid ${styles.inputBorder};border-radius:8px;background:${styles.panelBackground};color:${styles.messagesColor};font-size:14px;outline:none;box-sizing:border-box;" placeholder="John Doe">
+                                <input type="text" id="hn_feedback_user_name" style="width:100%;padding:12px 16px;border:1px solid ${styles.inputBorder};border-radius:8px;background:${styles.panelBackground};color:${styles.panelColor};font-size:14px;outline:none;box-sizing:border-box;" placeholder="John Doe">
                             </div>
                             <div>
                                 <label style="display:block;font-size:13px;font-weight:500;color:${styles.panelColor};margin-bottom:6px;">Email Address <span style="color:#ef4444;">*</span></label>
-                                <input type="email" id="hn_feedback_contact_info" style="width:100%;padding:12px 16px;border:1px solid ${styles.inputBorder};border-radius:8px;background:${styles.panelBackground};color:${styles.messagesColor};font-size:14px;outline:none;box-sizing:border-box;" placeholder="your.email@example.com">
+                                <input type="email" id="hn_feedback_contact_info" style="width:100%;padding:12px 16px;border:1px solid ${styles.inputBorder};border-radius:8px;background:${styles.panelBackground};color:${styles.panelColor};font-size:14px;outline:none;box-sizing:border-box;" placeholder="your.email@example.com">
                             </div>
                         </div>
                         <div id="contact-error" style="display:none;color:#ef4444;font-size:12px;margin-top:4px;"></div>
@@ -1155,11 +1155,11 @@ function mountChatWidget(payload) {
                     // Remove active state from all options
                     options.forEach(opt => {
                         opt.style.borderColor = styles.inputBorder;
-                        opt.style.background = styles.inputBackground;
+                        opt.style.background = styles.panelBackground;
                     });
 
                     // Add active state to clicked option
-                    option.style.borderColor = styles.primaryColor;
+                    option.style.borderColor = styles.inputBorder;
                     option.style.background = styles.primaryColor + '16';
 
                     // Check the radio button
