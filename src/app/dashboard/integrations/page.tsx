@@ -54,49 +54,6 @@ function IntegrationsPage({ integrations }: { integrations: Row[]; tenantId: str
                 </div>
             </FadeIn>
 
-            {/* Overview Stats */}
-            <StaggerContainer>
-                <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-                    <StaggerChild>
-                        <StatCard
-                            title="Total Integrations"
-                            value={totalIntegrations}
-                            description="connected services"
-                            icon="fa-plug"
-                            color="success"
-                        />
-                    </StaggerChild>
-
-                    <StaggerChild>
-                        <StatCard
-                            title="Active Integrations"
-                            value={activeIntegrations.length}
-                            description="running smoothly"
-                            icon="fa-check-circle"
-                            color="primary"
-                        />
-                    </StaggerChild>
-
-                    <StaggerChild>
-                        <StatCard
-                            title="Healthy Integrations"
-                            value={healthyIntegrations}
-                            description="no issues"
-                            icon="fa-thumbs-up"
-                            color="success"
-                        />
-                    </StaggerChild>
-                    <StaggerChild>
-                        <StatCard
-                            title="Integration Health"
-                            value={(totalIntegrations > 0 ? Math.round((healthyIntegrations / totalIntegrations) * 100) : 100) + '%'}
-                            description="overall"
-                            icon="fa-heart-pulse"
-                            color={healthyIntegrations === totalIntegrations ? 'success' : healthyIntegrations === 0 ? 'error' : 'warning'}
-                        />
-                    </StaggerChild>
-                </div>
-            </StaggerContainer>
 
             {/* Main Content */}
             <div className="space-y-8">

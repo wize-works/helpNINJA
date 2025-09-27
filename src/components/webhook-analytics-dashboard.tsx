@@ -110,10 +110,6 @@ export function WebhookAnalyticsDashboard() {
             {/* Header with timeframe selector */}
             <div className="flex justify-between items-center">
                 <div className="flex items-center justify-between mb-6">
-                    <div>
-                        <h2 className="text-xl font-semibold text-base-content">Webhook Performance</h2>
-                        <p className="text-sm text-base-content/60 mt-1">Real-time delivery metrics and performance insights</p>
-                    </div>
                 </div>
                 <div className="flex gap-2">
                     {['1d', '7d', '30d', '90d'].map((period) => (

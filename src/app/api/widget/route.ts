@@ -239,9 +239,22 @@ export async function GET(req: NextRequest) {
         const [r, g, b] = hexToRgbServer(hex); return `rgba(${r},${g},${b},${alpha})`;
     }
 
+    // Helper function to determine if a color is light or dark
+    function isLightColor(hex: string): boolean {
+        const [r, g, b] = hexToRgbServer(hex);
+        const luminance = (0.299 * r + 0.587 * g + 0.114 * b) / 255;
+        return luminance > 0.5;
+    }
+
+    // Helper function to get contrasting color for text readability
+    function getContrastingColor(backgroundColor: string): string {
+        return isLightColor(backgroundColor) ? '#111111' : '#ffffff';
+    }
+
     function derivePalette(baseConfig: any, dark: boolean) { // eslint-disable-line @typescript-eslint/no-explicit-any
         const primary: string = (baseConfig.primaryColor as string) || '#0077b6';
         const advanced = baseConfig.advancedColors === true;
+
         // Light / dark contextual overrides (mirrors prior client logic)
         const themed: Record<string, unknown> = { ...baseConfig };
         if (dark) {
@@ -253,39 +266,47 @@ export async function GET(req: NextRequest) {
             if (!themed.assistantBubbleBackground) themed.assistantBubbleBackground = '#475569';
             if (!themed.assistantBubbleColor) themed.assistantBubbleColor = '#f8fafc';
         }
+
         const buttonBackground: string = advanced ? (themed.buttonBackground as string || primary) : primary;
         const userBubbleBackground: string = advanced ? (themed.userBubbleBackground as string || primary) : primary;
         const assistantBubbleBackground: string = advanced
             ? (themed.assistantBubbleBackground as string || (dark ? '#475569' : '#e6f2ff'))
             : rgbaFrom(primary, 0.13);
-        const assistantBubbleColor: string = advanced ? (themed.assistantBubbleColor as string || '#0077b6') : primary;
+        const assistantBubbleColor: string = advanced ? (themed.assistantBubbleColor as string || primary) : primary;
         const avatarBaseColor: string = advanced ? (themed.assistantBubbleColor as string || primary) : primary;
+
+        // Get dynamic fallback colors based on theme
+        const defaultPanelBackground = dark ? '#1E293B' : '#ffffff';
+        const defaultMessagesBackground = dark ? '#334155' : '#f8fafc';
+
         return {
             fontFamily: baseConfig.fontFamily,
             primaryColor: primary,
             buttonBackground,
-            buttonColor: themed.buttonColor || '#fff',
+            buttonColor: themed.buttonColor as string || getContrastingColor(buttonBackground),
             buttonHoverBackground: rgbaFrom(buttonBackground, 0.8),
-            bubbleBackground: advanced ? (themed.bubbleBackground || primary) : primary,
-            bubbleColor: themed.bubbleColor || '#fff',
-            panelBackground: advanced ? (themed.panelBackground || '#fff') : primary,
-            panelHeaderBackground: advanced ? (themed.panelHeaderBackground || primary) : primary,
-            panelColor: advanced ? (themed.panelColor || (dark ? '#ffffff' : '#333333')) : (dark ? '#ffffff' : '#333333'),
-            panelHeaderColor: advanced ? (themed.panelHeaderColor || '#ffffff') : '#ffffff',
-            messagesBackground: advanced ? (themed.messagesBackground || '#f8fafc') : '#f8fafc',
-            messagesColor: advanced ? (themed.messagesColor || (dark ? '#ffffff' : '#333333')) : (dark ? '#ffffff' : '#333333'),
+            bubbleBackground: advanced ? (themed.bubbleBackground as string || primary) : primary,
+            bubbleColor: themed.bubbleColor as string || getContrastingColor(advanced ? (themed.bubbleBackground as string || primary) : primary),
+            panelBackground: advanced ? (themed.panelBackground as string || defaultPanelBackground) : defaultPanelBackground,
+            panelHeaderBackground: advanced ? (themed.panelHeaderBackground as string || primary) : primary,
+            panelColor: advanced ? (themed.panelColor as string || getContrastingColor(advanced ? (themed.panelBackground as string || defaultPanelBackground) : defaultPanelBackground)) : getContrastingColor(defaultPanelBackground),
+            panelHeaderColor: advanced ? (themed.panelHeaderColor as string || getContrastingColor(advanced ? (themed.panelHeaderBackground as string || primary) : primary)) : getContrastingColor(primary),
+            messagesBackground: advanced ? (themed.messagesBackground as string || defaultMessagesBackground) : defaultMessagesBackground,
+            messagesColor: advanced ? (themed.messagesColor as string || getContrastingColor(advanced ? (themed.messagesBackground as string || defaultMessagesBackground) : defaultMessagesBackground)) : getContrastingColor(defaultMessagesBackground),
             userBubbleBackground,
-            userBubbleColor: advanced ? (themed.userBubbleColor || '#fff') : '#fff',
+            userBubbleColor: advanced ? (themed.userBubbleColor as string || getContrastingColor(userBubbleBackground)) : getContrastingColor(userBubbleBackground),
             assistantBubbleBackground,
             assistantBubbleColor,
             focusOutlineColor: rgbaFrom(buttonBackground, 0.5),
-            headerIconBackground: 'rgba(255,255,255,0.2)',
+            headerIconBackground: rgbaFrom(getContrastingColor(primary), 0.2),
             avatarBackground: rgbaFrom(avatarBaseColor, 0.15),
-            inputBackground: baseConfig.theme === 'light' || (baseConfig.theme === 'auto' && dark) ? "#fff" : "#111",
-            borderColor: baseConfig.theme === 'light' || (baseConfig.theme === 'auto' && dark) ? "#cccccc" : "#cccccc",
-            inputBorder: baseConfig.theme === 'light' || (baseConfig.theme === 'auto' && dark) ? "#cccccc" : "#cccccc",
-            textColor: baseConfig.theme === 'light' || (baseConfig.theme === 'auto' && dark) ? "#111" : "#fff",
-            mutedTextColor: baseConfig.theme === 'light' || (baseConfig.theme === 'auto' && dark) ? "#11111177" : "#ffffff77"
+            // Use buttonBackground for input since they're part of the same send interface
+            inputBackground: buttonBackground,
+            borderColor: rgbaFrom(buttonBackground, 0.3),
+            inputBorder: rgbaFrom(buttonBackground, 0.3),
+            // Use buttonColor for input text since they're part of the same send interface
+            textColor: themed.buttonColor as string || getContrastingColor(buttonBackground),
+            mutedTextColor: rgbaFrom(themed.buttonColor as string || getContrastingColor(buttonBackground), 0.6)
         };
     }
 

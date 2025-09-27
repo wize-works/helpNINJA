@@ -915,80 +915,80 @@ function mountChatWidget(payload) {
             <form id="hn_feedback_form" style="display:flex;flex-direction:column;gap:20px;">
                 <!-- Feedback Type Selection -->
                 <fieldset style="border:none;padding:0;margin:0;">
-                    <legend style="font-size:14px;font-weight:500;color:${styles.messagesColor};margin-bottom:12px;padding:0;">What type of feedback is this?</legend>
+                    <legend style="font-size:14px;font-weight:500;color:${styles.panelColor};margin-bottom:12px;padding:0;">What type of feedback is this?</legend>
                     <div id="hn_feedback_types" style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">
-                        <label class="feedback-type-option" data-value="bug" style="cursor:pointer;border:1px solid ${styles.inputBorder};border-radius:8px;padding:12px;transition:all 0.2s ease;background:${styles.inputBackground};">
+                        <label class="feedback-type-option" data-value="bug" style="cursor:pointer;border:1px solid ${styles.inputBorder};border-radius:8px;padding:12px;transition:all 0.2s ease;background:${styles.panelBackground};">
                             <input type="radio" name="feedback_type" value="bug" style="display:none;">
                             <div style="display:flex;align-items:start;gap:8px;">
                                 <div style="height:24px;width:24px;">
-                                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 640" fill="currentColor"><path d="M320 64C267 64 224 107 224 160L224 163.6C224 179.3 236.7 192 252.4 192L387.5 192C403.2 192 415.9 179.3 415.9 163.6L415.9 160C415.9 107 372.9 64 319.9 64zM432 344L432 416C432 469.6 394.3 514.4 344 525.4L344 360C344 346.7 333.3 336 320 336C306.7 336 296 346.7 296 360L296 525.4C245.7 514.4 208 469.6 208 416L208 344C208 313.1 233.1 288 264 288L376 288C406.9 288 432 313.1 432 344zM179.8 282.9C170.3 296 163.8 311.3 161.2 328L56 328C42.7 328 32 338.7 32 352C32 365.3 42.7 376 56 376L160 376L160 416C160 422.5 160.4 428.9 161.1 435.1L73.6 500.8C63 508.8 60.8 523.8 68.8 534.4C76.8 545 91.8 547.2 102.4 539.2L175.4 484.5C201 538.6 256.1 576 320 576C383.9 576 439 538.6 464.6 484.5L537.6 539.2C548.2 547.2 563.2 545 571.2 534.4C579.2 523.8 577 508.8 566.4 500.8L478.9 435.1C479.6 428.8 480 422.4 480 416L480 376L584 376C597.3 376 608 365.3 608 352C608 338.7 597.3 328 584 328L478.8 328C476.2 311.3 469.7 296 460.2 282.9L566.4 203.2C577 195.2 579.2 180.2 571.2 169.6C563.2 159 548.2 156.8 537.6 164.8L422.6 251C408.6 243.9 392.7 240 376 240L264 240C247.2 240 231.4 244 217.4 251L102.4 164.8C91.8 156.8 76.8 159 68.8 169.6C60.8 180.2 63 195.2 73.6 203.2L179.8 282.9z"/></svg>
+                                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 640"><path d="M320 64C267 64 224 107 224 160L224 163.6C224 179.3 236.7 192 252.4 192L387.5 192C403.2 192 415.9 179.3 415.9 163.6L415.9 160C415.9 107 372.9 64 319.9 64zM432 344L432 416C432 469.6 394.3 514.4 344 525.4L344 360C344 346.7 333.3 336 320 336C306.7 336 296 346.7 296 360L296 525.4C245.7 514.4 208 469.6 208 416L208 344C208 313.1 233.1 288 264 288L376 288C406.9 288 432 313.1 432 344zM179.8 282.9C170.3 296 163.8 311.3 161.2 328L56 328C42.7 328 32 338.7 32 352C32 365.3 42.7 376 56 376L160 376L160 416C160 422.5 160.4 428.9 161.1 435.1L73.6 500.8C63 508.8 60.8 523.8 68.8 534.4C76.8 545 91.8 547.2 102.4 539.2L175.4 484.5C201 538.6 256.1 576 320 576C383.9 576 439 538.6 464.6 484.5L537.6 539.2C548.2 547.2 563.2 545 571.2 534.4C579.2 523.8 577 508.8 566.4 500.8L478.9 435.1C479.6 428.8 480 422.4 480 416L480 376L584 376C597.3 376 608 365.3 608 352C608 338.7 597.3 328 584 328L478.8 328C476.2 311.3 469.7 296 460.2 282.9L566.4 203.2C577 195.2 579.2 180.2 571.2 169.6C563.2 159 548.2 156.8 537.6 164.8L422.6 251C408.6 243.9 392.7 240 376 240L264 240C247.2 240 231.4 244 217.4 251L102.4 164.8C91.8 156.8 76.8 159 68.8 169.6C60.8 180.2 63 195.2 73.6 203.2L179.8 282.9z"/></svg>
                                 </div>
                                 <div>
-                                    <div style="font-size:14px;font-weight:500;color:${styles.messagesColor};margin-bottom:2px;">Bug Report</div>
-                                    <div style="font-size:12px;color:${styles.mutedTextColor};">Something is broken</div>
+                                    <div style="font-size:14px;font-weight:500;color:${styles.panelColor};margin-bottom:2px;">Bug Report</div>
+                                    <div style="font-size:12px;color:${styles.panelColor};">Something is broken</div>
                                 </div>
                             </div>
                         </label>
                         
-                        <label class="feedback-type-option" data-value="feature" style="cursor:pointer;border:1px solid ${styles.inputBorder};border-radius:8px;padding:12px;transition:all 0.2s ease;background:${styles.inputBackground};">
+                        <label class="feedback-type-option" data-value="feature" style="cursor:pointer;border:1px solid ${styles.inputBorder};border-radius:8px;padding:12px;transition:all 0.2s ease;background:${styles.panelBackground};">
                             <input type="radio" name="feedback_type" value="feature" style="display:none;">
                             <div style="display:flex;align-items:start;gap:8px;">
                                 <div style="height:24px;width:24px;">
                                     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 640"><path d="M424.5 355.1C449 329.2 464 294.4 464 256C464 176.5 399.5 112 320 112C240.5 112 176 176.5 176 256C176 294.4 191 329.2 215.5 355.1C236.8 377.5 260.4 409.1 268.8 448L371.2 448C379.6 409 403.2 377.5 424.5 355.1zM459.3 388.1C435.7 413 416 443.4 416 477.7L416 496C416 540.2 380.2 576 336 576L304 576C259.8 576 224 540.2 224 496L224 477.7C224 443.4 204.3 413 180.7 388.1C148 353.7 128 307.2 128 256C128 150 214 64 320 64C426 64 512 150 512 256C512 307.2 492 353.7 459.3 388.1zM272 248C272 261.3 261.3 272 248 272C234.7 272 224 261.3 224 248C224 199.4 263.4 160 312 160C325.3 160 336 170.7 336 184C336 197.3 325.3 208 312 208C289.9 208 272 225.9 272 248z"/></svg>
                                 </div>
                                 <div>
-                                    <div style="font-size:14px;font-weight:500;color:${styles.messagesColor};margin-bottom:2px;">Feature Request</div>
-                                    <div style="font-size:12px;color:${styles.mutedTextColor};">Suggest an improvement</div>
+                                    <div style="font-size:14px;font-weight:500;color:${styles.panelColor};margin-bottom:2px;">Feature Request</div>
+                                    <div style="font-size:12px;color:${styles.panelColor};">Suggest an improvement</div>
                                 </div>
                             </div>
                         </label>
                         
-                        <label class="feedback-type-option" data-value="improvement" style="cursor:pointer;border:1px solid ${styles.inputBorder};border-radius:8px;padding:12px;transition:all 0.2s ease;background:${styles.inputBackground};">
+                        <label class="feedback-type-option" data-value="improvement" style="cursor:pointer;border:1px solid ${styles.inputBorder};border-radius:8px;padding:12px;transition:all 0.2s ease;background:${styles.panelBackground};">
                             <input type="radio" name="feedback_type" value="improvement" style="display:none;">
                             <div style="display:flex;align-items:start;gap:8px;">
                                 <div style="height:24px;width:24px;">
                                     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 640"><path d="M337.5 79C328.1 69.6 312.9 69.6 303.6 79L135.5 247C126.1 256.4 126.1 271.6 135.5 280.9C144.9 290.2 160.1 290.3 169.4 280.9L296.4 153.9L296.4 560C296.4 573.3 307.1 584 320.4 584C333.7 584 344.4 573.3 344.4 560L344.4 153.9L471.4 280.9C480.8 290.3 496 290.3 505.3 280.9C514.6 271.5 514.7 256.3 505.3 247L337.5 79z"/></svg>
                                 </div>
                                 <div>
-                                    <div style="font-size:14px;font-weight:500;color:${styles.messagesColor};margin-bottom:2px;">Improvement</div>
-                                    <div style="font-size:12px;color:${styles.mutedTextColor};">Make something better or more efficient</div>
+                                    <div style="font-size:14px;font-weight:500;color:${styles.panelColor};margin-bottom:2px;">Improvement</div>
+                                    <div style="font-size:12px;color:${styles.panelColor};">Make something better or more efficient</div>
                                 </div>
                             </div>
                         </label>
                         
-                        <label class="feedback-type-option" data-value="ui_ux" style="cursor:pointer;border:1px solid ${styles.inputBorder};border-radius:8px;padding:12px;transition:all 0.2s ease;background:${styles.inputBackground};">
+                        <label class="feedback-type-option" data-value="ui_ux" style="cursor:pointer;border:1px solid ${styles.inputBorder};border-radius:8px;padding:12px;transition:all 0.2s ease;background:${styles.panelBackground};">
                             <input type="radio" name="feedback_type" value="ui_ux" style="display:none;">
                             <div style="display:flex;align-items:start;gap:8px;">
                                 <div style="height:24px;width:24px;">
                                     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 640"><path d="M530.4 64C513.1 64 496.3 69.8 482.6 80.4L278.1 240.3C252.8 260 236.7 288.9 232.9 320.3C230 320.1 227 320 224 320C153.3 320 96 377.3 96 448C96 456.6 96.9 465.1 98.5 473.2C102.1 491.3 90 512 71.5 512L64 512C46.3 512 32 526.3 32 544C32 561.7 46.3 576 64 576L224 576C294.7 576 352 518.7 352 448C352 445 351.9 442.1 351.7 439.1C383.1 435.3 412 419.1 431.7 393.9L591.6 189.3C602.2 175.7 608 158.9 608 141.6C608 98.7 573.3 64 530.4 64zM339.1 392C326.6 366.3 305.7 345.4 280 332.9C280.6 311.5 290.7 291.4 307.6 278.1L512.2 118.3C517.4 114.2 523.8 112 530.4 112C546.7 112 560 125.2 560 141.6C560 148.2 557.8 154.6 553.7 159.8L393.9 364.3C380.7 381.3 360.5 391.4 339.1 391.9zM304 448C304 492.2 268.2 528 224 528L131.9 528C132.4 527.3 132.9 526.5 133.4 525.8C144.9 508.3 150 485.9 145.6 463.8C144.6 458.7 144 453.4 144 448C144 403.8 179.8 368 224 368C268.2 368 304 403.8 304 448z"/></svg>
                                 </div>
                                 <div>
-                                    <div style="font-size:14px;font-weight:500;color:${styles.messagesColor};margin-bottom:2px;">UI/UX Feedback</div>
-                                    <div style="font-size:12px;color:${styles.mutedTextColor};">Visual design or user experience suggestions</div>
+                                    <div style="font-size:14px;font-weight:500;color:${styles.panelColor};margin-bottom:2px;">UI/UX Feedback</div>
+                                    <div style="font-size:12px;color:${styles.panelColor};">Visual design or user experience suggestions</div>
                                 </div>
                             </div>
                         </label>
-                        <label class="feedback-type-option" data-value="performance" style="cursor:pointer;border:1px solid ${styles.inputBorder};border-radius:8px;padding:12px;transition:all 0.2s ease;background:${styles.inputBackground};">
+                        <label class="feedback-type-option" data-value="performance" style="cursor:pointer;border:1px solid ${styles.inputBorder};border-radius:8px;padding:12px;transition:all 0.2s ease;background:${styles.panelBackground};">
                             <input type="radio" name="feedback_type" value="performance" style="display:none;">
                             <div style="display:flex;align-items:start;gap:8px;">
                                 <div style="height:24px;width:24px;">
                                     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 640"><path d="M320 112C434.9 112 528 205.1 528 320C528 434.9 434.9 528 320 528C205.1 528 112 434.9 112 320C112 205.1 205.1 112 320 112zM320 576C461.4 576 576 461.4 576 320C576 178.6 461.4 64 320 64C178.6 64 64 178.6 64 320C64 461.4 178.6 576 320 576zM352 176C352 158.3 337.7 144 320 144C302.3 144 288 158.3 288 176C288 193.7 302.3 208 320 208C337.7 208 352 193.7 352 176zM320 472C350.9 472 376 446.9 376 416C376 401.6 370.6 388.5 361.6 378.5L422.1 233.2C427.2 221 421.4 206.9 409.2 201.8C397 196.7 382.9 202.5 377.8 214.7L317.3 360.1C287.6 361.5 264 386 264 416C264 446.9 289.1 472 320 472zM256 224C256 206.3 241.7 192 224 192C206.3 192 192 206.3 192 224C192 241.7 206.3 256 224 256C241.7 256 256 241.7 256 224zM176 352C193.7 352 208 337.7 208 320C208 302.3 193.7 288 176 288C158.3 288 144 302.3 144 320C144 337.7 158.3 352 176 352zM496 320C496 302.3 481.7 288 464 288C446.3 288 432 302.3 432 320C432 337.7 446.3 352 464 352C481.7 352 496 337.7 496 320z"/></svg>
                                 </div>
                                 <div>
-                                    <div style="font-size:14px;font-weight:500;color:${styles.messagesColor};margin-bottom:2px;">Performance Issue</div>
-                                    <div style="font-size:12px;color:${styles.mutedTextColor};">Speed, loading, or responsiveness concerns</div>
+                                    <div style="font-size:14px;font-weight:500;color:${styles.panelColor};margin-bottom:2px;">Performance Issue</div>
+                                    <div style="font-size:12px;color:${styles.panelColor};">Speed, loading, or responsiveness concerns</div>
                                 </div>
                             </div>
                         </label>
-                        <label class="feedback-type-option" data-value="general" style="cursor:pointer;border:1px solid ${styles.inputBorder};border-radius:8px;padding:12px;transition:all 0.2s ease;background:${styles.inputBackground};">
+                        <label class="feedback-type-option" data-value="general" style="cursor:pointer;border:1px solid ${styles.inputBorder};border-radius:8px;padding:12px;transition:all 0.2s ease;background:${styles.panelBackground};">
                             <input type="radio" name="feedback_type" value="general" style="display:none;">
                             <div style="display:flex;align-items:start;gap:8px;">
                                 <div style="height:24px;width:24px;">
                                     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 640"><path d="M267.7 576.9C267.7 576.9 267.7 576.9 267.7 576.9L229.9 603.6C222.6 608.8 213 609.4 205 605.3C197 601.2 192 593 192 584L192 512L160 512C107 512 64 469 64 416L64 192C64 139 107 96 160 96L480 96C533 96 576 139 576 192L576 416C576 469 533 512 480 512L359.6 512L267.7 576.9zM332 472.8C340.1 467.1 349.8 464 359.7 464L480 464C506.5 464 528 442.5 528 416L528 192C528 165.5 506.5 144 480 144L160 144C133.5 144 112 165.5 112 192L112 416C112 442.5 133.5 464 160 464L216 464C226.4 464 235.3 470.6 238.6 479.9C239.5 482.4 240 485.1 240 488L240 537.7C272.7 514.6 303.3 493 331.9 472.8z"/></svg>
                                 </div>
                                 <div>
-                                    <div style="font-size:14px;font-weight:500;color:${styles.messagesColor};margin-bottom:2px;">General Feedback</div>
-                                    <div style="font-size:12px;color:${styles.mutedTextColor};">Other comments or suggestions</div>
+                                    <div style="font-size:14px;font-weight:500;color:${styles.panelColor};margin-bottom:2px;">General Feedback</div>
+                                    <div style="font-size:12px;color:${styles.panelColor};">Other comments or suggestions</div>
                                 </div>
                             </div>
                         </label>
@@ -997,71 +997,71 @@ function mountChatWidget(payload) {
 
                 <!-- Priority Selection -->
                 <fieldset style="border:none;padding:0;margin:0;">
-                    <legend style="font-size:14px;font-weight:500;color:${styles.messagesColor};margin-bottom:12px;padding:0;">Priority Level</legend>
+                    <legend style="font-size:14px;font-weight:500;color:${styles.panelColor};margin-bottom:12px;padding:0;">Priority Level</legend>
                     <div id="hn_feedback_priorities" style="display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:8px;">
-                        <label class="feedback-priority-option" data-value="low" style="cursor:pointer;border:1px solid ${styles.inputBorder};border-radius:8px;padding:8px 12px;transition:all 0.2s ease;background:${styles.inputBackground};text-align:center;">
+                        <label class="feedback-priority-option" data-value="low" style="cursor:pointer;border:1px solid ${styles.inputBorder};border-radius:8px;padding:8px 12px;transition:all 0.2s ease;background:${styles.panelBackground};text-align:center;">
                             <input type="radio" name="feedback_priority" value="low" style="display:none;">
-                            <div style="font-weight:600;font-size:14px;color:${styles.messagesColor};">Low</div>
-                            <div style="font-size:12px;color:${styles.mutedTextColor};">Nice to have</div>
+                            <div style="font-weight:600;font-size:14px;color:${styles.panelColor};">Low</div>
+                            <div style="font-size:12px;color:${styles.panelColor};">Nice to have</div>
                         </label>
                         
-                        <label class="feedback-priority-option" data-value="medium" style="cursor:pointer;border:1px solid ${styles.inputBorder};border-radius:8px;padding:8px 12px;transition:all 0.2s ease;background:${styles.inputBackground};text-align:center;">
+                        <label class="feedback-priority-option" data-value="medium" style="cursor:pointer;border:1px solid ${styles.inputBorder};border-radius:8px;padding:8px 12px;transition:all 0.2s ease;background:${styles.panelBackground};text-align:center;">
                             <input type="radio" name="feedback_priority" value="medium" style="display:none;" checked>
-                            <div style="font-weight:600;font-size:14px;color:${styles.messagesColor};">Medium</div>
-                            <div style="font-size:12px;color:${styles.mutedTextColor};">Important improvement</div>
+                            <div style="font-weight:600;font-size:14px;color:${styles.panelColor};">Medium</div>
+                            <div style="font-size:12px;color:${styles.panelColor};">Important improvement</div>
                         </label>
                         
-                        <label class="feedback-priority-option" data-value="high" style="cursor:pointer;border:1px solid ${styles.inputBorder};border-radius:8px;padding:8px 12px;transition:all 0.2s ease;background:${styles.inputBackground};text-align:center;">
+                        <label class="feedback-priority-option" data-value="high" style="cursor:pointer;border:1px solid ${styles.inputBorder};border-radius:8px;padding:8px 12px;transition:all 0.2s ease;background:${styles.panelBackground};text-align:center;">
                             <input type="radio" name="feedback_priority" value="high" style="display:none;">
-                            <div style="font-weight:600;font-size:14px;color:${styles.messagesColor};">High</div>
-                            <div style="font-size:12px;color:${styles.mutedTextColor};">Significant issue</div>
+                            <div style="font-weight:600;font-size:14px;color:${styles.panelColor};">High</div>
+                            <div style="font-size:12px;color:${styles.panelColor};">Significant issue</div>
                         </label>
-                        <label class="feedback-priority-option" data-value="urgent" style="cursor:pointer;border:1px solid ${styles.inputBorder};border-radius:8px;padding:8px 12px;transition:all 0.2s ease;background:${styles.inputBackground};text-align:center;">
+                        <label class="feedback-priority-option" data-value="urgent" style="cursor:pointer;border:1px solid ${styles.inputBorder};border-radius:8px;padding:8px 12px;transition:all 0.2s ease;background:${styles.panelBackground};text-align:center;">
                             <input type="radio" name="feedback_priority" value="urgent" style="display:none;">
-                            <div style="font-weight:600;font-size:14px;color:${styles.messagesColor};">Urgent</div>
-                            <div style="font-size:12px;color:${styles.mutedTextColor};">Blocking or critical issue</div>
+                            <div style="font-weight:600;font-size:14px;color:${styles.panelColor};">Urgent</div>
+                            <div style="font-size:12px;color:${styles.panelColor};">Blocking or critical issue</div>
                         </label>
                     </div>
                 </fieldset>
 
                 <!-- Title Input -->
                 <div>
-                    <label style="display:block;font-size:14px;font-weight:500;color:${styles.messagesColor};margin-bottom:6px;">
+                    <label style="display:block;font-size:14px;font-weight:500;color:${styles.panelColor};margin-bottom:6px;">
                         Title <span style="color:#ef4444;">*</span>
                     </label>
-                    <input type="text" id="hn_feedback_title" maxlength="100" style="width:100%;padding:12px 16px;border:1px solid ${styles.inputBorder};border-radius:8px;background:${styles.inputBackground};color:${styles.messagesColor};font-size:14px;outline:none;box-sizing:border-box;" placeholder="Brief summary of your feedback">
+                    <input type="text" id="hn_feedback_title" maxlength="100" style="width:100%;padding:12px 16px;border:1px solid ${styles.inputBorder};border-radius:8px;background:${styles.panelBackground};color:${styles.messagesColor};font-size:14px;outline:none;box-sizing:border-box;" placeholder="Brief summary of your feedback">
                     <div style="display:flex;justify-content:space-between;align-items:center;margin-top:4px;">
                         <div id="title-error" style="display:none;color:#ef4444;font-size:12px;"></div>
-                        <div id="title-counter" style="font-size:12px;color:${styles.mutedTextColor};">0/100</div>
+                        <div id="title-counter" style="font-size:12px;color:${styles.panelColor};">0/100</div>
                     </div>
                 </div>
 
                 <!-- Description Input -->
                 <div>
-                    <label style="display:block;font-size:14px;font-weight:500;color:${styles.messagesColor};margin-bottom:6px;">
+                    <label style="display:block;font-size:14px;font-weight:500;color:${styles.panelColor};margin-bottom:6px;">
                         Description <span style="color:#ef4444;">*</span>
                     </label>
-                    <textarea id="hn_feedback_description" maxlength="1000" rows="4" style="width:100%;padding:12px 16px;border:1px solid ${styles.inputBorder};border-radius:8px;background:${styles.inputBackground};color:${styles.messagesColor};font-size:14px;outline:none;resize:vertical;box-sizing:border-box;" placeholder="Please provide detailed information about your feedback"></textarea>
+                    <textarea id="hn_feedback_description" maxlength="1000" rows="4" style="width:100%;padding:12px 16px;border:1px solid ${styles.inputBorder};border-radius:8px;background:${styles.panelBackground};color:${styles.messagesColor};font-size:14px;outline:none;resize:vertical;box-sizing:border-box;" placeholder="Please provide detailed information about your feedback"></textarea>
                     <div style="display:flex;justify-content:space-between;align-items:center;margin-top:4px;">
                         <div id="desc-error" style="display:none;color:#ef4444;font-size:12px;"></div>
-                        <div id="desc-counter" style="font-size:12px;color:${styles.mutedTextColor};">0/1000</div>
+                        <div id="desc-counter" style="font-size:12px;color:${styles.panelColor};">0/1000</div>
                     </div>
                 </div>
 
                 <!-- File Upload -->
                 <div>
-                    <label style="display:flex;font-size:14px;font-weight:500;color:${styles.messagesColor};margin-bottom:6px;">
+                    <label style="display:flex;font-size:14px;font-weight:500;color:${styles.panelColor};margin-bottom:6px;">
                         <div style="height:18px;width:18px;">
                             <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 640" fill="currentColor"><path d="M305.4 82.4C358.5 29.3 444.6 29.3 497.7 82.4C550.8 135.5 550.8 221.6 497.7 274.7L328 444.5C293.6 478.9 237.9 478.9 203.5 444.5C169.1 410.1 169.1 354.4 203.5 320L362 161.6C371.4 152.2 386.6 152.2 395.9 161.6C405.2 171 405.3 186.2 395.9 195.5L237.5 353.9C221.9 369.5 221.9 394.8 237.5 410.5C253.1 426.2 278.4 426.1 294.1 410.5L463.8 240.8C498.2 206.4 498.2 150.7 463.8 116.3C429.4 81.9 373.7 81.9 339.4 116.3L158.4 297.3C105.3 350.4 105.3 436.5 158.4 489.6C211.5 542.7 297.6 542.7 350.7 489.6L492.1 348.3C501.5 338.9 516.7 338.9 526 348.3C535.3 357.7 535.4 372.9 526 382.2L384.6 523.6C312.7 595.5 196.2 595.5 124.4 523.6C52.6 451.7 52.5 335.2 124.4 263.4L305.4 82.4z"/></svg>
                         </div>&nbsp;&nbsp;
                         Attachments (Optional)
                     </label>
-                    <div id="hn_feedback_file_drop" style="border:2px dashed ${styles.inputBorder};border-radius:8px;padding:20px;text-align:center;background:${styles.inputBackground};cursor:pointer;transition:all 0.2s ease;">
+                    <div id="hn_feedback_file_drop" style="border:2px dashed ${styles.inputBorder};border-radius:8px;padding:20px;text-align:center;background:${styles.panelBackground};cursor:pointer;transition:all 0.2s ease;">
                         <div style="height:24px;width:24px;margin-left:auto;margin-right:auto;">
                             <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 640"><path d="M272 96C183.6 96 112 167.6 112 256C112 260.9 112.2 265.8 112.7 270.6C64.9 294 32 343.1 32 400C32 479.5 96.5 544 176 544L480 544C550.7 544 608 486.7 608 416C608 366.1 579.5 323 537.9 301.8C541.9 289.9 544 277.2 544 264C544 197.7 490.3 144 424 144C412.5 144 401.3 145.6 390.7 148.7C361.4 116.4 319.1 96 272 96zM160 256C160 194.1 210.1 144 272 144C309.7 144 343 162.6 363.3 191.1C370 200.6 382.6 203.9 393.1 198.9C402.4 194.5 412.8 192 423.9 192C463.7 192 495.9 224.2 495.9 264C495.9 278.1 491.9 291.2 484.9 302.3C480.8 308.8 480.1 316.9 482.9 324C485.7 331.1 491.9 336.5 499.4 338.3C534.2 347 559.9 378.5 559.9 415.9C559.9 460.1 524.1 495.9 479.9 495.9L175.9 495.9C122.9 495.9 79.9 452.9 79.9 399.9C79.9 357.2 107.8 320.9 146.5 308.5C158.3 304.7 165.3 292.5 162.6 280.4C160.8 272.5 159.9 264.3 159.9 255.9zM337 263C327.6 253.6 312.4 253.6 303.1 263L239.1 327C229.7 336.4 229.7 351.6 239.1 360.9C248.5 370.2 263.7 370.3 273 360.9L296 337.9L296 424C296 437.3 306.7 448 320 448C333.3 448 344 437.3 344 424L344 337.9L367 360.9C376.4 370.3 391.6 370.3 400.9 360.9C410.2 351.5 410.3 336.3 400.9 327L336.9 263z"/></svg>
                         </div>
-                        <div style="font-size:14px;color:${styles.messagesColor};margin-bottom:4px;">Drop files here or click to browse</div>
-                        <div style="font-size:12px;color:${styles.mutedTextColor};">Max 10MB • Images, text files, PDFs</div>
+                        <div style="font-size:14px;color:${styles.panelColor};margin-bottom:4px;">Drop files here or click to browse</div>
+                        <div style="font-size:12px;color:${styles.panelColor};">Max 10MB • Images, text files, PDFs</div>
                         <input type="file" id="hn_feedback_file_input" multiple accept="image/*,.txt,.pdf" style="display:none;">
                     </div>
                     <div id="hn_feedback_files_container" style="margin-top:12px;"></div>
@@ -1069,13 +1069,13 @@ function mountChatWidget(payload) {
 
                 <!-- Contact Information -->
                 <div>
-                    <label style="display:block;font-size:14px;font-weight:500;color:${styles.messagesColor};margin-bottom:6px;">
+                    <label style="display:block;font-size:14px;font-weight:500;color:${styles.panelColor};margin-bottom:6px;">
                         Contact Method (Optional)
                     </label>
                     <div id="hn_feedback_contact_methods" style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:12px;">
-                        <label class="feedback-contact-option" data-value="email" style="cursor:pointer;border:1px solid ${styles.inputBorder};border-radius:8px;padding:8px 12px;transition:all 0.2s ease;background:${styles.inputBackground};text-align:center;">
+                        <label class="feedback-contact-option" data-value="email" style="cursor:pointer;border:1px solid ${styles.inputBorder};border-radius:8px;padding:8px 12px;transition:all 0.2s ease;background:${styles.panelBackground};text-align:center;">
                             <input type="radio" name="feedback_contact_method" value="email" style="display:none;">
-                            <div style="display:flex;font-size:14px;color:${styles.messagesColor};">
+                            <div style="display:flex;font-size:14px;color:${styles.panelColor};">
                                 <div style="height:16px;width:16px;margin-right:6px;">
                                     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 640"><path d="M125.4 128C91.5 128 64 155.5 64 189.4C64 190.3 64 191.1 64.1 192L64 192L64 448C64 483.3 92.7 512 128 512L512 512C547.3 512 576 483.3 576 448L576 192L575.9 192C575.9 191.1 576 190.3 576 189.4C576 155.5 548.5 128 514.6 128L125.4 128zM528 256.3L528 448C528 456.8 520.8 464 512 464L128 464C119.2 464 112 456.8 112 448L112 256.3L266.8 373.7C298.2 397.6 341.7 397.6 373.2 373.7L528 256.3zM112 189.4C112 182 118 176 125.4 176L514.6 176C522 176 528 182 528 189.4C528 193.6 526 197.6 522.7 200.1L344.2 335.5C329.9 346.3 310.1 346.3 295.8 335.5L117.3 200.1C114 197.6 112 193.6 112 189.4z"/></svg>
                                 </div>
@@ -1085,9 +1085,9 @@ function mountChatWidget(payload) {
                             </div>
                         </label>
                         
-                        <label class="feedback-contact-option" data-value="none" style="cursor:pointer;border:1px solid ${styles.inputBorder};border-radius:8px;padding:8px 12px;transition:all 0.2s ease;background:${styles.inputBackground};text-align:center;">
+                        <label class="feedback-contact-option" data-value="none" style="cursor:pointer;border:1px solid ${styles.inputBorder};border-radius:8px;padding:8px 12px;transition:all 0.2s ease;background:${styles.panelBackground};text-align:center;">
                             <input type="radio" name="feedback_contact_method" value="none" style="display:none;" checked>
-                            <div style="display:flex; font-size:14px;color:${styles.messagesColor};">
+                            <div style="display:flex; font-size:14px;color:${styles.panelColor};">
                                 <div style="height:16px;width:16px;margin-right:6px;">
                                     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 640"><path d="M73 39.1C63.6 29.7 48.4 29.7 39.1 39.1C29.8 48.5 29.7 63.7 39 73.1L567 601.1C576.4 610.5 591.6 610.5 600.9 601.1C610.2 591.7 610.3 576.5 600.9 567.2L513.1 479.4C530.6 476.1 543.9 460.7 543.9 442.3C543.9 435.6 542.1 429 538.8 423.3L517 385.7C498 353.1 488 316.1 488 278.4L488 263.9C488 179.3 425.4 109.2 344 97.6L344 87.9C344 74.6 333.3 63.9 320 63.9C306.7 63.9 296 74.6 296 87.9L296 97.6C253.8 103.6 216.6 125.4 190.6 156.7L73 39.1zM224.8 190.9C246.7 162.4 281.2 144 320 144C386.3 144 440 197.7 440 264L440 278.5C440 324.7 452.3 370 475.5 409.9L488.4 432L465.8 432L224.7 190.9zM164.5 409.9C184 376.5 195.8 339.2 199.1 300.9L152.4 254.2C152.2 257.5 152.1 260.8 152.1 264.1L152.1 278.6C152.1 316.3 142.1 353.3 123.1 385.9L101.1 423.2C97.7 429 96 435.5 96 442.2C96 463.1 112.9 480 133.8 480L378.2 480L330.2 432L151.6 432L164.5 409.9zM252.1 528C262 556 288.7 576 320 576C351.3 576 378 556 387.9 528L252.1 528z"/></svg>
                                 </div>
@@ -1101,12 +1101,12 @@ function mountChatWidget(payload) {
                     <div id="contact-info-container" style="display:none;">
                         <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px;">
                             <div>
-                                <label style="display:block;font-size:13px;font-weight:500;color:${styles.messagesColor};margin-bottom:6px;">Your Name <span style="color:#ef4444;">*</span></label>
-                                <input type="text" id="hn_feedback_user_name" style="width:100%;padding:12px 16px;border:1px solid ${styles.inputBorder};border-radius:8px;background:${styles.inputBackground};color:${styles.messagesColor};font-size:14px;outline:none;box-sizing:border-box;" placeholder="John Doe">
+                                <label style="display:block;font-size:13px;font-weight:500;color:${styles.panelColor};margin-bottom:6px;">Your Name <span style="color:#ef4444;">*</span></label>
+                                <input type="text" id="hn_feedback_user_name" style="width:100%;padding:12px 16px;border:1px solid ${styles.inputBorder};border-radius:8px;background:${styles.panelBackground};color:${styles.messagesColor};font-size:14px;outline:none;box-sizing:border-box;" placeholder="John Doe">
                             </div>
                             <div>
-                                <label style="display:block;font-size:13px;font-weight:500;color:${styles.messagesColor};margin-bottom:6px;">Email Address <span style="color:#ef4444;">*</span></label>
-                                <input type="email" id="hn_feedback_contact_info" style="width:100%;padding:12px 16px;border:1px solid ${styles.inputBorder};border-radius:8px;background:${styles.inputBackground};color:${styles.messagesColor};font-size:14px;outline:none;box-sizing:border-box;" placeholder="your.email@example.com">
+                                <label style="display:block;font-size:13px;font-weight:500;color:${styles.panelColor};margin-bottom:6px;">Email Address <span style="color:#ef4444;">*</span></label>
+                                <input type="email" id="hn_feedback_contact_info" style="width:100%;padding:12px 16px;border:1px solid ${styles.inputBorder};border-radius:8px;background:${styles.panelBackground};color:${styles.messagesColor};font-size:14px;outline:none;box-sizing:border-box;" placeholder="your.email@example.com">
                             </div>
                         </div>
                         <div id="contact-error" style="display:none;color:#ef4444;font-size:12px;margin-top:4px;"></div>
