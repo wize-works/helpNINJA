@@ -175,7 +175,7 @@ function mountChatWidget(payload) {
     const dropdownContainer = el('div', `position:relative;`);
 
     // Menu button (3 dots)
-    const menuButton = el('button', `background:${styles.buttonBackground};color:${styles.buttonColor};border:none;cursor:pointer;padding:8px;border-radius:50%;height:40px;width:40px;transition:all .2s ease;display:flex;align-items:center;justify-content:center;`);
+    const menuButton = el('button', `background:${styles.panelHeaderColor}40;color:${styles.panelHeaderColor};border:none;cursor:pointer;padding:8px;border-radius:50%;height:40px;width:40px;transition:all .2s ease;display:flex;align-items:center;justify-content:center;`);
     menuButton.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 640" fill="currentColor"><circle cx="320" cy="160" r="48"/><circle cx="320" cy="320" r="48"/><circle cx="320" cy="480" r="48"/></svg>';
 
     // Dropdown menu
