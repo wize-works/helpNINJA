@@ -46,6 +46,43 @@ function mountChatWidget(payload) {
         document.head.appendChild(link);
     }
 
+    // Add bubble animation styles
+    if (!document.querySelector('#hn-bubble-animations')) {
+        const style = document.createElement('style');
+        style.id = 'hn-bubble-animations';
+        style.textContent = `
+            @keyframes hn-bubble-pulse {
+                0%, 100% { transform: scale(1); }
+                50% { transform: scale(1.05); }
+            }
+            @keyframes hn-ripple {
+                0% {
+                    transform: scale(1);
+                    opacity: 0.6;
+                }
+                100% {
+                    transform: scale(2);
+                    opacity: 0;
+                }
+            }
+            .hn-bubble-animating {
+                animation: hn-bubble-pulse 1s ease-in-out;
+            }
+            .hn-ripple-ring {
+                position: absolute;
+                top: 0;
+                left: 0;
+                right: 0;
+                bottom: 0;
+                border-radius: 30px;
+                border: 2px solid currentColor;
+                pointer-events: none;
+                animation: hn-ripple 1.5s ease-out;
+            }
+        `;
+        document.head.appendChild(style);
+    }
+
     // ---- Session ----
     let sessionId = 'sid_' + Math.random().toString(36).slice(2);
     try {
@@ -85,6 +122,45 @@ function mountChatWidget(payload) {
 
     bubble.innerHTML = originalIconSvg;
     document.body.appendChild(bubble);
+
+    // ---- Periodic Animation ----
+    function animateBubble() {
+        // Only animate if chat is closed
+        if (panel.style.display === 'none' || !panel.style.display) {
+            // Add pulse animation class
+            bubble.classList.add('hn-bubble-animating');
+
+            // Create ripple rings
+            const ripple1 = el('div');
+            ripple1.className = 'hn-ripple-ring';
+            ripple1.style.color = styles.bubbleBackground;
+            bubble.appendChild(ripple1);
+
+            setTimeout(() => {
+                const ripple2 = el('div');
+                ripple2.className = 'hn-ripple-ring';
+                ripple2.style.color = styles.bubbleBackground;
+                bubble.appendChild(ripple2);
+            }, 300);
+
+            // Remove animation class after animation completes
+            setTimeout(() => {
+                bubble.classList.remove('hn-bubble-animating');
+            }, 1000);
+
+            // Remove ripple elements after animation
+            setTimeout(() => {
+                const ripples = bubble.querySelectorAll('.hn-ripple-ring');
+                ripples.forEach(r => r.remove());
+            }, 1800);
+        }
+    }
+
+    // Start periodic animation (every 8 seconds)
+    const animationInterval = config.bubbleAnimationInterval || 8000;
+    if (config.enableBubbleAnimation !== false) { // enabled by default
+        setInterval(animateBubble, animationInterval);
+    }
 
     // ---- Panel ----
     // Function to calculate maximum available height for chat panel
