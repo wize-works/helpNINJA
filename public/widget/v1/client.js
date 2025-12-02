@@ -644,11 +644,63 @@ function mountChatWidget(payload) {
         msgs.scrollTop = msgs.scrollHeight;
     }
 
+    function addTypingIndicator() {
+        const row = el('div', `display:flex;gap:8px;margin-bottom:12px;justify-content:flex-start;`);
+        row.id = 'hn_typing_indicator';
+
+        // Create icon
+        const icon = el('div', `width:32px;height:32px;display:flex;align-items:center;justify-content:center;border-radius:50%;flex-shrink:0;background:${styles.assistantBubbleBackground};color:${styles.assistantBubbleColor};`);
+        icon.innerHTML = `<div style="width:20px;height:20px;">${iconSvg}</div>`;
+
+        // Create typing indicator bubble with animated dots
+        const bub = el('div',
+            `white-space:pre-wrap;max-width:280px;border-radius:18px;background:${styles.assistantBubbleBackground};color:${styles.assistantBubbleColor};border-top-left-radius:4px;padding:12px 16px;display:flex;gap:4px;align-items:center;`
+        );
+
+        // Create three animated dots
+        for (let i = 0; i < 3; i++) {
+            const dot = el('div', `width:8px;height:8px;border-radius:50%;background:${styles.assistantBubbleColor};opacity:0.6;animation:hn-typing-dot 1.4s infinite;animation-delay:${i * 0.2}s;`);
+            bub.appendChild(dot);
+        }
+
+        row.appendChild(icon);
+        row.appendChild(bub);
+        msgs.appendChild(row);
+
+        // Adjust panel size and scroll
+        adjustPanelSize();
+        msgs.scrollTop = msgs.scrollHeight;
+
+        // Add CSS animation for typing dots if not already added
+        if (!document.querySelector('#hn-typing-animation')) {
+            const style = document.createElement('style');
+            style.id = 'hn-typing-animation';
+            style.textContent = `
+                @keyframes hn-typing-dot {
+                    0%, 60%, 100% { opacity: 0.3; transform: translateY(0); }
+                    30% { opacity: 1; transform: translateY(-6px); }
+                }
+            `;
+            document.head.appendChild(style);
+        }
+    }
+
+    function removeTypingIndicator() {
+        const indicator = document.getElementById('hn_typing_indicator');
+        if (indicator) {
+            indicator.remove();
+            adjustPanelSize();
+        }
+    }
+
     async function send() {
         const text = input.value.trim();
         if (!text) return;
         input.value = '';
         add('user', text);
+
+        // Show typing indicator
+        addTypingIndicator();
 
         const res = await fetch(`${baseOrigin}/api/chat`, {
             method: 'POST',
@@ -661,6 +713,9 @@ function mountChatWidget(payload) {
                 siteId: siteId || config.siteId || ''
             })
         }).catch(() => null);
+
+        // Remove typing indicator
+        removeTypingIndicator();
 
         if (!res) return add('assistant', 'Network error. Try again.');
         let j = null; try { j = await res.json(); } catch { }
