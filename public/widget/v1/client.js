@@ -63,7 +63,7 @@ function mountChatWidget(payload) {
     }[pos];
 
     const bubble = el('div',
-        `position:fixed;${posBubble}width:60px;height:60px;border-radius:50%;` +
+        `position:fixed;${posBubble}width:60px;height:60px;border-radius:30px;` +
         `box-shadow:0 10px 30px rgba(0,0,0,.2);background:${styles.bubbleBackground};` +
         `color:${styles.bubbleColor};display:flex;align-items:center;justify-content:center;` +
         `cursor:pointer;z-index:999999;transition:all .2s ease;padding:12px;`
@@ -79,7 +79,11 @@ function mountChatWidget(payload) {
         bubble.style.boxShadow = '0 10px 30px rgba(0,0,0,.2)';
     });
 
-    bubble.innerHTML = iconSvg
+    // Store original icon for toggling
+    const originalIconSvg = iconSvg;
+    const closeIconSvg = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 640" fill="currentColor" style="width:100%;height:100%;"><path d="M506.4 135.4C514.9 125.3 513.6 110.1 503.5 101.6C493.4 93.1 478.2 94.4 469.7 104.5L320 282.7L170.4 104.6C161.9 94.4 146.7 93.1 136.6 101.6C126.5 110.1 125.1 125.3 133.6 135.4L288.7 320L133.6 504.6C125.1 514.8 126.4 529.9 136.5 538.4C146.6 546.9 161.8 545.6 170.3 535.5L320 357.3L469.6 535.4C478.1 545.6 493.3 546.9 503.4 538.3C513.5 529.7 514.9 514.6 506.3 504.5L351.3 320L506.4 135.4z"/></svg>';
+
+    bubble.innerHTML = originalIconSvg;
     document.body.appendChild(bubble);
 
     // ---- Panel ----
@@ -252,18 +256,18 @@ function mountChatWidget(payload) {
 
     dropdownContainer.appendChild(menuButton);
     dropdownContainer.appendChild(dropdownMenu);
-    const close = el('button', `background:${styles.panelHeaderColor}40;color:${styles.panelHeaderColor};border:none;cursor:pointer;padding:6px;border-radius:50%;height:40px;width:40px;transition:all .2s ease;`);
-    close.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 640" fill="currentColor"><path d="M506.4 135.4C514.9 125.3 513.6 110.1 503.5 101.6C493.4 93.1 478.2 94.4 469.7 104.5L320 282.7L170.4 104.6C161.9 94.4 146.7 93.1 136.6 101.6C126.5 110.1 125.1 125.3 133.6 135.4L288.7 320L133.6 504.6C125.1 514.8 126.4 529.9 136.5 538.4C146.6 546.9 161.8 545.6 170.3 535.5L320 357.3L469.6 535.4C478.1 545.6 493.3 546.9 503.4 538.3C513.5 529.7 514.9 514.6 506.3 504.5L351.3 320L506.4 135.4z"/></svg>';
-    close.onclick = () => { panel.style.display = 'none'; bubble.style.display = 'flex'; };
+    const closeBtn = el('button', `background:${styles.panelHeaderColor}40;color:${styles.panelHeaderColor};border:none;cursor:pointer;padding:6px;border-radius:50%;height:40px;width:40px;transition:all .2s ease;`);
+    closeBtn.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 640" fill="currentColor"><path d="M506.4 135.4C514.9 125.3 513.6 110.1 503.5 101.6C493.4 93.1 478.2 94.4 469.7 104.5L320 282.7L170.4 104.6C161.9 94.4 146.7 93.1 136.6 101.6C126.5 110.1 125.1 125.3 133.6 135.4L288.7 320L133.6 504.6C125.1 514.8 126.4 529.9 136.5 538.4C146.6 546.9 161.8 545.6 170.3 535.5L320 357.3L469.6 535.4C478.1 545.6 493.3 546.9 503.4 538.3C513.5 529.7 514.9 514.6 506.3 504.5L351.3 320L506.4 135.4z"/></svg>';
+    // closeBtn.onclick will be set later after close function is defined
 
     // Add hover effect to close button
-    close.addEventListener('mouseenter', () => {
-        close.style.transform = 'scale(1.1)';
-        close.style.opacity = '0.8';
+    closeBtn.addEventListener('mouseenter', () => {
+        closeBtn.style.transform = 'scale(1.1)';
+        closeBtn.style.opacity = '0.8';
     });
-    close.addEventListener('mouseleave', () => {
-        close.style.transform = 'scale(1)';
-        close.style.opacity = '1';
+    closeBtn.addEventListener('mouseleave', () => {
+        closeBtn.style.transform = 'scale(1)';
+        closeBtn.style.opacity = '1';
     });
     // Handle menu actions
     function handleMenuAction(action) {
@@ -368,7 +372,7 @@ function mountChatWidget(payload) {
 
     header.appendChild(title);
     titleButtons.appendChild(dropdownContainer);
-    titleButtons.appendChild(close);
+    titleButtons.appendChild(closeBtn);
     header.appendChild(titleButtons);
 
     // Messages - start with initial compact size
@@ -726,7 +730,7 @@ function mountChatWidget(payload) {
     // Wire up
     const open = async () => {
         panel.style.display = 'flex';
-        bubble.style.display = 'none';
+        bubble.innerHTML = closeIconSvg; // Change to X icon
 
         // Only show welcome message if no chat history exists
         if (!msgs.children.length) {
@@ -745,7 +749,16 @@ function mountChatWidget(payload) {
             input.focus();
         }, 50);
     };
-    bubble.onclick = () => (panel.style.display === 'none' ? open() : (panel.style.display = 'none', bubble.style.display = 'flex'));
+
+    const close = () => {
+        panel.style.display = 'none';
+        bubble.innerHTML = originalIconSvg; // Restore original icon
+    };
+
+    // Wire up close button in header to use close function
+    closeBtn.onclick = close;
+
+    bubble.onclick = () => (panel.style.display === 'none' ? open() : close());
     sendBtn.onclick = send;
     input.addEventListener('keydown', (e) => (e.key === 'Enter') && send());
 
