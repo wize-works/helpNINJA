@@ -138,8 +138,8 @@ const zoomProvider: Provider = {
             const res = await fetch(webhookUrlWithParams, {
                 method: 'POST',
                 headers: {
-                    'content-type': 'application/json',
-                    'Authorization': verificationToken // Zoom uses direct token, not Bearer
+                    'Content-Type': 'application/json',
+                    'Authorization': `${verificationToken}` // Try Bearer format
                 },
                 body: JSON.stringify(messageFields)
             });

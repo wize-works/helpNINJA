@@ -14,6 +14,7 @@ import type { EscalationDestination } from '@/lib/escalation-service';
 import type { EscalationReason } from '@/lib/integrations/types';
 import { renderMarkdownLiteToHtml } from '@/lib/markdown-lite-server';
 import { logEvent } from '@/lib/events';
+import { isOriginAllowedForTenant, withCORS } from '@/lib/cors';
 
 // Types for contact info handling
 interface ContactInfo {
@@ -43,25 +44,9 @@ interface PendingEscalation {
 
 export const runtime = 'nodejs';
 
-function parseAllowedOrigins(): string[] | null {
-    const raw = process.env.ALLOWED_WIDGET_ORIGINS;
-    if (!raw) return null;
-    return raw.split(',').map(s => s.trim()).filter(Boolean);
-}
-
-function isOriginAllowed(origin: string | null, allowlist: string[] | null): boolean {
-    if (!allowlist || allowlist.length === 0) return true; // permissive by default
-    if (!origin) return false;
-    return allowlist.includes(origin);
-}
-
-function corsHeaders(req: NextRequest) {
-    const reqOrigin = req.headers.get('origin');
-    const allowlist = parseAllowedOrigins();
-    const allowed = isOriginAllowed(reqOrigin, allowlist);
-    const origin = allowed ? (reqOrigin || '*') : 'null';
+function corsHeaders(origin: string | null = null) {
     return {
-        'access-control-allow-origin': origin,
+        'access-control-allow-origin': origin || '*',
         'access-control-allow-credentials': 'true',
         'access-control-allow-headers': 'content-type',
         'access-control-allow-methods': 'POST, OPTIONS',
@@ -70,10 +55,10 @@ function corsHeaders(req: NextRequest) {
 }
 
 export async function OPTIONS(req: NextRequest) {
-    const allowlist = parseAllowedOrigins();
-    const ok = isOriginAllowed(req.headers.get('origin'), allowlist);
-    if (!ok) return new NextResponse(null, { status: 403, headers: corsHeaders(req) });
-    return new NextResponse(null, { status: 204, headers: corsHeaders(req) });
+    // For OPTIONS preflight requests, we don't have access to the request body (tenant ID)
+    // So we need to be permissive here and rely on the actual POST request for tenant-specific validation
+    const origin = req.headers.get('origin');
+    return new NextResponse(null, { status: 204, headers: corsHeaders(origin) });
 }
 
 // Helper functions for contact info and escalation management
@@ -117,34 +102,30 @@ async function checkForContactInfoResponse(message: string, conversationId: stri
     const hasEmail = emailPattern.test(message);
     const hasPhone = phonePattern.test(message);
 
-    // Check if it looks like contact info response (has email/phone + mentions preference or contact method)
-    const mentionsContact = /\b(prefer|contact|email|phone|slack|reach|call|message)\b/i.test(message);
-
-    if ((hasEmail || hasPhone) && mentionsContact) {
+    // If there's a pending escalation and the message contains email/phone, treat it as contact info
+    if (hasEmail || hasPhone) {
         const emailMatch = message.match(emailPattern);
         const phoneMatch = message.match(phonePattern);
 
-        // Try to extract name using various patterns
+        // Try to extract name - look for any words that aren't the email/phone
         let name = '';
-        let nameMatch = null;
 
-        for (const pattern of namePatterns) {
-            nameMatch = message.match(pattern);
-            if (nameMatch) {
-                name = nameMatch[1].trim();
-                break;
-            }
+        // Remove email and phone from message to extract name
+        let nameSource = message.replace(emailPattern, '').replace(phonePattern, '');
+        // Clean up common words and punctuation
+        nameSource = nameSource.replace(/\b(my name is|i'm|i am|name:|call me|contact|prefer|email|phone|and|is|at)\b/gi, '');
+        nameSource = nameSource.replace(/[,.:;!?]/g, '').trim();
+
+        // Take the first reasonable name-like words
+        const nameMatch = nameSource.match(/([a-zA-Z]+(?:\s+[a-zA-Z]+)?)/);
+        if (nameMatch) {
+            name = nameMatch[1].trim();
         }
 
-        // If no specific pattern matched, try to extract a name from the beginning of the message
+        // Fallback to a default name if we can't extract one
         if (!name) {
-            const firstWordsMatch = message.match(/^([a-zA-Z]+(?:\s+[a-zA-Z]+)?)/);
-            if (firstWordsMatch) {
-                name = firstWordsMatch[1].trim();
-            }
+            name = 'User';
         }
-
-        if (!name) return { isContactInfo: false };
         let contactMethod: 'email' | 'phone' | 'slack' = 'email';
         let contactValue = '';
 
@@ -396,11 +377,28 @@ If the user is TROUBLESHOOTING, give up to 2 step bullets from Context; if insuf
 `;
 
 export async function POST(req: NextRequest) {
-    const headersOut = corsHeaders(req);
     try {
-        const allowlist = parseAllowedOrigins();
-        const ok = isOriginAllowed(req.headers.get('origin'), allowlist);
-        if (!ok) return NextResponse.json({ error: 'origin not allowed' }, { status: 403, headers: headersOut });
+        // Parse request body to get tenant ID for CORS validation
+        const { tenantId: bodyTid, sessionId, message, voice, siteId } = await req.json();
+        console.log("siteId", siteId);
+
+        // Resolve tenant ID early for CORS validation
+        const tenantId = await resolveTenantInternalId(bodyTid);
+        if (!tenantId) {
+            const origin = req.headers.get('origin');
+            return NextResponse.json({ error: 'tenant_not_found', message: 'Unknown tenant identifier.' }, { status: 400, headers: corsHeaders(origin) });
+        }
+
+        // Validate origin against tenant's allowed domains
+        const origin = req.headers.get('origin');
+        const originAllowed = await isOriginAllowedForTenant(origin, tenantId);
+
+        if (!originAllowed) {
+            console.warn(`❌ Origin ${origin} not allowed for tenant ${tenantId}`);
+            return NextResponse.json({ error: 'origin_not_allowed' }, { status: 403, headers: corsHeaders(origin) });
+        }
+
+        const headersOut = corsHeaders(origin);
 
         if (!process.env.OPENAI_API_KEY) {
             return NextResponse.json(
@@ -409,12 +407,7 @@ export async function POST(req: NextRequest) {
             );
         }
 
-        const { tenantId: bodyTid, sessionId, message, voice, siteId } = await req.json();
-        console.log("siteId", siteId);
         // Chat API request received (debug log removed)
-        const tenantId = await resolveTenantInternalId(bodyTid);
-        if (!tenantId)
-            return NextResponse.json({ error: 'tenant_not_found', message: 'Unknown tenant identifier.' }, { status: 400, headers: headersOut });
         if (!sessionId || !message)
             return NextResponse.json({ error: 'missing fields' }, { status: 400, headers: headersOut });
 
@@ -653,15 +646,20 @@ ${contextText}`;
             : '';
 
         // 3. Check if user provided contact information in response to our request
+        console.log('🔍 [DEBUG] Checking if message contains contact info:', message);
         let isContactInfoResponse: ContactInfoResponse;
         try {
             isContactInfoResponse = await checkForContactInfoResponse(message, conversationId);
+            console.log('🔍 [DEBUG] Contact info check result:', isContactInfoResponse);
         } catch (error) {
             console.error('❌ Error checking contact info response:', error);
             isContactInfoResponse = { isContactInfo: false };
         }
 
         if (isContactInfoResponse.isContactInfo) {
+            console.log('🎯 [DEBUG] Contact information detected! Processing escalation...');
+            console.log('🔍 [DEBUG] Contact info:', isContactInfoResponse.contactInfo);
+
             // Store the contact info and proceed with pending escalation
             await storeContactInfo(conversationId, tenantId, isContactInfoResponse.contactInfo!);
 
@@ -669,12 +667,14 @@ ${contextText}`;
             let pendingEscalation: PendingEscalation | null = null;
             try {
                 pendingEscalation = await getPendingEscalation(conversationId);
+                console.log('🔍 [DEBUG] Pending escalation found:', pendingEscalation);
             } catch (error) {
                 console.error('❌ Error getting pending escalation, clearing corrupted data:', error);
                 await clearPendingEscalation(conversationId);
             }
 
             if (pendingEscalation) {
+                console.log('🚨 [DEBUG] Processing pending escalation with contact info!');
                 // Proceed with the escalation using stored context
                 text = "Thank you for providing your contact information. I'm connecting you with our support team now - they'll reach out to you shortly using your preferred method.";
                 confidence = 0.9;
@@ -736,6 +736,7 @@ ${contextText}`;
 
         try {
             // Evaluate all active rules for this tenant and site (escalation and routing)
+            console.log('🔍 [DEBUG] Looking for rules for tenantId:', tenantId, 'siteId:', siteId || null);
             const { rows: rules } = await query(
                 `SELECT * FROM public.escalation_rules 
          WHERE tenant_id = $1 AND enabled = true 
@@ -745,7 +746,9 @@ ${contextText}`;
                 [tenantId, siteId || null]
             );
 
+            console.log('🔍 [DEBUG] Found', rules.length, 'rules for evaluation');
             if (rules.length > 0) {
+                console.log('🔍 [DEBUG] Rules found:', rules.map(r => ({ id: r.id, name: r.name, type: r.rule_type, enabled: r.enabled })));
                 // Evaluating escalation/routing rules (debug logs removed)
 
                 // Set up context for rule evaluation
@@ -764,19 +767,21 @@ ${contextText}`;
                 // Check each rule
                 interface EscalationRule { id: string; name: string; rule_type: string; conditions?: { operator: string; conditions: unknown[] }; predicate?: { operator: string; conditions: unknown[] }; destinations?: unknown; }
                 for (const rule of rules as EscalationRule[]) {
-                    // Testing rule (debug log removed)
+                    console.log('🔍 [DEBUG] Evaluating rule:', rule.id, 'name:', rule.name, 'type:', rule.rule_type);
 
                     const conditions = (rule.conditions || rule.predicate || { operator: 'and', conditions: [] }) as import('@/lib/rule-engine').RuleConditions;
 
                     // Skip rules with no conditions
                     if (!conditions.conditions || conditions.conditions.length === 0) {
-                        // Skipping rule with no conditions
+                        console.log('⚠️ [DEBUG] Skipping rule with no conditions:', rule.id);
                         continue;
                     }
 
-                    // Rule structure/operator details removed
+                    console.log('🔍 [DEBUG] Rule conditions:', JSON.stringify(conditions, null, 2));
+                    console.log('🔍 [DEBUG] Evaluation context:', JSON.stringify(context, null, 2));
 
                     const result = evaluateRuleConditions(conditions, context);
+                    console.log('🔍 [DEBUG] Rule evaluation result:', JSON.stringify(result, null, 2));
 
                     // Rule match evaluation summary removed
 
@@ -787,14 +792,14 @@ ${contextText}`;
                             shouldEscalateForRules = true;
                             matchedRuleId = rule.id;
                             escalationReason = 'rule_match';
-                            // Escalation rule matched
+                            console.log('🎯 [DEBUG] Escalation rule matched! Setting shouldEscalateForRules = true');
                             break; // Exit after first match for escalation
                         } else if (rule.rule_type === 'routing') {
                             // Routing - route to specific handler with context
                             shouldEscalateForRules = true; // Still use escalation system for routing
                             matchedRuleId = rule.id;
                             escalationReason = 'routing_rule';
-                            // Routing rule matched
+                            console.log('🎯 [DEBUG] Routing rule matched! Setting shouldEscalateForRules = true');
                             break; // Exit after first match for routing
                         }
                     }
@@ -874,12 +879,23 @@ ${contextText}`;
         }
 
         // Combine both escalation conditions
+        console.log('🎯 [DEBUG] Escalation decision point:', {
+            shouldEscalateForConfidence,
+            shouldEscalateForRules,
+            forcedHandled,
+            finalDecision: (shouldEscalateForConfidence || shouldEscalateForRules) && !forcedHandled
+        });
+
         if ((shouldEscalateForConfidence || shouldEscalateForRules) && !forcedHandled) {
+            console.log('🚨 [DEBUG] ESCALATION TRIGGERED!');
             try {
                 // Check if we already have contact info for this conversation
+                console.log('🔍 [DEBUG] Checking for existing contact info for conversation:', conversationId);
                 const existingContactInfo = await getContactInfo(conversationId);
+                console.log('🔍 [DEBUG] Existing contact info:', existingContactInfo);
 
                 if (!existingContactInfo) {
+                    console.log('🔍 [DEBUG] No contact info found, requesting from user');
                     // We need contact info before escalating - ask the user
                     const contactPrompt = generateContactInfoPrompt();
 
@@ -1023,7 +1039,8 @@ ${contextText}`;
 
         // Don't leak internal errors; keep message generic in production
         const dev = process.env.NODE_ENV !== 'production';
-        const errorHeaders = headersOut || corsHeaders(req);
+        const origin = req.headers.get('origin');
+        const errorHeaders = corsHeaders(origin);
         return NextResponse.json(
             { error: 'internal_error', message: dev ? (e as Error).message : 'Unexpected server error.' },
             { status: 500, headers: errorHeaders }
