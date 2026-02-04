@@ -1,11 +1,10 @@
 import { getTenantIdStrict } from "@/lib/tenant-resolve";
 import { query } from "@/lib/db";
 import { Breadcrumb } from "@/components/ui/breadcrumb";
-import { AnimatedPage, StaggerContainer, StaggerChild, FadeIn, SlideIn } from "@/components/ui/animated-page";
+import { AnimatedPage, FadeIn, SlideIn } from "@/components/ui/animated-page";
 import { WebhookAnalyticsDashboard } from "@/components/webhook-analytics-dashboard";
 //
 import Link from "next/link";
-import StatCard from "@/components/ui/stat-card";
 
 export const runtime = 'nodejs'
 
@@ -18,8 +17,6 @@ async function list(tenantId: string) {
 
 function IntegrationsPage({ integrations }: { integrations: Row[]; tenantId: string }) {
     const activeIntegrations = integrations.filter(i => i.status === 'active');
-    const totalIntegrations = integrations.length;
-    const healthyIntegrations = integrations.filter(i => i.status === 'active').length;
 
     return (
         <div className="space-y-8">

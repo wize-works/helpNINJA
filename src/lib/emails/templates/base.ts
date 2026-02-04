@@ -295,12 +295,10 @@ export function generateEmailTemplate(data: EmailTemplateData, customColors?: Pa
     const {
         title,
         preheader,
-        brandName = 'helpNINJA',
         greeting = 'Hi there!',
         body,
         callToAction,
         footerText,
-        supportEmail = process.env.SUPPORT_FROM_EMAIL || 'support@contact.helpninja.app',
         supportToEmail = process.env.SUPPORT_TO_EMAIL || 'support@helpninja.ai',
         siteUrl = process.env.SITE_URL || 'https://helpninja.app',
         tenantName
@@ -392,7 +390,6 @@ export function generateTextTemplate(data: EmailTemplateData): string {
         body,
         callToAction,
         footerText,
-        supportEmail = process.env.SUPPORT_FROM_EMAIL || 'support@contact.helpninja.ai',
         supportToEmail = process.env.SUPPORT_TO_EMAIL || 'support@helpninja.ai',
         siteUrl = process.env.SITE_URL || 'https://helpninja.app',
         tenantName

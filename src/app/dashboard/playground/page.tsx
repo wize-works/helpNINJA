@@ -106,11 +106,11 @@ export default function PlaygroundPage() {
         }
     };
 
-    const getHealthColor = (score: number) => {
-        if (score >= 80) return 'text-success';
-        if (score >= 60) return 'text-warning';
-        return 'text-error';
-    };
+    // const getHealthColor = (score: number) => {
+    //     if (score >= 80) return 'text-success';
+    //     if (score >= 60) return 'text-warning';
+    //     return 'text-error';
+    // };
 
     if (!tenantId) {
         return <div className="text-center py-8">Loading...</div>;

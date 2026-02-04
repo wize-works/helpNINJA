@@ -14,7 +14,7 @@ import type { EscalationDestination } from '@/lib/escalation-service';
 import type { EscalationReason } from '@/lib/integrations/types';
 import { renderMarkdownLiteToHtml } from '@/lib/markdown-lite-server';
 import { logEvent } from '@/lib/events';
-import { isOriginAllowedForTenant, withCORS } from '@/lib/cors';
+import { isOriginAllowedForTenant } from '@/lib/cors';
 
 // Types for contact info handling
 interface ContactInfo {
@@ -92,12 +92,13 @@ async function checkForContactInfoResponse(message: string, conversationId: stri
     const emailPattern = /\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Z|a-z]{2,}\b/;
     const phonePattern = /\b(?:\+?1[-.\s]?)?\(?([0-9]{3})\)?[-.\s]?([0-9]{3})[-.\s]?([0-9]{4})\b/;
 
-    // More flexible name patterns
-    const namePatterns = [
-        /(?:my name is|i'm|i am|name:|call me)\s+([a-zA-Z\s]+)/i,
-        /^([a-zA-Z]+\s+[a-zA-Z]+)(?:,|\s+and|\s+I)/i, // "John Smith, and I..." or "John Smith and I..."
-        /^([a-zA-Z]+\s+[a-zA-Z]+)(?:\s+prefer|\s+would)/i // "John Smith prefer..." or "John Smith would..."
-    ];
+    // More flexible name patterns - checking for names (currently unused)
+    // const nameCheck = [
+    //     /(?:my name is|i'm|i am|name:|call me)\s+([a-zA-Z\s]+)/i,
+    //     /^([a-zA-Z]+\s+[a-zA-Z]+)(?:,|\s+and|\s+I)/i, // "John Smith, and I..." or "John Smith and I..."
+    //     /^([a-zA-Z]+\s+[a-zA-Z]+)(?:\s+prefer|\s+would)/i // "John Smith prefer..." or "John Smith would..."
+    // ];
+    // const hasName = nameCheck.some(pattern => pattern.test(message));
 
     const hasEmail = emailPattern.test(message);
     const hasPhone = phonePattern.test(message);
@@ -1075,7 +1076,7 @@ ${contextText}`;
         console.error('❌ CHAT API ERROR STACK:', (e as Error).stack);
 
         // Check for specific OpenAI quota errors
-        const isQuotaError = (e as any)?.status === 429 || (e as Error).message?.includes('quota');
+        const isQuotaError = (e as { status?: number })?.status === 429 || (e as Error).message?.includes('quota');
         const origin = req.headers.get('origin');
         const errorHeaders = corsHeaders(origin);
 

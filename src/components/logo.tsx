@@ -17,7 +17,7 @@ type LogoProps = {
  * - Shows full SVG logo on medium screens and above
  * Pass Tailwind/DaisyUI text-* classes to control SVG color per theme.
  */
-export default function Logo({ className, color1 = "text-primary", color2 = "text-neutral-content", hoverColor = "group-hover:text-primary", height = 30, width = 120, title = "helpNINJA Logo" }: LogoProps) {
+export default function Logo({ className, color1 = "text-primary", color2 = "text-neutral-content", hoverColor = "group-hover:text-primary", title = "helpNINJA Logo" }: LogoProps) {
     return (
         <div>
             {/* PNG image for small screens */}

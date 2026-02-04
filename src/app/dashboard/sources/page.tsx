@@ -3,7 +3,6 @@ import SourcesTable from "@/components/sources-table";
 import { Breadcrumb } from "@/components/ui/breadcrumb";
 import { AnimatedPage, StaggerContainer, StaggerChild, HoverScale } from "@/components/ui/animated-page";
 import { query } from "@/lib/db";
-import { Suspense } from "react";
 import FilterControls from "./filter-controls";
 import StatCard from "@/components/ui/stat-card";
 

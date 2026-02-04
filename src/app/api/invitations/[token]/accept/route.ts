@@ -128,9 +128,8 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ tok
             try {
 
                 // Step 1: Validate organization exists
-                let organization;
                 try {
-                    organization = await clerk.organizations.getOrganization({
+                    await clerk.organizations.getOrganization({
                         organizationId: invitation.clerk_org_id
                     });
                 } catch (orgError) {
@@ -159,7 +158,7 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ tok
                 } else {
                     // Step 3: Create membership only if needed
                     try {
-                        const membership = await clerk.organizations.createOrganizationMembership({
+                        await clerk.organizations.createOrganizationMembership({
                             organizationId: invitation.clerk_org_id,
                             userId: clerkUserId,
                             role: invitation.role === 'admin' ? 'org:admin' : 'org:member'

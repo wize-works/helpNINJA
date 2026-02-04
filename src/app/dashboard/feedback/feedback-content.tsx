@@ -4,7 +4,6 @@ import { Suspense } from 'react';
 import { FeedbackTable } from '@/components/feedback-table';
 import { FeedbackAnalytics } from '@/components/feedback-analytics';
 import { StaggerContainer, StaggerChild } from '@/components/ui/animated-page';
-import FilterControls from './filter-controls';
 
 interface Filters {
     type?: string;
