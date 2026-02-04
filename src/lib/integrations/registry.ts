@@ -3,6 +3,7 @@ import email from './providers/email'
 import slack from './providers/slack'
 import teams from './providers/teams'
 import discord from './providers/discord'
+import zoom from './providers/zoom'
 
 /**
  * Registry of all integration providers
@@ -11,7 +12,8 @@ const REGISTRY: Record<string, Provider> = {
     email,
     slack,
     teams,
-    discord
+    discord,
+    zoom
 };
 
 /**

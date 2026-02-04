@@ -57,6 +57,19 @@ const integrationTypes = [
         }
     },
     {
+        id: 'zoom',
+        name: 'Zoom',
+        description: 'Send rich escalation notifications to Zoom chat channels with formatted messages and meeting context',
+        icon: 'fa-solid fa-video',
+        color: 'info',
+        features: ['Rich chat messages', 'Channel targeting', 'Custom bot appearance', 'Meeting integration ready'],
+        configSchema: {
+            webhook_url: { type: 'url', label: 'Zoom Webhook URL', required: true, placeholder: 'https://api.zoom.us/v2/chat/channels/.../messages' },
+            channel_id: { type: 'text', label: 'Channel ID', required: false, placeholder: 'Optional channel ID' },
+            bot_name: { type: 'text', label: 'Bot Display Name', required: false, placeholder: 'helpNINJA Bot' }
+        }
+    },
+    {
         id: 'zendesk',
         name: 'Zendesk',
         description: 'Create tickets automatically when AI escalates conversations',

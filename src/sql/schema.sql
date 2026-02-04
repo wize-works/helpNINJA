@@ -257,7 +257,7 @@ create index if not exists messages_conv_idx on public.messages(conversation_id)
 create table if not exists public.integrations (
   id uuid primary key default gen_random_uuid(),
   tenant_id uuid not null references public.tenants(id) on delete cascade,
-  provider text not null check (provider in ('email','slack','teams','freshdesk','zoho','zendesk','cherwell','jira')),
+  provider text not null check (provider in ('email','slack','teams','discord','zoom','freshdesk','zoho','zendesk','cherwell','jira')),
   name text not null,
   status text not null default 'active',
   credentials jsonb not null default '{}'::jsonb,
