@@ -535,41 +535,81 @@ ${contextText}`
 Context:
 ${contextText}`;
 
-                const chat = await openai.chat.completions.create({
-                    model: process.env.OPENAI_CHAT_MODEL || 'gpt-4o-mini',
-                    messages: [
-                        { role: 'system', content: SYSTEM(voice) },
-                        // Provide context separately to reduce confusion
-                        ...historyForModel,
-                        { role: 'user', content: userContent }
-                    ] as ChatCompletionMessageParam[]
-                });
+                // Memory protection: limit total context size to prevent OOM
+                const maxContextLength = 50000; // ~50KB limit
+                const finalUserContent = userContent.length > maxContextLength
+                    ? userContent.substring(0, maxContextLength) + '\n\n[Context truncated due to length]'
+                    : userContent;
 
-                text = chat.choices[0]?.message?.content?.trim() || "I'm not sure. Want me to connect you with support?";
-                confidence = chat.choices[0]?.finish_reason === 'stop' ? 0.7 : 0.4;
+                if (userContent.length > maxContextLength) {
+                    console.warn('[CHAT] Context truncated for memory protection', {
+                        tenantId,
+                        originalLength: userContent.length,
+                        truncatedLength: finalUserContent.length,
+                        ragResultsCount: ragResults.length,
+                        historyCount: historyForModel.length
+                    });
+                }
 
-                // Log user message
-                const userMessage = await query<{ id: string }>(
+                // Generate OpenAI response with enhanced error handling
+                try {
+                    console.log('[CHAT] Generating OpenAI response', {
+                        tenantId,
+                        sessionId,
+                        contextLength: finalUserContent.length,
+                        historyLength: historyForModel.length,
+                        memoryUsage: process.memoryUsage()
+                    });
+
+                    const chat = await openai.chat.completions.create({
+                        model: process.env.OPENAI_CHAT_MODEL || 'gpt-4o-mini',
+                        messages: [
+                            { role: 'system', content: SYSTEM(voice) },
+                            // Provide context separately to reduce confusion
+                            ...historyForModel,
+                            { role: 'user', content: finalUserContent }
+                        ] as ChatCompletionMessageParam[],
+                        max_tokens: 2000, // Limit response size
+                        temperature: 0.7
+                    });
+
+                    text = chat.choices[0]?.message?.content?.trim() || "I'm not sure. Want me to connect you with support?";
+                    confidence = chat.choices[0]?.finish_reason === 'stop' ? 0.7 : 0.4;
+
+                    console.log('[CHAT] OpenAI response generated successfully', {
+                        tenantId,
+                        confidence,
+                        textLength: text?.length,
+                        finishReason: chat.choices[0]?.finish_reason
+                    });
+
+                } catch (openaiError) {
+                    console.error('[CHAT] OpenAI API error', {
+                        tenantId,
+                        sessionId,
+                        error: openaiError instanceof Error ? openaiError.message : openaiError,
+                        errorStack: openaiError instanceof Error ? openaiError.stack : undefined,
+                        contextLength: finalUserContent.length,
+                        historyLength: historyForModel.length,
+                        memoryUsage: process.memoryUsage()
+                    });
+
+                    text = "I'm having trouble processing your request right now. Let me connect you with our support team.";
+                    confidence = 0.3;
+                    forcedEscalation = true;
+                }
+
+                // Log user message for RAG path
+                await query(
                     `insert into public.messages (conversation_id, tenant_id, role, content, confidence, intent, site_id)
-           values ($1, $2, 'user', $3, 1.0, $4, $5) returning id`,
+                     values ($1, $2, 'user', $3, 1.0, $4, $5)`,
                     [conversationId, tenantId, message, intent, siteId]
                 );
                 userLogged = true;
-
-                // Trigger message sent webhook for user message
-                try {
-                    // Triggering message.sent webhook for user message
-                    await webhookEvents.messageSent(tenantId, conversationId, userMessage.rows[0].id, 'user');
-                    // (Optional sampling) message_sent event for user
-                    logEvent({ tenantId, name: 'message_sent', data: { conversationId, role: 'user' }, soft: true });
-                    // message.sent webhook triggered successfully
-                } catch (error) {
-                    console.error('💥 Chat API: Failed to trigger message.sent webhook for user:', error);
-                }
             }
         }
 
-        // Ensure user message stored even for short-circuit intent branches
+        // Ensure user message stored even for short-circuit intent branches  
         if (!userLogged) {
             try {
                 await query(

@@ -29,9 +29,29 @@ async function embed(openai: OpenAI, text: string) {
 }
 
 function cosine(a: number[], b: number[]) {
+    if (!a || !b || a.length === 0 || b.length === 0 || a.length !== b.length) {
+        console.warn('[INTENT] cosine: Invalid input vectors', { aLen: a?.length, bLen: b?.length });
+        return 0;
+    }
+
     let dot = 0, na = 0, nb = 0;
-    for (let i = 0; i < a.length; i++) { dot += a[i] * b[i]; na += a[i] * a[i]; nb += b[i] * b[i]; }
-    return dot / (Math.sqrt(na) * Math.sqrt(nb) + 1e-12);
+    for (let i = 0; i < a.length; i++) {
+        if (!isFinite(a[i]) || !isFinite(b[i])) {
+            console.warn('[INTENT] cosine: Non-finite values detected', { i, aVal: a[i], bVal: b[i] });
+            continue;
+        }
+        dot += a[i] * b[i];
+        na += a[i] * a[i];
+        nb += b[i] * b[i];
+    }
+
+    const denom = Math.sqrt(na) * Math.sqrt(nb) + 1e-12;
+    const result = dot / denom;
+    if (!isFinite(result)) {
+        console.error('[INTENT] cosine: Result is not finite', { dot, na, nb, denom, result });
+        return 0;
+    }
+    return result;
 }
 
 export async function ensureIntentEmbeddings(openai: OpenAI) {

@@ -97,7 +97,7 @@ async function determineEmbeddingModel(): Promise<{ model: string, dimensions: n
 export async function embedBatch(texts: string[]) {
     await ensureDimsOk();
     // Filter out empty or whitespace-only texts
-    const validTexts = texts.filter(text => text && text.trim().length > 0);
+    const validTexts = texts.filter(text => text && typeof text === 'string' && text.trim().length > 0);
 
     if (validTexts.length === 0) {
         throw new Error('No valid text content to embed');
@@ -114,21 +114,61 @@ export async function embedBatch(texts: string[]) {
         model,
         input: validTexts,
     });
-    return data.map(d => d.embedding);
+
+    const embeddings = data.map(d => d.embedding);
+
+    // Validate all embeddings contain no NaN or infinite values
+    for (let i = 0; i < embeddings.length; i++) {
+        const embedding = embeddings[i];
+        if (!Array.isArray(embedding) || embedding.some(val => !isFinite(val))) {
+            throw new Error(`Invalid embedding at index ${i} - contains NaN or infinite values`);
+        }
+    }
+
+    return embeddings;
 }
 
 export async function embedQuery(text: string) {
     await ensureDimsOk();
+
+    if (!text || typeof text !== 'string' || text.trim().length === 0) {
+        console.error('[EMBED] embedQuery: Invalid text input', { text: typeof text });
+        throw new Error('Invalid text input for embedding');
+    }
+
     // Get the appropriate embedding model based on existing data
     const { model } = await determineEmbeddingModel();
 
-    // Initialize OpenAI only when needed at runtime
-    const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
-    // Embedding query with model ${model} (debug log removed)
+    try {
+        // Initialize OpenAI only when needed at runtime
+        const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
+        // Embedding query with model ${model} (debug log removed)
 
-    const { data } = await openai.embeddings.create({
-        model,
-        input: [text],
-    });
-    return data[0].embedding;
+        const { data } = await openai.embeddings.create({
+            model,
+            input: [text],
+        });
+
+        const embedding = data[0].embedding;
+
+        // Validate embedding contains no NaN or infinite values
+        if (!Array.isArray(embedding) || embedding.some(val => !isFinite(val))) {
+            console.error('[EMBED] embedQuery: Invalid embedding from OpenAI', {
+                model,
+                textLength: text.length,
+                embeddingLength: embedding?.length,
+                firstNonFinite: embedding?.findIndex(val => !isFinite(val))
+            });
+            throw new Error('Invalid embedding returned from OpenAI - contains NaN or infinite values');
+        }
+
+        return embedding;
+    } catch (error) {
+        console.error('[EMBED] embedQuery: Failed to generate embedding', {
+            model,
+            textLength: text.length,
+            error: error instanceof Error ? error.message : error
+        });
+        throw error;
+    }
 }

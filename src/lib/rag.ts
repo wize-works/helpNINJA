@@ -57,9 +57,10 @@ function pathBoost(url: string, intent?: IntentKey): number {
 
 // Convert pgvector distance (lower is better) to a similarity (higher is better) in a crude but stable way.
 function distToSim(d?: number): number {
-    if (d == null) return 0;
+    if (d == null || !isFinite(d)) return 0;
     // Typical cosine/normalized L2 distances are in [0, ~2]; map to (0,1] monotonically decreasing.
-    return 1 / (1 + Math.max(0, d));
+    const result = 1 / (1 + Math.max(0, d));
+    return isFinite(result) ? result : 0;
 }
 
 function rankAndDedupe(results: HybridResult[], k: number, intent?: IntentKey): HybridResult[] {
@@ -67,11 +68,18 @@ function rankAndDedupe(results: HybridResult[], k: number, intent?: IntentKey): 
     const byUrl = new Map<string, Scored>();
 
     for (const r of results) {
-        const baseSim = Math.max(r._lexScore ?? 0, distToSim(r._vecDist));
-        const score = baseSim + pathBoost(r.url, intent);
+        const lexScore = typeof r._lexScore === 'number' && isFinite(r._lexScore) ? r._lexScore : 0;
+        const vecSim = distToSim(r._vecDist);
+        const baseSim = Math.max(lexScore, vecSim);
+        const boost = pathBoost(r.url, intent);
+        const score = baseSim + boost;
+
+        // Ensure score is finite
+        const finalScore = isFinite(score) ? score : 0;
+
         const prev = byUrl.get(r.url);
-        if (!prev || score > prev._score) {
-            const merged: Scored = { ...r, _score: score } as Scored;
+        if (!prev || finalScore > prev._score) {
+            const merged: Scored = { ...r, _score: finalScore } as Scored;
             if (!merged.title && prev?.title) merged.title = prev.title;
             byUrl.set(r.url, merged);
         } else if (prev && !prev.title && r.title) {
@@ -127,9 +135,44 @@ export async function searchHybrid(
     // Compute embeddings for each term and average them for a robust query vector.
     const vecs = await Promise.all(terms.map(t => embedQuery(t)));
     const dim = vecs[0]?.length ?? 0;
+
+    if (dim === 0 || vecs.length === 0) {
+        console.warn('[RAG] No valid embeddings for vector search, falling back to lexical only', {
+            tenantId,
+            terms: terms.length,
+            vecCount: vecs.length,
+            dim
+        });
+        // Fallback to empty vector search if embeddings failed
+        return rankAndDedupe([...lex.map(l => ({ ...l, _lexScore: normLex(l._lexScore) }))], k, intent);
+    }
+
     const avg: number[] = new Array(dim).fill(0);
-    for (const v of vecs) for (let i = 0; i < dim; i++) avg[i] += v[i];
-    for (let i = 0; i < dim; i++) avg[i] /= Math.max(1, vecs.length);
+    let validVecCount = 0;
+
+    for (const v of vecs) {
+        if (Array.isArray(v) && v.length === dim && v.every(val => isFinite(val))) {
+            for (let i = 0; i < dim; i++) avg[i] += v[i];
+            validVecCount++;
+        }
+    }
+
+    if (validVecCount === 0) {
+        console.error('[RAG] No valid embeddings found, all contained NaN/infinite values', {
+            tenantId,
+            totalVecs: vecs.length,
+            terms,
+            vecSample: vecs[0]?.slice(0, 5)
+        });
+        // Fallback to lexical only if no valid embeddings
+        return rankAndDedupe([...lex.map(l => ({ ...l, _lexScore: normLex(l._lexScore) }))], k, intent);
+    }
+
+    for (let i = 0; i < dim; i++) {
+        avg[i] /= validVecCount;
+        if (!isFinite(avg[i])) avg[i] = 0; // Ensure no NaN in final vector
+    }
+
     const vecLiteral = `[${avg.join(',')}]`;
 
     const chunkParams: unknown[] = [tenantId, vecLiteral];
