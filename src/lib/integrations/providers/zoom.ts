@@ -71,8 +71,8 @@ function formatZoomMessage(ev: EscalationEvent) {
         "📋 Reason": ev.reason,
         "🎯 Confidence": String(ev.confidence ?? 'n/a'),
         "🔢 Session": ev.sessionId,
-        "👤 User": ev.userMessage,
-        "🤖 Answer": ev.assistantAnswer || '—',
+        "❓ User Question": ev.userMessage,
+        "🤖 AI Response": ev.assistantAnswer || '—',
         ...(contactText ? { "📞 Contact": contactText } : {}),
         ...(refs ? { "📚 References": refs } : {}),
         "📊 Dashboard": `${process.env.SITE_URL}/conversations/${ev.conversationId}`

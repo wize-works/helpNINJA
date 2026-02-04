@@ -67,7 +67,7 @@ export async function OPTIONS(req: NextRequest) {
  * Generates a friendly prompt asking the user for their contact information
  */
 function generateContactInfoPrompt(): string {
-    return "I'd like to connect you with our support team to help with this. To make sure they can reach you, could you please provide:\n\n1. Your name\n2. How you'd prefer to be contacted (email, phone, or Slack)\n3. Your contact details (email address or phone number)\n\nYou can format it like: \"My name is John Smith, I prefer email, john@example.com\"";
+    return "I'm escalating this to our support team who can provide better assistance. To ensure they can reach you quickly, please provide:\n\n1. Your name\n2. How you'd prefer to be contacted (email, phone, or Slack)\n3. Your contact details (email address or phone number)\n\nYou can format it like: \"My name is John Smith, I prefer email, john@example.com\"\n\nOnce I have your contact information, our team will reach out to you as soon as possible!";
 }
 
 /**
@@ -371,6 +371,7 @@ const SYSTEM = (voice = 'friendly') => `You are helpNINJA, a concise, helpful si
 Use only the provided Context to answer. If unsure, say you don’t know and offer to connect support.
 Voice: ${voice}. Keep answers under 120 words. Include 1 link to the relevant page if useful.
 
+If the user asks a vague question (like just "help" or "support"), ask them to be more specific about what they need help with, then offer to connect support.
 If the user asks about FEATURES or CAPABILITIES, synthesize a short top-3–5 list strictly from Context (page titles help name features). 
 If the user asks about PRICING, prefer pricing URLs and include one pricing link if available.
 If the user is TROUBLESHOOTING, give up to 2 step bullets from Context; if insufficient, offer to connect support.
@@ -567,7 +568,21 @@ ${contextText}`;
                     });
 
                     text = chat.choices[0]?.message?.content?.trim() || "I'm not sure. Want me to connect you with support?";
-                    confidence = chat.choices[0]?.finish_reason === 'stop' ? 0.7 : 0.4;
+
+                    // Check for vague, single-word queries that should have lower confidence
+                    const isVagueQuery = /^(help|support|info|information|assistance|guide|docs|documentation)[\s\?\!\.]*$/i.test(message.trim());
+
+                    if (isVagueQuery) {
+                        // Vague single-word queries should have low confidence to trigger escalation
+                        confidence = 0.4;
+                        console.log('[CHAT] Detected vague query, lowering confidence', {
+                            message: message.trim(),
+                            originalConfidence: 0.7,
+                            adjustedConfidence: confidence
+                        });
+                    } else {
+                        confidence = chat.choices[0]?.finish_reason === 'stop' ? 0.7 : 0.4;
+                    }
 
                     console.log('[CHAT] OpenAI response generated successfully', {
                         tenantId,
@@ -676,7 +691,11 @@ ${contextText}`;
             if (pendingEscalation) {
                 console.log('🚨 [DEBUG] Processing pending escalation with contact info!');
                 // Proceed with the escalation using stored context
-                text = "Thank you for providing your contact information. I'm connecting you with our support team now - they'll reach out to you shortly using your preferred method.";
+                const refs = pendingEscalation.refs || [];
+                const escalationWithContactResponse = refs.length > 0
+                    ? `Thank you for providing your contact information. I have escalated this to our support team and they will contact you soon. While you wait, you may find these resources helpful:\n\n${refs.map((ref: string) => `• ${ref}`).join('\n')}\n\nOur team will reach out to you shortly using your preferred contact method.`
+                    : "Thank you for providing your contact information. I have escalated this to our support team and they will contact you soon. Our team will reach out to you shortly using your preferred contact method.";
+                text = escalationWithContactResponse;
                 confidence = 0.9;
 
                 // Trigger the pending escalation
@@ -1008,6 +1027,14 @@ ${contextText}`;
                     if (!result.ok) {
                         console.error(`❌ Chat API: Escalation failed: ${result.error || 'Unknown error'}`);
                     }
+
+                    // Update the response to clearly indicate escalation has occurred
+                    const escalationResponse = refs && refs.length > 0
+                        ? `I have escalated this to our support team and they will contact you soon. While you wait, you may find these resources helpful:\n\n${refs.map(ref => `• ${ref}`).join('\n')}\n\nOur team will reach out to you shortly using your preferred contact method.`
+                        : "I have escalated this to our support team and they will contact you soon. Our team will reach out to you shortly using your preferred contact method.";
+
+                    text = escalationResponse;
+                    confidence = 0.9; // High confidence in escalation response
                 }
             } catch (error) {
                 console.error('❌ Failed to handle escalation:', error);
