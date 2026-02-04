@@ -60,7 +60,7 @@ const integrationTypes = [
         id: 'zoom',
         name: 'Zoom',
         description: 'Send rich escalation notifications to Zoom chat channels using Zoom\'s Incoming Webhook Chatbot',
-        icon: 'fa-solid fa-video',
+        icon: 'fa-solid fa-duotone fa-video',
         color: 'info',
         features: ['Rich field-based messages', 'Channel targeting', 'Secure token authentication', 'Multiple message formats'],
         configSchema: {

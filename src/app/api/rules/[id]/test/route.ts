@@ -8,8 +8,14 @@ export const runtime = 'nodejs';
 type Context = { params: Promise<{ id: string }> };
 
 export async function POST(req: NextRequest, ctx: Context) {
+    let tenantId: string;
     try {
-        const tenantId = await getTenantIdStrict();
+        tenantId = await getTenantIdStrict();
+    } catch (e) {
+        return NextResponse.json({ error: (e as Error).message || 'unauthorized' }, { status: 401 });
+    }
+
+    try {
         const { id } = await ctx.params;
         const body = await req.json();
 
@@ -51,7 +57,7 @@ export async function POST(req: NextRequest, ctx: Context) {
             matched: result.matched,
             details: result.details,
             testContext,
-            predicate: rule.predicate
+            conditions: rulePredicate
         });
     } catch (error) {
         console.error('Error testing escalation rule:', error);
