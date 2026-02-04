@@ -120,6 +120,12 @@ const zoomProvider: Provider = {
         // Format message content for Zoom's fields format
         const messageFields = formatZoomMessage(ev);
 
+        // Add required timestamp for Zoom webhook validation
+        const payload = {
+            ...messageFields,
+            timestamp: Math.floor(Date.now() / 1000) // Unix timestamp in seconds
+        };
+
         // Construct webhook URL with fields format parameter
         const webhookUrlWithFormat = `${webhookUrl}?format=fields`;
 
@@ -128,7 +134,8 @@ const zoomProvider: Provider = {
                 integrationId: i.id,
                 conversationId: ev.conversationId,
                 webhook: webhookUrl.substring(0, 50) + '...',
-                format: 'fields'
+                format: 'fields',
+                timestamp: payload.timestamp
             });
 
             const res = await fetch(webhookUrlWithFormat, {
@@ -137,7 +144,7 @@ const zoomProvider: Provider = {
                     'content-type': 'application/json',
                     'Authorization': verificationToken // Zoom uses direct token, not Bearer
                 },
-                body: JSON.stringify(messageFields)
+                body: JSON.stringify(payload)
             });
 
             if (!res.ok) {
