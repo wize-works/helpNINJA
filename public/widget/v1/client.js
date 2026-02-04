@@ -173,11 +173,13 @@ function mountChatWidget(payload) {
         if (pos.startsWith('bottom-')) {
             // For bottom positions, calculate from bottom edge to top of viewport
             const maxHeight = window.innerHeight - bubbleOffsetFromEdge - bubbleHeight - panelGap - topPadding;
-            return Math.max(200, maxHeight); // minimum 200px
+            const result = Math.max(200, maxHeight); // minimum 200px
+            return isNaN(result) ? 200 : result;
         } else {
             // For top positions, calculate from top edge to bottom of viewport  
             const maxHeight = window.innerHeight - bubbleOffsetFromEdge - bubbleHeight - panelGap - topPadding;
-            return Math.max(200, maxHeight); // minimum 200px
+            const result = Math.max(200, maxHeight); // minimum 200px
+            return isNaN(result) ? 200 : result;
         }
     }
 
@@ -221,7 +223,7 @@ function mountChatWidget(payload) {
         const maxAvailableHeight = calculateMaxPanelHeight();
 
         // Calculate required height based on messages content
-        const messagesScrollHeight = msgs.scrollHeight;
+        const messagesScrollHeight = msgs.scrollHeight || 0;
         const requiredPanelHeight = messagesScrollHeight + headerHeight + inputHeight + msgsPadding;
 
         // Use larger of: initial size or required size, but not more than max available
@@ -230,12 +232,22 @@ function mountChatWidget(payload) {
             maxAvailableHeight
         );
 
+        // Ensure newPanelHeight is valid
+        if (isNaN(newPanelHeight) || newPanelHeight < 0) {
+            console.warn('Invalid panel height calculated, using fallback');
+            panel.style.height = `${initialPanelHeight}px`;
+            msgs.style.height = `${initialPanelHeight - headerHeight - inputHeight}px`;
+            return;
+        }
+
         // Update panel height
         panel.style.height = `${newPanelHeight}px`;
 
         // Update messages container height
         const newMessagesHeight = newPanelHeight - headerHeight - inputHeight;
-        msgs.style.height = `${Math.max(150, newMessagesHeight)}px`;
+        // Ensure newMessagesHeight is valid
+        const finalMessagesHeight = isNaN(newMessagesHeight) ? 150 : Math.max(150, newMessagesHeight);
+        msgs.style.height = `${finalMessagesHeight}px`;
     }
 
     // Header
@@ -944,10 +956,11 @@ function mountChatWidget(payload) {
 
     // File handling functions
     function formatFileSize(bytes) {
-        if (bytes === 0) return '0 Bytes';
+        if (bytes === 0 || !bytes || isNaN(bytes)) return '0 Bytes';
         const k = 1024;
         const sizes = ['Bytes', 'KB', 'MB', 'GB'];
         const i = Math.floor(Math.log(bytes) / Math.log(k));
+        if (isNaN(i) || i < 0) return '0 Bytes';
         return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
     }
 

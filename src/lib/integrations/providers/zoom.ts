@@ -120,14 +120,11 @@ const zoomProvider: Provider = {
         // Format message content for Zoom's fields format
         const messageFields = formatZoomMessage(ev);
 
-        // Add required timestamp for Zoom webhook validation
-        const payload = {
-            ...messageFields,
-            timestamp: Math.floor(Date.now() / 1000) // Unix timestamp in seconds
-        };
+        // Generate timestamp for Zoom webhook validation (required as query param)
+        const timestamp = Math.floor(Date.now() / 1000); // Unix timestamp in seconds
 
-        // Construct webhook URL with fields format parameter
-        const webhookUrlWithFormat = `${webhookUrl}?format=fields`;
+        // Construct webhook URL with format and timestamp parameters
+        const webhookUrlWithParams = `${webhookUrl}?format=fields&timestamp=${timestamp}`;
 
         try {
             console.log('🔄 Sending Zoom escalation', {
@@ -135,16 +132,16 @@ const zoomProvider: Provider = {
                 conversationId: ev.conversationId,
                 webhook: webhookUrl.substring(0, 50) + '...',
                 format: 'fields',
-                timestamp: payload.timestamp
+                timestamp: timestamp
             });
 
-            const res = await fetch(webhookUrlWithFormat, {
+            const res = await fetch(webhookUrlWithParams, {
                 method: 'POST',
                 headers: {
                     'content-type': 'application/json',
                     'Authorization': verificationToken // Zoom uses direct token, not Bearer
                 },
-                body: JSON.stringify(payload)
+                body: JSON.stringify(messageFields)
             });
 
             if (!res.ok) {
