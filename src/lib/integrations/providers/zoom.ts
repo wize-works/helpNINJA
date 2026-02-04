@@ -13,7 +13,7 @@ function formatZoomMessage(ev: EscalationEvent) {
     } | undefined;
 
     if (isFeedback && feedbackMeta) {
-        // Format feedback escalation message with rich formatting
+        // Format feedback escalation message for Zoom's fields format
         const typeEmoji = feedbackMeta.feedbackType === 'bug' ? '🐛' :
             feedbackMeta.feedbackType === 'feature_request' ? '💡' :
                 feedbackMeta.feedbackType === 'improvement' ? '⚡' :
@@ -25,50 +25,14 @@ function formatZoomMessage(ev: EscalationEvent) {
                 feedbackMeta.priority === 'medium' ? '📋' : '📌';
 
         return {
-            head: {
-                text: `${typeEmoji} New ${feedbackMeta.feedbackType?.replace('_', ' ').toUpperCase()} Feedback ${priorityEmoji}`,
-                style: {
-                    color: feedbackMeta.priority === 'urgent' ? '#FF6B35' :
-                        feedbackMeta.priority === 'high' ? '#FF8C42' : '#2B59C3',
-                    bold: true
-                }
-            },
-            body: [
-                {
-                    type: "section",
-                    sidebar_color: feedbackMeta.priority === 'urgent' ? '#FF6B35' : '#2B59C3',
-                    sections: [
-                        {
-                            type: "message",
-                            text: `**Title:** ${ev.userMessage}`
-                        },
-                        {
-                            type: "message",
-                            text: `**Description:**\n${ev.assistantAnswer || '—'}`
-                        },
-                        ...(feedbackMeta.contactInfo ? [{
-                            type: "message",
-                            text: `**Contact:** ${feedbackMeta.contactInfo}`
-                        }] : []),
-                        ...(feedbackMeta.url ? [{
-                            type: "message",
-                            text: `**Source:** ${feedbackMeta.url}`
-                        }] : []),
-                        {
-                            type: "message",
-                            text: `**Priority:** ${feedbackMeta.priority}`
-                        },
-                        {
-                            type: "message",
-                            text: `**Feedback ID:** ${feedbackMeta.feedbackId}`
-                        },
-                        {
-                            type: "message",
-                            text: `[View in Dashboard](${process.env.SITE_URL}/dashboard/feedback)`
-                        }
-                    ]
-                }
-            ]
+            "📝 Type": `${typeEmoji} ${feedbackMeta.feedbackType?.replace('_', ' ').toUpperCase() || 'Feedback'}`,
+            "📌 Priority": `${priorityEmoji} ${feedbackMeta.priority?.toUpperCase() || 'MEDIUM'}`,
+            "💬 Title": ev.userMessage,
+            "📋 Description": ev.assistantAnswer || '—',
+            ...(feedbackMeta.contactInfo ? { "👤 Contact": feedbackMeta.contactInfo } : {}),
+            ...(feedbackMeta.url ? { "🔗 Source": feedbackMeta.url } : {}),
+            "🔢 Feedback ID": feedbackMeta.feedbackId || 'N/A',
+            "📊 Dashboard": `${process.env.SITE_URL}/dashboard/feedback`
         };
     }
 
@@ -93,71 +57,25 @@ function formatZoomMessage(ev: EscalationEvent) {
             // If URL parsing fails, just show the full URL as link text
             linkText = u.length > 50 ? u.substring(0, 47) + '...' : u;
         }
-        return `• [${linkText}](${u})`;
+        return `${linkText}: ${u}`;
     }).join('\n')
 
     // Extract contact info from meta for non-feedback escalations
     const contactInfo = ev.meta?.contactInfo as { name?: string; contact_method?: string; contact_value?: string } | undefined;
     const contactText = contactInfo
-        ? `**Contact:** ${contactInfo.name} (${contactInfo.contact_method}: ${contactInfo.contact_value})`
+        ? `${contactInfo.name} (${contactInfo.contact_method}: ${contactInfo.contact_value})`
         : '';
 
-    // Color based on escalation reason and confidence
-    const getEscalationColor = () => {
-        if (ev.reason === 'user_request') return '#FF6B35'; // Orange for user requests
-        if (ev.reason === 'low_confidence') return '#FFB84D'; // Yellow for low confidence
-        if (ev.reason === 'handoff') return '#E74C3C'; // Red for handoffs
-        return '#2B59C3'; // Default blue
-    };
-
     return {
-        head: {
-            text: "🚨 helpNINJA Escalation Alert",
-            style: {
-                color: getEscalationColor(),
-                bold: true
-            }
-        },
-        body: [
-            {
-                type: "section",
-                sidebar_color: getEscalationColor(),
-                sections: [
-                    {
-                        type: "message",
-                        text: `**Reason:** ${ev.reason}`
-                    },
-                    {
-                        type: "message",
-                        text: `**Confidence:** ${ev.confidence ?? 'n/a'}`
-                    },
-                    {
-                        type: "message",
-                        text: `**Session:** ${ev.sessionId}`
-                    },
-                    {
-                        type: "message",
-                        text: `**User:** ${ev.userMessage}`
-                    },
-                    {
-                        type: "message",
-                        text: `**Answer:** ${ev.assistantAnswer || '—'}`
-                    },
-                    ...(contactText ? [{
-                        type: "message",
-                        text: contactText
-                    }] : []),
-                    ...(refs ? [{
-                        type: "message",
-                        text: `**Refs:**\n${refs}`
-                    }] : []),
-                    {
-                        type: "message",
-                        text: `[Open in dashboard](${process.env.SITE_URL}/conversations/${ev.conversationId})`
-                    }
-                ]
-            }
-        ]
+        "🚨 Alert": "helpNINJA Escalation",
+        "📋 Reason": ev.reason,
+        "🎯 Confidence": String(ev.confidence ?? 'n/a'),
+        "🔢 Session": ev.sessionId,
+        "👤 User": ev.userMessage,
+        "🤖 Answer": ev.assistantAnswer || '—',
+        ...(contactText ? { "📞 Contact": contactText } : {}),
+        ...(refs ? { "📚 References": refs } : {}),
+        "📊 Dashboard": `${process.env.SITE_URL}/conversations/${ev.conversationId}`
     };
 }
 
@@ -172,48 +90,54 @@ const zoomProvider: Provider = {
             credentialsKeys: Object.keys(i.credentials || {}),
             credentialsStructure: i.credentials,
             hasWebhookUrl: !!(i.config as { webhook_url?: string })?.webhook_url,
+            hasVerificationToken: !!(i.credentials as { verification_token?: string })?.verification_token,
             webhookUrlPreview: (i.config as { webhook_url?: string })?.webhook_url ?
                 String((i.config as { webhook_url?: string }).webhook_url).substring(0, 50) + '...' : 'none'
         });
 
-        const webhook = (i.config?.webhook_url as string) || process.env.ZOOM_WEBHOOK_URL
-        if (!webhook) {
+        const webhookUrl = (i.config?.webhook_url as string) || process.env.ZOOM_WEBHOOK_URL
+        const verificationToken = (i.credentials?.verification_token as string) || process.env.ZOOM_VERIFICATION_TOKEN
+
+        if (!webhookUrl) {
             console.error('❌ Zoom escalation failed: No webhook URL configured', {
                 integrationId: i.id,
                 hasCredentials: !!i.credentials,
                 credentialsKeys: Object.keys(i.credentials || {}),
                 hasEnvWebhook: !!process.env.ZOOM_WEBHOOK_URL
             });
-            return { ok: false, error: 'no zoom webhook configured' }
+            return { ok: false, error: 'no zoom webhook URL configured' }
         }
 
-        // Format message content
-        const messageContent = formatZoomMessage(ev);
+        if (!verificationToken) {
+            console.error('❌ Zoom escalation failed: No verification token configured', {
+                integrationId: i.id,
+                hasCredentials: !!i.credentials,
+                hasEnvToken: !!process.env.ZOOM_VERIFICATION_TOKEN
+            });
+            return { ok: false, error: 'no zoom verification token configured' }
+        }
 
-        // Zoom Chat webhook payload format
-        const payload = {
-            robot: {
-                account_id: process.env.ZOOM_ACCOUNT_ID || "default",
-                content: messageContent,
-                to_jid: (i.config?.channel_id as string) || "channel",
-                user_jid: (i.config?.bot_name as string) || "helpNINJA Bot"
-            }
-        };
+        // Format message content for Zoom's fields format
+        const messageFields = formatZoomMessage(ev);
+
+        // Construct webhook URL with fields format parameter
+        const webhookUrlWithFormat = `${webhookUrl}?format=fields`;
 
         try {
             console.log('🔄 Sending Zoom escalation', {
                 integrationId: i.id,
                 conversationId: ev.conversationId,
-                webhook: webhook.substring(0, 50) + '...' // Log partial webhook for debugging
+                webhook: webhookUrl.substring(0, 50) + '...',
+                format: 'fields'
             });
 
-            const res = await fetch(webhook, {
+            const res = await fetch(webhookUrlWithFormat, {
                 method: 'POST',
                 headers: {
                     'content-type': 'application/json',
-                    'Authorization': `Bearer ${process.env.ZOOM_BOT_TOKEN || ''}`
+                    'Authorization': verificationToken // Zoom uses direct token, not Bearer
                 },
-                body: JSON.stringify(payload)
+                body: JSON.stringify(messageFields)
             });
 
             if (!res.ok) {

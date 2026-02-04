@@ -241,61 +241,50 @@ export function IntegrationSettingsForm({ integration }: IntegrationSettingsForm
                             <input
                                 type="url"
                                 className="input input-bordered"
-                                placeholder="https://api.zoom.us/v2/chat/channels/.../messages"
+                                placeholder="https://integrations.zoom.us/chat/webhooks/incomingwebhook/{webhook_id}"
                                 value={(formData.config.webhook_url as string) || ''}
                                 onChange={(e) => handleConfigChange('webhook_url', e.target.value)}
                                 required
                             />
                             <label className="label">
                                 <span className="label-text-alt">
-                                    Zoom Chat webhook URL for receiving escalation notifications
+                                    Zoom Incoming Webhook URL from the /inc connect command
                                 </span>
                             </label>
                         </fieldset>
                         <fieldset className="fieldset">
-                            <label className="label">Channel ID</label>
-                            <input
-                                type="text"
-                                className="input input-bordered"
-                                placeholder="channel-id-123"
-                                value={(formData.config.channel_id as string) || ''}
-                                onChange={(e) => handleConfigChange('channel_id', e.target.value)}
-                            />
                             <label className="label">
-                                <span className="label-text-alt">
-                                    Optional: Specific Zoom channel ID for messages
-                                </span>
+                                Verification Token
+                                <span className="text-error">Required</span>
                             </label>
-                        </fieldset>
-                        <fieldset className="fieldset">
-                            <label className="label">Bot Display Name</label>
                             <input
-                                type="text"
+                                type="password"
                                 className="input input-bordered"
-                                placeholder="helpNINJA Bot"
-                                value={(formData.config.bot_name as string) || ''}
-                                onChange={(e) => handleConfigChange('bot_name', e.target.value)}
+                                placeholder="Verification token from Zoom"
+                                value={(formData.credentials.verification_token as string) || ''}
+                                onChange={(e) => handleCredentialChange('verification_token', e.target.value)}
+                                required
                             />
                             <label className="label">
                                 <span className="label-text-alt">
-                                    Optional: Custom display name for the bot in Zoom chat
+                                    The verification token provided by Zoom when creating the connection
                                 </span>
                             </label>
                         </fieldset>
                         <div className="alert alert-info">
                             <i className="fa-duotone fa-solid fa-info-circle" />
                             <div>
-                                <h4 className="font-medium">How to create a Zoom Chat webhook:</h4>
+                                <h4 className="font-medium">How to set up Zoom Incoming Webhook:</h4>
                                 <ol className="list-decimal list-inside mt-2 space-y-1 text-sm">
-                                    <li>Go to the <strong>Zoom Marketplace</strong> and sign in with your account</li>
-                                    <li>Click &quot;Develop&quot; and select &quot;Build App&quot;</li>
-                                    <li>Choose &quot;Chatbot&quot; app type and provide basic information</li>
-                                    <li>Enable &quot;Interactive Messages&quot; and configure webhook endpoints</li>
-                                    <li>Set up OAuth scopes: <code>chat_message:write</code> and <code>chat_channel:write</code></li>
-                                    <li>Install the app to your Zoom account and copy the webhook URL</li>
+                                    <li>Sign in to the <strong>Zoom App Marketplace</strong> as an admin</li>
+                                    <li>Search for &quot;Incoming Webhook&quot; and click <strong>Add</strong></li>
+                                    <li>Authorize the app for your Zoom account</li>
+                                    <li>Open Zoom desktop app and go to <strong>Team Chat</strong></li>
+                                    <li>In your target channel, type: <code>/inc connect helpninja</code></li>
+                                    <li>Copy the <strong>endpoint</strong> and <strong>verification token</strong> from the response</li>
                                 </ol>
                                 <p className="text-xs mt-2 text-base-content/70">
-                                    <strong>Note:</strong> You&apos;ll also need to set environment variables <code>ZOOM_BOT_TOKEN</code> and <code>ZOOM_ACCOUNT_ID</code> for authentication.
+                                    <strong>Note:</strong> The Incoming Webhook chatbot will send you a private message with the endpoint URL and verification token after running the command.
                                 </p>
                             </div>
                         </div>
