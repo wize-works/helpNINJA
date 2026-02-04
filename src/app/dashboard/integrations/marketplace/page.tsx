@@ -60,7 +60,7 @@ const integrationTypes = [
         id: 'zoom',
         name: 'Zoom',
         description: 'Send rich escalation notifications to Zoom chat channels with formatted messages and meeting context',
-        icon: 'fa-solid fa-video',
+        icon: 'fa-solid fa-duotone fa-video',
         color: 'info',
         features: ['Rich chat messages', 'Channel targeting', 'Custom bot appearance', 'Meeting integration ready'],
         configSchema: {
