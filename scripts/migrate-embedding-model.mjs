@@ -104,7 +104,7 @@ rl.question('Are you sure you want to continue? (type "MIGRATE" to confirm): ', 
 
         // Get all documents that need re-ingestion
         const docsResult = await client.query(`
-            SELECT DISTINCT d.id, d.tenant_id, d.url, d.title, d.content, d.site_id
+            SELECT DISTINCT d.id, d.tenant_id, d.url, d.title, d.content, d.site_id, d.created_at
             FROM public.documents d
             INNER JOIN public.chunks c ON c.document_id = d.id
             WHERE c.embedding IS NOT NULL

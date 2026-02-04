@@ -997,12 +997,17 @@ ${contextText}`;
                     const hasIntegrationDestinations = Array.isArray(matchedRuleDestinations) && matchedRuleDestinations.some(d => d.type === 'integration');
                     const triggerWebhooks = !(shouldEscalateForRules && hasIntegrationDestinations);
 
+                    // Prepare the escalation response message first
+                    const escalationResponse = refs && refs.length > 0
+                        ? `I have escalated this to our support team and they will contact you soon. While you wait, you may find these resources helpful:\n\n${refs.map(ref => `• ${ref}`).join('\n')}\n\nOur team will reach out to you shortly using your preferred contact method.`
+                        : "I have escalated this to our support team and they will contact you soon. Our team will reach out to you shortly using your preferred contact method.";
+
                     const result = await handleEscalation({
                         tenantId,
                         conversationId,
                         sessionId,
                         userMessage: message,
-                        assistantAnswer: text,
+                        assistantAnswer: escalationResponse, // Send the escalation message to integrations
                         confidence,
                         refs,
                         reason: forcedEscalation
@@ -1028,7 +1033,8 @@ ${contextText}`;
                             intent,
                             intentScore,
                             intentMargin: margin,
-                            contactInfo: existingContactInfo
+                            contactInfo: existingContactInfo,
+                            originalAiResponse: text // Store the original AI response for reference
                         }
                     });
 
@@ -1036,11 +1042,7 @@ ${contextText}`;
                         console.error(`❌ Chat API: Escalation failed: ${result.error || 'Unknown error'}`);
                     }
 
-                    // Update the response to clearly indicate escalation has occurred
-                    const escalationResponse = refs && refs.length > 0
-                        ? `I have escalated this to our support team and they will contact you soon. While you wait, you may find these resources helpful:\n\n${refs.map(ref => `• ${ref}`).join('\n')}\n\nOur team will reach out to you shortly using your preferred contact method.`
-                        : "I have escalated this to our support team and they will contact you soon. Our team will reach out to you shortly using your preferred contact method.";
-
+                    // Update the widget response to show escalation message
                     text = escalationResponse;
                     confidence = 0.9; // High confidence in escalation response
                 }
@@ -1072,10 +1074,23 @@ ${contextText}`;
         console.error('❌ CHAT API ERROR:', e);
         console.error('❌ CHAT API ERROR STACK:', (e as Error).stack);
 
-        // Don't leak internal errors; keep message generic in production
-        const dev = process.env.NODE_ENV !== 'production';
+        // Check for specific OpenAI quota errors
+        const isQuotaError = (e as any)?.status === 429 || (e as Error).message?.includes('quota');
         const origin = req.headers.get('origin');
         const errorHeaders = corsHeaders(origin);
+
+        if (isQuotaError) {
+            return NextResponse.json(
+                {
+                    error: 'quota_exceeded',
+                    message: 'Our AI service is temporarily unavailable. Please try again in a few minutes or contact support.'
+                },
+                { status: 503, headers: errorHeaders }
+            );
+        }
+
+        // Don't leak internal errors; keep message generic in production
+        const dev = process.env.NODE_ENV !== 'production';
         return NextResponse.json(
             { error: 'internal_error', message: dev ? (e as Error).message : 'Unexpected server error.' },
             { status: 500, headers: errorHeaders }

@@ -696,7 +696,7 @@ function mountChatWidget(payload) {
 
         // Create bubble
         const bub = el('div',
-            `white-space:pre-wrap;max-width:280px;border-radius:18px;` +
+            `white-space:pre-wrap;max-width:280px;border-radius:18px;word-break:break-word;overflow-wrap:break-word;` +
             (role === 'user'
                 ? `background:${styles.userBubbleBackground};color:${styles.userBubbleColor};border-top-right-radius:4px;padding:12px 16px;`
                 : `background:${styles.assistantBubbleBackground};color:${styles.assistantBubbleColor};border-top-left-radius:4px;padding:12px 16px;`)
@@ -746,7 +746,7 @@ function mountChatWidget(payload) {
 
         // Create typing indicator bubble with animated dots
         const bub = el('div',
-            `white-space:pre-wrap;max-width:280px;border-radius:18px;background:${styles.assistantBubbleBackground};color:${styles.assistantBubbleColor};border-top-left-radius:4px;padding:12px 16px;display:flex;gap:4px;align-items:center;`
+            `white-space:pre-wrap;max-width:280px;border-radius:18px;word-break:break-word;overflow-wrap:break-word;background:${styles.assistantBubbleBackground};color:${styles.assistantBubbleColor};border-top-left-radius:4px;padding:12px 16px;display:flex;gap:4px;align-items:center;`
         );
 
         // Create three animated dots
