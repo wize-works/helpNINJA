@@ -8,14 +8,10 @@ export const runtime = 'nodejs';
 type Context = { params: Promise<{ id: string }> };
 
 export async function POST(req: NextRequest, ctx: Context) {
-    let tenantId: string;
     try {
-        tenantId = await getTenantIdStrict();
-    } catch (e) {
-        return NextResponse.json({ error: (e as Error).message || 'unauthorized' }, { status: 401 });
-    }
-
-    try {
+        console.log('🔍 Rule test - Starting authentication...');
+        const tenantId = await getTenantIdStrict();
+        console.log('✅ Rule test - Authentication successful, tenantId:', tenantId);
         const { id } = await ctx.params;
         const body = await req.json();
 
