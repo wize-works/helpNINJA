@@ -796,7 +796,11 @@ function mountChatWidget(payload) {
 
         const res = await fetch(`${baseOrigin}/api/chat`, {
             method: 'POST',
-            headers: { 'content-type': 'application/json' },
+            headers: {
+                'content-type': 'application/json'
+            },
+            mode: 'cors',
+            credentials: 'omit',
             body: JSON.stringify({
                 tenantId,
                 sessionId,

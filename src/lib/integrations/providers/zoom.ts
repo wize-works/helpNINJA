@@ -82,38 +82,15 @@ function formatZoomMessage(ev: EscalationEvent) {
 const zoomProvider: Provider = {
     key: 'zoom',
     async sendEscalation(ev: EscalationEvent, i: IntegrationRecord) {
-        console.log('🔍 Zoom provider received integration record', {
-            integrationId: i.id,
-            provider: i.provider,
-            name: i.name,
-            credentialsType: typeof i.credentials,
-            credentialsKeys: Object.keys(i.credentials || {}),
-            credentialsStructure: i.credentials,
-            hasWebhookUrl: !!(i.config as { webhook_url?: string })?.webhook_url,
-            hasVerificationToken: !!(i.credentials as { verification_token?: string })?.verification_token,
-            webhookUrlPreview: (i.config as { webhook_url?: string })?.webhook_url ?
-                String((i.config as { webhook_url?: string }).webhook_url).substring(0, 50) + '...' : 'none'
-        });
 
         const webhookUrl = (i.config?.webhook_url as string) || process.env.ZOOM_WEBHOOK_URL
         const verificationToken = (i.credentials?.verification_token as string) || process.env.ZOOM_VERIFICATION_TOKEN
 
         if (!webhookUrl) {
-            console.error('❌ Zoom escalation failed: No webhook URL configured', {
-                integrationId: i.id,
-                hasCredentials: !!i.credentials,
-                credentialsKeys: Object.keys(i.credentials || {}),
-                hasEnvWebhook: !!process.env.ZOOM_WEBHOOK_URL
-            });
             return { ok: false, error: 'no zoom webhook URL configured' }
         }
 
         if (!verificationToken) {
-            console.error('❌ Zoom escalation failed: No verification token configured', {
-                integrationId: i.id,
-                hasCredentials: !!i.credentials,
-                hasEnvToken: !!process.env.ZOOM_VERIFICATION_TOKEN
-            });
             return { ok: false, error: 'no zoom verification token configured' }
         }
 
@@ -127,13 +104,6 @@ const zoomProvider: Provider = {
         const webhookUrlWithParams = `${webhookUrl}?format=fields&timestamp=${timestamp}`;
 
         try {
-            console.log('🔄 Sending Zoom escalation', {
-                integrationId: i.id,
-                conversationId: ev.conversationId,
-                webhook: webhookUrl.substring(0, 50) + '...',
-                format: 'fields',
-                timestamp: timestamp
-            });
 
             const res = await fetch(webhookUrlWithParams, {
                 method: 'POST',
@@ -146,16 +116,9 @@ const zoomProvider: Provider = {
 
             if (!res.ok) {
                 const responseText = await res.text().catch(() => 'Unable to read response');
-                console.error('❌ Zoom webhook returned error', {
-                    status: res.status,
-                    statusText: res.statusText,
-                    response: responseText,
-                    integrationId: i.id
-                });
                 return { ok: false, error: `HTTP ${res.status}: ${res.statusText} - ${responseText}` }
             }
 
-            console.log('✅ Zoom escalation sent successfully', { integrationId: i.id, conversationId: ev.conversationId });
             return { ok: true }
         } catch (e) {
             console.error('❌ Zoom escalation network error', {

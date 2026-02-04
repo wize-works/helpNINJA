@@ -392,10 +392,18 @@ export async function POST(req: NextRequest) {
 
         // Validate origin against tenant's allowed domains
         const origin = req.headers.get('origin');
+        const referer = req.headers.get('referer');
+        const userAgent = req.headers.get('user-agent');
+
+        // Debug logging for null origin cases
+        if (origin === null || origin === 'null') {
+            console.log(`🐛 Null origin debug - Referer: ${referer}, User-Agent: ${userAgent?.slice(0, 100)}...`);
+        }
+
         const originAllowed = await isOriginAllowedForTenant(origin, tenantId);
 
         if (!originAllowed) {
-            console.warn(`❌ Origin ${origin} not allowed for tenant ${tenantId}`);
+            console.warn(`❌ Origin "${origin}" not allowed for tenant ${tenantId}${origin === null || origin === 'null' ? ' (null origin - possibly iframe/mobile context)' : ''}`);
             return NextResponse.json({ error: 'origin_not_allowed' }, { status: 403, headers: corsHeaders(origin) });
         }
 

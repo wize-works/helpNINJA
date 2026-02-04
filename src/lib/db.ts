@@ -16,6 +16,9 @@ const isLocal =
 export const pool = new Pool({
     connectionString: DATABASE_URL,
     ssl: isLocal ? undefined : { rejectUnauthorized: false }, // fixes SELF_SIGNED_CERT_IN_CHAIN on Windows
+    max: 10,                    // Maximum connections in pool
+    idleTimeoutMillis: 30000,   // Close idle connections after 30s
+    connectionTimeoutMillis: 5000,  // Timeout new connections after 5s
 });
 
 export async function query<T extends QueryResultRow = QueryResultRow>(text: string, params?: unknown[]): Promise<QueryResult<T>> {

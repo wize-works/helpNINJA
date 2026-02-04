@@ -1,58 +1,58 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: helpninja
-  namespace: helpninja
-  labels:
-    app: helpninja
-spec:
-  replicas: 2
-  selector:
-    matchLabels:
-      app: helpninja
-  template:
-    metadata:
-      labels:
+    name: helpninja
+    namespace: helpninja
+    labels:
         app: helpninja
-    spec:
-      containers:
-      - name: helpninja
-        image: "IMAGE_PLACEHOLDER"
-        ports:
-        - containerPort: 3000
-          name: http
-        env:
-        - name: NODE_OPTIONS
-          value: "--dns-result-order=ipv4first"
-        envFrom:
-        - configMapRef:
-            name: helpninja-config
-        - secretRef:
-            name: helpninja-secrets
-        resources:
-          requests:
-            memory: "128Mi"
-            cpu: "100m"
-          limits:
-            memory: "512Mi"
-            cpu: "500m"
-        livenessProbe:
-          httpGet:
-            path: /api/health
-            port: http
-          initialDelaySeconds: 30
-          periodSeconds: 10
-          timeoutSeconds: 5
-          failureThreshold: 3
-        readinessProbe:
-          httpGet:
-            path: /api/health
-            port: http
-          initialDelaySeconds: 5
-          periodSeconds: 5
-          timeoutSeconds: 3
-          failureThreshold: 3
-        lifecycle:
-          preStop:
-            exec:
-              command: ["/bin/sh", "-c", "sleep 10"]
+spec:
+    replicas: 2
+    selector:
+        matchLabels:
+            app: helpninja
+    template:
+        metadata:
+            labels:
+                app: helpninja
+        spec:
+            containers:
+                - name: helpninja
+                  image: 'IMAGE_PLACEHOLDER'
+                  ports:
+                      - containerPort: 3000
+                        name: http
+                  env:
+                      - name: NODE_OPTIONS
+                        value: '--dns-result-order=ipv4first'
+                  envFrom:
+                      - configMapRef:
+                            name: helpninja-config
+                      - secretRef:
+                            name: helpninja-secrets
+                  resources:
+                      requests:
+                          memory: '256Mi'
+                          cpu: '100m'
+                      limits:
+                          memory: '1Gi'
+                          cpu: '500m'
+                  livenessProbe:
+                      httpGet:
+                          path: /api/health
+                          port: http
+                      initialDelaySeconds: 30
+                      periodSeconds: 10
+                      timeoutSeconds: 5
+                      failureThreshold: 3
+                  readinessProbe:
+                      httpGet:
+                          path: /api/health
+                          port: http
+                      initialDelaySeconds: 5
+                      periodSeconds: 5
+                      timeoutSeconds: 3
+                      failureThreshold: 3
+                  lifecycle:
+                      preStop:
+                          exec:
+                              command: ['/bin/sh', '-c', 'sleep 10']

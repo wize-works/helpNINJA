@@ -13,21 +13,25 @@ export function withCORS(res: Response, origin?: string | null) {
 
 // Enhanced CORS validation for widget endpoints
 export async function isOriginAllowedForTenant(origin: string | null, tenantId: string | null): Promise<boolean> {
-    if (!origin) return false;
-    
+    // Allow null origins for widget requests (common in iframes, mobile apps, and certain browser contexts)
+    if (!origin || origin === 'null') {
+        // For null origins, we rely on other security measures (tenant validation, domain verification in widget script)
+        return true;
+    }
+
     try {
         // Extract domain from origin (remove protocol and port)
         const originUrl = new URL(origin);
         const domain = originUrl.hostname;
-        
+
         // For localhost/development, be permissive
-        if (domain === 'localhost' || 
-            domain.endsWith('.localhost') || 
+        if (domain === 'localhost' ||
+            domain.endsWith('.localhost') ||
             domain.match(/^127\.0\.0\.1$|^0\.0\.0\.0$/) ||
             domain.match(/^192\.168\./)) {
             return true;
         }
-        
+
         // If tenantId is provided, check against tenant_sites table
         if (tenantId) {
             const { rows } = await query(
@@ -35,12 +39,12 @@ export async function isOriginAllowedForTenant(origin: string | null, tenantId: 
                  WHERE tenant_id = $1 AND (domain = $2 OR domain LIKE '%' || $2)`,
                 [tenantId, domain]
             );
-            
+
             if (rows.length > 0) {
                 return true; // Domain is registered for this tenant
             }
         }
-        
+
         // Fallback to environment variable for testing
         const allowedOrigins = process.env.ALLOWED_WIDGET_ORIGINS;
         if (allowedOrigins) {
@@ -49,7 +53,7 @@ export async function isOriginAllowedForTenant(origin: string | null, tenantId: 
                 return true;
             }
         }
-        
+
         // Default: deny unknown origins for security
         return false;
     } catch (error) {
@@ -61,21 +65,21 @@ export async function isOriginAllowedForTenant(origin: string | null, tenantId: 
 
 // Helper for widget CORS with tenant validation
 export async function withWidgetCORS(
-    res: Response, 
+    res: Response,
     req: { headers: { get: (name: string) => string | null } },
     tenantId?: string | null
 ) {
     const origin = req.headers.get('origin');
-    
+
     // For widget endpoints, we want to be more permissive by default
     // but still validate against tenant sites when possible
     if (tenantId) {
         const allowed = await isOriginAllowedForTenant(origin, tenantId);
         if (!allowed) {
-            console.warn(`Origin ${origin} not allowed for tenant ${tenantId}`);
+            console.warn(`Origin "${origin}" not allowed for tenant ${tenantId}${origin === null || origin === 'null' ? ' (null origin - possibly iframe/mobile context)' : ''}`);
             // Still allow it but log the warning - widgets should work broadly
         }
     }
-    
+
     return withCORS(res, origin);
 }
